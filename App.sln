@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{700FE634-A544-4DD6-8565-08ABD7780CE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Contracts", "App.Contracts\App.Contracts.csproj", "{FBB63A6A-C0B4-47BA-808C-77B9E636DF69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Helper", "App.Helper\App.Helper.csproj", "{D4D5C4BE-5626-419E-9A89-98048A108F58}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{700FE634-A544-4DD6-8565-08ABD7780CE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700FE634-A544-4DD6-8565-08ABD7780CE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700FE634-A544-4DD6-8565-08ABD7780CE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700FE634-A544-4DD6-8565-08ABD7780CE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBB63A6A-C0B4-47BA-808C-77B9E636DF69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBB63A6A-C0B4-47BA-808C-77B9E636DF69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBB63A6A-C0B4-47BA-808C-77B9E636DF69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBB63A6A-C0B4-47BA-808C-77B9E636DF69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4D5C4BE-5626-419E-9A89-98048A108F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4D5C4BE-5626-419E-9A89-98048A108F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4D5C4BE-5626-419E-9A89-98048A108F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4D5C4BE-5626-419E-9A89-98048A108F58}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {58B03A53-4721-40EF-9B6D-05F6D046A9F4}
+	EndGlobalSection
+EndGlobal
