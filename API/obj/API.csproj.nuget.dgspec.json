@@ -1,0 +1,309 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\API\\API.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\API\\API.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\API\\API.csproj",
+        "projectName": "API",
+        "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\Flave\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\API\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Flave\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {
+              "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj": {
+                "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj"
+              },
+              "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj": {
+                "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[5.0.13, )"
+            },
+            "Swashbuckle.AspNetCore.Swagger": {
+              "target": "Package",
+              "version": "[5.6.3, )"
+            },
+            "Swashbuckle.AspNetCore.SwaggerGen": {
+              "target": "Package",
+              "version": "[5.6.3, )"
+            },
+            "Swashbuckle.AspNetCore.SwaggerUI": {
+              "target": "Package",
+              "version": "[5.6.3, )"
+            },
+            "jose-jwt": {
+              "target": "Package",
+              "version": "[3.2.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj",
+        "projectName": "BLL",
+        "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj",
+        "packagesPath": "C:\\Users\\Flave\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Flave\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {
+              "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj": {
+                "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj"
+              },
+              "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj": {
+                "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "dependencies": {
+            "MailKit": {
+              "target": "Package",
+              "version": "[2.6.0, )"
+            },
+            "NLog": {
+              "target": "Package",
+              "version": "[4.7.13, )"
+            },
+            "Polly": {
+              "target": "Package",
+              "version": "[7.2.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj",
+        "projectName": "Contracts",
+        "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj",
+        "packagesPath": "C:\\Users\\Flave\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Flave\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {
+              "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj": {
+                "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "dependencies": {
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[10.3.6, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj",
+        "projectName": "DAL",
+        "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj",
+        "packagesPath": "C:\\Users\\Flave\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Flave\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0": {
+            "targetAlias": "net5.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0": {
+          "targetAlias": "net5.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[5.0.6, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[5.0.6, )"
+            },
+            "Microsoft.AspNetCore.Identity.UI": {
+              "target": "Package",
+              "version": "[5.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[5.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "target": "Package",
+              "version": "[5.0.6, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
