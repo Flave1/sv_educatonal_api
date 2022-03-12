@@ -13,3 +13,18 @@ C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\DAL\
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\DAL\obj\Debug\net5.0\ref\DAL.dll
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\DAL\obj\Debug\net5.0\DAL.pdb
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\DAL\obj\Debug\net5.0\DAL.genruntimeconfig.cache
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\bin\Debug\net5.0\DAL.deps.json
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\bin\Debug\net5.0\DAL.runtimeconfig.json
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\bin\Debug\net5.0\DAL.runtimeconfig.dev.json
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\bin\Debug\net5.0\DAL.dll
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\bin\Debug\net5.0\DAL.pdb
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.csproj.AssemblyReference.cache
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.AssemblyInfoInputs.cache
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.AssemblyInfo.cs
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.csproj.CoreCompileInputs.cache
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.dll
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\refint\DAL.dll
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.pdb
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\DAL.genruntimeconfig.cache
+C:\Users\HP\Desktop\FlaveTech\SchoolManagerAPI\DAL\obj\Debug\net5.0\ref\DAL.dll

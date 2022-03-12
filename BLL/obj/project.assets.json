@@ -3325,7 +3325,7 @@
       ]
     },
     "Newtonsoft.Json/10.0.1": {
-      "sha512": "ebWzW9j2nwxQeBo59As2TYn7nYr9BHicqqCwHOD1Vdo+50HBtLPuqdiCYJcLdTRknpYis/DSEOQz5KmZxwrIAg==",
+      "sha512": "MOUhQfeI43upq9QiEv+7YYTDQPtEZEj9xB50MgplO1XF/aumP0f+TCYIHpZEmfsiahJJaXt/gdRFYLFEoF2VyQ==",
       "type": "package",
       "path": "newtonsoft.json/10.0.1",
       "hasTools": true,
@@ -7623,19 +7623,26 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Flave\\.nuget\\packages\\": {}
+    "C:\\Users\\HP\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
+    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj",
+      "projectUniqueName": "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\BLL\\BLL.csproj",
       "projectName": "BLL",
-      "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\BLL.csproj",
-      "packagesPath": "C:\\Users\\Flave\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\BLL\\obj\\",
+      "projectPath": "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\BLL\\BLL.csproj",
+      "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\BLL\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+      ],
       "configFilePaths": [
-        "C:\\Users\\Flave\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -7643,17 +7650,18 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Users\\Public\\Documents\\Infragistics\\NuGet\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj": {
-              "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\Contracts\\Contracts.csproj"
+            "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\Contracts\\Contracts.csproj": {
+              "projectPath": "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\Contracts\\Contracts.csproj"
             },
-            "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj": {
-              "projectPath": "C:\\Users\\Flave\\Desktop\\Devs\\FLAVETECH\\Projects\\School Management\\Server\\API\\DAL\\DAL.csproj"
+            "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\DAL\\DAL.csproj": {
+              "projectPath": "C:\\Users\\HP\\Desktop\\FlaveTech\\SchoolManagerAPI\\DAL\\DAL.csproj"
             }
           }
         }
@@ -7696,7 +7704,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }
