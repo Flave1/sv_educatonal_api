@@ -146,6 +146,7 @@ namespace BLL.AuthenticationServices
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("userId", user.Id),
+                new Claim("userType", user.UserType.ToString()),
                 new Claim("userName",user.UserName)
             };
 

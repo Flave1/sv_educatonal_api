@@ -1,4 +1,5 @@
 ﻿using BLL.AuthenticationServices;
+using BLL.Constants;
 using BLL.MiddleWares;
 using BLL.StudentServices;
 using Contracts.Authentication;
@@ -174,6 +175,15 @@ namespace API.Controllers
         public ActionResult GetUserProfile()
         {
             string userId = HttpContext.User?.FindFirst(c => c.Type == "userId").Value;
+            string userType = HttpContext.User?.FindFirst(c => c.Type == "userType").Value;
+            if((int)UserTypes.Teacher == Convert.ToInt16(userType))
+            {
+
+            }
+            else
+            {
+
+            }
             return Ok(userId);
         }
     }

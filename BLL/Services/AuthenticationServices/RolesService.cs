@@ -105,7 +105,7 @@ namespace BLL.AuthenticationServices
             if (role.Name == "SCHOOL_ADMIN")
                 throw new ArgumentException("Admin role cannot be deleted ");
             role.Deleted = true;
-            role.Name += "_DELETED";
+            role.Name = role.Name +"_DELETED";
             var result = await manager.UpdateAsync(role);
             if (!result.Succeeded)
             {
