@@ -31,7 +31,7 @@ namespace Contracts.Authentication
 
     public class AddToRole
     {
-        public string UserId { get; set; }
+        public string[] UserIds { get; set; }
         public string RoleId { get; set; }
     }
 
