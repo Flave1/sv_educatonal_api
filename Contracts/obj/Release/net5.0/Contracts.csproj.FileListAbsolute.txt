@@ -13,3 +13,18 @@ C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\Cont
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\Contracts\bin\Release\net5.0\DAL.dll
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\Contracts\bin\Release\net5.0\DAL.pdb
 C:\Users\Flave\Desktop\Devs\FLAVETECH\Projects\School Management\Server\API\Contracts\obj\Release\net5.0\Contracts.csproj.CopyComplete
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\Contracts.deps.json
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\Contracts.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\DAL.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\DAL.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.csproj.AssemblyReference.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.AssemblyInfoInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.AssemblyInfo.cs
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.csproj.CoreCompileInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.csproj.CopyComplete
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\refint\Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\Contracts.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\ref\Contracts.dll
