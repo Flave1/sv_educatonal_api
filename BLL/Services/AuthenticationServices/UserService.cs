@@ -35,20 +35,32 @@ namespace BLL.AuthenticationServices
             this.schoolSettings = options.Value;
         }
 
-        async Task IUserService.AddUserToRoleAsync(string roleId, AppUser user, string userId)
+        async Task IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
         {
             if(user == null)
             {
-                user = manager.Users.FirstOrDefault(f => f.Id == userId);
-                if(user == null)
-                    throw new ArgumentException("User account not found");
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                    throw new ArgumentException("Role does not exist");
+
+                if (userIds.Any())
+                {
+                    foreach(var userId in userIds)
+                    {
+                        user = manager.Users.FirstOrDefault(f => f.Id == userId);
+                        if (user == null)
+                            throw new ArgumentException("User account not found");
+
+                        
+                        var result = await manager.AddToRoleAsync(user, role.Name);
+                        if (!result.Succeeded)
+                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                    }
+                 
+                }
+                
             }
-            var role = await roleManager.FindByIdAsync(roleId);
-            if (role == null) 
-                throw new ArgumentException("Role does not exist"); 
-            var result = await manager.AddToRoleAsync(user, role.Name);
-            if (!result.Succeeded) 
-                throw new ArgumentException(result.Errors.FirstOrDefault().Description); 
+            
         }
 
         async Task IUserService.CreateTeacherAsync(string email)

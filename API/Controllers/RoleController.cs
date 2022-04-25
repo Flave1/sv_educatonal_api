@@ -15,10 +15,12 @@ namespace API.Controllers
     [Route("role/api/v1/")]
     public class RoleController : Controller
     {
-        private readonly IRolesService roleService;  
-        public RoleController(IRolesService service)
+        private readonly IRolesService roleService; 
+        private readonly IUserService userService;
+        public RoleController(IRolesService service, IUserService userService)
         {
-            this.roleService = service; 
+            this.roleService = service;
+            this.userService = userService;
         }
 
         #region ROLES
@@ -86,8 +88,25 @@ namespace API.Controllers
         }
 
         #endregion
-          
 
-         
+
+
+        [HttpPost("assign/user-to-role")]
+        public async Task<IActionResult> AssignUserToRole([FromBody] AddToRole request)
+        {
+
+            try
+            {
+                await userService.AddUserToRoleAsync(request.RoleId, null, request.UserIds);
+                return Ok(new { result = "Successfully added user to selected role" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { result = ex.Message });
+            }
+        }
+
+
+
     }
 }
