@@ -1691,7 +1691,7 @@
           "lib/netstandard1.3/System.Xml.XmlSerializer.dll": {}
         }
       },
-      "DAL/1.0.0": {
+      "SMP.DAL/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
@@ -1702,10 +1702,10 @@
           "Microsoft.EntityFrameworkCore.Tools": "5.0.6"
         },
         "compile": {
-          "bin/placeholder/DAL.dll": {}
+          "bin/placeholder/SMP.DAL.dll": {}
         },
         "runtime": {
-          "bin/placeholder/DAL.dll": {}
+          "bin/placeholder/SMP.DAL.dll": {}
         }
       }
     }
@@ -6239,16 +6239,16 @@
         "system.xml.xmlserializer.nuspec"
       ]
     },
-    "DAL/1.0.0": {
+    "SMP.DAL/1.0.0": {
       "type": "project",
-      "path": "../DAL/DAL.csproj",
-      "msbuildProject": "../DAL/DAL.csproj"
+      "path": "../DAL/SMP.DAL.csproj",
+      "msbuildProject": "../DAL/SMP.DAL.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net5.0": [
-      "DAL >= 1.0.0",
-      "FluentValidation.AspNetCore >= 10.3.6"
+      "FluentValidation.AspNetCore >= 10.3.6",
+      "SMP.DAL >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -6258,9 +6258,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\Contracts.csproj",
-      "projectName": "Contracts",
-      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\Contracts.csproj",
+      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj",
+      "projectName": "SMP.Contracts",
+      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj",
       "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\obj\\",
       "projectStyle": "PackageReference",
@@ -6282,8 +6282,8 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj": {
-              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj"
+            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
+              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj"
             }
           }
         }

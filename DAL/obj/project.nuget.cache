@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Tc2F6i8vLNBXoMb5O2RzAGkeT5k9fnmn1EstNLJijMGBfyDKoqR4r+M47JTTHN+11z9EsX3iE69ic6GtO53OfQ==",
+  "dgSpecHash": "50pUTXy1mIA767ozWxeWZdC8KVV/pCJu517IqOzuw+U5UrUK+rnpq4t4sQnm19TeUJrAbcsaQ2VnyAa7kNo1DA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj",
+  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\thispc\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\thispc\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\5.0.6\\microsoft.aspnetcore.cryptography.internal.5.0.6.nupkg.sha512",

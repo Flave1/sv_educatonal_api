@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "h69RlwRC2LecMElUYc1hsfx/WbVFB/bChXsQquQONwM2lLY1RtNwUqYL9ltMaU5M/XwU3vZsPpJHddNWf4n3bQ==",
+  "dgSpecHash": "ckWFcU1N9Kn+1XxVyfqWc3SpiF6vAXblI1nkQWG2F1C/MJA/JR0fYEfENjwBxVgmpblw4qun5tnNe9St4XEPmA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\Contracts.csproj",
+  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\thispc\\.nuget\\packages\\fluentvalidation\\10.3.6\\fluentvalidation.10.3.6.nupkg.sha512",
     "C:\\Users\\thispc\\.nuget\\packages\\fluentvalidation.aspnetcore\\10.3.6\\fluentvalidation.aspnetcore.10.3.6.nupkg.sha512",

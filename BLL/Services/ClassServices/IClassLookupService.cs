@@ -1,4 +1,6 @@
 ﻿using Contracts.Class;
+using Contracts.Common;
+using DAL.ClassEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +11,9 @@ namespace BLL.ClassServices
 {
     public interface IClassLookupService
     {
-        Task CreateClassLookupAsync(string className);
-        Task UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive);
-        Task<List<GetApplicationLookups>> GetAllClassLookupsAsync();
-        Task DeleteClassLookupAsync(string lookupId);
+        Task<APIResponse<ClassLookup>> CreateClassLookupAsync(string className);
+        Task<APIResponse<ClassLookup>> UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive);
+        Task<APIResponse<List<GetApplicationLookups>>> GetAllClassLookupsAsync();
+        Task<APIResponse<ClassLookup>> DeleteClassLookupAsync(MultipleDelete lookupId);
     }
 }

@@ -9,8 +9,8 @@ namespace BLL.ClassServices
 {
     public interface IClassService
     {
-        Task CreateSessionClassAsync(SessionClassCommand sClass);
-        Task<List<GetSessionClass>> GetSessionClassesAsync();
-        Task<List<GetSessionClass>> GetSessionClassesBySessionAsync(DateTime? StartDate, DateTime? EndDate); 
+        Task<APIResponse<SessionClassCommand>> CreateSessionClassAsync(SessionClassCommand sClass);
+        Task<APIResponse<List<GetSessionClass>>> GetSessionClassesAsync();
+        Task<APIResponse<List<GetSessionClass>>> GetSessionClassesBySessionAsync(DateTime? StartDate, DateTime? EndDate); 
     }
 }

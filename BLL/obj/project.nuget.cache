@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3MIC4ojX/gEBTByxVNYYp308L2RAWnKfvHcI1inmuIFZfnMVXw2xbfwBuNZGg3cPlfVg8av6ibcxE1a+Z2TDyw==",
+  "dgSpecHash": "9GIggFQwLQjbcIrpz++987AA1sV2ZbI60jKrjFwP961YSRjYWEG4Xg40g6pyn/t8MiEUHvu9RtI7N5vA4zx9Jw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\BLL.csproj",
+  "projectFilePath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\SMP.BLL.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\thispc\\.nuget\\packages\\fluentvalidation\\10.3.6\\fluentvalidation.10.3.6.nupkg.sha512",
     "C:\\Users\\thispc\\.nuget\\packages\\fluentvalidation.aspnetcore\\10.3.6\\fluentvalidation.aspnetcore.10.3.6.nupkg.sha512",

@@ -2208,21 +2208,21 @@
           "lib/netstandard1.3/System.Xml.XmlSerializer.dll": {}
         }
       },
-      "Contracts/1.0.0": {
+      "SMP.Contracts/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
-          "DAL": "1.0.0",
-          "FluentValidation.AspNetCore": "10.3.6"
+          "FluentValidation.AspNetCore": "10.3.6",
+          "SMP.DAL": "1.0.0"
         },
         "compile": {
-          "bin/placeholder/Contracts.dll": {}
+          "bin/placeholder/SMP.Contracts.dll": {}
         },
         "runtime": {
-          "bin/placeholder/Contracts.dll": {}
+          "bin/placeholder/SMP.Contracts.dll": {}
         }
       },
-      "DAL/1.0.0": {
+      "SMP.DAL/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
@@ -2233,10 +2233,10 @@
           "Microsoft.EntityFrameworkCore.Tools": "5.0.6"
         },
         "compile": {
-          "bin/placeholder/DAL.dll": {}
+          "bin/placeholder/SMP.DAL.dll": {}
         },
         "runtime": {
-          "bin/placeholder/DAL.dll": {}
+          "bin/placeholder/SMP.DAL.dll": {}
         }
       }
     }
@@ -7597,24 +7597,24 @@
         "system.xml.xmlserializer.nuspec"
       ]
     },
-    "Contracts/1.0.0": {
+    "SMP.Contracts/1.0.0": {
       "type": "project",
-      "path": "../Contracts/Contracts.csproj",
-      "msbuildProject": "../Contracts/Contracts.csproj"
+      "path": "../Contracts/SMP.Contracts.csproj",
+      "msbuildProject": "../Contracts/SMP.Contracts.csproj"
     },
-    "DAL/1.0.0": {
+    "SMP.DAL/1.0.0": {
       "type": "project",
-      "path": "../DAL/DAL.csproj",
-      "msbuildProject": "../DAL/DAL.csproj"
+      "path": "../DAL/SMP.DAL.csproj",
+      "msbuildProject": "../DAL/SMP.DAL.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net5.0": [
-      "Contracts >= 1.0.0",
-      "DAL >= 1.0.0",
       "MailKit >= 2.6.0",
       "NLog >= 4.7.13",
-      "Polly >= 7.2.3"
+      "Polly >= 7.2.3",
+      "SMP.Contracts >= 1.0.0",
+      "SMP.DAL >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -7624,9 +7624,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\BLL.csproj",
-      "projectName": "BLL",
-      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\BLL.csproj",
+      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\SMP.BLL.csproj",
+      "projectName": "SMP.BLL",
+      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\SMP.BLL.csproj",
       "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\obj\\",
       "projectStyle": "PackageReference",
@@ -7648,11 +7648,11 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\Contracts.csproj": {
-              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\Contracts.csproj"
+            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj": {
+              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj"
             },
-            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj": {
-              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj"
+            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
+              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj"
             }
           }
         }

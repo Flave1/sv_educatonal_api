@@ -26,65 +26,58 @@ namespace API.Controllers
         #region ROLES
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateRoleAsync([FromBody] ApplicationRoleCommand request)
-        { 
-            try
-            {
-                await roleService.CreateRoleAsync(request.Name);
-                var result = await roleService.GetAllRolesAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            { 
-                return StatusCode(400, new { result = ex.Message });
-            }
+        public async Task<IActionResult> CreateRoleAsync([FromBody] CreateRoleActivity request)
+        {
+            var response = await roleService.CreateRoleAsync(request);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
+        
         [HttpPost("update")]
-        public async Task<IActionResult> UpdateRoleAsync([FromBody] ApplicationRoleCommand request)
-        { 
-            try
-            {
-                await roleService.UpdateRoleAsync(request.Name, request.RoleId);
-                var result = await roleService.GetAllRolesAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            { 
-                return StatusCode(400, new { result = ex.Message });
-            }
+        public async Task<IActionResult> UpdateRoleAsync([FromBody] UpdateRoleActivity request)
+        {
+          var response = await roleService.UpdateRoleAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("getall-activities")]
+        public async Task<IActionResult> GetAllActivitiesAsync()
+        {
+            var result = await roleService.GetAllActivitiesAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("getall-activities-by-roleId")]
+        public async Task<IActionResult> GetActivitiesByRoleAsync(string roleId)
+        {
+            var result = await roleService.GetAllActivitiesAsync();
+            return Ok(result);
         }
 
         [HttpGet("getall")]
         public async Task<IActionResult> GetAllRolesAsync()
         { 
             var result = await roleService.GetAllRolesAsync();
-            return Ok(new { result = result });
+            return Ok(result);
         }
 
         [HttpGet("get/{roleId}")]
         public async Task<IActionResult> GetSingleRoleAsync(string roldeId)
         { 
             var result = await roleService.GetSingleRoleAsync(roldeId);
-            return Ok(new { result = result });
+            return Ok(result);
         }
 
         [HttpPost("delete")]
-        public async Task<IActionResult> DeleteRoleAsync([FromBody] MultipleDelete reguest)
+        public async Task<IActionResult> DeleteRoleAsync([FromBody] MultipleDelete request)
         {
-            
-            try
-            {
-                if (reguest.Items.Any()) 
-                    foreach(var item in reguest.Items)
-                    { 
-                        await roleService.DeleteRoleAsync(item);
-                    } 
-                return Ok(new { result = true});
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(400, new { result = ex.Message });
-            }
+            var response = await roleService.DeleteRoleAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         #endregion

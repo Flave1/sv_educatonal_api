@@ -1,4 +1,5 @@
 ﻿using Contracts.Class;
+using Contracts.Common;
 using DAL;
 using DAL.SubjectModels;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +20,15 @@ namespace BLL.Services.SubjectServices
             this.context = context;
         }
 
-        async Task ISubjectService.CreateSubjectAsync(string subjectName)
+        async Task<APIResponse<Subject>> ISubjectService.CreateSubjectAsync(string subjectName)
         {
-            if (context.Subject.Any(r => subjectName.Trim().ToLower().Contains(r.Name.Trim().ToLower())))
-                throw new ArgumentException("Subject Name Already exist");
+            var res = new APIResponse<Subject>();
+
+            if (context.Subject.Any(r => subjectName.Trim().ToLower() == r.Name.Trim().ToLower()))
+            {
+                res.Message.FriendlyMessage = "Subject Name Already exist";
+                return res;
+            }
             var lookup = new Subject
             {
                 Name = subjectName,
@@ -30,36 +36,72 @@ namespace BLL.Services.SubjectServices
             };
             context.Subject.Add(lookup);
             await context.SaveChangesAsync();
+
+
+            res.Result = lookup;
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "You have successfuly created a class lookp";
+            return res;
         }
 
-        async Task ISubjectService.UpdateSubjectAsync(string Name, string Id, bool isActive)
+        async Task<APIResponse<Subject>> ISubjectService.UpdateSubjectAsync(string Name, string Id, bool isActive)
         {
-            if (context.Subject.Any(r => Name.Contains(r.Name) && r.SubjectId != Guid.Parse(Id)))
-                throw new ArgumentException("Subject Name Already exist");
+            var res = new APIResponse<Subject>();
+
+            if (context.Subject.Any(r => Name.ToLower().Trim() == r.Name.Trim().ToLower() && r.SubjectId != Guid.Parse(Id)))
+            {
+                res.Message.FriendlyMessage = "Subject Name Already exist";
+                return res;
+            }
 
             var lookup = context.Subject.FirstOrDefault(r => r.SubjectId == Guid.Parse(Id));
             if (lookup == null)
-                throw new ArgumentException("Subject  does not exist");
+            {
+                res.Message.FriendlyMessage = "Subject  does not exist";
+                return res;
+            }
             lookup.Name = Name;
             lookup.IsActive = isActive;
             var result = await context.SaveChangesAsync();
+
+            res.Result = lookup;
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "You have successfuly updated a class lookp";
+            return res;
         }
 
-        async Task<List<GetApplicationLookups>> ISubjectService.GetAllSubjectsAsync()
+        async Task<APIResponse<List<GetApplicationLookups>>> ISubjectService.GetAllSubjectsAsync()
         {
-            return await context.Subject.Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            var res = new APIResponse<List<GetApplicationLookups>>();
+            var result =  await context.Subject.Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
         }
 
 
-        async Task ISubjectService.DeleteSubjectAsync(string Id)
+        async Task<APIResponse<Subject>> ISubjectService.DeleteSubjectAsync(MultipleDelete request)
         {
-            var lookup = context.Subject.FirstOrDefault(d => d.SubjectId == Guid.Parse(Id));
-            if (lookup == null)
+            var res = new APIResponse<Subject>();
+            
+            foreach(var Id in request.Items)
             {
-                throw new ArgumentException("Subject  does not exist");
+                var lookup = context.Subject.FirstOrDefault(d => d.SubjectId == Guid.Parse(Id));
+                if (lookup == null)
+                {
+                    res.Message.FriendlyMessage = "Subject  does not exist";
+                    return res;
+                }
+                lookup.Deleted = true;
+                lookup.Name = lookup.Name + "_DELETE" + DateTime.Now.ToString();
+                await context.SaveChangesAsync();
+                res.Result = lookup;
             }
-            lookup.Deleted = true;
-            await context.SaveChangesAsync();
+
+           
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "You have successfuly deleted a class lookp";
+            return res;
         }
     }
 }

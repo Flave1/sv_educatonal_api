@@ -1,4 +1,6 @@
 ﻿using Contracts.Authentication;
+using Contracts.Common;
+using DAL.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +11,11 @@ namespace BLL.AuthenticationServices
 {
     public interface IRolesService
     {
-        Task CreateRoleAsync(string roleName);
-        Task<List<ApplicationRoles>> GetAllRolesAsync();
-        Task<ApplicationRoles> GetSingleRoleAsync(string roleId);
-        Task UpdateRoleAsync(string roleName, string roleId);
-        Task DeleteRoleAsync(string roleId); 
+        Task<APIResponse<UserRole>> CreateRoleAsync(CreateRoleActivity request);
+        Task<APIResponse<List<ApplicationRoles>>> GetAllRolesAsync();
+        Task<APIResponse<GetRoleActivities>> GetSingleRoleAsync(string roleId);
+        Task<APIResponse<UserRole>> UpdateRoleAsync(UpdateRoleActivity request);
+        Task<APIResponse<UserRole>> DeleteRoleAsync(MultipleDelete request);
+        Task<APIResponse<List<GetActivities>>> GetAllActivitiesAsync();
     }
 }

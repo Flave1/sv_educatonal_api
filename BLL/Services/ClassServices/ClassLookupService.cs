@@ -1,4 +1,5 @@
 ﻿using Contracts.Class;
+using Contracts.Common;
 using DAL;
 using DAL.ClassEntities;
 using Microsoft.EntityFrameworkCore;
@@ -18,10 +19,14 @@ namespace BLL.ClassServices
             this.context = context;
         }
 
-        async Task IClassLookupService.CreateClassLookupAsync(string className)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className)
         {
-            if (context.ClassLookUp.Any(r => className.Trim().ToLower().Contains(r.Name.Trim().ToLower())))
-                throw new ArgumentException("Class Name Already exist");
+            var res = new APIResponse<ClassLookup>();
+            if (context.ClassLookUp.Any(r => className.Trim().ToLower() == r.Name.Trim().ToLower().ToLower()))
+            {
+                res.Message.FriendlyMessage = "Class Name Already exist";
+                return res;
+            }
             var lookup = new ClassLookup
             {
                 Name = className,
@@ -29,36 +34,68 @@ namespace BLL.ClassServices
             };
             context.ClassLookUp.Add(lookup);
             await context.SaveChangesAsync();
+            res.Result = lookup;
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "You have succesfully created a class lookup";
+            return res;
         }
 
-        async Task IClassLookupService.UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive)
         {
-            if (context.ClassLookUp.Any(r => lookupName.Contains(r.Name) && r.ClassLookupId != Guid.Parse(lookupId)))
-                throw new ArgumentException("Class Name Already exist");
+            var res = new APIResponse<ClassLookup>();
+
+            if (context.ClassLookUp.Any(r => lookupName.ToLower().Trim() == r.Name.Trim().ToLower() && r.ClassLookupId != Guid.Parse(lookupId)))
+            {
+                res.Message.FriendlyMessage = "Class Name Already exist";
+                return res;
+            }
 
             var lookup = context.ClassLookUp.FirstOrDefault(r => r.ClassLookupId == Guid.Parse(lookupId));
             if (lookup == null)
-                throw new ArgumentException("Class Lookup does not exist");
+            {
+                res.Message.FriendlyMessage = "Class Lookup does not exist";
+                return res;
+            }
             lookup.Name = lookupName;
             lookup.IsActive = isActive;
-            var result = await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+
+            res.IsSuccessful = true;
+            res.Result = lookup;
+            res.Message.FriendlyMessage = "You have succesfully updated a class lookup";
+            return res;
         }
 
-        async Task<List<GetApplicationLookups>> IClassLookupService.GetAllClassLookupsAsync()
+        async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllClassLookupsAsync()
         {
-            return await context.ClassLookUp.Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.ClassLookupId.ToString(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            var res = new APIResponse<List<GetApplicationLookups>>();
+            var result = await context.ClassLookUp.Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.ClassLookupId.ToString(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
         }
          
 
-        async Task IClassLookupService.DeleteClassLookupAsync(string lookupId)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.DeleteClassLookupAsync(MultipleDelete request)
         {
-            var lookup =  context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId));
-            if (lookup == null)
+            var res = new APIResponse<ClassLookup>();
+            foreach(var lookupId in request.Items)
             {
-                throw new ArgumentException("Class Lookup does not exist");
+                var lookup = context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId));
+                if (lookup == null)
+                {
+                    res.Message.FriendlyMessage = "Class Lookup does not exist";
+                    return res;
+                }
+                lookup.Deleted = true;
+                await context.SaveChangesAsync();
+
+                res.Result = lookup;
             }
-            lookup.Deleted = true;
-            await context.SaveChangesAsync();
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "You have succesfully deleted a class lookup";
+            return res;
         }
     }
 }

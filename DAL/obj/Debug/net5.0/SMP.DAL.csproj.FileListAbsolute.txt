@@ -1,0 +1,15 @@
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\bin\Debug\net5.0\SMP.DAL.deps.json
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\bin\Debug\net5.0\SMP.DAL.runtimeconfig.json
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\bin\Debug\net5.0\SMP.DAL.runtimeconfig.dev.json
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\bin\Debug\net5.0\SMP.DAL.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\bin\Debug\net5.0\SMP.DAL.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.csproj.AssemblyReference.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.AssemblyInfoInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.AssemblyInfo.cs
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.csproj.CoreCompileInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\refint\SMP.DAL.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\SMP.DAL.genruntimeconfig.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\DAL\obj\Debug\net5.0\ref\SMP.DAL.dll

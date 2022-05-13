@@ -1,0 +1,15 @@
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\SMP.Contracts.deps.json
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\SMP.Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\SMP.Contracts.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\SMP.DAL.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\bin\Release\net5.0\SMP.DAL.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.csproj.AssemblyReference.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.AssemblyInfoInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.AssemblyInfo.cs
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.csproj.CoreCompileInputs.cache
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.csproj.CopyComplete
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\refint\SMP.Contracts.dll
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\SMP.Contracts.pdb
+C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\Contracts\obj\Release\net5.0\ref\SMP.Contracts.dll

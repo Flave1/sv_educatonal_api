@@ -19,6 +19,57 @@ namespace DAL.Migrations
                 .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("DAL.Authentication.Activity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActivityParentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityParentId");
+
+                    b.ToTable("Activity");
+                });
+
+            modelBuilder.Entity("DAL.Authentication.ActivityParent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityParent");
+                });
+
             modelBuilder.Entity("DAL.Authentication.AppUser", b =>
                 {
                     b.Property<string>("Id")
@@ -149,6 +200,57 @@ namespace DAL.Migrations
                     b.HasKey("JwtId");
 
                     b.ToTable("RefreshToken");
+                });
+
+            modelBuilder.Entity("DAL.Authentication.RoleActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActivityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanCreate")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanExport")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanImport")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanUpdate")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("RoleActivity");
                 });
 
             modelBuilder.Entity("DAL.ClassEntities.ClassLookup", b =>
@@ -604,6 +706,34 @@ namespace DAL.Migrations
                     b.HasDiscriminator().HasValue("UserRole");
                 });
 
+            modelBuilder.Entity("DAL.Authentication.Activity", b =>
+                {
+                    b.HasOne("DAL.Authentication.ActivityParent", "Parent")
+                        .WithMany("Activities")
+                        .HasForeignKey("ActivityParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("DAL.Authentication.RoleActivity", b =>
+                {
+                    b.HasOne("DAL.Authentication.Activity", "Activity")
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Authentication.UserRole", "UserRole")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("UserRole");
+                });
+
             modelBuilder.Entity("DAL.ClassEntities.SessionClass", b =>
                 {
                     b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
@@ -717,6 +847,11 @@ namespace DAL.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("DAL.Authentication.ActivityParent", b =>
+                {
+                    b.Navigation("Activities");
                 });
 
             modelBuilder.Entity("DAL.Authentication.AppUser", b =>
