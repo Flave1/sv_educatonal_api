@@ -45,21 +45,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("assign/user-to-role")]
-        public async Task<IActionResult> AssignUserToRole([FromBody] AddToRole request)
-        {
-
-            try
-            {
-                await userService.AddUserToRoleAsync(request.RoleId, null, request.RoleId);
-                return Ok(new { result = "Successfully added user to selected role" });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
-
+    
         [HttpPost("create/teacher")]
         public async Task<IActionResult> CreateTeacherAsync([FromBody] UserCommand request)
         { 
