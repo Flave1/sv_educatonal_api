@@ -18,6 +18,5 @@ namespace Contracts.Authentication
     {
         public string RoleId { get; set; }
         public string Name { get; set; } 
-
     }
 }

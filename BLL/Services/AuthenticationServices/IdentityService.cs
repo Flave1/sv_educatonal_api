@@ -175,7 +175,7 @@ namespace BLL.AuthenticationServices
                 var tokenDecriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.Add(jwtSettings.TokenLifeSpan),
+                    Expires = DateTime.UtcNow.AddYears(1), //Add(jwtSettings.TokenLifeSpan),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
                  

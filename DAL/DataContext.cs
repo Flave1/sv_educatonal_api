@@ -31,6 +31,9 @@ namespace DAL
         public DbSet<SessionClass> SessionClass { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<Subject> Subject { get; set; }
+        public DbSet<ActivityParent> ActivityParent { get; set; }
+        public DbSet<Activity> Activity { get; set; }
+        public DbSet<RoleActivity> RoleActivity { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

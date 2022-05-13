@@ -24,54 +24,36 @@ namespace API.Controllers
 
         [HttpPost("create/subject")]
         public async Task<IActionResult> CreateSubjectAsync([FromBody] ApplicationLookupCommand request)
-        { 
-            try
-            {
-                await service.CreateSubjectAsync(request.Name);
-                var result = await service.GetAllSubjectsAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+        {
+            var response = await service.CreateSubjectAsync(request.Name);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
         [HttpPost("update/subject")]
         public async Task<IActionResult> UpdateSubjectAsync([FromBody] ApplicationLookupCommand request)
-        { 
-            try
-            {
-                await service.UpdateSubjectAsync(request.Name, request.LookupId, request.IsActive);
-                var result = await service.GetAllSubjectsAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+        {
+            var response = await service.UpdateSubjectAsync(request.Name, request.LookupId, request.IsActive);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpGet("getall/subject")]
         public async Task<IActionResult> GetAllSubjectsAsync()
         {
-            var result = await service.GetAllSubjectsAsync();
-            return Ok(new { result = result });
+            var response = await service.GetAllSubjectsAsync();
+            return Ok(response);
         }
  
 
         [HttpPost("delete/subject")]
-        public async Task<IActionResult> DeleteSubjectAsync([FromBody] SingleDelete reguest)
-        { 
-            try
-            {
-                await service.DeleteSubjectAsync(reguest.Item);
-                var result = await service.GetAllSubjectsAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+        public async Task<IActionResult> DeleteSubjectAsync([FromBody] MultipleDelete reguest)
+        {
+            var response = await service.DeleteSubjectAsync(reguest);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         #endregion

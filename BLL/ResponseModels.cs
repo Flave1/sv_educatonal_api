@@ -3,15 +3,18 @@
 namespace BLL
 {
     public class APIResponse<T>
-    { 
-        public bool IsSuccessful { get; set; }
-        public List<T> Result { get; set; } = new List<T>();
-        public APIResponseMessage Message { get; set; } = new APIResponseMessage();
+    {
+        public APIResponse()
+        {
+            Message = new APIResponseMessage();
+        }
+        public bool IsSuccessful;
+        public T Result { get; set; } 
+        public APIResponseMessage Message { get; set; } 
     } 
 
     public class APIResponseMessage
     {
-        public string Key { get; set; }
         public string FriendlyMessage { get; set; }
         public string TechnicalMessage { get; set; }
     }

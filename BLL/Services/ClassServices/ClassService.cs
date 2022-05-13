@@ -16,11 +16,16 @@ namespace BLL.ClassServices
         {
             this.context = context;
         }
-         
-        async Task IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
+
+        async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
         {
-            if(context.SessionClass.Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId))) 
-                throw new ArgumentException($"Same Class In Session Detected");
+            var res = new APIResponse<SessionClassCommand>();
+            if (context.SessionClass.Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId)))
+            {
+                res.Message.FriendlyMessage = "Same Class In Session Detected";
+                return res;
+            }
+                 
 
             context.SessionClass.Add(new SessionClass 
             {
@@ -31,32 +36,47 @@ namespace BLL.ClassServices
                 SessionId = Guid.Parse(sClass.SessionId),
                 InSession = sClass.InSession,  
             });
-            await context.SaveChangesAsync(); 
+            await context.SaveChangesAsync();
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "Class created successfully";
+            return res;
         }
 
-        async Task<List<GetSessionClass>> IClassService.GetSessionClassesAsync()
+        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesAsync()
         {
-            return await context.SessionClass.Where(r => r.InSession)
+            var res = new APIResponse<List<GetSessionClass>>();
+
+            var result = await context.SessionClass.Where(r => r.InSession)
                 .Include(rr => rr.Class)
                 .Include(rr=> rr.Session)
                 //.Include(rr => rr.Students)
                 .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
         }
 
-        async Task<List<GetSessionClass>> IClassService.GetSessionClassesBySessionAsync(DateTime? startDate, DateTime? endDate)
+        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesBySessionAsync(DateTime? startDate, DateTime? endDate)
         {
+
+            var res = new APIResponse<List<GetSessionClass>>();
+
             var query = context.SessionClass
-         .Include(rr => rr.Class)
-         .Include(rr => rr.Session)
-         .Include(rr => rr.Students).ThenInclude(uuu => uuu.User)
-         .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Where(r => r.InSession);
+             .Include(rr => rr.Class)
+             .Include(rr => rr.Session)
+             .Include(rr => rr.Students).ThenInclude(uuu => uuu.User)
+             .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Where(r => r.InSession);
+
             if (startDate != null && startDate.HasValue)
                 query = query.Where(v => v.Session.StartDate.Date == startDate.Value.Date);
 
             if (endDate != null && endDate.HasValue)
                 query = query.Where(v => v.Session.StartDate.Date == endDate.Value.Date);
 
-            return await query.Select(g => new GetSessionClass(g)).ToListAsync();
+            var result = await query.Select(g => new GetSessionClass(g)).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
         }
     }
 }

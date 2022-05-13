@@ -6144,9 +6144,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj",
-      "projectName": "DAL",
-      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\DAL.csproj",
+      "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
+      "projectName": "SMP.DAL",
+      "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
       "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\obj\\",
       "projectStyle": "PackageReference",
