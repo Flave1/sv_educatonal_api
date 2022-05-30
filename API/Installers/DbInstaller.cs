@@ -9,6 +9,8 @@ using DAL.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SMP.BLL.Services.EnrollmentServices;
+using SMP.BLL.Services.TeacherServices;
 
 namespace GODP.APIsContinuation.Installers
 {
@@ -41,7 +43,8 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IStudentService, StudentService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ISubjectService, SubjectService>();
-
+            services.AddScoped<ITeacherService, TeacherService>();
+            services.AddScoped<IEnrollmentService, EnrollmentService>();
 
         }
     }

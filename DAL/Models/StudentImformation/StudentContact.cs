@@ -3,6 +3,7 @@ using DAL.ClassEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.StudentInformation
 {
@@ -24,7 +25,10 @@ namespace DAL.StudentInformation
         public string CountryId { get; set; }
         public string ZipCode { get; set; }  
         public string RegistrationNumber { get; set; }
-        public SessionClass Class { get; set; }
+        public Guid SessionClassId { get; set; }
+        [ForeignKey("SessionClassId")]
+        public SessionClass SessionClass { get; set; }
+        public int Status { get; set; }
         public virtual ICollection<StudentClassProgressions> ClassProgressions { get; set; }
     }
 }

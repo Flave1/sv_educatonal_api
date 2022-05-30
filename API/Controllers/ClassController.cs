@@ -48,7 +48,13 @@ namespace API.Controllers
             var response = await lookupService.GetAllClassLookupsAsync();
             return Ok(response);
         }
- 
+
+        [HttpGet("get-all/active-classes")]
+        public async Task<IActionResult> GetActiveClassesAsync()
+        {
+            var response = await lookupService.GetAllActiveClassLookupsAsync();
+            return Ok(response);
+        }
 
         [HttpPost("delete/class-lookup")]
         public async Task<IActionResult> DeleteClassLookupAsync([FromBody] MultipleDelete reguest)
@@ -63,7 +69,7 @@ namespace API.Controllers
 
         #region CLASS
 
-        [HttpPost("create/class")]
+        [HttpPost("create/session-class")]
         public async Task<IActionResult> CreateClassAsync([FromBody] SessionClassCommand request)
         {
             var response = await service.CreateSessionClassAsync(request);
@@ -72,18 +78,52 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("get-all/classes")]
-        public async Task<IActionResult> GetClassesAsync()
+        [HttpPost("update/session-class")]
+        public async Task<IActionResult> UpdateClassAsync([FromBody] SessionClassCommand request)
         {
-            var response = await service.GetSessionClassesAsync();
+            var response = await service.UpdateSessionClassAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get-all/session-classes{sessionId}")]
+        public async Task<IActionResult> GetClassesAsync(Guid sessionId)
+        {
+            var response = await service.GetSessionClassesAsync(sessionId);
             return Ok(response);
         }
 
+       
         [HttpGet("search/classes/by-session")]
         public async Task<IActionResult> GetClassesBySessionAsync([FromBody] SessionQuery query)
         {
             var response = await service.GetSessionClassesBySessionAsync(query.StartDate, query.EndDate);
             return Ok(response);
+        }
+
+        [HttpGet("get-single/session-classes/{sessionClassId}")]
+        public async Task<IActionResult> GetSingleSessionClassAsync(string sessionClassId)
+        {
+            var response = await service.GetSingleSessionClassesAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpGet("get-students/{sessionClassId}")]
+        public async Task<IActionResult> GetSessionClassStudentsAsync(string sessionClassId)
+        {
+            var response = await service.GetClassStudentsClassesAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpPost("delete-session-class")]
+        public async Task<IActionResult> DeleteSessionClassAsync([FromBody] SingleDelete reguest)
+        {
+
+            var response = await service.DeleteSessionClassesAsync(Guid.Parse(reguest.Item));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         #endregion

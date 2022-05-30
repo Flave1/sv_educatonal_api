@@ -15,5 +15,6 @@ namespace BLL.ClassServices
         Task<APIResponse<ClassLookup>> UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive);
         Task<APIResponse<List<GetApplicationLookups>>> GetAllClassLookupsAsync();
         Task<APIResponse<ClassLookup>> DeleteClassLookupAsync(MultipleDelete lookupId);
+        Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassLookupsAsync();
     }
 }

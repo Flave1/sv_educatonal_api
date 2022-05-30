@@ -10,6 +10,7 @@ namespace DAL.TeachersInfor
         [Key]
         public Guid TeacherId { get; set; }
         public string UserId { get; set; }
+        public int Status { get; set; }
         [ForeignKey("UserId")]
         public AppUser User { get; set; }
     }
