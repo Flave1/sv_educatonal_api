@@ -17,6 +17,7 @@ using BLL.EmailServices;
 using BLL.LoggerService;
 using DAL;
 using Contracts.Options;
+using Microsoft.AspNetCore.Builder;
 
 namespace API.Installers
 {
@@ -44,6 +45,11 @@ namespace API.Installers
             };
 
             services.AddSingleton(tokenValidatorParameters);
+
+            services.Configure<IISOptions>(options =>
+            {
+                options.ForwardClientCertificate = false;
+            });
 
             services.Configure<EmailConfiguration>(
               configuration.GetSection("EmailConfiguration"));

@@ -18,12 +18,10 @@ namespace API.Controllers
     public class UserController : Controller
     { 
         private readonly IUserService userService;
-        private readonly IStudentService studentService;
         private readonly IIdentityService identityService;
-        public UserController(IUserService userService, IStudentService studentService, IIdentityService identityService)
+        public UserController(IUserService userService, IIdentityService identityService)
         {
             this.userService = userService;
-            this.studentService = studentService;
             this.identityService = identityService;
         }
 
@@ -46,80 +44,7 @@ namespace API.Controllers
         }
 
     
-        [HttpPost("create/teacher")]
-        public async Task<IActionResult> CreateTeacherAsync([FromBody] UserCommand request)
-        { 
-            try
-            {
-                await userService.CreateTeacherAsync(request.Email);
-                var result = await userService.GetAllTeachersAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
-        [HttpPost("update/teacher")]
-        public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateTeacher request)
-        { 
-            try
-            {
-                await userService.UpdateTeacherAsync(request);
-                return Ok(new { result = true });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
-
-        [HttpGet("getall/teachers")]
-        public async Task<IActionResult> GetAllUserAsync()
-        {
-            var result = await userService.GetAllTeachersAsync();
-            return Ok(new { result = result });
-        }
-         
-
-        [HttpPost("delete/teacher")]
-        public async Task<IActionResult> DeleteUserAsync([FromBody] SingleDelete reguest)
-        {
-
-            try
-            {
-                await userService.DeleteUserAsync(reguest.Item);
-                return Ok(new { result = true });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
-
-        [HttpPost("create/student")]
-        public async Task<IActionResult> CreateTeacherAsync([FromBody] StudentContactCommand request)
-        {
-            try
-            {
-                await studentService.CreateStudenAsync(request); 
-                return Ok(new { result = request });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
-
-
-
-        [HttpGet("getall/students")]
-        public async Task<IActionResult> GetAllStudentsAsync()
-        {
-            var result = await studentService.GetAllStudensAsync();
-            return Ok(new { result = result });
-        }
-
+        
         [AllowAnonymous]
         [HttpPost("generate/reset-link")]
         public async Task<IActionResult> GenerateResetLinkAndSendToUserEmail([FromBody] ResetPassword request)

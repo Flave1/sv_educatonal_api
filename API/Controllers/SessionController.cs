@@ -1,8 +1,5 @@
-﻿using BLL;
-using BLL.AuthenticationServices;
-using BLL.MiddleWares;
+﻿using BLL.MiddleWares;
 using BLL.SessionServices;
-using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Session;
 using Microsoft.AspNetCore.Mvc;
@@ -28,70 +25,71 @@ namespace API.Controllers
         public async Task<IActionResult> CreateSessionAsync([FromBody] CreateUpdateSession request)
         {
             
-            try
-            {
-                await sessionService.CreateSessionAsync(request);
-                var result = await sessionService.GetSessionsAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+            var response = await sessionService.CreateSessionAsync(request);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
-        [HttpPost("update")]
-        public async Task<IActionResult> UpdateSessionAsync([FromBody] CreateUpdateSession request)
-        {
-            
-            try
-            {
-                await sessionService.ModifySessionAsync(request);
-                var result = await sessionService.GetSessionsAsync();
-                return Ok(new { result = result });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
-        }
+
 
         [HttpGet("getall")]
         public async Task<IActionResult> GetAllSessionsAsync()
-        { 
-            var result = await sessionService.GetSessionsAsync();
-            return Ok(new { result = result });
+        {
+            var response = await sessionService.GetSessionsAsync();
+            return Ok(response);
         }
 
-       
+        [HttpGet("getall-single-session{sessionId}")]
+        public async Task<IActionResult> GetSingleSessionAsync(string sessionId)
+        {
+            var response = await sessionService.GetSingleSessionAsync(sessionId);
+            return Ok(response);
+        }
+
+
 
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteSessionAsync([FromBody] SingleDelete reguest)
         {
-            
-            try
-            {
-                await sessionService.DeleteSessionAsync(Guid.Parse(reguest.Item));
-                return Ok(new { result = true});
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+
+            var response = await sessionService.DeleteSessionAsync(Guid.Parse(reguest.Item));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
-        [HttpPost("switch")]
+        [HttpPost("switch-session")]
         public async Task<IActionResult> SwitchSessionAsync([FromBody] SwitchRequest reguest)
-        { 
-            try
-            {
-                await sessionService.SwitchSessionAsync(reguest.TargetId, reguest.SwitchValue);
-                var response = reguest.SwitchValue ? $"Seccessfuly turned on Session" : $"Seccessfuly turned off Session";
-                return Ok(new { result = response });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { result = ex.Message });
-            }
+        {
+            var response = await sessionService.SwitchSessionAsync(reguest.TargetId, reguest.SwitchValue);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("activate-term")]
+        public async Task<IActionResult> ActivateTermAsync([FromBody] ActivateTerm reguest)
+        {
+            var response = await sessionService.ActivateTermAsync(Guid.Parse(reguest.SessionTermId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get-active")]
+        public async Task<IActionResult> GetActiveSessionsAsync()
+        {
+            var response = await sessionService.GetActiveSessionsAsync();
+            return Ok(response);
+        }
+
+        [HttpPost("update/header-teacher")]
+        public async Task<IActionResult> UpdateSessionAsync([FromBody] UpdateHeadTeacher reguest)
+        {
+
+            var response = await sessionService.UpdateSessionHeadTeacherAsync(reguest);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         #endregion

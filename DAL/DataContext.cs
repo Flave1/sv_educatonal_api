@@ -7,6 +7,11 @@ using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.EnrollmentEntities;
+using SMP.DAL.Models.GradeEntities;
+using SMP.DAL.Models.SessionEntities;
+using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,11 +34,18 @@ namespace DAL
         public DbSet<Teacher> Teacher { get; set; }
         public DbSet<StudentClassProgressions> StudentClassProgressions { get; set; }
         public DbSet<SessionClass> SessionClass { get; set; }
+        public DbSet<SessionClassSubject> SessionClassSubject { get; set; }
+        public DbSet<SessionTerm> SessionTerm { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<Subject> Subject { get; set; }
         public DbSet<ActivityParent> ActivityParent { get; set; }
         public DbSet<Activity> Activity { get; set; }
         public DbSet<RoleActivity> RoleActivity { get; set; }
+        public DbSet<StudentSessionClassHistory> StudentSessionClassHistory { get; set; }
+        public DbSet<Enrollment> Enrollment { get; set; }
+        public DbSet<GradeGroup> GradeGroup { get; set; }
+        public DbSet<Grade> Grade { get; set; }
+        public DbSet<ClassGrade> ClassGrade { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

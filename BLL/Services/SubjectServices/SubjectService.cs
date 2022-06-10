@@ -3,6 +3,8 @@ using Contracts.Common;
 using DAL;
 using DAL.SubjectModels;
 using Microsoft.EntityFrameworkCore;
+using SMP.BLL.Constants;
+using SMP.BLL.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,25 +22,34 @@ namespace BLL.Services.SubjectServices
             this.context = context;
         }
 
-        async Task<APIResponse<Subject>> ISubjectService.CreateSubjectAsync(string subjectName)
+        async Task<APIResponse<Subject>> ISubjectService.CreateSubjectAsync(ApplicationLookupCommand subject)
         {
             var res = new APIResponse<Subject>();
 
-            if (context.Subject.Any(r => subjectName.Trim().ToLower() == r.Name.Trim().ToLower()))
+            try
             {
-                res.Message.FriendlyMessage = "Subject Name Already exist";
+                if (context.Subject.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(subject.Name) == UtilTools.ReplaceWhitespace(r.Name)))
+                {
+                    res.Message.FriendlyMessage = "Subject Name Already exist";
+                    return res;
+                }
+                var lookup = new Subject
+                {
+                    Name = subject.Name,
+                    IsActive = subject.IsActive,
+                };
+                context.Subject.Add(lookup);
+                await context.SaveChangesAsync();
+                res.Result = lookup;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
-            var lookup = new Subject
-            {
-                Name = subjectName,
-                IsActive = true,
-            };
-            context.Subject.Add(lookup);
-            await context.SaveChangesAsync();
 
 
-            res.Result = lookup;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "You have successfuly created a class lookp";
             return res;
@@ -48,23 +59,32 @@ namespace BLL.Services.SubjectServices
         {
             var res = new APIResponse<Subject>();
 
-            if (context.Subject.Any(r => Name.ToLower().Trim() == r.Name.Trim().ToLower() && r.SubjectId != Guid.Parse(Id)))
+            try
             {
-                res.Message.FriendlyMessage = "Subject Name Already exist";
+                if (context.Subject.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(Name) == UtilTools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id)))
+                {
+                    res.Message.FriendlyMessage = "Subject Name Already exist";
+                    return res;
+                }
+
+                var lookup = context.Subject.FirstOrDefault(r => r.SubjectId == Guid.Parse(Id));
+                if (lookup == null)
+                {
+                    res.Message.FriendlyMessage = "Subject  does not exist";
+                    return res;
+                }
+                lookup.Name = Name;
+                lookup.IsActive = isActive;
+                await context.SaveChangesAsync();
+                res.Result = lookup;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
 
-            var lookup = context.Subject.FirstOrDefault(r => r.SubjectId == Guid.Parse(Id));
-            if (lookup == null)
-            {
-                res.Message.FriendlyMessage = "Subject  does not exist";
-                return res;
-            }
-            lookup.Name = Name;
-            lookup.IsActive = isActive;
-            var result = await context.SaveChangesAsync();
-
-            res.Result = lookup;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "You have successfuly updated a class lookp";
             return res;
@@ -73,7 +93,16 @@ namespace BLL.Services.SubjectServices
         async Task<APIResponse<List<GetApplicationLookups>>> ISubjectService.GetAllSubjectsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result =  await context.Subject.Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            var result =  await context.Subject.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<List<GetApplicationLookups>>> ISubjectService.GetAllActiveSubjectsAsync()
+        {
+            var res = new APIResponse<List<GetApplicationLookups>>();
+            var result = await context.Subject.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.IsActive == true).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
             res.Result = result;
             res.IsSuccessful = true;
             return res;

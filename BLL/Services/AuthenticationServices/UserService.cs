@@ -14,6 +14,7 @@ using DAL.TeachersInfor;
 using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
+using System.Data;
 
 namespace BLL.AuthenticationServices
 {
@@ -63,99 +64,7 @@ namespace BLL.AuthenticationServices
             
         }
 
-        async Task IUserService.CreateTeacherAsync(string email)
-        {
-            if (manager.Users.Any(e => e.Email.ToLower().Trim().Contains(email.ToLower().Trim())))
-                throw new ArgumentException("Teacher With Email Has Already been Added");
-            var user = new AppUser
-            {
-                UserName = email, 
-                Active = true,
-                Deleted = false,
-                CreatedOn = DateTime.UtcNow,
-                CreatedBy = "",
-                Email = email,
-                UserType = (int)UserTypes.Teacher
-            };
-            var result = await manager.CreateAsync(user, UserConstants.PASSWORD);
-            if (!result.Succeeded) 
-                 throw new ArgumentException(result.Errors.FirstOrDefault().Description);  
-            var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.TEACHER);
-            if (!addTorole.Succeeded)
-                throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
-
-            context.Teacher.Add(new Teacher { UserId = user.Id });
-            await context.SaveChangesAsync(); 
-
-            await SendEmailToTeacherOnCreateAsync(user);
-        }
-
-        private async Task SendEmailToTeacherOnCreateAsync(AppUser obj)
-        {
-            var to = new List<EmailAddress>();
-            var frm = new List<EmailAddress>();
-            to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
-            var emMsg = new EmailMessage
-            {
-                Content = $"Hello <br>" +
-                $"Your email {obj.UserName} has been added to the school database <br>" +
-                $"Please loggin to your account to verify email. <br>" +
-                $"Email: {obj.UserName} <br>" +
-                $"Password: {UserConstants.PASSWORD}",
-                SentBy = "Flavetechs",
-                Subject = "Account Verification",
-                ToAddresses = to,
-                FromAddresses = frm
-            };
-            await emailService.Send(emMsg);
-        }
-
-        async Task IUserService.UpdateTeacherAsync(UpdateTeacher userDetail)
-        {
-            var user = await manager.FindByIdAsync(userDetail.TeacherUserAccountId);
-            if (user == null) 
-                throw new ArgumentException("Teacher user account does not exist");
-            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
-            if(teacherAct != null)
-            {
-                user.Email = userDetail.Email;
-                user.UserName = userDetail.Email;
-                user.UpdateOn = DateTime.Now;
-                user.FirstName = userDetail.FirstName;
-                user.LastName = userDetail.LastName;
-                user.MiddleName = userDetail.MiddleName;
-                user.Phone = userDetail.Phone;
-                user.DOB = userDetail.DOB;
-                user.Photo = userDetail.Photo;
-                user.EmailConfirmed = true;
-                var result = await manager.UpdateAsync(user);
-                if (!result.Succeeded)
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-            } 
-        }
-
-        async Task<List<ApplicationUser>> IUserService.GetAllTeachersAsync()
-        {
-            return await context.Teacher.Include(s => s.User).Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).Select(a => new ApplicationUser(a)).ToListAsync();
-        }
-
-        async Task IUserService.DeleteUserAsync(string UserId)
-        {
-            var user = await manager.FindByIdAsync(UserId);
-            if (user == null)
-                throw new ArgumentException("user does not exist");
-            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
-            if (teacherAct != null)
-            {
-                teacherAct.Deleted = true;
-                user.Deleted = true;
-                user.Active = false;
-                var result = await manager.UpdateAsync(user);
-                if (!result.Succeeded) 
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description); 
-            }
-            
-        }
+       
 
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
@@ -173,18 +82,48 @@ namespace BLL.AuthenticationServices
                 DOB = student.DOB,
                 FirstName = student.FirstName,
                 MiddleName = student.MiddleName,
-                Phone = student.Phone
+                Phone = student.Phone,
+                
             };
             var result = await manager.CreateAsync(user, regNoFormat);
             if (!result.Succeeded)
             {
-                throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                if(result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                {
+                    throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                }
+                else
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
             }
             var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
             if (!addTorole.Succeeded)
                 throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
 
             return user.Id;
+        }
+
+        async Task IUserService.UpdateStudentUserAccountAsync(StudentContactCommand student)
+        {
+            var account = await manager.FindByIdAsync(student.UserAccountId);
+            if(account == null)
+            {
+                throw new ArgumentException("Account not found");
+            }
+
+            account.UserName = student.Email;
+            account.Email = student.Email;
+            account.UserType = (int)UserTypes.Student;
+            account.LastName = student.LastName;
+            account.DOB = student.DOB;
+            account.FirstName = student.FirstName;
+            account.MiddleName = student.MiddleName;
+            account.Phone = student.Phone;
+            var result = await manager.UpdateAsync(account);
+            if (!result.Succeeded)
+            {
+                throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+            }
+
         }
 
         void IUserService.ValidateResetOption(ResetPassword request)
