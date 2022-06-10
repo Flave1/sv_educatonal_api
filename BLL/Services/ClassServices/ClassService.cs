@@ -176,7 +176,6 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesAsync(Guid sessionId)
         {
             var res = new APIResponse<List<GetSessionClass>>();
-
             var result = await context.SessionClass
                 .Include(rr=> rr.Session)
                 .Include(rr => rr.Class)

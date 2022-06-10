@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SMP.BLL.Services.EnrollmentServices;
+using SMP.BLL.Services.GradeServices;
+using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.TeacherServices;
 
 namespace GODP.APIsContinuation.Installers
@@ -45,6 +47,8 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<ITeacherService, TeacherService>();
             services.AddScoped<IEnrollmentService, EnrollmentService>();
+            services.AddScoped<IGradeService, GradeService>();
+            services.AddScoped<IPromotionService, PromotionService>();
 
         }
     }

@@ -13,6 +13,7 @@ namespace SMP.BLL.Constants
         public const string GetSuccess = "Fetched successfully";
         public const string DeletedSuccess = "Deleted successfully";
         public const string FriendlyException = "(Error: 500 Occurred!!): Please contact administrator";
+        public const string ClassTransitionException = "(Error: 5111 Occurred!!): Error thrown tryiing to transition student to a new class";
         public const string FriendlyNOTFOUND = "Item not found!! Unable to locate selected item";
     }
 }
