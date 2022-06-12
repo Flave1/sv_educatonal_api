@@ -726,6 +726,12 @@ namespace DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("AssessmentScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExamScore")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
