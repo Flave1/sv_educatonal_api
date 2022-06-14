@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.GradeEntities;
+using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
@@ -46,6 +47,8 @@ namespace DAL
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
         public DbSet<ClassGrade> ClassGrade { get; set; }
+        public DbSet<ScoreEntry> ScoreEntry { get; set; }
+        public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

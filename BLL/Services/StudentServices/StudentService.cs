@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
+using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
@@ -26,12 +27,14 @@ namespace BLL.StudentServices
         private readonly DataContext context;
         private readonly IUserService userService;
         private readonly UserManager<AppUser> userManager;
+        private readonly IResultsService resultsService;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService)
         {
             this.context = context;
             this.userService = userService;
             this.userManager = userManager;
+            this.resultsService = resultsService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -70,12 +73,15 @@ namespace BLL.StudentServices
                     await context.SaveChangesAsync();
 
                     await CreateStudentSessionClassHistoryAsync(item);
+                    
                     await EnrollOnCreateStudentAsync(item);
+
+                    await resultsService.CreateClassScoreSubjectEntriesAsync(item.StudentContactId);
 
                     await transaction.CommitAsync();
 
                     res.Message.FriendlyMessage = Messages.Cretaed;
-                    res.Result = item;
+                    res.Result = null;
                     res.IsSuccessful = true;
                     return res;
                 }
@@ -113,47 +119,60 @@ namespace BLL.StudentServices
         {
             var res = new APIResponse<StudentContact>();
 
-            var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
-            try
+            using (var transaction = await context.Database.BeginTransactionAsync())
             {
-                if (studentInfor == null)
+
+                try
                 {
-                    res.Message.FriendlyMessage = "Student Account not found";
+
+                    var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
+                    if (studentInfor == null)
+                    {
+                        res.Message.FriendlyMessage = "Student Account not found";
+                        return res;
+                    }
+
+                    await userService.UpdateStudentUserAccountAsync(student);
+
+                    studentInfor.CityId = student.CityId;
+                    studentInfor.CountryId = student.CountryId;
+                    studentInfor.EmergencyPhone = student.EmergencyPhone;
+                    studentInfor.HomeAddress = student.HomeAddress;
+                    studentInfor.ParentOrGuardianEmail = student.ParentOrGuardianEmail;
+                    studentInfor.ParentOrGuardianName = student.ParentOrGuardianName;
+                    studentInfor.ParentOrGuardianPhone = student.ParentOrGuardianPhone;
+                    studentInfor.ParentOrGuardianRelationship = student.ParentOrGuardianRelationship;
+                    studentInfor.HomePhone = student.HomePhone;
+                    studentInfor.StateId = student.StateId;
+                    studentInfor.ZipCode = student.ZipCode;
+                    studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
+                    await context.SaveChangesAsync();
+
+                    await resultsService.CreateClassScoreSubjectEntriesAsync(studentInfor.StudentContactId);
+                    await transaction.CommitAsync();
+                    res.Message.FriendlyMessage = "Updated student account successfully";
+                    res.Result = null;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+                catch (DuplicateNameException ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = ex.Message;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
                 }
 
-                await userService.UpdateStudentUserAccountAsync(student);
 
-                studentInfor.CityId = student.CityId;
-                studentInfor.CountryId = student.CountryId;
-                studentInfor.EmergencyPhone = student.EmergencyPhone;
-                studentInfor.HomeAddress = student.HomeAddress;
-                studentInfor.ParentOrGuardianEmail = student.ParentOrGuardianEmail;
-                studentInfor.ParentOrGuardianName = student.ParentOrGuardianName;
-                studentInfor.ParentOrGuardianPhone = student.ParentOrGuardianPhone;
-                studentInfor.ParentOrGuardianRelationship = student.ParentOrGuardianRelationship;
-                studentInfor.HomePhone = student.HomePhone;
-                studentInfor.StateId = student.StateId;
-                studentInfor.ZipCode = student.ZipCode;
-                studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
-                await context.SaveChangesAsync();
-
-                //await enrollmentService.ReEnrollOnUpdateStudentAsync(studentInfor);
-
-                res.Message.FriendlyMessage = "Updated student account successfully";
-                res.Result = studentInfor;
-                res.IsSuccessful = true;
-                return res;
+                finally { await transaction.DisposeAsync(); }
             }
-            catch (Exception ex)
-            {
-                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
-                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                return res;
-            }
-            finally { context.Dispose(); }
-
-
         }
 
         async Task<APIResponse<List<GetStudentContacts>>> IStudentService.GetAllStudensAsync()
@@ -240,11 +259,12 @@ namespace BLL.StudentServices
                 {
                     std.SessionClassId = classId;
                     await CreateStudentSessionClassHistoryAsync(std);
+                    await resultsService.CreateClassScoreSubjectEntriesAsync(std.StudentContactId);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             { 
-                throw ex;
+                throw;
             }
         }
 
@@ -256,6 +276,8 @@ namespace BLL.StudentServices
             enrollment.Status = (int)EnrollmentStatus.Enrolled;
             await context.AddAsync(enrollment);
             await context.SaveChangesAsync();
+
+          
         }
     }
 

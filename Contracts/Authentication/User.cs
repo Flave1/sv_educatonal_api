@@ -23,6 +23,7 @@ namespace Contracts.Authentication
         public string LastName { get; set; }   
         public string MiddleName { get; set; }
         public string Phone { get; set; }
+        public string dob { get; set; }
 
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
@@ -37,6 +38,7 @@ namespace Contracts.Authentication
             LastName = db.User.LastName;
             Phone = db.User.PhoneNumber;
             MiddleName = db.User.MiddleName;
+            dob = db.User.DOB;
         }
     }
 

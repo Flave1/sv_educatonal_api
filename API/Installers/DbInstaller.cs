@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.GradeServices;
 using SMP.BLL.Services.PromorionServices;
+using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.TeacherServices;
 
 namespace GODP.APIsContinuation.Installers
@@ -49,6 +50,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IEnrollmentService, EnrollmentService>();
             services.AddScoped<IGradeService, GradeService>();
             services.AddScoped<IPromotionService, PromotionService>();
+            services.AddScoped<IResultsService, ResultsService>();
 
         }
     }

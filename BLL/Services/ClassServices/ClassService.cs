@@ -6,6 +6,7 @@ using DAL;
 using DAL.ClassEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.ClassEntities;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace BLL.ClassServices
     public class ClassService : IClassService
     {
         private readonly DataContext context;
+        private readonly IResultsService resultsService;
 
-        public ClassService(DataContext context)
+        public ClassService(DataContext context, IResultsService resultsService)
         {
             this.context = context;
+            this.resultsService = resultsService;
         }
 
         async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
@@ -64,6 +67,8 @@ namespace BLL.ClassServices
 
                     await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
 
+                    await resultsService.CreateClassScoreEntryAsync(sessionClass);
+
                     await transaction.CommitAsync();
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = "Session class created successfully";
@@ -74,6 +79,7 @@ namespace BLL.ClassServices
                 {
                     await transaction.RollbackAsync();
                     res.Message.FriendlyMessage = Messages.FriendlyException;
+                    res.Message.TechnicalMessage = ex.ToString();
                     return res;
                 }
             }
