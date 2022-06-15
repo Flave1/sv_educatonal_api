@@ -28,7 +28,7 @@ namespace SMP.API.Controllers
         }
 
         [HttpPost("promote/class")]
-        public async Task<IActionResult> CreateTeacherAsync([FromBody] Promote request)
+        public async Task<IActionResult> PromoteClassAsync([FromBody] Promote request)
         {
             var response = await service.PromoteClassAsync(Guid.Parse(request.ClassToBePromoted), Guid.Parse(request.ClassToPromoteTo));
             if (response.IsSuccessful)

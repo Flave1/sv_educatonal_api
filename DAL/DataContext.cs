@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.GradeEntities;
+using SMP.DAL.Models.PromotionEntities;
 using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
@@ -33,7 +34,6 @@ namespace DAL
         public DbSet<ClassLookup> ClassLookUp { get; set; }
         public DbSet<StudentContact> StudentContact { get; set; }
         public DbSet<Teacher> Teacher { get; set; }
-        public DbSet<StudentClassProgressions> StudentClassProgressions { get; set; }
         public DbSet<SessionClass> SessionClass { get; set; }
         public DbSet<SessionClassSubject> SessionClassSubject { get; set; }
         public DbSet<SessionTerm> SessionTerm { get; set; }
@@ -49,6 +49,7 @@ namespace DAL
         public DbSet<ClassGrade> ClassGrade { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
+        public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -62,10 +63,6 @@ namespace DAL
         {
             builder.Entity<Teacher>().HasOne<AppUser>(a => a.User).WithOne(d => d.Teacher).HasForeignKey<Teacher>(ad => ad.UserId);
 
-            builder.Entity<StudentClassProgressions>()
-                .HasOne<StudentContact>(s => s.Student)
-                .WithMany(g => g.ClassProgressions)
-                 .HasForeignKey(ad => ad.StudentId);
             base.OnModelCreating(builder);
         }
 

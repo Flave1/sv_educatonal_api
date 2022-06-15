@@ -15,6 +15,7 @@ namespace SMP.Contracts.PromotionModels
         public int TotalStudentsInClass { get; set; }
         public int TotalStudentsPassed { get; set; }
         public int TotalStudentsFailed { get; set; }
+        public bool IsPromoted { get; set; }
         public PreviousSessionClasses(SessionClass cl)
         {
             SessionClassId = cl.SessionClassId.ToString();
