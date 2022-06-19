@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220617064321_gradeLevel")]
+    partial class gradeLevel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -287,9 +289,6 @@ namespace DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("GradeGroupId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -303,8 +302,6 @@ namespace DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("ClassLookupId");
-
-                    b.HasIndex("GradeGroupId");
 
                     b.ToTable("ClassLookUp");
                 });
@@ -339,6 +336,9 @@ namespace DAL.Migrations
                     b.Property<Guid?>("FormTeacherId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("GradeGroupId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("InSession")
                         .HasColumnType("bit");
 
@@ -359,6 +359,8 @@ namespace DAL.Migrations
                     b.HasIndex("ClassId");
 
                     b.HasIndex("FormTeacherId");
+
+                    b.HasIndex("GradeGroupId");
 
                     b.HasIndex("SessionId");
 
@@ -1057,17 +1059,6 @@ namespace DAL.Migrations
                     b.Navigation("UserRole");
                 });
 
-            modelBuilder.Entity("DAL.ClassEntities.ClassLookup", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.GradeEntities.GradeGroup", "GradeLevel")
-                        .WithMany("Classes")
-                        .HasForeignKey("GradeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GradeLevel");
-                });
-
             modelBuilder.Entity("DAL.ClassEntities.SessionClass", b =>
                 {
                     b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
@@ -1080,6 +1071,12 @@ namespace DAL.Migrations
                         .WithMany()
                         .HasForeignKey("FormTeacherId");
 
+                    b.HasOne("SMP.DAL.Models.GradeEntities.GradeGroup", "GradeLevel")
+                        .WithMany("SessionClass")
+                        .HasForeignKey("GradeGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("DAL.SessionEntities.Session", "Session")
                         .WithMany("SessionClass")
                         .HasForeignKey("SessionId")
@@ -1087,6 +1084,8 @@ namespace DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
+
+                    b.Navigation("GradeLevel");
 
                     b.Navigation("Session");
 
@@ -1349,9 +1348,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.GradeGroup", b =>
                 {
-                    b.Navigation("Classes");
-
                     b.Navigation("Grades");
+
+                    b.Navigation("SessionClass");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>

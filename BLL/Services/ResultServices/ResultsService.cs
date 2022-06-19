@@ -72,16 +72,33 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-        async Task<APIResponse<List<GetClassScoreEntry>>> IResultsService.GetClassEntryAsync(Guid sessionClassId)
+        async Task<APIResponse<GetClassScoreEntry>> IResultsService.GetClassEntryAsync(Guid sessionClassId, Guid subjectId)
         {
-            var res = new APIResponse<List<GetClassScoreEntry>>();
+            var res = new APIResponse<GetClassScoreEntry>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             res.Result = await context.ClassScoreEntry
                 .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Class)
                 .Include(d => d.Subject)
                 .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassScoreEntry(s, regNoFormat)).ToListAsync();
+                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new GetClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+
+        async Task<APIResponse<PreviewClassScoreEntry>> IResultsService.PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId)
+        {
+            var res = new APIResponse<PreviewClassScoreEntry>();
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            res.Result = await context.ClassScoreEntry
+                .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
+                .Include(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
+                .Include(d => d.Subject)
+                .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
+                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -132,6 +149,66 @@ namespace SMP.BLL.Services.ResultServices
             catch (Exception)
             {
                 throw;
+            }
+        }
+
+        async Task<APIResponse<ScoreEntry>> IResultsService.UpdateExamScore(UpdateScore request)
+        {
+            var res = new APIResponse<ScoreEntry>();
+            try
+            {
+                var entry = await context.ScoreEntry.FindAsync(Guid.Parse(request.ScoreEntryId));
+                if(entry != null)
+                {
+                    entry.ExamScore = request.Score;
+                    entry.IsSaved = request.Score > 0 || entry.AssessmentScore > 0;
+                    entry.IsOffered = request.Score > 0 || entry.AssessmentScore > 0;
+                    await context.SaveChangesAsync();
+
+                    res.Result = entry;
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = "Successful";
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "Entry not found";
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = ex?.Message;
+                return res;
+            }
+        }
+
+        async Task<APIResponse<ScoreEntry>> IResultsService.UpdateAssessmentScore(UpdateScore request)
+        {
+            var res = new APIResponse<ScoreEntry>();
+            try
+            {
+                var entry = await context.ScoreEntry.FindAsync(Guid.Parse(request.ScoreEntryId));
+                if (entry != null)
+                {
+                    entry.AssessmentScore = request.Score;
+                    entry.IsSaved = request.Score > 0 || entry.AssessmentScore > 0;
+                    entry.IsOffered = request.Score > 0 || entry.AssessmentScore > 0;
+                    await context.SaveChangesAsync();
+
+                    res.Result = entry;
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = "Successful";
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "Entry not found";
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = ex?.Message;
+                return res;
             }
         }
     }

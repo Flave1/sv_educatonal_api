@@ -3,6 +3,7 @@ using BLL.MiddleWares;
 using Contracts.Common;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.ResultServices;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Threading.Tasks;
 
@@ -34,9 +35,33 @@ namespace API.Controllers
         }
 
         [HttpGet("get/class-score-entries/{sessionClassid}")]
-        public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid)
+        public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId)
         {
-            var response = await service.GetClassEntryAsync(Guid.Parse(sessionClassid));
+            var response = await service.GetClassEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId));
+            return Ok(response);
+        }
+
+        [HttpPost("update/exam-score")]
+        public async Task<IActionResult> UpdateExamScore([FromBody] UpdateScore request)
+        {
+            var response = await service.UpdateExamScore(request);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("update/assessment-score")]
+        public async Task<IActionResult> UpdateAssessmentScore([FromBody] UpdateScore request)
+        {
+            var response = await service.UpdateAssessmentScore(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/preview-class/score-entries")]
+        public async Task<IActionResult> PreviewClassScoreEntry(string sessionClassid, string subjectId)
+        {
+            var response = await service.PreviewClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId));
             return Ok(response);
         }
     }

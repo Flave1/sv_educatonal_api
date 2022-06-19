@@ -46,7 +46,7 @@ namespace DAL
         public DbSet<Enrollment> Enrollment { get; set; }
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
-        public DbSet<ClassGrade> ClassGrade { get; set; }
+        //public DbSet<ClassGrade> ClassGrade { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }

@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220615220833_isOffered")]
+    partial class isOffered
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -287,9 +289,6 @@ namespace DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("GradeGroupId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -303,8 +302,6 @@ namespace DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("ClassLookupId");
-
-                    b.HasIndex("GradeGroupId");
 
                     b.ToTable("ClassLookUp");
                 });
@@ -760,6 +757,42 @@ namespace DAL.Migrations
                     b.ToTable("Enrollment");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.GradeEntities.ClassGrade", b =>
+                {
+                    b.Property<Guid>("ClassGradeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("GradeGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ClassGradeId");
+
+                    b.HasIndex("GradeGroupId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.ToTable("ClassGrade");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.Grade", b =>
                 {
                     b.Property<Guid>("GradeId")
@@ -1057,17 +1090,6 @@ namespace DAL.Migrations
                     b.Navigation("UserRole");
                 });
 
-            modelBuilder.Entity("DAL.ClassEntities.ClassLookup", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.GradeEntities.GradeGroup", "GradeLevel")
-                        .WithMany("Classes")
-                        .HasForeignKey("GradeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GradeLevel");
-                });
-
             modelBuilder.Entity("DAL.ClassEntities.SessionClass", b =>
                 {
                     b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
@@ -1225,6 +1247,25 @@ namespace DAL.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.GradeEntities.ClassGrade", b =>
+                {
+                    b.HasOne("SMP.DAL.Models.GradeEntities.GradeGroup", "GradeGroup")
+                        .WithMany("ClassGrades")
+                        .HasForeignKey("GradeGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany()
+                        .HasForeignKey("SessionClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GradeGroup");
+
+                    b.Navigation("SessionClass");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.Grade", b =>
                 {
                     b.HasOne("SMP.DAL.Models.GradeEntities.GradeGroup", "GradeGroup")
@@ -1349,7 +1390,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.GradeGroup", b =>
                 {
-                    b.Navigation("Classes");
+                    b.Navigation("ClassGrades");
 
                     b.Navigation("Grades");
                 });

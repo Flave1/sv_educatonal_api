@@ -22,5 +22,6 @@ namespace SMP.DAL.Models.ResultModels
         [ForeignKey("SubjectId")]
         public Subject Subject { get; set; }
         public ICollection<ScoreEntry> ScoreEntries { get; set; }
+        
     }
 }

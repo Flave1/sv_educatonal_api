@@ -18,6 +18,8 @@ namespace SMP.DAL.Models.ResultModels
         public Guid ScoreEntryId { get; set; }
         public int AssessmentScore { get; set; }
         public int ExamScore { get; set; }
+        public bool IsOffered { get; set; }
+        public bool IsSaved { get; set; }
         public Guid StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact StudentContact { get; set; }

@@ -2,6 +2,7 @@
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace DAL.ClassEntities
         public int ExamScore { get; set; }
         public int AssessmentScore { get; set; }
         public int PassMark { get; set; }
+      
         public ICollection<StudentContact> Students { get; set; }
         public ICollection<SessionClassSubject> SessionClassSubjects { get; set; }
         public ICollection<ClassScoreEntry> ClassScoreEntries { get; set; }

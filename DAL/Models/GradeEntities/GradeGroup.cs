@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.ClassEntities;
 using DAL.SessionEntities;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace SMP.DAL.Models.GradeEntities
         [ForeignKey("SessionId")]
         public Session Session { get; set; }
         public virtual ICollection<Grade> Grades { get; set; }
-        public virtual ICollection<ClassGrade> ClassGrades { get; set; }
+        public virtual ICollection<ClassLookup> Classes { get; set; }
     }
 
 }

@@ -20,15 +20,15 @@ namespace SMP.Contracts.GradeModels
         {
             GradeGroupId = gg.GradeGroupId;
             GradeGroupName = gg.GradeGroupName;
-            if (gg.ClassGrades.Any())
-            {
-                Classes = gg.ClassGrades.OrderBy(s => s.SessionClass.Class.Name).Select(cg => new GetClassGradeModel
-                {
-                    ClassGradeId = cg.ClassGradeId,
-                    SessionClassId = cg.SessionClassId,
-                    ClassName = cg.SessionClass.Class.Name,
-                }).ToList();
-            }
+            //if (gg.ClassGrades.Any())
+            //{
+            //    Classes = gg.ClassGrades.OrderBy(s => s.SessionClass.Class.Name).Select(cg => new GetClassGradeModel
+            //    {
+            //        ClassGradeId = cg.ClassGradeId,
+            //        SessionClassId = cg.SessionClassId,
+            //        ClassName = cg.SessionClass.Class.Name,
+            //    }).ToList();
+            //}
             if (gg.Grades.Any())
             {
                 Grades = gg.Grades.OrderBy(d => d.GradeName).Select(g => new GetGradesModel

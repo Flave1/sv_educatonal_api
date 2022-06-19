@@ -21,7 +21,7 @@ namespace BLL.ClassServices
             this.context = context;
         }
 
-        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, Guid gradeLevelId)
         {
             var res = new APIResponse<ClassLookup>();
             try
@@ -35,6 +35,7 @@ namespace BLL.ClassServices
                 {
                     Name = className,
                     IsActive = true,
+                    GradeGroupId = gradeLevelId
                 };
                 context.ClassLookUp.Add(lookup);
                 await context.SaveChangesAsync();
@@ -54,7 +55,7 @@ namespace BLL.ClassServices
             return res;
         }
 
-        async Task<APIResponse<ClassLookup>> IClassLookupService.UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.UpdateClassLookupAsync(string lookupName, string lookupId, bool isActive, Guid gradeLevelId)
         {
             var res = new APIResponse<ClassLookup>();
 
@@ -75,6 +76,7 @@ namespace BLL.ClassServices
                 }
                 lookup.Name = lookupName;
                 lookup.IsActive = isActive;
+                lookup.GradeGroupId = gradeLevelId;
                 await context.SaveChangesAsync();
                 res.Result = lookup;
             }
@@ -97,7 +99,14 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetApplicationLookups>>();
             var result = await context.ClassLookUp
                 .OrderBy(s => s.Name)
-                .Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { LookupId = a.ClassLookupId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+                .Include(d => d.GradeLevel)
+                .Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { 
+                    LookupId = a.ClassLookupId.ToString().ToLower(), 
+                    Name = a.Name, 
+                    IsActive = a.IsActive, 
+                    GradeLevelId = a.GradeGroupId.ToString(),
+                    GradeLevelName = a.GradeLevel.GradeGroupName
+                }).ToListAsync();
             res.IsSuccessful = true;
             res.Result = result;
             return res;
@@ -106,7 +115,13 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllActiveClassLookupsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true).Select(a => new GetApplicationLookups { LookupId = a.ClassLookupId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true)
+                .Select(a => new GetApplicationLookups { 
+                    LookupId = a.ClassLookupId.ToString().ToLower(), 
+                    Name = a.Name, 
+                    IsActive = a.IsActive,
+                    GradeLevelId = a.GradeGroupId.ToString(),
+                }).ToListAsync();
             res.IsSuccessful = true;
             res.Result = result;
             return res;
