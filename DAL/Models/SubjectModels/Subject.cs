@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SMP.DAL.Models.ResultModels;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace DAL.SubjectModels
@@ -9,5 +10,6 @@ namespace DAL.SubjectModels
         public Guid SubjectId { get; set; }
         public string Name { get; set; }
         public bool IsActive { get; set; }
+        public ScoreEntry ScoreEntry { get; set; }
     }
 }

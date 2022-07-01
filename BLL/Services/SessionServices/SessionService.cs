@@ -3,6 +3,8 @@ using DAL;
 using DAL.SessionEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Utilities;
+using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
@@ -96,9 +98,7 @@ namespace BLL.SessionServices
             noOfTerms += 1;
             for (var i = 1; i < noOfTerms; i++)
             {
-                string termName = "";
-
-                termName = OrdinalSuffixOf(i);
+                var termName = UtilTools.OrdinalSuffixOf(i);
 
                 var term = new SessionTerm
                 {
@@ -111,24 +111,7 @@ namespace BLL.SessionServices
             }
         }
 
-        private string OrdinalSuffixOf(int i)
-        {
-            var j = i % 10;
-            var k = i % 100;
-            if (j == 1 && k != 11)
-            {
-                return i + "st";
-            }
-            if (j == 2 && k != 12)
-            {
-                return i + "nd";
-            }
-            if (j == 3 && k != 13)
-            {
-                return i + "rd";
-            }
-            return i + "th";
-        }
+       
 
         private async Task SetOtherSessionsInactiveAsync(Guid currentSessionId)
         {
@@ -282,6 +265,8 @@ namespace BLL.SessionServices
             return res;
         }
 
+       
+
         async Task<APIResponse<bool>> ISessionService.UpdateSessionHeadTeacherAsync(UpdateHeadTeacher req)
         {
             var res = new APIResponse<bool>();
@@ -311,5 +296,38 @@ namespace BLL.SessionServices
             res.Message.FriendlyMessage = Messages.Updated;
             return res;
         }
+
+
+        async Task<APIResponse<List<Terms>>> ISessionService.GetSessionTermsAsync(Guid sessionId)
+        {
+            var res = new APIResponse<List<Terms>>();
+            var result = await context.SessionTerm.Where(d => d.SessionId == sessionId).Select(t => new Terms
+            {
+                IsActive = t.IsActive,
+                SessionTermId = t.SessionTermId,
+                TermName = t.TermName,
+            }).ToListAsync();
+
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+        async Task<APIResponse<List<GetSessionClass>>> ISessionService.GetSessionClassesAsync(Guid sessionId)
+        {
+            var res = new APIResponse<List<GetSessionClass>>();
+            var result = await context.SessionClass
+                .Include(rr => rr.Class)
+                .OrderBy(d => d.Class.Name)
+                .Where(r => r.Deleted == false && r.SessionId == sessionId).Select(g => new GetSessionClass {
+                    SessionClass = g.Class.Name,
+                    SessionClassId = g.SessionClassId
+                }).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+
     }
 }

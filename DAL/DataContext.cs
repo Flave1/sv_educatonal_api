@@ -50,6 +50,7 @@ namespace DAL
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
+        public DbSet<PublishStatus> PublishStatus { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -1,6 +1,7 @@
 ﻿using DAL.ClassEntities;
 using DAL.SubjectModels;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

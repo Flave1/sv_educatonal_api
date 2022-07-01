@@ -5,9 +5,6 @@ namespace API.Controllers.BaseControllers
 {
     public class BaseController : Controller
     {
-        public BaseController()
-        {
-
-        }
+        public BaseController() { }
     }
 }

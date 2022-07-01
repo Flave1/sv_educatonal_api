@@ -76,7 +76,6 @@ namespace BLL.StudentServices
                     
                     await EnrollOnCreateStudentAsync(item);
 
-                    await resultsService.CreateClassScoreSubjectEntriesAsync(item.StudentContactId);
 
                     await transaction.CommitAsync();
 
@@ -148,7 +147,6 @@ namespace BLL.StudentServices
                     studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
                     await context.SaveChangesAsync();
 
-                    await resultsService.CreateClassScoreSubjectEntriesAsync(studentInfor.StudentContactId);
                     await transaction.CommitAsync();
                     res.Message.FriendlyMessage = "Updated student account successfully";
                     res.Result = null;
@@ -259,7 +257,7 @@ namespace BLL.StudentServices
                 {
                     std.SessionClassId = classId;
                     await CreateStudentSessionClassHistoryAsync(std);
-                    await resultsService.CreateClassScoreSubjectEntriesAsync(std.StudentContactId);
+                    //await resultsService.CreateClassScoreSubjectEntriesAsync(std.StudentContactId);
                 }
             }
             catch (Exception)

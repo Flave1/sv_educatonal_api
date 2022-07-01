@@ -93,10 +93,10 @@ namespace BLL.ClassServices
             {
 
                 if (context.SessionClass
-              .Include(x => x.Session)
-              .Any(ss => ss.Deleted == false && ss.ClassId == Guid.Parse(sClass.ClassId)
-              && ss.SessionClassId != Guid.Parse(sClass.SessionClassId)
-              && ss.SessionId == Guid.Parse(sClass.SessionId)))
+                  .Include(x => x.Session)
+                  .Any(ss => ss.Deleted == false && ss.ClassId == Guid.Parse(sClass.ClassId)
+                  && ss.SessionClassId != Guid.Parse(sClass.SessionClassId)
+                  && ss.SessionId == Guid.Parse(sClass.SessionId)))
                 {
                     res.Message.FriendlyMessage = "This class has already been added to this session";
                     return res;
@@ -138,6 +138,8 @@ namespace BLL.ClassServices
 
                         await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
 
+                        await resultsService.CreateClassScoreEntryAsync(sessionClass);
+
                         await transaction.CommitAsync();
                         res.IsSuccessful = true;
                         res.Message.FriendlyMessage = "Session class updated successfully";
@@ -169,14 +171,12 @@ namespace BLL.ClassServices
                 var subs = new List<SessionClassSubject>();
                 foreach (var subject in ClassSubjects)
                 {
-                    var sub = new SessionClassSubject
-                    {
-                        SessionClassId = SessionClassId,
-                        SubjectId = Guid.Parse(subject.SubjectId),
-                        SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId),
-                        AssessmentScore = subject.Assessment,
-                        ExamScore = subject.ExamSCore
-                    };
+                    var sub = new SessionClassSubject();
+                    sub.SessionClassId = SessionClassId;
+                    sub.SubjectId = Guid.Parse(subject.SubjectId);
+                    sub.SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId);
+                    sub.AssessmentScore = subject.Assessment;
+                    sub.ExamScore = subject.ExamSCore;
                     subs.Add(sub);
                 }
                 await context.SessionClassSubject.AddRangeAsync(subs);

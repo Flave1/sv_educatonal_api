@@ -2,8 +2,6 @@
 using DAL.SessionEntities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BLL.SessionServices
@@ -18,5 +16,7 @@ namespace BLL.SessionServices
         Task<APIResponse<ActiveSession>> GetActiveSessionsAsync();
         Task<APIResponse<GetSession>> GetSingleSessionAsync(string sessionId);
         Task<APIResponse<bool>> UpdateSessionHeadTeacherAsync(UpdateHeadTeacher req);
+        Task<APIResponse<List<Terms>>> GetSessionTermsAsync(Guid sessionId);
+        Task<APIResponse<List<GetSessionClass>>> GetSessionClassesAsync(Guid sessionId);
     }
 }

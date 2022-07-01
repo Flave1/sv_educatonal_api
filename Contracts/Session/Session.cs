@@ -58,4 +58,6 @@ namespace Contracts.Session
         public string FormTeacher { get; set; }
         public Guid SessionClassId { get; set; }
     }
+
+  
 }

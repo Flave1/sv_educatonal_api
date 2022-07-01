@@ -1,14 +1,9 @@
 ﻿using DAL;
-using DAL.ClassEntities;
 using DAL.StudentInformation;
-using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.SessionEntities;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.ResultModels
 {
@@ -26,6 +21,9 @@ namespace SMP.DAL.Models.ResultModels
         public Guid ClassScoreEntryId { get; set; }
         [ForeignKey("ClassScoreEntryId")]
         public ClassScoreEntry ClassScoreEntry { get; set; }
+        public Guid? SessionTermId { get; set; }
+        [ForeignKey("SessionTermId")]
+        public SessionTerm SessionTerm { get; set; }
 
     }
 }
