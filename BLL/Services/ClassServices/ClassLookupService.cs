@@ -43,8 +43,6 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-
-                res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
