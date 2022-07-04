@@ -1,15 +1,19 @@
-﻿using Contracts.Options;
+﻿using Contracts.Common;
+using Contracts.Options;
+using DAL.StudentInformation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BLL.StudentServices
 {
     public interface IStudentService
     {
-        Task CreateStudenAsync(StudentContactCommand student);
-        Task<List<GetStudentContacts>> GetAllStudensAsync();
+        Task<APIResponse<List<GetStudentContacts>>> GetAllStudensAsync();
+        Task<APIResponse<StudentContact>> CreateStudenAsync(StudentContactCommand student);
+        Task<APIResponse<StudentContact>> UpdateStudenAsync(StudentContactCommand student);
+        Task<APIResponse<GetStudentContacts>> GetSingleStudentAsync(Guid studentContactId);
+        Task<APIResponse<bool>> DeleteStudentAsync(MultipleDelete request);
+        Task ChangeClassAsync(Guid studentId, Guid classId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using BLL.LoggerService;
+﻿using BLL.Constants;
+using BLL.LoggerService;
 using Contracts.Authentication;
 using Contracts.Options;
 using DAL;
@@ -6,8 +7,10 @@ using DAL.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using SMP.BLL.Constants;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,7 +25,7 @@ namespace BLL.AuthenticationServices
     {
 
 
-        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters, DataContext dataContext, RoleManager<UserRole> roleManager, ILoggerService logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IOptions<JwtSettings> jwtSettings)
+        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters, DataContext dataContext, RoleManager<UserRole> roleManager, ILoggerService logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IOptions<JwtSettings> jwtSettings, DataContext context)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -32,6 +35,7 @@ namespace BLL.AuthenticationServices
             this.httpContextAccessor = httpContextAccessor;
             this.env = env;
             this.jwtSettings = jwtSettings.Value;
+            this.context = context;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -42,6 +46,7 @@ namespace BLL.AuthenticationServices
         private readonly ILoggerService logger;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IWebHostEnvironment env;
+        private readonly DataContext context;
 
         async Task<AuthenticationResult> IIdentityService.LoginAsync(LoginCommand loginRequest)
         {
@@ -51,6 +56,24 @@ namespace BLL.AuthenticationServices
 
             if(!await userManager.CheckPasswordAsync(userAccount, loginRequest.Password))
                 throw new ArgumentException($"Password seems to be incorrect");
+
+            if(userAccount.UserType == (int)UserTypes.Teacher)
+            {
+                var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                if(techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                { 
+                    throw new ArgumentException($"Teacher account is currently unavailable!! Please contact school administration");
+                }
+            }
+
+            if (userAccount.UserType == (int)UserTypes.Student)
+            {
+                var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                {
+                    throw new ArgumentException($"Student account is currently unavailable!! Please contact school administration");
+                }
+            }
 
             return await GenerateAuthenticationResultForUserAsync(userAccount);
         }

@@ -137,7 +137,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.Where(d => d.Deleted != true)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;
@@ -148,7 +148,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result =  await context.Activity.Where(d => d.Deleted != true)
+            var result =  await context.Activity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new GetActivities {  
                     ActivityId = a.Id.ToString(), 

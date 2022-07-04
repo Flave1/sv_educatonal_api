@@ -25,7 +25,7 @@ namespace API.Controllers
         [HttpPost("create/subject")]
         public async Task<IActionResult> CreateSubjectAsync([FromBody] ApplicationLookupCommand request)
         {
-            var response = await service.CreateSubjectAsync(request.Name);
+            var response = await service.CreateSubjectAsync(request);
             if(response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -45,7 +45,15 @@ namespace API.Controllers
             var response = await service.GetAllSubjectsAsync();
             return Ok(response);
         }
- 
+
+
+        [HttpGet("getall/active-subject")]
+        public async Task<IActionResult> GetAllActiveSubjectsAsync()
+        {
+            var response = await service.GetAllActiveSubjectsAsync();
+            return Ok(response);
+        }
+
 
         [HttpPost("delete/subject")]
         public async Task<IActionResult> DeleteSubjectAsync([FromBody] MultipleDelete reguest)
