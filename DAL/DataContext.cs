@@ -7,9 +7,11 @@ using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.GradeEntities;
+using SMP.DAL.Models.Register;
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
@@ -46,6 +48,8 @@ namespace DAL
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
         public DbSet<ClassGrade> ClassGrade { get; set; }
+        public DbSet<Attendance> Attendance { get; set; }
+        public DbSet<Register> Register { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
