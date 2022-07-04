@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.ClassEntities;
+using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,6 +30,6 @@ namespace DAL.StudentInformation
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
         public int Status { get; set; }
-        public virtual ICollection<StudentClassProgressions> ClassProgressions { get; set; }
+        public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
     }
 }

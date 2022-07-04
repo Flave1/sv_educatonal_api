@@ -33,7 +33,7 @@ namespace API.Controllers
             var response = await service.UpdateGradeAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
-            return BadRequest();
+            return BadRequest(response);
         }
 
         [HttpPost("create")]
@@ -42,7 +42,7 @@ namespace API.Controllers
             var response = await service.CreateGradeAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
-            return BadRequest();
+            return BadRequest(response);
         }
 
         [HttpGet("get/get-settings")]
@@ -51,16 +51,16 @@ namespace API.Controllers
             var response = await service.GetGradeSettingAsync();
             if (response.IsSuccessful)
                 return Ok(response);
-            return BadRequest();
+            return BadRequest(response);
         }
-
+        [Obsolete]
         [HttpGet("get/get-classes")]
         public async Task<IActionResult> GetClassesAsync()
         {
             var response = await service.GetClassesAsync();
             if (response.IsSuccessful)
                 return Ok(response);
-            return BadRequest();
+            return BadRequest(response);
         }
 
     }

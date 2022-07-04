@@ -28,7 +28,7 @@ namespace API.Controllers
         [HttpPost("create/class-lookup")]
         public async Task<IActionResult> CreateClassLookupAsync([FromBody] ApplicationLookupCommand request)
         {
-            var response = await lookupService.CreateClassLookupAsync(request.Name);
+            var response = await lookupService.CreateClassLookupAsync(request.Name, Guid.Parse(request.GradeLevelId));
             if(response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -36,7 +36,7 @@ namespace API.Controllers
         [HttpPost("update/class-lookup")]
         public async Task<IActionResult> UpdateClassLookupAsync([FromBody] ApplicationLookupCommand request)
         {
-            var response = await lookupService.UpdateClassLookupAsync(request.Name, request.LookupId, request.IsActive);
+            var response = await lookupService.UpdateClassLookupAsync(request.Name, request.LookupId, request.IsActive, Guid.Parse(request.GradeLevelId));
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

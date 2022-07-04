@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.Contracts.PromotionModels;
+using SMP.DAL.Models.PromotionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,13 @@ namespace SMP.BLL.Services.PromorionServices
                     .Where(r => r.InSession && r.Deleted == false && r.SessionId == previousSessionId)
                     .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new PreviousSessionClasses(g)).ToListAsync();
 
+                await CreateCopyOfClassesToPromoteAsync(result, previousSessionId);
+
+                foreach(var cl in result)
+                {
+                    cl.IsPromoted = context.PromotedSessionClass.FirstOrDefault(d => d.SessionClassId == Guid.Parse(cl.SessionClassId)).IsPromoted;
+                }
+
                 res.Result = result;
             }
            
@@ -59,23 +67,35 @@ namespace SMP.BLL.Services.PromorionServices
             {
                 try
                 {
-                    var allStudentsInClassToPromote = context.SessionClass.Include(s => s.Students).FirstOrDefault(w => w.SessionClassId == classToPromote).Students;
+                    
+                    var allStudentsInClassToPromote = context.SessionClass
+                        .Include(s => s.Students)
+                        .FirstOrDefault(w => w.SessionClassId == classToPromote).Students;
+
                     if (allStudentsInClassToPromote.Any())
                     {
+                        string session = Convert.ToString(allStudentsInClassToPromote.FirstOrDefault().SessionClass.SessionId);
                         foreach (var student in allStudentsInClassToPromote)
                         {
                             var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
                             if (enrollment != null)
                                 enrollment.Status = (int)EnrollmentStatus.Enrolled;
                             await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
+
                         }
                         await context.SaveChangesAsync();
+                        //return null;
+                        await UpdatePromotedClassAsync(classToPromote, session);
+                        await transaction.CommitAsync();
+                        res.Message.FriendlyMessage = "Promotion Successful";
+                        res.Result = true;
+                        res.IsSuccessful = true;
                     }
-
-                    await transaction.CommitAsync();
-                    res.Message.FriendlyMessage = "Promotion Successful";
-                    res.Result = true;
-                    res.IsSuccessful = true;
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                        res.Message.FriendlyMessage = "No student found in this class to promote";
+                    }
                     return res;
                 }
                 catch (Exception ex)
@@ -89,6 +109,7 @@ namespace SMP.BLL.Services.PromorionServices
            
         }
 
+        
         async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllPassedStudentsAsync(Guid SessionClassId)
         {
             var res = new APIResponse<List<GetStudents>>();
@@ -125,6 +146,38 @@ namespace SMP.BLL.Services.PromorionServices
             res.Result = result;
             res.IsSuccessful = true;
             return res;
+        }
+
+        async Task CreateCopyOfClassesToPromoteAsync(List<PreviousSessionClasses> prevClasses, Guid previousSessionId)
+        {
+            if (await context.PromotedSessionClass.CountAsync(d => d.SessionId == previousSessionId) == prevClasses.Count())
+            {
+                return;
+            }
+            else
+            {
+                foreach (var prevClass in prevClasses)
+                {
+                    var classToPrommote = await context.PromotedSessionClass.FirstOrDefaultAsync(d => d.SessionId == previousSessionId && d.SessionClassId == Guid.Parse(prevClass.SessionClassId));
+                    if (classToPrommote == null)
+                    {
+                        classToPrommote = new PromotedSessionClass();
+                        classToPrommote.SessionClassId = Guid.Parse(prevClass.SessionClassId);
+                        classToPrommote.SessionId = previousSessionId;
+                        context.PromotedSessionClass.Add(classToPrommote);
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+        }
+        async Task UpdatePromotedClassAsync(Guid sessionClassId, string previousSessionId)
+        {
+            var classToPrommote = await context.PromotedSessionClass.FirstOrDefaultAsync(d => d.SessionId == Guid.Parse(previousSessionId) && d.SessionClassId == sessionClassId);
+            if (classToPrommote != null)
+            {
+                classToPrommote.IsPromoted = true;
+                await context.SaveChangesAsync();
+            }
         }
     }
 }
