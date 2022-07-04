@@ -1,9 +1,11 @@
 ﻿using BLL;
+using BLL.Utilities;
 using Contracts.AttendanceContract;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.DAL.Models.Attendance;
+using SMP.DAL.Models.Register;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,59 +23,69 @@ namespace SMP.BLL.Services.AttendanceServices
             this.context = context;
         }
 
-        public async Task<APIResponse<Attendance>> CreateAttendanceAsync(PostAttendance attendance)
+        async Task<APIResponse<ClassRegister>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
-            var res = new APIResponse<Attendance>();
-            var student = context.StudentContact.FirstOrDefaultAsync(x=>x.StudentContactId == attendance.StudentContactId);
-            if(student != null)
-            {
-                var attendances = await context.Attendance
-               //.Include(s => s.StudentContact)
-               //.ThenInclude(x => x.User)
-               //.Include(q => q.SessionClass)
-               .FirstOrDefaultAsync(x => x.ClassRegisterId == attendance.ClassRegisterId && x.StudentContactId == attendance.StudentContactId);
+            var res = new APIResponse<ClassRegister>();
 
-                var newAttendance = new Attendance()
+            var reg = new ClassRegister
+            {
+                SessionClassId = SessionClassId,
+                RegisterLabel = $"ATTENDANCE AS AT {DateTime.UtcNow}",
+            };
+            await context.ClassRegister.AddAsync(reg);
+            await context.SaveChangesAsync();
+
+            res.Result = reg;
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.Created;
+            return res;
+        }
+        async Task<APIResponse<PostStudentAttendance>> IAttendanceService.UpdateStudentAttendanceRecord(PostStudentAttendance attendance)
+        {
+            var res = new APIResponse<PostStudentAttendance>();
+            var attendanceRecord = await context.StudentAttendance.FirstOrDefaultAsync(x => x.ClassRegisterId == attendance.ClassRegisterId 
+            && x.StudentContactId == attendance.StudentContactId);
+
+            if (attendance.IsPresent && attendanceRecord == null)
+            {
+                attendanceRecord = new StudentAttendance()
                 {
                     ClassRegisterId = attendance.ClassRegisterId,
                     StudentContactId = attendance.StudentContactId,
-                    Deleted = false,
-
                 };
-                await context.Attendance.AddAsync(newAttendance);
+                await context.StudentAttendance.AddAsync(attendanceRecord);
                 await context.SaveChangesAsync();
-                res.Message.FriendlyMessage = Messages.Cretaed;
-                res.Result = newAttendance;
-                res.IsSuccessful = true;
-
             }
+            else
+            {
+                if (attendanceRecord != null)
+                {
+                    context.StudentAttendance.Remove(attendanceRecord);
+                    await context.SaveChangesAsync();
+                }
+            }
+            res.Result = attendance;
+            res.IsSuccessful = true;
             return res;
         }
-        public async Task<APIResponse<Attendance>> UpdateAttendanceAsync(PostAttendance attendance)
+        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.ContinueAttendanceAsync(Guid ClassRegisterId)
         {
-            var res = new APIResponse<Attendance>();
-            var student = context.StudentContact.FirstOrDefaultAsync(x => x.StudentContactId == attendance.StudentContactId);
-            if (student != null)
-            {
-                var attendances = await context.Attendance
-                //.Include(s => s.StudentContact)
-                //.ThenInclude(x => x.User)
-                //.Include(q => q.SessionClass)
-                .FirstOrDefaultAsync(x => x.ClassRegisterId == attendance.ClassRegisterId && x.StudentContactId == attendance.StudentContactId);
-                if (attendances == null)
-                {
-                    res.Message.FriendlyMessage = "No record found";
-                    attendance.IsPresent = false;
-                }
-                attendances.ClassRegisterId = attendance.ClassRegisterId;
-                attendances.StudentContactId = attendance.StudentContactId;
-                attendances.Deleted = false;
-                await context.SaveChangesAsync();
-                res.Message.FriendlyMessage = Messages.Cretaed;
-                res.Result = attendances;
-                res.IsSuccessful = true;
+            var res = new APIResponse<List<GetAttendance>>();
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
+            var register = await context.ClassRegister
+                .Include(d => d.StudentAttendances)
+                .Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(s => s.User)
+                .Where(d => d.ClassRegisterId == ClassRegisterId).Select(s => new GetAttendance(s, regNoFormat)).ToListAsync();
+            if(register == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
             }
+
+            res.Message.FriendlyMessage = Messages.Created;
+            res.Result = register;
+            res.IsSuccessful = true;
             return res;
         }
           
@@ -81,13 +93,13 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             var res = new APIResponse<List<GetAttendance>>();
  
-            var result = await context.Attendance
-                .Include(s=>s.StudentContact)
-                .ThenInclude(x=>x.User)
-                .Include(q => q.SessionClass)
+            var result = await context.ClassRegister
+                .Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                .Include(q => q.StudentAttendances)
                 .OrderByDescending(d => d.SessionClass.SessionClassId)
                 .Where(d => d.Deleted == false)
-                .Select(f => new GetAttendance(f, f.StudentContact.User)).ToListAsync();
+                .Select(f => new GetAttendance(f)).ToListAsync();
+
             if (!result.Any())
                 res.Message.FriendlyMessage = "No Attendance Recorded";
                 res.IsSuccessful=false;
@@ -98,10 +110,10 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
 
-        public async Task<APIResponse<GetPresentStudentAttendance>> PresentStudentAsync(PostAttendance attendance)
+        public async Task<APIResponse<GetPresentStudentAttendance>> PresentStudentAsync(PostStudentAttendance attendance)
         {
             var res = new APIResponse<GetPresentStudentAttendance>();
-            var attendances = await context.Attendance.Include(q => q.SessionClass).Where(x => x.ClassRegisterId == attendance.ClassRegisterId && attendance.IsPresent == true).ToListAsync();
+            var attendances = await context.StudentAttendance.Include(q => q.SessionClass).Where(x => x.ClassRegisterId == attendance.ClassRegisterId && attendance.IsPresent == true).ToListAsync();
             var presentStudent = attendances.Count();
             var presentStudents = new GetPresentStudentAttendance
             {
@@ -115,10 +127,10 @@ namespace SMP.BLL.Services.AttendanceServices
 
         }
 
-        public async Task<APIResponse<GetPresentStudentAttendance>> AbsentStudentAsync(PostAttendance attendance)
+        public async Task<APIResponse<GetPresentStudentAttendance>> AbsentStudentAsync(PostStudentAttendance attendance)
         {
             var res = new APIResponse<GetPresentStudentAttendance>();
-            var attendances = await context.Attendance.Include(q => q.SessionClass).Where(x => x.ClassRegisterId == attendance.ClassRegisterId && attendance.IsPresent == false).ToListAsync();
+            var attendances = await context.StudentAttendance.Include(q => q.SessionClass).Where(x => x.ClassRegisterId == attendance.ClassRegisterId && attendance.IsPresent == false).ToListAsync();
             var abentStudent = attendances.Count();
             var absentStudents = new GetPresentStudentAttendance
             {

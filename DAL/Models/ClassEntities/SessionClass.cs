@@ -2,6 +2,7 @@
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.Register;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,5 +30,6 @@ namespace DAL.ClassEntities
         public int PassMark { get; set; }
         public ICollection<StudentContact> Students { get; set; }
         public ICollection<SessionClassSubject> SessionClassSubjects { get; set; }
+        public ICollection<ClassRegister> ClassRegisters { get; set; }
     }
 }

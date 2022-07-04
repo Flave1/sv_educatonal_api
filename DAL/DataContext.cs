@@ -48,8 +48,8 @@ namespace DAL
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
         public DbSet<ClassGrade> ClassGrade { get; set; }
-        public DbSet<Attendance> Attendance { get; set; }
-        public DbSet<Register> Register { get; set; }
+        public DbSet<StudentAttendance> StudentAttendance { get; set; }
+        public DbSet<ClassRegister> ClassRegister { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
