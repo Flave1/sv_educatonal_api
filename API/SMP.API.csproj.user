@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+<<<<<<< HEAD
+    <NameOfLastUsedPublishProfile>C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\API\Properties\PublishProfiles\Default Settings4.pubxml</NameOfLastUsedPublishProfile>
+    <ActiveDebugProfile>API</ActiveDebugProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
+=======
     <NameOfLastUsedPublishProfile>C:\Users\thispc\Desktop\FLAVETECH\Main\SchoolManagerAPI\API\Properties\PublishProfiles\Default Settings.pubxml</NameOfLastUsedPublishProfile>
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
   </PropertyGroup>
 </Project>
