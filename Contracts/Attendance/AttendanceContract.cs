@@ -33,7 +33,7 @@ namespace Contracts.AttendanceContract
             TotalStudentInClass = db.SessionClass.Students.Count();
             TotalStudentPresent = db.StudentAttendances.Count();
             TotalStudentAbsent = TotalStudentInClass - TotalStudentPresent;
-            DateTime = db.CreatedOn.ToString("dd/MM/yyy hh:mm");
+            DateTime = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
         }
     }
     public class AttendanceList
@@ -75,6 +75,11 @@ namespace Contracts.AttendanceContract
     {
         public Guid ClassRegisterId { get; set; }
         public string RegisterLabel { get; set; }
+    }
+
+    public class CreateClassRegister
+    {
+        public Guid SessionClassId { get; set; }
     }
 
     public class GetClassRegister

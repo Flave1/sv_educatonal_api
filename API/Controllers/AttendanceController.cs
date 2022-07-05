@@ -23,10 +23,10 @@ namespace API.Controllers
 
 
         [HttpPost("create-register")]
-        public async Task<IActionResult> CreateClassRegisterAsync([FromBody] Guid SessionClassId)
+        public async Task<IActionResult> CreateClassRegisterAsync([FromBody] CreateClassRegister request)
         {
 
-            var response = await service.CreateClassRegisterAsync(SessionClassId);
+            var response = await service.CreateClassRegisterAsync(request.SessionClassId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

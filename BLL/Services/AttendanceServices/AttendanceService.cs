@@ -28,10 +28,10 @@ namespace SMP.BLL.Services.AttendanceServices
             this.accessor = accessor;
         }
 
-        async Task<APIResponse<ClassRegister>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
+        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
-            var res = new APIResponse<ClassRegister>();
-
+            var res = new APIResponse<List<GetAttendance>>();
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
@@ -40,7 +40,11 @@ namespace SMP.BLL.Services.AttendanceServices
             await context.ClassRegister.AddAsync(reg);
             await context.SaveChangesAsync();
 
-            res.Result = reg;
+            var classAttendance = await context.ClassRegister.Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User).Where(d =>
+            d.ClassRegisterId == reg.ClassRegisterId)
+                .Select(s => new GetAttendance(s, regNoFormat)).ToListAsync();
+
+            res.Result = classAttendance;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.Created;
             return res;
