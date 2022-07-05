@@ -1,12 +1,9 @@
-﻿using BLL; 
+﻿using BLL;
 using Contracts.AttendanceContract;
-using DAL.StudentInformation;
-using SMP.DAL.Models.Attendance;
+using Contracts.Common;
 using SMP.DAL.Models.Register;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.AttendanceServices
@@ -15,11 +12,11 @@ namespace SMP.BLL.Services.AttendanceServices
     {
         Task<APIResponse<PostStudentAttendance>> UpdateStudentAttendanceRecord(PostStudentAttendance attendance);
         Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync();
-        Task<APIResponse<List<StudentContact>>> AbsentStudentAsync(Guid classRegisterId);
+        Task<APIResponse<List<AttendanceList>>> GetAllAbsentStudents(Guid classRegisterId);
         Task<APIResponse<ClassRegister>> CreateClassRegisterAsync(Guid SessionClassId);
-        Task<APIResponse<List<StudentContact>>> PresentStudentAsync(Guid classRegisterId);
+        Task<APIResponse<List<AttendanceList>>> GetAllStudentPresentAsync(Guid classRegisterId);
         Task<APIResponse<List<GetAttendance>>> ContinueAttendanceAsync(Guid ClassRegisterId);
-        Task<APIResponse<DeleteClassRegisterContract>> DeleteClassRegisterAsync(DeleteClassRegisterContract ClassRegister);
-        Task<APIResponse<UpdateClassRegisterContract>> UpdateClassRegisterLabel(UpdateClassRegisterContract ClassRegister);
+        Task<APIResponse<bool>> DeleteClassRegisterAsync(SingleDelete ClassRegister);
+        Task<APIResponse<UpdateClassRegister>> UpdateClassRegisterLabel(UpdateClassRegister ClassRegister);
     }
 }

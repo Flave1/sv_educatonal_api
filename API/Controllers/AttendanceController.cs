@@ -23,7 +23,7 @@ namespace API.Controllers
 
 
         [HttpPost("create-register")]
-        public async Task<IActionResult> CreateRegisterAsync([FromBody] Guid SessionClassId)
+        public async Task<IActionResult> CreateClassRegisterAsync([FromBody] Guid SessionClassId)
         {
 
             var response = await service.CreateClassRegisterAsync(SessionClassId);
@@ -32,64 +32,57 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateAttendanceAsync([FromBody] PostStudentAttendance request)
+        [HttpPost("update/student-attendance")]
+        public async Task<IActionResult> UpdateStudentAttendanceRecord([FromBody] PostStudentAttendance request)
         {
-            
             var response = await service.UpdateStudentAttendanceRecord(request);
             if(response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> UpdateAttendanceAsync([FromBody] Guid ClassRegisterId)
+        [HttpGet("continue-attendance")]
+        public async Task<IActionResult> ContinueAttendanceAsync(Guid ClassRegisterId)
         {
-            
             var response = await service.ContinueAttendanceAsync(ClassRegisterId);
-            if(response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            return Ok(response);
         }
-        [HttpPost("present_student")]
-        public async Task<IActionResult> PresentStudentAttendanceAsync([FromBody] Guid classRegisterId)
+        [HttpGet("get/present-students")]
+        public async Task<IActionResult> GetAllStudentPresent(Guid classRegisterId)
         {
-            
-            var response = await service.PresentStudentAsync(classRegisterId);
-            if(response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            var response = await service.GetAllStudentPresentAsync(classRegisterId);
+            return Ok(response);
         }
-        [HttpPost("absent_student")]
-        public async Task<IActionResult> AbsentStudentAttendanceAsync([FromBody] Guid classRegisterId)
+        [HttpGet("get/absent-students")]
+        public async Task<IActionResult> GetAllStudentAbsent(Guid classRegisterId)
         {
-            
-            var response = await service.AbsentStudentAsync(classRegisterId);
-            if(response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            var response = await service.GetAllAbsentStudents(classRegisterId);
+            return Ok(response);
         }
 
-
-        [HttpGet("getall")]
-        public async Task<IActionResult> GetAllAttendancesAsync()
+        [HttpGet("get/all/class-register")]
+        public async Task<IActionResult> GetAllAttendanceRegisterAsync()
         {
             var response = await service.GetAllAttendanceRegisterAsync();
             return Ok(response);
         }
 
-        [HttpGet("delete-class-register")]
-        public async Task<IActionResult> DeleteClassRegisterAsync(DeleteClassRegisterContract delete)
+        [HttpPost("delete/class-register")]
+        public async Task<IActionResult> DeleteClassRegisterAsync(SingleDelete delete)
         {
             var response = await service.DeleteClassRegisterAsync(delete);
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
-        [HttpGet("update-class-register")]
-        public async Task<IActionResult> UpdateClassRegisterLabelAsync(UpdateClassRegisterContract ClassRegister)
+        [HttpPost("update/class-register")]
+        public async Task<IActionResult> UpdateClassRegisterLabelAsync(UpdateClassRegister ClassRegister)
         {
             var response = await service.UpdateClassRegisterLabel(ClassRegister);
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
          
         #endregion

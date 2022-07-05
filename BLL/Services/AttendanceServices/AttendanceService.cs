@@ -1,8 +1,10 @@
 ﻿using BLL;
 using BLL.Utilities;
 using Contracts.AttendanceContract;
+using Contracts.Common;
 using DAL;
 using DAL.StudentInformation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.DAL.Models.Attendance;
@@ -18,10 +20,12 @@ namespace SMP.BLL.Services.AttendanceServices
     public class AttendanceService: IAttendanceService
     {
         private readonly DataContext context;
+        private readonly IHttpContextAccessor accessor;
 
-        public AttendanceService(DataContext context)
+        public AttendanceService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            this.accessor = accessor;
         }
 
         async Task<APIResponse<ClassRegister>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
@@ -97,36 +101,32 @@ namespace SMP.BLL.Services.AttendanceServices
             var result = await context.ClassRegister
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(q => q.StudentAttendances)
-                .OrderByDescending(d => d.SessionClass.SessionClassId)
+                .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false)
                 .Select(f => new GetAttendance(f)).ToListAsync();
 
-            if (!result.Any())
-                res.Message.FriendlyMessage = "No Attendance Recorded";
-                res.IsSuccessful=false;
-             
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
             res.IsSuccessful = true;
             return res;
         }
 
-        async Task<APIResponse<List<StudentContact>>> IAttendanceService.PresentStudentAsync(Guid classRegisterId)
+        async Task<APIResponse<List<AttendanceList>>> IAttendanceService.GetAllStudentPresentAsync(Guid classRegisterId)
         {
-            var res = new APIResponse<List<StudentContact>> ();
+            var res = new APIResponse<List<AttendanceList>> ();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            var present = await context.ClassRegister
-                .Include(s => s.StudentAttendances)
-                .ThenInclude(q => q.StudentContact).ThenInclude(x=>x.User)
+
+            var classRegister = await context.ClassRegister
+                .Include(s => s.StudentAttendances).ThenInclude(q => q.StudentContact).ThenInclude(x => x.User)
                 .Where(x => x.ClassRegisterId == classRegisterId).FirstOrDefaultAsync();
-            if (present == null)
+            
+            if (classRegister == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
 
-            var presentStudentIds = present.StudentAttendances.Select(x => x.ClassRegisterId).ToList();
-            var presentStudent = present.SessionClass.Students.Where(x => presentStudentIds.Contains(x.StudentContactId)).ToList();
+            var presentStudent = classRegister.StudentAttendances.Select(x => x.StudentContact).Select(d => new AttendanceList(d, regNoFormat, true)).ToList();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true; 
@@ -134,22 +134,22 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
 
-        async Task<APIResponse<List<StudentContact>>> IAttendanceService.AbsentStudentAsync(Guid classRegisterId)
+        async Task<APIResponse<List<AttendanceList>>> IAttendanceService.GetAllAbsentStudents(Guid classRegisterId)
         {
-            var res = new APIResponse<List<StudentContact>>(); 
+            var res = new APIResponse<List<AttendanceList>>();
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var classRegister = await context.ClassRegister
-                .Include(q => q.SessionClass)
-                .ThenInclude(s => s.Students)
-                .Include(q => q.StudentAttendances)
-                .ThenInclude(x=>x.StudentContact)
+                .Include(q => q.SessionClass).ThenInclude(s => s.Students)
+                .Include(q => q.StudentAttendances).ThenInclude(x=>x.StudentContact)
                 .Where(x => x.ClassRegisterId == classRegisterId).FirstOrDefaultAsync();
+           
             if (classRegister == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
             var presentStudentIds = classRegister.StudentAttendances.Select(x=>x.ClassRegisterId).ToList();
-            var absentStudents = classRegister.SessionClass.Students.Where(x => !presentStudentIds.Contains(x.StudentContactId)).ToList();
+            var absentStudents = classRegister.SessionClass.Students.Where(x => !presentStudentIds.Contains(x.StudentContactId)).Select(s => new AttendanceList(s, regNoFormat, false)).ToList();
            
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -159,13 +159,10 @@ namespace SMP.BLL.Services.AttendanceServices
 
         }
 
-        async Task<APIResponse<DeleteClassRegisterContract>> IAttendanceService.DeleteClassRegisterAsync(DeleteClassRegisterContract ClassRegister)
+        async Task<APIResponse<bool>> IAttendanceService.DeleteClassRegisterAsync(SingleDelete request)
         {
-            var res = new APIResponse<DeleteClassRegisterContract>();
-            //var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            var result = await context.ClassRegister
- 
-                .FirstOrDefaultAsync(x => x.ClassRegisterId == ClassRegister.ClassRegisterId);
+            var res = new APIResponse<bool>();
+            var result = await context.ClassRegister.FirstOrDefaultAsync(x => x.ClassRegisterId == Guid.Parse(request.Item));
 
             if (result != null)
             {
@@ -175,28 +172,23 @@ namespace SMP.BLL.Services.AttendanceServices
 
             res.Message.FriendlyMessage = Messages.DeletedSuccess;
             res.IsSuccessful = true;
-            res.Result = ClassRegister;
+            res.Result = true;
             return res;
         }
-        async Task<APIResponse<UpdateClassRegisterContract>> IAttendanceService.UpdateClassRegisterLabel(UpdateClassRegisterContract ClassRegister)
+        async Task<APIResponse<UpdateClassRegister>> IAttendanceService.UpdateClassRegisterLabel(UpdateClassRegister request)
         {
-            var res = new APIResponse<UpdateClassRegisterContract>();
-            //var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var res = new APIResponse<UpdateClassRegister>();
             var result = await context.ClassRegister
-                .Include(q => q.SessionClass)
-                .ThenInclude(s => s.Students)
-                .Include(q => q.StudentAttendances)
-                .FirstOrDefaultAsync(x => x.ClassRegisterId == ClassRegister.ClassRegisterId && x.Deleted == false);
+                .FirstOrDefaultAsync(x => x.ClassRegisterId == request.ClassRegisterId && x.Deleted == false);
 
             if (result != null)
             {
-                result.RegisterLabel = ClassRegister.RegisterLabel;
+                result.RegisterLabel = request.RegisterLabel;
+                await context.SaveChangesAsync();
             }
-            context.ClassRegister.Update(result);
-            await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Updated;
             res.IsSuccessful = true;
-            res.Result = ClassRegister;
+            res.Result = request;
             return res;
         }
     }
