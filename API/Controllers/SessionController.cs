@@ -92,6 +92,20 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("get-session-terms")]
+        public async Task<IActionResult> GetSessionTermsAsync(string sessionId)
+        {
+            var response = await sessionService.GetSessionTermsAsync(Guid.Parse(sessionId));
+            return Ok(response);
+        }
+
+        [HttpGet("get/session-term/classes")]
+        public async Task<IActionResult> GetSessionTermClassesAsync(string sessionId, string termId)
+        {
+            var response = await sessionService.GetSessionClassesAsync(Guid.Parse(sessionId));
+            return Ok(response);
+        }
+
         #endregion
 
 

@@ -24,5 +24,7 @@ namespace SMP.DAL.Models.ClassEntities
         public Guid SubjectTeacherId { get; set; }
         [ForeignKey("SubjectTeacherId")]
         public virtual Teacher SubjectTeacher { get; set; }
+        public int ExamScore { get; set; }
+        public int AssessmentScore { get; set; }
     }
 }

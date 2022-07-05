@@ -11,7 +11,12 @@ using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.GradeEntities;
+<<<<<<< HEAD
 using SMP.DAL.Models.Register;
+=======
+using SMP.DAL.Models.PromotionEntities;
+using SMP.DAL.Models.ResultModels;
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
@@ -34,7 +39,6 @@ namespace DAL
         public DbSet<ClassLookup> ClassLookUp { get; set; }
         public DbSet<StudentContact> StudentContact { get; set; }
         public DbSet<Teacher> Teacher { get; set; }
-        public DbSet<StudentClassProgressions> StudentClassProgressions { get; set; }
         public DbSet<SessionClass> SessionClass { get; set; }
         public DbSet<SessionClassSubject> SessionClassSubject { get; set; }
         public DbSet<SessionTerm> SessionTerm { get; set; }
@@ -47,9 +51,17 @@ namespace DAL
         public DbSet<Enrollment> Enrollment { get; set; }
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
+<<<<<<< HEAD
         public DbSet<ClassGrade> ClassGrade { get; set; }
         public DbSet<StudentAttendance> StudentAttendance { get; set; }
         public DbSet<ClassRegister> ClassRegister { get; set; }
+=======
+        //public DbSet<ClassGrade> ClassGrade { get; set; }
+        public DbSet<ScoreEntry> ScoreEntry { get; set; }
+        public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
+        public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
+        public DbSet<PublishStatus> PublishStatus { get; set; }
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -63,10 +75,6 @@ namespace DAL
         {
             builder.Entity<Teacher>().HasOne<AppUser>(a => a.User).WithOne(d => d.Teacher).HasForeignKey<Teacher>(ad => ad.UserId);
 
-            builder.Entity<StudentClassProgressions>()
-                .HasOne<StudentContact>(s => s.Student)
-                .WithMany(g => g.ClassProgressions)
-                 .HasForeignKey(ad => ad.StudentId);
             base.OnModelCreating(builder);
         }
 

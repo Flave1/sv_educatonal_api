@@ -1,12 +1,5 @@
 ﻿using BLL;
-using BLL.Constants;
-using BLL.EmailServices;
-using Contracts.Authentication;
-using Contracts.Common;
-using Contracts.Email;
 using DAL;
-using DAL.Authentication;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
@@ -15,7 +8,6 @@ using SMP.DAL.Models.GradeEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.GradeServices
@@ -37,7 +29,7 @@ namespace SMP.BLL.Services.GradeServices
             {
                 try
                 {
-                    var gg = await context.GradeGroup.Include(s => s.ClassGrades).FirstOrDefaultAsync(r => r.GradeGroupId == request.GradeGroupId);
+                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == request.GradeGroupId);
 
                     var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
                     if (currentSession != null)
@@ -46,10 +38,10 @@ namespace SMP.BLL.Services.GradeServices
                         gg.SessionId = currentSession.SessionId;
                         await context.SaveChangesAsync();
 
-                        await DeleteClassGroupsAsync(request.GradeGroupId);
+                        //await DeleteClassGroupsAsync(request.GradeGroupId);
                         await DeleteGroupGradesAsync(request.GradeGroupId);
 
-                        await CreateClassGradeAsync(gg.GradeGroupId, request.Classes);
+                        //await CreateClassGradeAsync(gg.GradeGroupId, request.Classes);
                         await CreateGradeAsync(gg.GradeGroupId, request.Grades);
 
                         await transaction.CommitAsync();
@@ -105,7 +97,7 @@ namespace SMP.BLL.Services.GradeServices
                         context.GradeGroup.Add(gg);
                         await context.SaveChangesAsync();
 
-                        await CreateClassGradeAsync(gg.GradeGroupId, request.Classes);
+                        //await CreateClassGradeAsync(gg.GradeGroupId, request.Classes);
                         await CreateGradeAsync(gg.GradeGroupId, request.Grades);
 
                         await transaction.CommitAsync();
@@ -133,20 +125,20 @@ namespace SMP.BLL.Services.GradeServices
                 }
             }
         }
-        private async Task CreateClassGradeAsync(Guid groupId, List<string> classes)
-        {
-            var cgList = new List<ClassGrade>();
-            foreach (var cls in classes)
-            {
-                cgList.Add(new ClassGrade
-                {
-                    GradeGroupId = groupId,
-                    SessionClassId = Guid.Parse(cls),
-                });
-                context.AddRange(cgList);
-            }
-            await context.SaveChangesAsync();
-        }
+        //private async Task CreateClassGradeAsync(Guid groupId, List<string> classes)
+        //{
+        //    var cgList = new List<ClassGrade>();
+        //    foreach (var cls in classes)
+        //    {
+        //        cgList.Add(new ClassGrade
+        //        {
+        //            GradeGroupId = groupId,
+        //            SessionClassId = Guid.Parse(cls),
+        //        });
+        //        context.AddRange(cgList);
+        //    }
+        //    await context.SaveChangesAsync();
+        //}
         private async Task CreateGradeAsync(Guid groupId, GradesModel[] grades)
         {
             var gList = new List<Grade>();
@@ -173,7 +165,7 @@ namespace SMP.BLL.Services.GradeServices
             if(currentSession != null)
             {
                 var result = await context.GradeGroup
-                    .Include(d => d.ClassGrades).ThenInclude(d => d.SessionClass).ThenInclude(d => d.Class)
+                    .Include(d => d.Classes)
                     .Include(d => d.Grades)
                     .Where(d => d.SessionId == currentSession.SessionId)
                     .Select(d => new GetGradeGroupModel(d)).ToListAsync();
@@ -198,16 +190,10 @@ namespace SMP.BLL.Services.GradeServices
             var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
             if (currentSession != null)
             {
-                var addedClass = context.ClassGrade
-                    .Include(d => d.GradeGroup)
-                    .Where(d => d.GradeGroup.SessionId == currentSession.SessionId)
-                    .Select(d => d.SessionClassId)
-                    .ToList();
 
                 var result = await context.SessionClass
                     .Include(rr => rr.Class)
-                    .Where(a => a.SessionId == currentSession.SessionId
-                    && !addedClass.Contains(a.SessionClassId)).OrderBy(s => s.Class.Name)
+                    .Where(a => a.SessionId == currentSession.SessionId).OrderBy(s => s.Class.Name)
                     .Select(d => new GetSessionClass(d)).ToListAsync();
 
                               //select new GetSessionClass(a)).ToList();
@@ -226,15 +212,15 @@ namespace SMP.BLL.Services.GradeServices
             }
         }
    
-        private async Task DeleteClassGroupsAsync(Guid groupId)
-        {
-            var classGroups = await context.ClassGrade.Where(d => d.GradeGroupId == groupId).ToListAsync();
-            if (classGroups.Any())
-            {
-                context.ClassGrade.RemoveRange(classGroups);
-                await context.SaveChangesAsync();
-            }
-        }
+        //private async Task DeleteClassGroupsAsync(Guid groupId)
+        //{
+        //    var classGroups = await context.ClassGrade.Where(d => d.GradeGroupId == groupId).ToListAsync();
+        //    if (classGroups.Any())
+        //    {
+        //        context.ClassGrade.RemoveRange(classGroups);
+        //        await context.SaveChangesAsync();
+        //    }
+        //}
 
         private async Task DeleteGroupGradesAsync(Guid groupId)
         {

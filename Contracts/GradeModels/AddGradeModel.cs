@@ -10,7 +10,7 @@ namespace SMP.Contracts.GradeModels
     {
         public string GradeGroupName { get; set; }
         public GradesModel[] Grades { get; set; }
-        public List<string> Classes { get; set; } 
+        //public List<string> Classes { get; set; } 
     }
 
    

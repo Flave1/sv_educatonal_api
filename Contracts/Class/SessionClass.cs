@@ -51,22 +51,24 @@ namespace Contracts.Class
             PassMark = sClass.PassMark;
             Session = sClass.Session.StartDate + " / " + sClass.Session.EndDate;
             FormTeacher = sClass.Teacher.User.FirstName + " " + sClass.Teacher.User.LastName;
+
             if (sClass.SessionClassSubjects != null && sClass.SessionClassSubjects.Any())
             {
+                SubjectCount = sClass.SessionClassSubjects.Count();
                 ClassSubjects = sClass.SessionClassSubjects.Select(w => new ClassSubjects
                 {
                     SubjectId = w.SubjectId.ToString().ToLower(),
                     SubjectTeacherId = w.SubjectTeacherId.ToString().ToLower(),
                     SubjectName = w.Subject.Name,
                     SubjectTeacherName = w.SubjectTeacher.User.FirstName + " " + w.SubjectTeacher.User.LastName,
-                    Assessment = sClass.AssessmentScore,
-                    ExamSCore = sClass.ExamScore
+                    Assessment = w.AssessmentScore,
+                    ExamSCore = w.ExamScore
                 }).ToArray();
                 SubjectCount = sClass.SessionClassSubjects.Count();
             }
             if(sClass.Students != null && sClass.Students.Any())
             {
-                SubjectCount = sClass.Students.Count();
+                StudentCount = sClass.Students.Count();
             }
         }
     }

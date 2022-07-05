@@ -6,6 +6,7 @@ using DAL;
 using DAL.ClassEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.ClassEntities;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace BLL.ClassServices
     public class ClassService : IClassService
     {
         private readonly DataContext context;
+        private readonly IResultsService resultsService;
 
-        public ClassService(DataContext context)
+        public ClassService(DataContext context, IResultsService resultsService)
         {
             this.context = context;
+            this.resultsService = resultsService;
         }
 
         async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
@@ -64,6 +67,8 @@ namespace BLL.ClassServices
 
                     await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
 
+                    await resultsService.CreateClassScoreEntryAsync(sessionClass);
+
                     await transaction.CommitAsync();
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = "Session class created successfully";
@@ -74,6 +79,7 @@ namespace BLL.ClassServices
                 {
                     await transaction.RollbackAsync();
                     res.Message.FriendlyMessage = Messages.FriendlyException;
+                    res.Message.TechnicalMessage = ex.ToString();
                     return res;
                 }
             }
@@ -83,61 +89,79 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<SessionClassCommand>();
 
-            if (context.SessionClass.Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId) && ss.Deleted == false && ss.SessionClassId != Guid.Parse(sClass.SessionClassId)))
+            try
             {
-                res.Message.FriendlyMessage = "This class has already been added to this session";
-                return res;
-            }
 
-            var sessionClass = context.SessionClass.FirstOrDefault(ss =>  ss.ClassId == Guid.Parse(sClass.ClassId) && ss.Deleted == false);
-
-            if(sessionClass == null)
-            {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-                return res;
-            }
-
-            if (!sClass.ClassSubjects.Any())
-            {
-                res.Message.FriendlyMessage = "No Subjects found";
-                return res;
-            }
-            if (!sClass.ClassSubjects.All(e => !string.IsNullOrEmpty(e.SubjectId) && !string.IsNullOrEmpty(e.SubjectTeacherId)))
-            {
-                res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
-                return res;
-            }
-
-            using (var transaction = await context.Database.BeginTransactionAsync())
-            {
-                try
+                if (context.SessionClass
+                  .Include(x => x.Session)
+                  .Any(ss => ss.Deleted == false && ss.ClassId == Guid.Parse(sClass.ClassId)
+                  && ss.SessionClassId != Guid.Parse(sClass.SessionClassId)
+                  && ss.SessionId == Guid.Parse(sClass.SessionId)))
                 {
-                    sessionClass.ClassId = Guid.Parse(sClass.ClassId);
-                    sessionClass.FormTeacherId = Guid.Parse(sClass.FormTeacherId);
-                    sessionClass.SessionId = Guid.Parse(sClass.SessionId);
-                    sessionClass.InSession = sClass.InSession;
-                    sessionClass.ExamScore = sClass.ExamScore;
-                    sessionClass.AssessmentScore = sClass.AssessmentScore;
-                    sessionClass.PassMark = sClass.PassMark;
-                    await context.SaveChangesAsync();
-
-                    await DeleteExistingClassSubjectsAsync(sessionClass.SessionClassId);
-
-                    await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
-
-                    await transaction.CommitAsync();
-                    res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = "Session class updated successfully";
+                    res.Message.FriendlyMessage = "This class has already been added to this session";
                     return res;
                 }
-                catch (Exception ex)
+
+                var sessionClass = context.SessionClass.FirstOrDefault(ss => ss.SessionClassId == Guid.Parse(sClass.SessionClassId) && ss.Deleted == false);
+
+                if (sessionClass == null)
                 {
-                    await transaction.RollbackAsync();
-                    res.Message.FriendlyMessage = Messages.FriendlyException;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                     return res;
                 }
+
+                if (!sClass.ClassSubjects.Any())
+                {
+                    res.Message.FriendlyMessage = "No Subjects found";
+                    return res;
+                }
+                if (!sClass.ClassSubjects.All(e => !string.IsNullOrEmpty(e.SubjectId) && !string.IsNullOrEmpty(e.SubjectTeacherId)))
+                {
+                    res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
+                    return res;
+                }
+
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        //sessionClass.ClassId = Guid.Parse(sClass.ClassId);
+                        sessionClass.FormTeacherId = Guid.Parse(sClass.FormTeacherId);
+                        //sessionClass.SessionId = Guid.Parse(sClass.SessionId);
+                        sessionClass.InSession = sClass.InSession;
+                        sessionClass.ExamScore = sClass.ExamScore;
+                        sessionClass.AssessmentScore = sClass.AssessmentScore;
+                        sessionClass.PassMark = sClass.PassMark;
+                        await context.SaveChangesAsync();
+
+                        await DeleteExistingClassSubjectsAsync(sessionClass.SessionClassId);
+
+                        await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
+
+                        await resultsService.CreateClassScoreEntryAsync(sessionClass);
+
+                        await transaction.CommitAsync();
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = "Session class updated successfully";
+                        return res;
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        res.Message.FriendlyMessage = Messages.FriendlyException;
+                        res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                        return res;
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+
+           
         }
 
         private async Task CreateClassSubjectsAsync(ClassSubjects[] ClassSubjects, Guid SessionClassId)
@@ -147,12 +171,12 @@ namespace BLL.ClassServices
                 var subs = new List<SessionClassSubject>();
                 foreach (var subject in ClassSubjects)
                 {
-                    var sub = new SessionClassSubject
-                    {
-                        SessionClassId = SessionClassId,
-                        SubjectId = Guid.Parse(subject.SubjectId),
-                        SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId),
-                    };
+                    var sub = new SessionClassSubject();
+                    sub.SessionClassId = SessionClassId;
+                    sub.SubjectId = Guid.Parse(subject.SubjectId);
+                    sub.SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId);
+                    sub.AssessmentScore = subject.Assessment;
+                    sub.ExamScore = subject.ExamSCore;
                     subs.Add(sub);
                 }
                 await context.SessionClassSubject.AddRangeAsync(subs);

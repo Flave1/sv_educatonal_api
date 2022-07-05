@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.GradeEntities
 {
-    public class ClassGrade : CommonEntity
-    {
-        public Guid ClassGradeId { get; set; }
-        public Guid GradeGroupId { get; set; }
-        [ForeignKey("GradeGroupId")]
-        public GradeGroup GradeGroup { get; set; }
-        public Guid SessionClassId { get; set; }
-        [ForeignKey("SessionClassId")]
-        public SessionClass SessionClass { get; set; }
-    }
+    //public class ClassGrade : CommonEntity
+    //{
+    //    public Guid ClassGradeId { get; set; }
+    //    public Guid GradeGroupId { get; set; }
+    //    [ForeignKey("GradeGroupId")]
+    //    public GradeGroup GradeGroup { get; set; }
+    //    public Guid SessionClassId { get; set; }
+    //    [ForeignKey("SessionClassId")]
+    //    public SessionClass SessionClass { get; set; }
+    //}
 }

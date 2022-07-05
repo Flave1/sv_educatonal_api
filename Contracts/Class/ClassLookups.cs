@@ -10,12 +10,15 @@ namespace Contracts.Class
     { 
         public string LookupId { get; set; }
         public string Name { get; set; }
+        public string GradeLevelId { get; set; }
         public bool IsActive { get; set; }
+        public string GradeLevelName { get; set; }
     }
     public class ApplicationLookupCommand
     {
         public string LookupId { get; set; }
         public string Name { get; set; }
         public bool IsActive { get; set; }
+        public string GradeLevelId { get; set; }
     }
 }

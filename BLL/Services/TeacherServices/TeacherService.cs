@@ -123,6 +123,10 @@ namespace SMP.BLL.Services.TeacherServices
                 user.DOB = userDetail.DOB;
                 user.Photo = userDetail.Photo;
                 user.EmailConfirmed = true;
+
+                var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
+
+                await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
                 var result = await userManager.UpdateAsync(user);
                 if (!result.Succeeded)
                 {
