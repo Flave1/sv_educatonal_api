@@ -17,6 +17,7 @@ namespace Contracts.AttendanceContract
         public int TotalStudentInClass { get; set; }
         public int TotalStudentPresent{ get; set; }
         public int TotalStudentAbsent { get; set; }
+        public string DateTime { get; set; }
         public List<AttendanceList> AttendanceList { get; set; }
         public GetAttendance(ClassRegister db, string regNoFormat)
         {
@@ -32,6 +33,7 @@ namespace Contracts.AttendanceContract
             TotalStudentInClass = db.SessionClass.Students.Count();
             TotalStudentPresent = db.StudentAttendances.Count();
             TotalStudentAbsent = TotalStudentInClass - TotalStudentPresent;
+            DateTime = db.CreatedOn.ToString("dd/MM/yyy hh:mm");
         }
     }
     public class AttendanceList
@@ -48,6 +50,13 @@ namespace Contracts.AttendanceContract
             IsPresent = stAtt == null ? false : true;
             StudentName = $"{ student.User.FirstName }" + $"{ student.User.LastName }";
         }
+        public AttendanceList(StudentContact student, string regNoFormat, bool isPresent)
+        {
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+            StudentContactId = student.StudentContactId;
+            IsPresent = isPresent;
+            StudentName = $"{ student.User.FirstName }" + $"{ student.User.LastName }";
+        }
     }
     public class PostStudentAttendance
     {
@@ -61,13 +70,8 @@ namespace Contracts.AttendanceContract
         public bool IsPresent { get; set; }
         public Guid StudentContactId { get; set; }
     }
-
-    public class DeleteClassRegisterContract
-    {
-        public Guid ClassRegisterId { get; set; }
-    }
-    
-    public class UpdateClassRegisterContract
+  
+    public class UpdateClassRegister
     {
         public Guid ClassRegisterId { get; set; }
         public string RegisterLabel { get; set; }
