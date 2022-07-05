@@ -1,5 +1,6 @@
 ﻿using BLL; 
 using Contracts.AttendanceContract;
+using DAL.StudentInformation;
 using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.Register;
 using System;
@@ -14,9 +15,11 @@ namespace SMP.BLL.Services.AttendanceServices
     {
         Task<APIResponse<PostStudentAttendance>> UpdateStudentAttendanceRecord(PostStudentAttendance attendance);
         Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync();
-        Task<APIResponse<GetPresentStudentAttendance>> AbsentStudentAsync(PostStudentAttendance attendance);
+        Task<APIResponse<List<StudentContact>>> AbsentStudentAsync(Guid classRegisterId);
         Task<APIResponse<ClassRegister>> CreateClassRegisterAsync(Guid SessionClassId);
-        Task<APIResponse<GetPresentStudentAttendance>> PresentStudentAsync(PostStudentAttendance attendance);
+        Task<APIResponse<List<StudentContact>>> PresentStudentAsync(Guid classRegisterId);
         Task<APIResponse<List<GetAttendance>>> ContinueAttendanceAsync(Guid ClassRegisterId);
+        Task<APIResponse<DeleteClassRegisterContract>> DeleteClassRegisterAsync(DeleteClassRegisterContract ClassRegister);
+        Task<APIResponse<UpdateClassRegisterContract>> UpdateClassRegisterLabel(UpdateClassRegisterContract ClassRegister);
     }
 }

@@ -55,10 +55,22 @@ namespace Contracts.AttendanceContract
         public Guid StudentContactId { get; set; }
         public bool IsPresent { get; set; }
     } 
-    public class GetPresentStudentAttendance
+    public class GetStudentAttendance
     {
-        public long PresentStudent { get; set; } 
-        public long AbsentStudent { get; set; }
+        public Guid ClassAttendanceId { get; set; }
+        public bool IsPresent { get; set; }
+        public Guid StudentContactId { get; set; }
+    }
+
+    public class DeleteClassRegisterContract
+    {
+        public Guid ClassRegisterId { get; set; }
+    }
+    
+    public class UpdateClassRegisterContract
+    {
+        public Guid ClassRegisterId { get; set; }
+        public string RegisterLabel { get; set; }
     }
 
     public class GetClassRegister
