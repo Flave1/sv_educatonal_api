@@ -25,7 +25,6 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             this.context = context;
         }
-
         async Task<APIResponse<List<GetAttendance>>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
             var res = new APIResponse<List<GetAttendance>>();

@@ -152,7 +152,7 @@ namespace BLL.AuthenticationServices
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new GetActivities {  
                     ActivityId = a.Id.ToString(), 
-                    Name = a.Name, 
+                    Name = a.Permission, 
                     ParentId = a.ActivityParentId.ToString(), 
                     ParentName = a.Parent.Name
                 }).ToListAsync();
@@ -173,7 +173,7 @@ namespace BLL.AuthenticationServices
               .Select(a => new RoleActivities
               {
                   ActivityId = a.Id.ToString(),
-                  Name = a.Name,
+                  Name = a.Permission,
                   ParentId = a.ActivityParentId.ToString(),
                   ParentName = a.Parent.Name
               }).ToListAsync();
@@ -194,7 +194,7 @@ namespace BLL.AuthenticationServices
                     CanUpdate = a.CanUpdate,
                     CanExport = a.CanExport,
                     CanImport = a.CanImport,
-                    Name = a.Activity.Name,
+                    Name = a.Activity.Permission,
                     ParentId = a.Activity.ActivityParentId.ToString(),
                     ParentName = a.Activity.Parent.Name,
                 }).ToListAsync();
