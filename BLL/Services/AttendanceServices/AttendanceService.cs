@@ -96,7 +96,7 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
           
-        public async Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync(Guid sessionClassId)
+        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.GetAllAttendanceRegisterAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetAttendance>>();
  
