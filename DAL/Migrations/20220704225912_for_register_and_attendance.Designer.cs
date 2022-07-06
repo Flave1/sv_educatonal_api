@@ -936,9 +936,21 @@ namespace DAL.Migrations
                     b.ToTable("GradeGroup");
                 });
 
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.Property<Guid>("ClassRegisterId")
+========
+<<<<<<< HEAD
+            modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
+                {
+                    b.Property<Guid>("ClassRegisterId")
+=======
+            modelBuilder.Entity("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", b =>
+                {
+                    b.Property<Guid>("PromotedClassId")
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -951,10 +963,99 @@ namespace DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
                     b.Property<string>("RegisterLabel")
                         .HasColumnType("nvarchar(max)");
+========
+<<<<<<< HEAD
+                    b.Property<string>("RegisterLabel")
+                        .HasColumnType("nvarchar(max)");
+=======
+                    b.Property<bool>("IsPromoted")
+                        .HasColumnType("bit");
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
 
                     b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
+========
+<<<<<<< HEAD
+=======
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
+                    b.HasKey("ClassRegisterId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.ToTable("ClassRegister");
+========
+<<<<<<< HEAD
+                    b.HasKey("ClassRegisterId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.ToTable("ClassRegister");
+=======
+                    b.HasKey("PromotedClassId");
+
+                    b.ToTable("PromotedSessionClass");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>
+                {
+                    b.Property<Guid>("ClassScoreEntryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ClassScoreEntryId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.ToTable("ClassScoreEntry");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.PublishStatus", b =>
+                {
+                    b.Property<Guid>("PublishStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionTermId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -963,11 +1064,68 @@ namespace DAL.Migrations
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("ClassRegisterId");
+                    b.HasKey("PublishStatusId");
 
                     b.HasIndex("SessionClassId");
 
-                    b.ToTable("ClassRegister");
+                    b.HasIndex("SessionTermId");
+
+                    b.ToTable("PublishStatus");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.ScoreEntry", b =>
+                {
+                    b.Property<Guid>("ScoreEntryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AssessmentScore")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ClassScoreEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ExamScore")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsOffered")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSaved")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("SessionTermId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentContactId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ScoreEntryId");
+
+                    b.HasIndex("ClassScoreEntryId");
+
+                    b.HasIndex("SessionTermId");
+
+                    b.HasIndex("StudentContactId");
+
+                    b.ToTable("ScoreEntry");
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.SessionEntities.SessionTerm", b =>
@@ -1318,15 +1476,89 @@ namespace DAL.Migrations
                     b.Navigation("Session");
                 });
 
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
                         .WithMany("ClassRegisters")
+========
+<<<<<<< HEAD
+            modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany("ClassRegisters")
+=======
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany("ClassScoreEntries")
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
                         .HasForeignKey("SessionClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
                     b.Navigation("SessionClass");
+========
+<<<<<<< HEAD
+                    b.Navigation("SessionClass");
+=======
+                    b.HasOne("DAL.SubjectModels.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SessionClass");
+
+                    b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.PublishStatus", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany()
+                        .HasForeignKey("SessionClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
+                        .WithMany()
+                        .HasForeignKey("SessionTermId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SessionClass");
+
+                    b.Navigation("SessionTerm");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.ScoreEntry", b =>
+                {
+                    b.HasOne("SMP.DAL.Models.ResultModels.ClassScoreEntry", "ClassScoreEntry")
+                        .WithMany("ScoreEntries")
+                        .HasForeignKey("ClassScoreEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
+                        .WithMany()
+                        .HasForeignKey("SessionTermId");
+
+                    b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
+                        .WithMany("ScoreEntries")
+                        .HasForeignKey("StudentContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClassScoreEntry");
+
+                    b.Navigation("SessionTerm");
+
+                    b.Navigation("StudentContact");
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.SessionEntities.SessionTerm", b =>
@@ -1377,7 +1609,15 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.ClassEntities.SessionClass", b =>
                 {
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
                     b.Navigation("ClassRegisters");
+========
+<<<<<<< HEAD
+                    b.Navigation("ClassRegisters");
+=======
+                    b.Navigation("ClassScoreEntries");
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
 
                     b.Navigation("SessionClassSubjects");
 
@@ -1403,9 +1643,21 @@ namespace DAL.Migrations
                     b.Navigation("Grades");
                 });
 
+<<<<<<<< HEAD:DAL/Migrations/20220704225912_for_register_and_attendance.Designer.cs
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.Navigation("StudentAttendances");
+========
+<<<<<<< HEAD
+            modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
+                {
+                    b.Navigation("StudentAttendances");
+=======
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>
+                {
+                    b.Navigation("ScoreEntries");
+>>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
+>>>>>>>> b5179bc3753a9d2d39d16efa3496f72aa24bca91:DAL/Migrations/DataContextModelSnapshot.cs
                 });
 #pragma warning restore 612, 618
         }
