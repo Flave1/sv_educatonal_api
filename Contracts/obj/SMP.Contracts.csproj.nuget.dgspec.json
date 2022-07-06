@@ -1,20 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\Contracts\\SMP.Contracts.csproj": {}
+    "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj": {}
   },
   "projects": {
-    "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\Contracts\\SMP.Contracts.csproj": {
+    "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\Contracts\\SMP.Contracts.csproj",
+        "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj",
         "projectName": "SMP.Contracts",
-        "projectPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\Contracts\\SMP.Contracts.csproj",
-        "packagesPath": "C:\\Users\\PARTNER\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\Contracts\\obj\\",
+        "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj",
+        "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
         "configFilePaths": [
-          "C:\\Users\\PARTNER\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\thispc\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -28,8 +31,8 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj": {
-                "projectPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj"
+              "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
+                "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj"
               }
             }
           }
@@ -64,21 +67,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.202\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj": {
+    "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj",
+        "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
         "projectName": "SMP.DAL",
-        "projectPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj",
-        "packagesPath": "C:\\Users\\PARTNER\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\obj\\",
+        "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
+        "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
         "configFilePaths": [
-          "C:\\Users\\PARTNER\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\thispc\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -140,7 +146,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.202\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
         }
       }
     }
