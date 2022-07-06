@@ -44,11 +44,11 @@ namespace Contracts.AttendanceContract
         public bool IsPresent { get; set; }
         public AttendanceList(StudentContact student, string regNoFormat, ICollection<StudentAttendance> studentsAttendance)
         {
-            var stAtt = studentsAttendance.FirstOrDefault(d => d.StudentContactId == student.StudentContactId) ?? null;
+            var stAtt = studentsAttendance == null ? studentsAttendance?.FirstOrDefault(d => d.StudentContactId == student.StudentContactId) ?? null : null;
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             StudentContactId = student.StudentContactId;
             IsPresent = stAtt == null ? false : true;
-            StudentName = $"{ student.User.FirstName }" + $"{ student.User.LastName }";
+            StudentName = $"{ student.User.FirstName } " + $" { student.User.LastName }";
         }
         public AttendanceList(StudentContact student, string regNoFormat, bool isPresent)
         {

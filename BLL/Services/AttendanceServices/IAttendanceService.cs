@@ -11,7 +11,7 @@ namespace SMP.BLL.Services.AttendanceServices
     public interface IAttendanceService
     {
         Task<APIResponse<PostStudentAttendance>> UpdateStudentAttendanceRecord(PostStudentAttendance attendance);
-        Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync();
+        Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync(Guid sessionClassId);
         Task<APIResponse<List<AttendanceList>>> GetAllAbsentStudents(Guid classRegisterId);
         Task<APIResponse<List<GetAttendance>>> CreateClassRegisterAsync(Guid SessionClassId);
         Task<APIResponse<List<AttendanceList>>> GetAllStudentPresentAsync(Guid classRegisterId);

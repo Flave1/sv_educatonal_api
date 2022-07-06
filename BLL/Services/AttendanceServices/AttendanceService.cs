@@ -98,7 +98,7 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
           
-        public async Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync()
+        public async Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetAttendance>>();
  
@@ -106,7 +106,7 @@ namespace SMP.BLL.Services.AttendanceServices
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(q => q.StudentAttendances)
                 .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false)
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId)
                 .Select(f => new GetAttendance(f)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

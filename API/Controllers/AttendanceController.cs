@@ -60,10 +60,10 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpGet("get/all/class-register")]
-        public async Task<IActionResult> GetAllAttendanceRegisterAsync()
+        [HttpGet("get/all/class-register/{sessionClassId}")]
+        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId)
         {
-            var response = await service.GetAllAttendanceRegisterAsync();
+            var response = await service.GetAllAttendanceRegisterAsync(Guid.Parse(sessionClassId));
             return Ok(response);
         }
 
