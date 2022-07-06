@@ -2,12 +2,8 @@
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.ClassEntities;
-<<<<<<< HEAD
 using SMP.DAL.Models.Register;
-=======
-using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.ResultModels;
->>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -35,13 +31,10 @@ namespace DAL.ClassEntities
         public int PassMark { get; set; }
         public ICollection<StudentContact> Students { get; set; }
         public ICollection<SessionClassSubject> SessionClassSubjects { get; set; }
-<<<<<<< HEAD
         public ICollection<ClassRegister> ClassRegisters { get; set; }
-=======
         public ICollection<ClassScoreEntry> ClassScoreEntries { get; set; }
         public Guid? PublishStatusId { get; set; }
         [ForeignKey("PublishStatusId")]
         public PublishStatus PublishStatus { get; set; }
->>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
     }
 }

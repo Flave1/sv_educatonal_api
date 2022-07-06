@@ -51,11 +51,8 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IEnrollmentService, EnrollmentService>();
             services.AddScoped<IGradeService, GradeService>();
             services.AddScoped<IPromotionService, PromotionService>();
-<<<<<<< HEAD
             services.AddScoped<IAttendanceService, AttendanceService>();
-=======
             services.AddScoped<IResultsService, ResultsService>();
->>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
 
         }
     }

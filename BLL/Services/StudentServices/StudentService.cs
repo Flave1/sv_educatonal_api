@@ -78,14 +78,8 @@ namespace BLL.StudentServices
 
 
                     await transaction.CommitAsync();
-
-<<<<<<< HEAD
                     res.Message.FriendlyMessage = Messages.Created;
-                    res.Result = item;
-=======
-                    res.Message.FriendlyMessage = Messages.Cretaed;
                     res.Result = null;
->>>>>>> 669eb3cba63c129fac7f8dcd54ddbf946e1b1142
                     res.IsSuccessful = true;
                     return res;
                 }
