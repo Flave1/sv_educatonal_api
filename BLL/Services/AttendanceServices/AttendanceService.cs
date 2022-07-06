@@ -20,12 +20,10 @@ namespace SMP.BLL.Services.AttendanceServices
     public class AttendanceService: IAttendanceService
     {
         private readonly DataContext context;
-        private readonly IHttpContextAccessor accessor;
 
-        public AttendanceService(DataContext context, IHttpContextAccessor accessor)
+        public AttendanceService(DataContext context)
         {
             this.context = context;
-            this.accessor = accessor;
         }
 
         async Task<APIResponse<List<GetAttendance>>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
