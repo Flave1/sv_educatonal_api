@@ -1,0 +1,14 @@
+/API/obj
+/API/bin
+/.vs
+/site1.PublishSettings
+/site3.PublishSettings
+
+/BLL/obj
+/BLL/bin
+
+/Contracts/obj
+/Contracts/bin
+
+/DAL/obj
+/DAL/bin

@@ -7433,6 +7433,7 @@
     "net5.0": [
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 5.0.13",
       "SMP.BLL >= 1.0.0",
+      "SMP.Contracts >= 1.0.0",
       "SMP.DAL >= 1.0.0",
       "Swashbuckle.AspNetCore.Swagger >= 5.6.3",
       "Swashbuckle.AspNetCore.SwaggerGen >= 5.6.3",
@@ -7473,6 +7474,9 @@
           "projectReferences": {
             "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\SMP.BLL.csproj": {
               "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\BLL\\SMP.BLL.csproj"
+            },
+            "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj": {
+              "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\Contracts\\SMP.Contracts.csproj"
             },
             "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
               "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj"

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BLL\SMP.BLL.csproj" />
+    <ProjectReference Include="..\Contracts\SMP.Contracts.csproj" />
     <ProjectReference Include="..\DAL\SMP.DAL.csproj" />
   </ItemGroup>
 
