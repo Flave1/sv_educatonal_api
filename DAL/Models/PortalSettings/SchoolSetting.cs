@@ -19,7 +19,6 @@ namespace SMP.DAL.Models.PortalSettings
         public string State { get; set; }
         public string Phone_no1 { get; set; }
         public string Phone_no2 { get; set; }
-        public string Primary  { get; set; }
-        public string Secondary  { get; set; }
+        public string SchoolType  { get; set; }
     }
 }
