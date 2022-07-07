@@ -17,14 +17,8 @@ namespace SMP.DAL.Models.PortalSettings
         public string SchoolAbbreviation { get; set; }
         public string Country { get; set; }
         public string State { get; set; }
-<<<<<<< HEAD
-        public string Phone_no1 { get; set; }
-        public string Phone_no2 { get; set; }
-        public string SchoolType  { get; set; }
-=======
         public string PhoneNo1 { get; set; }
         public string PhoneNo2 { get; set; }
         public string SchoolType  { get; set; } 
->>>>>>> 97647fbd0bbbad293faa3ca977fa8f360c6c2cd8
     }
 }
