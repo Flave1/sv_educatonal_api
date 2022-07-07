@@ -27,8 +27,8 @@ namespace SMP.Contracts.PortalSettings
         public string SchoolAbbreviation { get; set; }
         public string Country { get; set; }
         public string State { get; set; }
-        public string Phone_no1 { get; set; }
-        public string Phone_no2 { get; set; }
+        public string PhoneNo1 { get; set; }
+        public string PhoneNo2 { get; set; }
         public string SchoolType { get; set; } 
         public SchoolSettingContract(SchoolSetting db)
         {
@@ -38,8 +38,8 @@ namespace SMP.Contracts.PortalSettings
             SchoolAbbreviation = db.SchoolAbbreviation;
             Country = db.Country;
             State = db.State;
-            Phone_no1 = db.PhoneNo1;
-            Phone_no2 = db.PhoneNo2;
+            PhoneNo1 = db.PhoneNo1;
+            PhoneNo2 = db.PhoneNo2;
             SchoolType = db.SchoolType; 
         }
     }
