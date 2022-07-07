@@ -15,10 +15,9 @@ namespace SMP.Contracts.PortalSettings
         public string SchoolAbbreviation { get; set; }
         public string Country { get; set; }
         public string State { get; set; }
-        public string Phone_no1 { get; set; }
-        public string Phone_no2 { get; set; }
-        public string Primary { get; set; }
-        public string Secondary { get; set; }
+        public string PhoneNo1 { get; set; }
+        public string PhoneNo2 { get; set; }
+        public string SchoolType { get; set; }
     }
         public class SchoolSettingContract
     {
@@ -30,8 +29,7 @@ namespace SMP.Contracts.PortalSettings
         public string State { get; set; }
         public string Phone_no1 { get; set; }
         public string Phone_no2 { get; set; }
-        public string Primary { get; set; } 
-        public string Secondary { get; set; }
+        public string SchoolType { get; set; } 
         public SchoolSettingContract(SchoolSetting db)
         {
             SchoolSettingsId = db.SchoolSettingsId;
@@ -40,10 +38,9 @@ namespace SMP.Contracts.PortalSettings
             SchoolAbbreviation = db.SchoolAbbreviation;
             Country = db.Country;
             State = db.State;
-            Phone_no1 = db.Phone_no1;
-            Phone_no2 = db.Phone_no2;
-            Primary = db.Primary;
-            Secondary = db.Secondary;
+            Phone_no1 = db.PhoneNo1;
+            Phone_no2 = db.PhoneNo2;
+            SchoolType = db.SchoolType; 
 
         }
     }
