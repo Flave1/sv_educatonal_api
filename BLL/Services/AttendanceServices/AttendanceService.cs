@@ -25,7 +25,6 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             this.context = context;
         }
-
         async Task<APIResponse<List<GetAttendance>>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
             var res = new APIResponse<List<GetAttendance>>();
@@ -96,7 +95,7 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
           
-        public async Task<APIResponse<List<GetAttendance>>> GetAllAttendanceRegisterAsync(Guid sessionClassId)
+        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.GetAllAttendanceRegisterAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetAttendance>>();
  
@@ -141,8 +140,8 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<List<AttendanceList>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var classRegister = await context.ClassRegister
-                .Include(q => q.SessionClass).ThenInclude(s => s.Students)
-                .Include(q => q.StudentAttendances).ThenInclude(x=>x.StudentContact)
+                .Include(q => q.SessionClass).ThenInclude(s => s.Students).ThenInclude(e => e.User)
+                .Include(q => q.StudentAttendances).ThenInclude(x=>x.StudentContact).ThenInclude(e => e.User)
                 .Where(x => x.ClassRegisterId == classRegisterId).FirstOrDefaultAsync();
            
             if (classRegister == null)
