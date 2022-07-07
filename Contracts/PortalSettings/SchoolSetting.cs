@@ -41,7 +41,6 @@ namespace SMP.Contracts.PortalSettings
             Phone_no1 = db.PhoneNo1;
             Phone_no2 = db.PhoneNo2;
             SchoolType = db.SchoolType; 
-
         }
     }
 }

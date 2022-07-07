@@ -56,9 +56,9 @@ namespace DAL
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
         public DbSet<PublishStatus> PublishStatus { get; set; }
-        public DbSet<SchoolSetting> SchoolSettings { get; set; }
-        public DbSet<ResultSetting> ResultSetting { get; set; }
-        public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        //public DbSet<SchoolSetting> SchoolSettings { get; set; }
+        //public DbSet<ResultSetting> ResultSetting { get; set; }
+        //public DbSet<NotificationSetting> NotificationSetting { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
