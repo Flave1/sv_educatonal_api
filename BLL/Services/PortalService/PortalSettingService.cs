@@ -10,12 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.BLL.Services.Portal
+namespace SMP.BLL.Services.PortalService
 {
     public class PortalSettingService : IPortalSettingService
     {
         private readonly DataContext context;
-        public PortalSettingService()
+        public PortalSettingService(DataContext context)
         {
             this.context = context;
         }
@@ -26,6 +26,7 @@ namespace SMP.BLL.Services.Portal
 
             if (schoolSetting == null)
             {
+
                 schoolSetting = new SchoolSetting()
                 {
                     SchoolName = contract.SchoolName,
@@ -33,7 +34,7 @@ namespace SMP.BLL.Services.Portal
                     SchoolAbbreviation = contract.SchoolAbbreviation,
                     PhoneNo1 = contract.PhoneNo1,
                     PhoneNo2 = contract.PhoneNo2,
-                    SchoolType = contract.SchoolType, 
+                    SchoolType = contract.SchoolType,
                     Country = contract.Country,
                     State = contract.State,
 
@@ -52,9 +53,9 @@ namespace SMP.BLL.Services.Portal
                 schoolSetting.Country = contract.Country;
                 schoolSetting.State = contract.State;
             }
-
+            await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Created;
-            res.Result = contract;
+            res.Result = new PostSchoolSetting { SchoolSettingsId = schoolSetting.SchoolSettingsId, SchoolAbbreviation = schoolSetting.SchoolAbbreviation, Country = schoolSetting.Country, PhoneNo1 = schoolSetting.PhoneNo1, PhoneNo2 = schoolSetting.PhoneNo2, SchoolAddress = schoolSetting.SchoolAddress, SchoolName = schoolSetting.SchoolName, SchoolType = schoolSetting.SchoolType, State = schoolSetting.State};
             res.IsSuccessful = true;
             return res;
         }
@@ -63,6 +64,7 @@ namespace SMP.BLL.Services.Portal
         {
             var res = new APIResponse<PostResultSetting>();
             var setting = await context.ResultSetting.FirstOrDefaultAsync(x => x.ResultSettingId == contract.ResultSettingId);
+            
             if (setting == null)
             {
                 setting = new ResultSetting()
@@ -75,7 +77,7 @@ namespace SMP.BLL.Services.Portal
                     BatchPrinting = contract.BatchPrinting,
                 };
                 await context.ResultSetting.AddAsync(setting);
-
+                 
             }
             else
             {
@@ -86,9 +88,9 @@ namespace SMP.BLL.Services.Portal
                 setting.CumulativeResult = contract.CumulativeResult;
                 setting.BatchPrinting = contract.BatchPrinting;
             }
-
+            await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Created;
-            res.Result = contract;
+            res.Result = new PostResultSetting { ResultSettingId = setting.ResultSettingId, BatchPrinting = setting.BatchPrinting, CumulativeResult = setting.CumulativeResult, PromoteAll = setting.PromoteAll, PromoteByPassmark = setting.PromoteByPassmark, ShowNewsletter = setting.ShowNewsletter, ShowPositionOnResult = setting.ShowPositionOnResult};
             res.IsSuccessful = true;
             return res;
              
@@ -98,11 +100,11 @@ namespace SMP.BLL.Services.Portal
             var res = new APIResponse<PostNotificationSetting>();
             var setting = await context.NotificationSetting.FirstOrDefaultAsync(x => x.NotificationSettingId == contract.NotificationSettingId);
 
+
             if (setting == null)
-            {
+            { 
                 setting = new NotificationSetting
                 {
-
                     NotifyByEmail = contract.NotifyByEmail,
                 };
                 await context.NotificationSetting.AddAsync(setting);
@@ -114,7 +116,7 @@ namespace SMP.BLL.Services.Portal
             await context.SaveChangesAsync();
 
             res.Message.FriendlyMessage = Messages.Created;
-            res.Result = contract;
+            res.Result = new PostNotificationSetting { NotificationSettingId = setting.NotificationSettingId, NotifyByEmail = setting.NotifyByEmail};
             res.IsSuccessful = true;
             return res;
         }

@@ -1,7 +1,7 @@
 ﻿using BLL.MiddleWares;
 using Contracts.Common; 
 using Microsoft.AspNetCore.Mvc;
-using SMP.BLL.Services.Portal;
+using SMP.BLL.Services.PortalService;
 using SMP.Contracts.PortalSettings;
 using System;
 using System.Threading.Tasks;  
@@ -61,14 +61,14 @@ namespace API.Controllers
         [HttpGet("get/result-settings")]
         public async Task<IActionResult> GetResultSettings(Guid resultlSettingId)
         {
-            var response = await service.GetSchollSettingsAsync(resultlSettingId);
+            var response = await service.GetResultSettingsAsync(resultlSettingId);
             return Ok(response);
         }
          
         [HttpGet("get/notification-settings")]
         public async Task<IActionResult> GetNotificationSettings(Guid notificationSettingId)
         {
-            var response = await service.GetSchollSettingsAsync(notificationSettingId);
+            var response = await service.GetNotificationSettingsAsync(notificationSettingId);
             return Ok(response);
         }
           
