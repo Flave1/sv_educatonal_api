@@ -31,10 +31,9 @@ namespace SMP.BLL.Services.Portal
                     SchoolName = contract.SchoolName,
                     SchoolAddress = contract.SchoolAddress,
                     SchoolAbbreviation = contract.SchoolAbbreviation,
-                    Phone_no1 = contract.Phone_no1,
-                    Phone_no2 = contract.Phone_no2,
-                    Primary = contract.Primary,
-                    Secondary = contract.Secondary,
+                    PhoneNo1 = contract.PhoneNo1,
+                    PhoneNo2 = contract.PhoneNo2,
+                    SchoolType = contract.SchoolType, 
                     Country = contract.Country,
                     State = contract.State,
 
@@ -47,10 +46,9 @@ namespace SMP.BLL.Services.Portal
                 schoolSetting.SchoolName = contract.SchoolName;
                 schoolSetting.SchoolAddress = contract.SchoolAddress;
                 schoolSetting.SchoolAbbreviation = contract.SchoolAbbreviation;
-                schoolSetting.Phone_no1 = contract.Phone_no1;
-                schoolSetting.Phone_no2 = contract.Phone_no2;
-                schoolSetting.Primary = contract.Primary;
-                schoolSetting.Secondary = contract.Secondary;
+                schoolSetting.PhoneNo1 = contract.PhoneNo1;
+                schoolSetting.PhoneNo2 = contract.PhoneNo2;
+                schoolSetting.SchoolType = contract.SchoolType;
                 schoolSetting.Country = contract.Country;
                 schoolSetting.State = contract.State;
             }
@@ -69,24 +67,24 @@ namespace SMP.BLL.Services.Portal
             {
                 setting = new ResultSetting()
                 {
-                    Promote_by_passmark = contract.Promote_by_passmark,
-                    Promote_all = contract.Promote_all,
-                    Show_position_on_result = contract.Show_position_on_result,
-                    Show_newsletter = contract.Show_newsletter,
-                    Cumulative_result = contract.Cumulative_result,
-                    Batch_printing = contract.Batch_printing,
+                    PromoteByPassmark = contract.PromoteByPassmark,
+                    PromoteAll = contract.PromoteAll,
+                    ShowPositionOnResult = contract.ShowPositionOnResult,
+                    ShowNewsletter = contract.ShowNewsletter,
+                    CumulativeResult = contract.CumulativeResult,
+                    BatchPrinting = contract.BatchPrinting,
                 };
                 await context.ResultSetting.AddAsync(setting);
 
             }
             else
             {
-                setting.Promote_by_passmark = contract.Promote_by_passmark;
-                setting.Promote_all = contract.Promote_all;
-                setting.Show_position_on_result = contract.Show_position_on_result;
-                setting.Show_newsletter = contract.Show_newsletter;
-                setting.Cumulative_result = contract.Cumulative_result;
-                setting.Batch_printing = contract.Batch_printing;
+                setting.PromoteByPassmark = contract.PromoteByPassmark;
+                setting.PromoteAll = contract.PromoteAll;
+                setting.ShowPositionOnResult = contract.ShowPositionOnResult;
+                setting.ShowNewsletter = contract.ShowNewsletter;
+                setting.CumulativeResult = contract.CumulativeResult;
+                setting.BatchPrinting = contract.BatchPrinting;
             }
 
             res.Message.FriendlyMessage = Messages.Created;

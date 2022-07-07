@@ -12,11 +12,11 @@ namespace SMP.DAL.Models.PortalSettings
     {
         [Key]
         public Guid ResultSettingId { get; set; }
-        public bool Promote_by_passmark { get; set; }
-        public bool Promote_all { get; set; }
-        public bool Show_position_on_result { get; set; }
-        public bool Cumulative_result { get; set; }
-        public bool Show_newsletter { get; set; }
-        public bool Batch_printing { get; set; }
+        public bool PromoteByPassmark { get; set; }
+        public bool PromoteAll { get; set; }
+        public bool ShowPositionOnResult { get; set; }
+        public bool CumulativeResult { get; set; }
+        public bool ShowNewsletter { get; set; }
+        public bool BatchPrinting { get; set; }
     }
 }
