@@ -10,7 +10,7 @@ namespace DAL.Authentication
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         [Key]
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Permission { get; set; }
         public string DisplayName { get; set; } 
         public bool IsActive { get; set; }
         public Guid ActivityParentId { get; set; }
