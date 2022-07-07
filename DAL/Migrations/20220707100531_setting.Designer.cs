@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace DAL.Migrations
+namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220707093545_portalsettings")]
-    partial class portalsettings
+    [Migration("20220707100531_setting")]
+    partial class setting
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -44,7 +44,7 @@ namespace DAL.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Permission")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UpdatedBy")

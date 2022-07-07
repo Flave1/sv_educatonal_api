@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\Portal\**" />
+    <EmbeddedResource Remove="Services\Portal\**" />
+    <None Remove="Services\Portal\**" />
+  </ItemGroup>
+
+  <ItemGroup>
 	  <PackageReference Include="MailKit" Version="2.6.0" />
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="Polly" Version="7.2.3" />
