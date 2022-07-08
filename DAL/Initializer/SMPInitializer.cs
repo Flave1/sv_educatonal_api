@@ -111,18 +111,16 @@ namespace SMP.DAL.Initializer
                         Permission = "student-all-student",
                         DisplayName = "All Student",
                         IsActive = true, Deleted = false},
-
-                    //enrollment-management
                     new Activity {
                         Id = Guid.Parse("7282f924-1449-4774-813c-6d83b7eb1868"),
-                        ActivityParentId = Guid.Parse("6ac6237e-63fe-4860-8f29-32151b5fce7d"),
-                        Permission = "enrollment-enrolled",
+                        ActivityParentId = Guid.Parse("a29a2a62-c814-4c06-bf79-cba341b1043c"),
+                        Permission = "student-enrolled",
                         DisplayName = "Enrolled Students",
                         IsActive = true, Deleted = false},
                     new Activity {
                         Id = Guid.Parse("17edf1f0-de9c-4ca2-98d3-ef3652d4d088"),
-                        ActivityParentId = Guid.Parse("6ac6237e-63fe-4860-8f29-32151b5fce7d"),
-                        Permission = "enrollment-unenrolled",
+                        ActivityParentId = Guid.Parse("a29a2a62-c814-4c06-bf79-cba341b1043c"),
+                        Permission = "student-unenrolled",
                         DisplayName = "Unenrolled Students",
                         IsActive = true, Deleted = false},
 

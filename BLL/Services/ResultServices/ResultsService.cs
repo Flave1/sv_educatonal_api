@@ -280,7 +280,7 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(d => d.Students).ThenInclude(d => d.User)
                 .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
                 .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
-                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students).Select(g => new StudentResult(g, regNoFormat, sessionClassId)).FirstOrDefaultAsync();
+                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students).Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
         
             if (result != null)
             {
@@ -483,7 +483,7 @@ namespace SMP.BLL.Services.ResultServices
                      .Include(r => r.Students).ThenInclude(d => d.User)
                      .Include(r => r.Session).ThenInclude(d => d.Terms)
                      .Include(r => r.Class)
-                      .Include(r => r.Teacher).ThenInclude(r => r.User)
+                     .Include(r => r.Teacher).ThenInclude(r => r.User)
                      .Where(r => r.SessionClassId == sessionClassId)
                      .Select(g => new CumulativeMasterList(g, regNoFormat)).FirstOrDefaultAsync();
 

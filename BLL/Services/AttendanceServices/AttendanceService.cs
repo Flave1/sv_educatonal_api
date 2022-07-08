@@ -25,9 +25,9 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             this.context = context;
         }
-        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
+        async Task<APIResponse<GetAttendance>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
-            var res = new APIResponse<List<GetAttendance>>();
+            var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var reg = new ClassRegister
             {
@@ -39,7 +39,7 @@ namespace SMP.BLL.Services.AttendanceServices
 
             var classAttendance = await context.ClassRegister.Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User).Where(d =>
             d.ClassRegisterId == reg.ClassRegisterId)
-                .Select(s => new GetAttendance(s, regNoFormat)).ToListAsync();
+                .Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
 
             res.Result = classAttendance;
             res.IsSuccessful = true;
@@ -74,15 +74,15 @@ namespace SMP.BLL.Services.AttendanceServices
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.ContinueAttendanceAsync(Guid ClassRegisterId)
+        async Task<APIResponse<GetAttendance>> IAttendanceService.ContinueAttendanceAsync(Guid ClassRegisterId)
         {
-            var res = new APIResponse<List<GetAttendance>>();
+            var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var register = await context.ClassRegister
                 .Include(d => d.StudentAttendances)
                 .Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(s => s.User)
-                .Where(d => d.ClassRegisterId == ClassRegisterId).Select(s => new GetAttendance(s, regNoFormat)).ToListAsync();
+                .Where(d => d.ClassRegisterId == ClassRegisterId).Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
             if(register == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;

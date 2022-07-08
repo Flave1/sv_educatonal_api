@@ -434,6 +434,9 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("EmergencyPhone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("EnrollmentStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("HomeAddress")
                         .HasColumnType("nvarchar(max)");
 
@@ -881,6 +884,129 @@ namespace SMP.DAL.Migrations
                     b.HasIndex("SessionId");
 
                     b.ToTable("GradeGroup");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.PortalSettings.NotificationSetting", b =>
+                {
+                    b.Property<Guid>("NotificationSettingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyByEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("NotificationSettingId");
+
+                    b.ToTable("NotificationSetting");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.PortalSettings.ResultSetting", b =>
+                {
+                    b.Property<Guid>("ResultSettingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("BatchPrinting")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("CumulativeResult")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PromoteAll")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PromoteByPassmark")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowNewsletter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowPositionOnResult")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ResultSettingId");
+
+                    b.ToTable("ResultSetting");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.PortalSettings.SchoolSetting", b =>
+                {
+                    b.Property<Guid>("SchoolSettingsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNo1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNo2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolAbbreviation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SchoolSettingsId");
+
+                    b.ToTable("SchoolSettings");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", b =>
