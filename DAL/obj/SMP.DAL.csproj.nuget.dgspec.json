@@ -1,23 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {}
+    "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj": {}
   },
   "projects": {
-    "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj": {
+    "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
+        "projectUniqueName": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj",
         "projectName": "SMP.DAL",
-        "projectPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\SMP.DAL.csproj",
-        "packagesPath": "C:\\Users\\thispc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\thispc\\Desktop\\FLAVETECH\\Main\\SchoolManagerAPI\\DAL\\obj\\",
+        "projectPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\SMP.DAL.csproj",
+        "packagesPath": "C:\\Users\\PARTNER\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\PARTNER\\Desktop\\schoolmanagement.api\\DAL\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "C:\\Users\\thispc\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\PARTNER\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -79,7 +76,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.202\\RuntimeIdentifierGraph.json"
         }
       }
     }

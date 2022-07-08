@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.BLL.Services.Portal
+namespace SMP.BLL.Services.PortalService
 {
     public interface IPortalSettingService
     {
