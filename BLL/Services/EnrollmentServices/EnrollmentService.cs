@@ -32,10 +32,11 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
                           join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                          where b.Status == (int)EnrollmentStatus.Enrolled && a.SessionClass.Session.IsActive == true
+                          where b.Status == (int)EnrollmentStatus.Enrolled && a.SessionClass.Session.IsActive == true && a.SessionClassId == b.SessionClassId
                           select new EnrolledStudents
                           {
                               Status = "enrrolled",
+                              SessionClassId = a.SessionClassId.ToString(),
                               StudentContactId = a.StudentContactId.ToString(),
                               StudentName = a.User.FirstName + " " + a.User.LastName,
                               StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
