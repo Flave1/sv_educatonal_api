@@ -84,9 +84,10 @@ namespace SMP.BLL.Services.EnrollmentServices
                     {
                         await studentService.ChangeClassAsync(Guid.Parse(studentId), Guid.Parse(req.SessionClassId));
 
-                        var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
+                        var enrollment = await context.Enrollment.Include(d => d.Student).FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
                         if (enrollment != null)
                         {
+                            enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
                             enrollment.StudentContactId = Guid.Parse(studentId);
                             enrollment.SessionClassId = Guid.Parse(req.SessionClassId);
                             enrollment.Status = (int)EnrollmentStatus.Enrolled;
@@ -122,10 +123,10 @@ namespace SMP.BLL.Services.EnrollmentServices
                 {
                     try
                     {
-
-                        var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
+                        var enrollment = await context.Enrollment.Include(d => d.Student).FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
                         if (enrollment != null)
                         {
+                            enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
                             enrollment.Status = (int)EnrollmentStatus.UnEnrolled;
                             await context.SaveChangesAsync();
                         }

@@ -6,6 +6,7 @@ using DAL;
 using DAL.ClassEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.ClassEntities;
 using System;
@@ -125,9 +126,7 @@ namespace BLL.ClassServices
                 {
                     try
                     {
-                        //sessionClass.ClassId = Guid.Parse(sClass.ClassId);
                         sessionClass.FormTeacherId = Guid.Parse(sClass.FormTeacherId);
-                        //sessionClass.SessionId = Guid.Parse(sClass.SessionId);
                         sessionClass.InSession = sClass.InSession;
                         sessionClass.ExamScore = sClass.ExamScore;
                         sessionClass.AssessmentScore = sClass.AssessmentScore;
@@ -236,7 +235,7 @@ namespace BLL.ClassServices
             var result = await context.StudentContact
                 .Include(q => q.User)
                 .OrderByDescending(d => d.User.FirstName)
-                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId)
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
                 .Select(f =>  new GetStudentContacts(f, regNoFormat)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

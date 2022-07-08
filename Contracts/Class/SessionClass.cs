@@ -66,7 +66,7 @@ namespace Contracts.Class
                 }).ToArray();
                 SubjectCount = sClass.SessionClassSubjects.Count();
             }
-            if(sClass.Students != null && sClass.Students.Any())
+            if(sClass.Students != null && sClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
             {
                 StudentCount = sClass.Students.Count();
             }

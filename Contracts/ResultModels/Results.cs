@@ -86,7 +86,7 @@ namespace SMP.Contracts.ResultModels
             if (db.SessionClass.Students != null && db.SessionClass.Students.Any())
             {
                 
-                foreach (var student in db.SessionClass.Students)
+                foreach (var student in db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).ToList())
                 {
                     var scoreEntrySheet = new ScoreEntrySheet();
                     var scoreEntrySheet1 = db.ScoreEntries.FirstOrDefault(f => f.StudentContactId == student.StudentContactId && f.SessionTermId == term.SessionTermId);
