@@ -11,10 +11,10 @@ namespace SMP.Contracts.ResultModels
     {
         public bool IsPublished { get; set; }
         public List<StudentResultDetail> PublishResult { get; set; } = new List<StudentResultDetail>();
-        public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId)
+        public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId, Guid termId)
         {
             if (s.Any())
-                PublishResult = s.Select(x => new StudentResultDetail(x, regNoFormat, sessionClassId)).ToList();
+                PublishResult = s.Select(x => new StudentResultDetail(x, regNoFormat, sessionClassId, termId)).ToList();
         }
         public StudentResult(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {
@@ -24,12 +24,12 @@ namespace SMP.Contracts.ResultModels
                 s.StudentName = student.User?.FirstName + " " + student.User?.LastName;
                 s.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                 s.Position = "";
-                s.TotalSubjects = student.SessionClass.ClassScoreEntries.Select(d => d.ScoreEntries).Count();
-
-                s.TotalExamScore = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClass.SessionClassId == sessionClassId && d.SessionTermId == termId).Sum(d => d.ExamScore);
-                s.TotalAssessmentScore = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClass.SessionClassId == sessionClassId && d.SessionTermId == termId).Sum(d => d.AssessmentScore);
-
-                s.AverageScore = s.TotalExamScore + s.TotalAssessmentScore / s.TotalSubjects;
+                var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+                s.TotalSubjects = studentsSubjects.Count();
+                s.TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
+                s.TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
+                decimal total = s.TotalExamScore + s.TotalAssessmentScore;
+                s.AverageScore = Math.Round(total / s.TotalSubjects, 2);
 
                 s.Status = student.SessionClass.PassMark > s.AverageScore ? "FAILED" : "PASSED";
                 PublishResult.Add(s);
@@ -44,24 +44,24 @@ namespace SMP.Contracts.ResultModels
         public string StudentContactId { get; set; }
         public string RegistrationNumber { get; set; }
         public string Position { get; set; }
-        public double AverageScore { get; set; }
+        public decimal AverageScore { get; set; }
         public int TotalSubjects { get; set; }
         public int TotalExamScore { get; set; }
         public int TotalAssessmentScore { get; set; }
         public string Status { get; set; }
         public StudentResultDetail() { }
-        public StudentResultDetail(StudentContact student, string regNoFormat, Guid sessionClassId)
+        public StudentResultDetail(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {
             StudentName = student.User?.FirstName + " " + student.User?.LastName;
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             Position = "1";
-            TotalSubjects = student.SessionClass.ClassScoreEntries.Select(d => d.ScoreEntries.Select(d => d.IsOffered == true)).Count();
-
-            TotalExamScore = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClass.SessionClassId == sessionClassId).Sum(d => d.ExamScore);
-            TotalAssessmentScore = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClass.SessionClassId == sessionClassId).Sum(d => d.AssessmentScore);
-
-            AverageScore = TotalExamScore + TotalAssessmentScore / TotalSubjects;
+            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+            TotalSubjects = studentsSubjects.Count();
+            TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
+            TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
+            decimal total = TotalExamScore + TotalAssessmentScore;
+            AverageScore = Math.Round(TotalSubjects > 0 ? total / TotalSubjects : 0, 2);
 
             Status = student.SessionClass.PassMark > AverageScore ? "FAILED" : "PASSED";
         }

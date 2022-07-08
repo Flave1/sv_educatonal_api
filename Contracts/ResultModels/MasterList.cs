@@ -28,7 +28,7 @@ namespace SMP.Contracts.ResultModels
             TermName = term.TermName;
             if (db.Students.Any())
             {
-                ResultList = db.Students.Select(e => new MasterListResult(e, regNoFormat, term.SessionTermId)).ToList();
+                ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new MasterListResult(e, regNoFormat, term.SessionTermId)).ToList();
             }
             
         }
@@ -99,7 +99,7 @@ namespace SMP.Contracts.ResultModels
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
             if (db.Students.Any())
-                ResultList = db.Students.Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
+                ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
 
         } 
     }
@@ -134,19 +134,12 @@ namespace SMP.Contracts.ResultModels
 
             var scores = se.ScoreEntries.Where(d => d.IsOffered == true).ToList();
 
-
             var grouped = se?.ScoreEntries.Where(d => d.IsOffered == true)
                 .GroupBy(u => u.SessionTermId)
                 .Select(grp => grp.ToList())
                 .ToList();
 
             CumulativeTermAvgScore = grouped.Select(d => new CumulativeTermAvgScore(d)).ToList();
-            //CumulativeTermAvgScore = se?.ScoreEntries.GroupBy(d => new {
-
-            //    SessionTermid = d.SessionTermId,
-            //    TermName = d.t.Where(a => a.IsOffered == true).FirstOrDefault()?.SessionTerm?.TermName
-
-            //}).Select(x => new CumulativeTermAvgScore(x)).ToList();
 
 
             Subjects = se?.ScoreEntries.Where(d => d.IsOffered == true).GroupBy(x => x.ClassScoreEntryId).Select(d => new CumulativeMasterListResultSubjects(d)).ToList();
@@ -177,7 +170,7 @@ namespace SMP.Contracts.ResultModels
     {
         public string TermName { get; set; }
         public string TermId { get; set; }
-        public int TermCumalativeScore { get; set; }
+        public decimal TermCumalativeScore { get; set; }
         public CumulativeTermAvgScore() { }
         public CumulativeTermAvgScore(ScoreEntry score)
         {
@@ -200,8 +193,9 @@ namespace SMP.Contracts.ResultModels
             TermId = x.FirstOrDefault()?.SessionTerm?.SessionTermId.ToString();
             var exam = x?.Sum(r => r.ExamScore) ?? 0;
             var ass = x?.Sum(r => r.AssessmentScore) ?? 0;
-            var count = x?.Count();
-            TermCumalativeScore = exam + ass / count ?? 0;
+            var count = x.Count();
+            decimal total = exam + ass;
+            TermCumalativeScore = Math.Round(total / count, 2);
         }
 
     }
