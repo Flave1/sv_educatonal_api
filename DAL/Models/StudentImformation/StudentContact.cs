@@ -30,6 +30,7 @@ namespace DAL.StudentInformation
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
         public int Status { get; set; }
+        public int EnrollmentStatus { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
     }
 }
