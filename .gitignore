@@ -10,6 +10,19 @@
 *.userosscache
 *.sln.docstates
 
+API/bin/
+API/obj/
+
+BLL/bin/
+BLL/obj/
+
+DAL/bin/
+DAL/obj/
+
+.vs/
+
+Contracts/bin/
+Contracts/obj/
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
