@@ -34,6 +34,7 @@ namespace SMP.BLL.Services.AttendanceServices
                 SessionClassId = SessionClassId,
                 RegisterLabel = $"ATTENDANCE AS AT {DateTime.UtcNow}",
             };
+
             await context.ClassRegister.AddAsync(reg);
             await context.SaveChangesAsync();
 
