@@ -555,5 +555,37 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
+
+        async Task<APIResponse<StudentResult>> IResultsService.GetStudentResultAsync(Guid sessionClassId, Guid termId, string studentContactId)
+        {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+            var res = new APIResponse<StudentResult>();
+            var result = await context.SessionClass
+                .Include(e => e.PublishStatus)
+                .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
+                .Include(d => d.Students).ThenInclude(d => d.User)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
+                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
+                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students).Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.IsPublished = context.PublishStatus.FirstOrDefault(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId)?.IsPublished ?? false;
+                var averages = result.PublishResult.Select(d => d.AverageScore);
+                var studentPositions = UtilTools.GetStudentPositions(averages);
+                foreach (var item in result.PublishResult)
+                {
+                    item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
+                }
+                result.PublishResult = result.PublishResult.Where(d => d.StudentContactId == studentContactId).ToList();
+            }
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+
     }
 }
