@@ -129,5 +129,12 @@ namespace API.Controllers
             var response = await service.PreviewPreviousTermsClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId), Guid.Parse(sessionTermId));
             return Ok(response);
         }
+
+        [HttpGet("get/student-result")]
+        public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string studentContactId)
+        {
+            var response = await service.GetStudentResultAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
+            return Ok(response);
+        }
     }
 } 

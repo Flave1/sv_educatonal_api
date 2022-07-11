@@ -26,5 +26,6 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<PreviewClassScoreEntry>> PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
         Task<APIResponse<CumulativeMasterList>> GetCumulativeMasterListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<StudentCoreEntry>> GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
+        Task<APIResponse<StudentResult>> GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
     }
 }
