@@ -28,16 +28,7 @@ namespace SMP.Contracts.FileUpload
                 var filePath = Path.Combine(environment.ContentRootPath, "Uploads", fileName);
 
                 bool exists = System.IO.Directory.Exists(filePath);
-                
-                //try
-                //{
-                //    if (!exists)
-                //        Directory.CreateDirectory("Uploads");
-                     
-                //}
-                //catch (Exception)
-                //{ }
-
+                 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     fileStream.Position = 0;
