@@ -51,7 +51,7 @@ namespace BLL.StudentServices
                 try
                 { 
                     var result = RegistrationNumber.GenerateForStudents();
-                    var uploadProfile = upload.UploadProfileImage(student.ProfileImage);
+
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
                      
                     var item = new StudentContact
