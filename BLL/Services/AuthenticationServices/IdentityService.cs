@@ -50,6 +50,7 @@ namespace BLL.AuthenticationServices
 
         async Task<AuthenticationResult> IIdentityService.LoginAsync(LoginCommand loginRequest)
         {
+            var id = Guid.NewGuid();
             var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
             if (userAccount == null)
                 throw new ArgumentException($"User account with {loginRequest.UserName} is not available");
@@ -60,10 +61,11 @@ namespace BLL.AuthenticationServices
             if(userAccount.UserType == (int)UserTypes.Teacher)
             {
                 var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
-                if(techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
                 { 
                     throw new ArgumentException($"Teacher account is currently unavailable!! Please contact school administration");
                 }
+                id = techerAccount.TeacherId;
             }
 
             if (userAccount.UserType == (int)UserTypes.Student)
@@ -73,9 +75,10 @@ namespace BLL.AuthenticationServices
                 {
                     throw new ArgumentException($"Student account is currently unavailable!! Please contact school administration");
                 }
+                id = studentAccount?.StudentContactId ?? new Guid();
             }
 
-            return await GenerateAuthenticationResultForUserAsync(userAccount);
+            return await GenerateAuthenticationResultForUserAsync(userAccount, id);
         }
 
         public async Task<AuthenticationResult> RefreshTokenAsync(string refreshToken, string token)
@@ -121,7 +124,7 @@ namespace BLL.AuthenticationServices
 
                 var user = await userManager.FindByIdAsync(validatedToken.Claims.SingleOrDefault(x => x.Type == "userId").Value);
 
-                return await GenerateAuthenticationResultForUserAsync(user);
+                return await GenerateAuthenticationResultForUserAsync(user, new Guid());
             }
             catch (Exception ex)
             {
@@ -156,7 +159,7 @@ namespace BLL.AuthenticationServices
 
 
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID)
         {
             try
             {
@@ -170,7 +173,8 @@ namespace BLL.AuthenticationServices
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("userId", user.Id),
                 new Claim("userType", user.UserType.ToString()),
-                new Claim("userName",user.UserName)
+                new Claim("userName",user.UserName),
+                user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentCoontactId", ID.ToString()),
             };
 
                 var userClaims = await userManager.GetClaimsAsync(user);

@@ -37,7 +37,7 @@ namespace API.Controllers
             return BadRequest(response);
         }
         [HttpPost("/update/teacher")]
-        public async Task<IActionResult> UpdateUserAsync([FromForm] UserCommand request)
+        public async Task<IActionResult> UpdateTeacherAsync([FromBody] UserCommand request)
         {
             var response = await service.UpdateTeacherAsync(request);
             if (response.IsSuccessful)
