@@ -44,7 +44,9 @@ namespace SMP.Contracts.FileUpload
                     fileStream.Close();
                 }
 
-                return filePath;
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
+                return url;
             }
             throw new ArgumentException("Invalid Profile Image");
         }
@@ -88,7 +90,6 @@ namespace SMP.Contracts.FileUpload
                     }
                 }
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-
                 var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
                 return url;
             }
