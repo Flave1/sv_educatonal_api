@@ -32,6 +32,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<List<GetClasses>>> IResultsService.GetCurrentStaffClassesAsync()
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value; 
             var res = new APIResponse<List<GetClasses>>();
 
             if (!string.IsNullOrEmpty(userid))
@@ -41,10 +42,28 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     res.Result = await context.SessionClass
                         .Include(s => s.Class) 
-                        .OrderBy(s => s.Class.Name)
                         .Include(s => s.Session)
+                        .OrderBy(s => s.Class.Name)
                         .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses(s)).ToListAsync();
-                } 
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+                //GET SUBJECT TEACHER CLASSES 
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                   var currentClasses = await context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId))).Select(s => new GetClasses(s)).ToListAsync();
+
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
 
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;

@@ -44,6 +44,7 @@ namespace Contracts.Options
         public string ZipCode { get; set; }
         public string Photo { get; set; }
         public string SessionClassId { get; set; }
+
     }
 
     public class GetStudentContacts
