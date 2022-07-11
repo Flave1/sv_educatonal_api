@@ -15,6 +15,7 @@ using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Data;
+using SMP.Contracts.FileUpload;
 
 namespace BLL.AuthenticationServices
 {
@@ -26,7 +27,8 @@ namespace BLL.AuthenticationServices
         private readonly DataContext context;
         private readonly IIdentityService identityService;
         private readonly SchoolSettings schoolSettings;
-        public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context, IIdentityService identityService, IOptions<SchoolSettings> options)
+        private readonly IFileUploadService uploadService;
+        public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context, IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -34,6 +36,7 @@ namespace BLL.AuthenticationServices
             this.context = context;
             this.identityService = identityService;
             this.schoolSettings = options.Value;
+            this.uploadService = uploadService;
         }
 
         async Task IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -69,6 +72,7 @@ namespace BLL.AuthenticationServices
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
             var email  = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
+            var filePath = uploadService.UploadProfileImage(student.ProfileImage);
             var user = new AppUser
             {
                 UserName = email,
@@ -83,6 +87,7 @@ namespace BLL.AuthenticationServices
                 FirstName = student.FirstName,
                 MiddleName = student.MiddleName,
                 Phone = student.Phone,
+                Photo = filePath
                 
             };
             var result = await manager.CreateAsync(user, regNoFormat);
@@ -110,6 +115,7 @@ namespace BLL.AuthenticationServices
                 throw new ArgumentException("Account not found");
             }
 
+            var filePath = uploadService.UpdateProfileImage(student.ProfileImage, account.Photo);
             account.UserName = student.Email;
             account.Email = student.Email;
             account.UserType = (int)UserTypes.Student;
@@ -118,6 +124,7 @@ namespace BLL.AuthenticationServices
             account.FirstName = student.FirstName;
             account.MiddleName = student.MiddleName;
             account.Phone = student.Phone;
+            account.Photo = filePath;
             var result = await manager.UpdateAsync(account);
             if (!result.Succeeded)
             {

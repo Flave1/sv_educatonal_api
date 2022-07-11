@@ -1,4 +1,5 @@
 ﻿using DAL.StudentInformation;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -43,7 +44,8 @@ namespace Contracts.Options
         public string CountryId { get; set; }
         public string ZipCode { get; set; }
         public string Photo { get; set; }
-        public string SessionClassId { get; set; }
+        public string SessionClassId { get; set; } 
+        public IFormFile ProfileImage { get; set; }
     }
 
     public class GetStudentContacts
@@ -100,6 +102,7 @@ namespace Contracts.Options
             StudentAccountId = db.StudentContactId.ToString();
             UserName = db.User.UserName;
             Email = db.User.Email;
+            Photo = db.User.Photo;
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
         }

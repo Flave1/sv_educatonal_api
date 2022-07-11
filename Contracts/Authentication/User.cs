@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Http;
 using System; 
 
 namespace Contracts.Authentication
@@ -7,7 +8,8 @@ namespace Contracts.Authentication
     public class UserCommand: UpdateTeacher
     {
         public string Id { get; set; }
-        public string Email { get; set; } 
+        public string Email { get; set; }
+        public IFormFile ProfileImage { get; set; }
     }
 
 
@@ -24,6 +26,7 @@ namespace Contracts.Authentication
         public string MiddleName { get; set; }
         public string Phone { get; set; }
         public string dob { get; set; }
+        public string Photo { get; set; }
 
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
@@ -39,6 +42,7 @@ namespace Contracts.Authentication
             Phone = db.User.PhoneNumber;
             MiddleName = db.User.MiddleName;
             dob = db.User.DOB;
+            Photo = db.User.Photo;
         }
     }
 

@@ -6,17 +6,20 @@ using Contracts.Options;
 using DAL;
 using DAL.Authentication;
 using DAL.StudentInformation;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.ResultServices;
+using SMP.Contracts.FileUpload;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,14 +30,16 @@ namespace BLL.StudentServices
         private readonly DataContext context;
         private readonly IUserService userService;
         private readonly UserManager<AppUser> userManager;
-        private readonly IResultsService resultsService;
+        private readonly IResultsService resultsService; 
+        private readonly IFileUploadService upload;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload)
         {
             this.context = context;
             this.userService = userService;
             this.userManager = userManager;
-            this.resultsService = resultsService;
+            this.resultsService = resultsService; 
+            this.upload = upload;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -44,12 +49,11 @@ namespace BLL.StudentServices
             {
                 
                 try
-                {
-
+                { 
                     var result = RegistrationNumber.GenerateForStudents();
 
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
-
+                     
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
@@ -62,12 +66,13 @@ namespace BLL.StudentServices
                         ParentOrGuardianRelationship = student.ParentOrGuardianRelationship,
                         HomePhone = student.HomePhone,
                         StateId = student.StateId,
-                        UserId = userId,
+                        UserId = userId, 
                         ZipCode = student.ZipCode,
                         RegistrationNumber = result.Keys.First(),
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
-                        SessionClassId = Guid.Parse(student.SessionClassId)
+                        SessionClassId = Guid.Parse(student.SessionClassId),
+                        
                     };
                     context.StudentContact.Add(item);
                     await context.SaveChangesAsync();
@@ -122,7 +127,6 @@ namespace BLL.StudentServices
 
                 try
                 {
-
                     var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
                     if (studentInfor == null)
                     {
