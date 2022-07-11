@@ -7,11 +7,14 @@ using Contracts.Email;
 using DAL;
 using DAL.Authentication;
 using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.Contracts.FileUpload;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,17 +26,22 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
         private readonly IEmailService emailService;
+        private readonly IWebHostEnvironment environment;
+        private readonly IFileUploadService upload;
 
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService)
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload)
         {
             this.userManager = userManager;
             this.context = context;
             this.emailService = emailService;
+            this.environment = environment;
+            this.upload = upload;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
         {
             var res = new APIResponse<UserCommand>();
+            var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
             if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
             {
                 res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
@@ -56,7 +64,7 @@ namespace SMP.BLL.Services.TeacherServices
                 Phone = request.Phone,
                 PhoneNumber = request.Phone,
                 PhoneNumberConfirmed = false,
-                Photo = null,
+                Photo = uploadProfile
             };
             var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
             if (!result.Succeeded)
@@ -104,6 +112,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.UpdateTeacherAsync(UserCommand userDetail)
         {
             var res = new APIResponse<UserCommand>();
+            var uploadProfile = upload.UpdateProfileImage(userDetail.ProfileImage, userDetail.Photo);
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {
@@ -121,7 +130,7 @@ namespace SMP.BLL.Services.TeacherServices
                 user.MiddleName = userDetail.MiddleName;
                 user.Phone = userDetail.Phone;
                 user.DOB = userDetail.DOB;
-                user.Photo = userDetail.Photo;
+                user.Photo = uploadProfile;
                 user.EmailConfirmed = true;
 
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);

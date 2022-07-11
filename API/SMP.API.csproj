@@ -24,4 +24,8 @@
     <ProjectReference Include="..\DAL\SMP.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\ProfileImage\" />
+  </ItemGroup>
+
 </Project>

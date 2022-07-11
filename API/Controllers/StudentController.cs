@@ -26,7 +26,7 @@ namespace API.Controllers
         #region STUDENTS
 
         [HttpPost("create/student")]
-        public async Task<IActionResult> CreateStudentAsync([FromBody] StudentContactCommand request)
+        public async Task<IActionResult> CreateStudentAsync([FromForm] StudentContactCommand request)
         {
             var response = await service.CreateStudenAsync(request);
             if (response.IsSuccessful)
@@ -34,7 +34,7 @@ namespace API.Controllers
             return BadRequest(response);
         }
         [HttpPost("update/student")]
-        public async Task<IActionResult> UpdateStudentAsync([FromBody] StudentContactCommand request)
+        public async Task<IActionResult> UpdateStudentAsync([FromForm] StudentContactCommand request)
         {
             var response = await service.UpdateStudenAsync(request);
             if (response.IsSuccessful)

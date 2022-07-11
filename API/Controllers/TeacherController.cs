@@ -29,7 +29,7 @@ namespace API.Controllers
 
 
         [HttpPost("/create/teacher")]
-        public async Task<IActionResult> CreateTeacherAsync([FromBody] UserCommand request)
+        public async Task<IActionResult> CreateTeacherAsync([FromForm] UserCommand request)
         {
             var response = await service.CreateTeacherAsync(request);
             if (response.IsSuccessful)
