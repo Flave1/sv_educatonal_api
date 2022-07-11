@@ -31,9 +31,9 @@ namespace BLL.StudentServices
         private readonly IUserService userService;
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService; 
-        private readonly IFileUpload upload;
+        private readonly IFileUploadService upload;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUpload upload)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload)
         {
             this.context = context;
             this.userService = userService;
@@ -51,8 +51,8 @@ namespace BLL.StudentServices
                 try
                 { 
                     var result = RegistrationNumber.GenerateForStudents();
-                    var uploadProfile = upload.Upload(student.ProfileImage);
-                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), uploadProfile);
+                    var uploadProfile = upload.UploadProfileImage(student.ProfileImage);
+                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
                      
                     var item = new StudentContact
                     {
@@ -127,7 +127,6 @@ namespace BLL.StudentServices
 
                 try
                 {
-                    var uploadProfile = upload.Upload(student.ProfileImage);
                     var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
                     if (studentInfor == null)
                     {
@@ -135,7 +134,7 @@ namespace BLL.StudentServices
                         return res;
                     }
 
-                    await userService.UpdateStudentUserAccountAsync(student, uploadProfile);
+                    await userService.UpdateStudentUserAccountAsync(student);
 
                     studentInfor.CityId = student.CityId;
                     studentInfor.CountryId = student.CountryId;
@@ -148,7 +147,6 @@ namespace BLL.StudentServices
                     studentInfor.HomePhone = student.HomePhone;
                     studentInfor.StateId = student.StateId;
                     studentInfor.ZipCode = student.ZipCode;
-                    studentInfor.User.Photo = student?.Photo;
                     studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
                     await context.SaveChangesAsync();
 

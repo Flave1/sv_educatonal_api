@@ -27,9 +27,9 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly DataContext context;
         private readonly IEmailService emailService;
         private readonly IWebHostEnvironment environment;
-        private readonly IFileUpload upload;
+        private readonly IFileUploadService upload;
 
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUpload upload)
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload)
         {
             this.userManager = userManager;
             this.context = context;
@@ -41,7 +41,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
         {
             var res = new APIResponse<UserCommand>();
-            var uploadProfile = upload.Upload(request.ProfileImage);
+            var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
             if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
             {
                 res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
@@ -112,7 +112,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.UpdateTeacherAsync(UserCommand userDetail)
         {
             var res = new APIResponse<UserCommand>();
-            var uploadProfile = upload.Upload(userDetail.ProfileImage);
+            var uploadProfile = upload.UpdateProfileImage(userDetail.ProfileImage, userDetail.Photo);
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {

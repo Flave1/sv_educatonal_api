@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.FileUpload
 {
-    public interface IFileUpload
+    public interface IFileUploadService
     {
-        string Upload(IFormFile file);
+        string UploadProfileImage(IFormFile file);
+        string UpdateProfileImage(IFormFile file, string filePath);
     }
 }

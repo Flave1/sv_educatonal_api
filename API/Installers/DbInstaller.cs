@@ -55,7 +55,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IPromotionService, PromotionService>();
             services.AddScoped<IAttendanceService, AttendanceService>();
             services.AddScoped<IResultsService, ResultsService>();
-            services.AddScoped<IFileUpload, FileUploadService>();
+            services.AddScoped<IFileUploadService, FileUploadService>();
             services.AddScoped<IPortalSettingService, PortalSettingService>();
 
         }
