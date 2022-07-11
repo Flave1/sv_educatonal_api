@@ -66,9 +66,10 @@ namespace BLL.AuthenticationServices
 
        
 
-        async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
+        async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat, string filePath)
         {
             var email  = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
+             
             var user = new AppUser
             {
                 UserName = email,
@@ -83,6 +84,7 @@ namespace BLL.AuthenticationServices
                 FirstName = student.FirstName,
                 MiddleName = student.MiddleName,
                 Phone = student.Phone,
+                Photo = filePath
                 
             };
             var result = await manager.CreateAsync(user, regNoFormat);
@@ -102,7 +104,7 @@ namespace BLL.AuthenticationServices
             return user.Id;
         }
 
-        async Task IUserService.UpdateStudentUserAccountAsync(StudentContactCommand student)
+        async Task IUserService.UpdateStudentUserAccountAsync(StudentContactCommand student, string filePath)
         {
             var account = await manager.FindByIdAsync(student.UserAccountId);
             if(account == null)
@@ -118,6 +120,7 @@ namespace BLL.AuthenticationServices
             account.FirstName = student.FirstName;
             account.MiddleName = student.MiddleName;
             account.Phone = student.Phone;
+            account.Photo = filePath;
             var result = await manager.UpdateAsync(account);
             if (!result.Succeeded)
             {

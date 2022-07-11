@@ -13,7 +13,7 @@ namespace BLL.AuthenticationServices
         void ValidateResetOption(ResetPassword request);
         Task GenerateResetLinkAndSendToUserEmail(ResetPassword request);
         Task<AuthenticationResult> ResetAccountAsync(ResetAccount request);
-        Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat);
-        Task UpdateStudentUserAccountAsync(StudentContactCommand student);
+        Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat, string filePath);
+        Task UpdateStudentUserAccountAsync(StudentContactCommand student, string filePath);
     }
 }

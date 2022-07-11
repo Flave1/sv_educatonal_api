@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.Contracts.FileUpload;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,33 +27,21 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly DataContext context;
         private readonly IEmailService emailService;
         private readonly IWebHostEnvironment environment;
+        private readonly IFileUpload upload;
 
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment)
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUpload upload)
         {
             this.userManager = userManager;
             this.context = context;
             this.emailService = emailService;
             this.environment = environment;
+            this.upload = upload;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
         {
             var res = new APIResponse<UserCommand>();
-            if (request.ProfileImage != null && request.ProfileImage.Length > 0 && (request.ProfileImage.FileName.EndsWith(".jpg")
-            || request.ProfileImage.FileName.EndsWith(".jpeg") || request.ProfileImage.FileName.EndsWith(".png")))
-            {
-                string ext = Path.GetExtension(request.ProfileImage.FileName);
-                string fileName = Guid.NewGuid().ToString() + ext;
-
-                var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
-                using (var fileStream = new FileStream(file, FileMode.Create))
-                {
-                    fileStream.Position = 0;
-                    request.ProfileImage.CopyTo(fileStream);
-                    fileStream.Flush();
-                    fileStream.Close();
-                }
-            }
+            var uploadProfile = upload.Upload(request.ProfileImage);
             if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
             {
                 res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
@@ -75,7 +64,7 @@ namespace SMP.BLL.Services.TeacherServices
                 Phone = request.Phone,
                 PhoneNumber = request.Phone,
                 PhoneNumberConfirmed = false,
-                Photo = request?.Photo,
+                Photo = uploadProfile
             };
             var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
             if (!result.Succeeded)
@@ -123,21 +112,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.UpdateTeacherAsync(UserCommand userDetail)
         {
             var res = new APIResponse<UserCommand>();
-            if (userDetail.ProfileImage != null && userDetail.ProfileImage.Length > 0 && (userDetail.ProfileImage.FileName.EndsWith(".jpg")
-            || userDetail.ProfileImage.FileName.EndsWith(".jpeg") || userDetail.ProfileImage.FileName.EndsWith(".png")))
-            {
-                string ext = Path.GetExtension(userDetail.ProfileImage.FileName);
-                string fileName = Guid.NewGuid().ToString() + ext;
-
-                var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
-                using (var fileStream = new FileStream(file, FileMode.Create))
-                {
-                    fileStream.Position = 0;
-                    userDetail.ProfileImage.CopyTo(fileStream);
-                    fileStream.Flush();
-                    fileStream.Close();
-                }
-            }
+            var uploadProfile = upload.Upload(userDetail.ProfileImage);
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {
@@ -155,7 +130,7 @@ namespace SMP.BLL.Services.TeacherServices
                 user.MiddleName = userDetail.MiddleName;
                 user.Phone = userDetail.Phone;
                 user.DOB = userDetail.DOB;
-                user.Photo = userDetail.Photo;
+                user.Photo = uploadProfile;
                 user.EmailConfirmed = true;
 
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);

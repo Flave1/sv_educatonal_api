@@ -16,6 +16,7 @@ using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.TeacherServices;
+using SMP.Contracts.FileUpload;
 
 namespace GODP.APIsContinuation.Installers
 {
@@ -54,6 +55,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IPromotionService, PromotionService>();
             services.AddScoped<IAttendanceService, AttendanceService>();
             services.AddScoped<IResultsService, ResultsService>();
+            services.AddScoped<IFileUpload, FileUploadService>();
             services.AddScoped<IPortalSettingService, PortalSettingService>();
 
         }

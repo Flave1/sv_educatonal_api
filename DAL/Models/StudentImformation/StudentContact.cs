@@ -32,6 +32,5 @@ namespace DAL.StudentInformation
         public int Status { get; set; }
         public int EnrollmentStatus { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
-        public string Photo { get; set; }
     }
 }
