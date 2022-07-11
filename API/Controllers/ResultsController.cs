@@ -130,7 +130,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpGet("get/result-list")]
+        [HttpGet("get/student-result")]
         public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string StudentContactId)
         {
             var response = await service.GetListOfResultsAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
