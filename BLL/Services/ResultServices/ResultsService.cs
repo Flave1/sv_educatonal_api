@@ -556,7 +556,7 @@ namespace SMP.BLL.Services.ResultServices
         }
 
 
-        async Task<APIResponse<StudentResult>> IResultsService.GetStudentResultAsync(Guid sessionClassId, Guid termId, string studentContactId)
+        async Task<APIResponse<StudentResult>> IResultsService.GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
@@ -579,7 +579,7 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
                 }
-                result.PublishResult = result.PublishResult.Where(d => d.StudentContactId == studentContactId).ToList();
+                result.PublishResult = result.PublishResult.Where(d => d.StudentContactId == studentContactId.ToString()).ToList();
             }
             res.IsSuccessful = true;
             res.Result = result;

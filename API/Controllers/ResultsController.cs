@@ -131,9 +131,9 @@ namespace API.Controllers
         }
 
         [HttpGet("get/student-result")]
-        public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string StudentContactId)
+        public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string studentContactId)
         {
-            var response = await service.GetListOfResultsAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
+            var response = await service.GetStudentResultAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
             return Ok(response);
         }
     }
