@@ -7,11 +7,13 @@ using Contracts.Email;
 using DAL;
 using DAL.Authentication;
 using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,17 +25,34 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
         private readonly IEmailService emailService;
+        private readonly IWebHostEnvironment environment;
 
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService)
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment)
         {
             this.userManager = userManager;
             this.context = context;
             this.emailService = emailService;
+            this.environment = environment;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
         {
             var res = new APIResponse<UserCommand>();
+            if (request.ProfileImage != null && request.ProfileImage.Length > 0 && (request.ProfileImage.FileName.EndsWith(".jpg")
+            || request.ProfileImage.FileName.EndsWith(".jpeg") || request.ProfileImage.FileName.EndsWith(".png")))
+            {
+                string ext = Path.GetExtension(request.ProfileImage.FileName);
+                string fileName = Guid.NewGuid().ToString() + ext;
+
+                var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
+                using (var fileStream = new FileStream(file, FileMode.Create))
+                {
+                    fileStream.Position = 0;
+                    request.ProfileImage.CopyTo(fileStream);
+                    fileStream.Flush();
+                    fileStream.Close();
+                }
+            }
             if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
             {
                 res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
@@ -56,7 +75,7 @@ namespace SMP.BLL.Services.TeacherServices
                 Phone = request.Phone,
                 PhoneNumber = request.Phone,
                 PhoneNumberConfirmed = false,
-                Photo = null,
+                Photo = request?.Photo,
             };
             var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
             if (!result.Succeeded)
@@ -104,6 +123,21 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.UpdateTeacherAsync(UserCommand userDetail)
         {
             var res = new APIResponse<UserCommand>();
+            if (userDetail.ProfileImage != null && userDetail.ProfileImage.Length > 0 && (userDetail.ProfileImage.FileName.EndsWith(".jpg")
+            || userDetail.ProfileImage.FileName.EndsWith(".jpeg") || userDetail.ProfileImage.FileName.EndsWith(".png")))
+            {
+                string ext = Path.GetExtension(userDetail.ProfileImage.FileName);
+                string fileName = Guid.NewGuid().ToString() + ext;
+
+                var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
+                using (var fileStream = new FileStream(file, FileMode.Create))
+                {
+                    fileStream.Position = 0;
+                    userDetail.ProfileImage.CopyTo(fileStream);
+                    fileStream.Flush();
+                    fileStream.Close();
+                }
+            }
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {

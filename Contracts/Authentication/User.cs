@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Http;
 using System; 
 
 namespace Contracts.Authentication
@@ -7,7 +8,8 @@ namespace Contracts.Authentication
     public class UserCommand: UpdateTeacher
     {
         public string Id { get; set; }
-        public string Email { get; set; } 
+        public string Email { get; set; }
+        public IFormFile ProfileImage { get; set; }
     }
 
 

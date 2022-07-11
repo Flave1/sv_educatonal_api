@@ -6,6 +6,7 @@ using Contracts.Options;
 using DAL;
 using DAL.Authentication;
 using DAL.StudentInformation;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -17,6 +18,7 @@ using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,13 +30,15 @@ namespace BLL.StudentServices
         private readonly IUserService userService;
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService;
+        private readonly IWebHostEnvironment environment;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService,IWebHostEnvironment environment)
         {
             this.context = context;
             this.userService = userService;
             this.userManager = userManager;
             this.resultsService = resultsService;
+            this.environment = environment;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -45,11 +49,24 @@ namespace BLL.StudentServices
                 
                 try
                 {
+                    if (student.ProfileImage != null && student.ProfileImage.Length > 0 && (student.ProfileImage.FileName.EndsWith(".jpg")
+                        || student.ProfileImage.FileName.EndsWith(".jpeg") || student.ProfileImage.FileName.EndsWith(".png")))
+                    {
+                        string ext = Path.GetExtension(student.ProfileImage.FileName);
+                        string fileName = Guid.NewGuid().ToString() + ext;
 
+                        var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
+                        using (var fileStream = new FileStream(file, FileMode.Create))
+                        {
+                            fileStream.Position = 0;
+                            student.ProfileImage.CopyTo(fileStream);
+                            fileStream.Flush();
+                            fileStream.Close();
+                        }
+                    }
                     var result = RegistrationNumber.GenerateForStudents();
-
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
-
+                     
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
@@ -63,11 +80,14 @@ namespace BLL.StudentServices
                         HomePhone = student.HomePhone,
                         StateId = student.StateId,
                         UserId = userId,
+                        Photo = student.Photo,
                         ZipCode = student.ZipCode,
                         RegistrationNumber = result.Keys.First(),
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
-                        SessionClassId = Guid.Parse(student.SessionClassId)
+                        
+                        SessionClassId = Guid.Parse(student.SessionClassId),
+                        
                     };
                     context.StudentContact.Add(item);
                     await context.SaveChangesAsync();
@@ -122,7 +142,21 @@ namespace BLL.StudentServices
 
                 try
                 {
+                    if (student.ProfileImage != null && student.ProfileImage.Length > 0 && (student.ProfileImage.FileName.EndsWith(".jpg")
+                        || student.ProfileImage.FileName.EndsWith(".jpeg") || student.ProfileImage.FileName.EndsWith(".png")))
+                    {
+                        string ext = Path.GetExtension(student.ProfileImage.FileName);
+                        string fileName = Guid.NewGuid().ToString() + ext;
 
+                        var file = Path.Combine(environment.ContentRootPath, "uploads", fileName);
+                        using (var fileStream = new FileStream(file, FileMode.Create))
+                        {
+                            fileStream.Position = 0;
+                            student.ProfileImage.CopyTo(fileStream);
+                            fileStream.Flush();
+                            fileStream.Close();
+                        }
+                    }
                     var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
                     if (studentInfor == null)
                     {
@@ -143,6 +177,7 @@ namespace BLL.StudentServices
                     studentInfor.HomePhone = student.HomePhone;
                     studentInfor.StateId = student.StateId;
                     studentInfor.ZipCode = student.ZipCode;
+                    studentInfor.User.Photo = student?.Photo;
                     studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
                     await context.SaveChangesAsync();
 
