@@ -49,17 +49,26 @@ namespace SMP.BLL.Services.ResultServices
                     res.IsSuccessful = true;
                     return res;
                 }
-                //GET SUBJECT TEACHER CLASSES 
+                //GET TEACHER CLASSES
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
-                   var currentClasses = await context.SessionClass
+                   var classesAsASujectTeacher = context.SessionClass
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
                         .OrderBy(s => s.Class.Name)
                         .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
-                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId))).Select(s => new GetClasses(s)).ToListAsync();
+                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
+                    var classesAsAFormTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+
+
+                    res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetClasses(s)).ToList();
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
                     return res;
