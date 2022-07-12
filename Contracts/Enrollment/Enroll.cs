@@ -23,5 +23,6 @@ namespace SMP.Contracts.Enrollment
         public string StudentRegNumber { get; set; }
         public string Status { get; set; }
         public string Class { get; set; }
+        public string SessionClassId { get; set; }
     }
 }
