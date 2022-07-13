@@ -151,7 +151,7 @@ namespace SMP.BLL.Services.AttendanceServices
                 return res;
             }
             var presentStudentIds = classRegister.StudentAttendances.Select(x=>x.ClassRegisterId).ToList();
-            var absentStudents = classRegister.SessionClass.Students.Where(x => !presentStudentIds.Contains(x.StudentContactId)).Select(s => new AttendanceList(s, regNoFormat, false)).ToList();
+            var absentStudents = classRegister.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Where(x => !presentStudentIds.Contains(x.StudentContactId)).Select(s => new AttendanceList(s, regNoFormat, false)).ToList();
            
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

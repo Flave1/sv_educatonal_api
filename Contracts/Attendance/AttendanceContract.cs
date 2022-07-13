@@ -23,14 +23,14 @@ namespace Contracts.AttendanceContract
         {
             ClassRegisterId = db.ClassRegisterId;
             ClassRegisterLabel = db.RegisterLabel;
-            if (db.SessionClass.Students.Any())
-                AttendanceList = db.SessionClass.Students.Select(d => new AttendanceList(d, regNoFormat, db.StudentAttendances)).ToList();
+            if (db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
+                AttendanceList = db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Select(d => new AttendanceList(d, regNoFormat, db.StudentAttendances)).ToList();
         }
         public GetAttendance(ClassRegister db)
         {
             ClassRegisterId = db.ClassRegisterId;
             ClassRegisterLabel = db.RegisterLabel;
-            TotalStudentInClass = db.SessionClass.Students.Count();
+            TotalStudentInClass = db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Count();
             TotalStudentPresent = db.StudentAttendances.Count();
             TotalStudentAbsent = TotalStudentInClass - TotalStudentPresent;
             DateTime = db.CreatedOn.ToString("dd-MM-yyy hh:mm");

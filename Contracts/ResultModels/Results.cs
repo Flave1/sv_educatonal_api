@@ -83,7 +83,7 @@ namespace SMP.Contracts.ResultModels
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
             SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
-            if (db.SessionClass.Students != null && db.SessionClass.Students.Any())
+            if (db.SessionClass.Students != null && db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
             {
                 
                 foreach (var student in db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).ToList())
