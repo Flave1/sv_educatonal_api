@@ -77,9 +77,9 @@ namespace API.Controllers
         }
 
         [HttpPost("update/class-register")]
-        public async Task<IActionResult> UpdateClassRegisterLabelAsync(UpdateClassRegister ClassRegister)
+        public async Task<IActionResult> UpdateClassRegisterLabelAsync(UpdateClassRegister classRegister)
         {
-            var response = await service.UpdateClassRegisterLabel(ClassRegister);
+            var response = await service.UpdateClassRegisterLabel(classRegister);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
