@@ -132,4 +132,98 @@ namespace SMP.Contracts.ResultModels
             }
         }
     }
+
+    public class CognitiveBehaviour
+    {
+        public string behaviour { get; set; }
+        public string remark { get; set; }
+    }
+
+    public class GradeSetting
+    {
+        public string limit { get; set; }
+        public string grade { get; set; }
+        public GradeSetting(Grade gradeSetting)
+        {
+            grade = gradeSetting.GradeName;
+            limit = gradeSetting.UpperLimit + "-" + gradeSetting.LowerLimit;
+        }
+    }
+
+    public class PreviewResult
+    {
+        public string studentName { get; set; }
+        public Guid studentContactId { get; set; }
+        public string registrationNumber { get; set; }
+        public string sessionClassName { get; set; }
+        public string session { get; set; }
+        public string term { get; set; }
+        public string position { get; set; }
+        public string remark { get; set; }
+        public int noOfStudents { get; set; }
+        public decimal total { get; set; }
+        public int totalScores { get; set; }
+        public int totalSubjects { get; set; }
+        public int totalExamScore { get; set; }
+        public int totalAssessmentScore { get;set; }
+        public decimal average { get; set; }
+        public bool isPublished { get; set; }
+        public List<StudentSubjectEntry> studentSubjectEntries { get; set; }
+        public List<GradeSetting> gradeSetting { get; set; }
+        public List<CognitiveBehaviour> cognitiveBehaviour { get; set; }
+        public PreviewResult(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId, Guid StudentContactId)
+        {
+            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+            totalExamScore = studentsSubjects.Sum(d => d.ExamScore);
+            totalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
+            total = totalExamScore + totalAssessmentScore;
+            average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
+            if (StudentContactId == studentContactId)
+            {
+                totalSubjects = studentsSubjects.Count();
+                remark = student.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+                position = "1";
+                registrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+                session = student.SessionClass.Session.StartDate + " / " + student.SessionClass.Session.StartDate;
+                studentName = student.User?.FirstName + " " + student.User?.LastName;
+                studentContactId = student.StudentContactId;
+                sessionClassName = student.SessionClass.Class.Name;
+                term = studentsSubjects.FirstOrDefault().SessionTerm.TermName;
+                noOfStudents = student.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Count();
+                isPublished = student.SessionClass.PublishStatus.IsPublished;
+                studentSubjectEntries = studentsSubjects.Select(e => new StudentSubjectEntry(e, student.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
+                gradeSetting = student.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            }
+        }
+    }
+
+    public class StudentSubjectEntry
+    {
+        public string sessionClassId { get; set; }
+        public string subjectId { get; set; }
+        public string sibjectName { get; set; }
+        public int examScore { get; set; }
+        public string classScoreEntryId { get; set; }
+        public int assessmentScore { get; set; }
+        public int totalScore { get; set; }
+        public string grade { get; set; }
+        public string remark { get; set; }
+        public StudentSubjectEntry() { }
+        public StudentSubjectEntry(ScoreEntry d, GradeGroup level, Guid SessionClassId)
+        {
+            sessionClassId = SessionClassId.ToString();
+            subjectId = d.ClassScoreEntry.SubjectId.ToString();
+            sibjectName = d.ClassScoreEntry.Subject.Name;
+            examScore = d.ExamScore;
+            classScoreEntryId = d.ClassScoreEntryId.ToString();
+            assessmentScore = d.AssessmentScore;
+            totalScore = examScore + assessmentScore;
+            var gradeSetup = level.Grades.FirstOrDefault(d => d.LowerLimit <= totalScore && totalScore <= d.UpperLimit);
+            if (gradeSetup != null)
+            {
+                grade = gradeSetup.GradeName;
+                remark = gradeSetup.Remark;
+            }
+        }
+    }
 }
