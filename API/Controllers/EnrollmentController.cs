@@ -45,9 +45,9 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/enrolled")]
-        public async Task<IActionResult> GetAllEnrrolledStudentsAsync()
+        public async Task<IActionResult> GetAllEnrrolledStudentsAsync(string sessionClassId)
         {
-            var response = await service.GetAllEnrrolledStudentsAsync();
+            var response = await service.GetAllEnrrolledStudentsAsync(Guid.Parse(sessionClassId));
             return Ok(response);
         }
 

@@ -23,7 +23,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             this.studentService = studentService;
         }
 
-        async Task<APIResponse<List<EnrolledStudents>>> IEnrollmentService.GetAllEnrrolledStudentsAsync()
+        async Task<APIResponse<List<EnrolledStudents>>> IEnrollmentService.GetAllEnrrolledStudentsAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<EnrolledStudents>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
@@ -32,15 +32,16 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
                           join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                          where b.Status == (int)EnrollmentStatus.Enrolled && a.SessionClass.Session.IsActive == true
-                          select new EnrolledStudents
+                          where b.Status == (int)EnrollmentStatus.Enrolled && a.SessionClass.Session.IsActive == true && a.SessionClassId == sessionClassId
+                                select new EnrolledStudents
                           {
                               Status = "enrrolled",
                               StudentContactId = a.StudentContactId.ToString(),
                               StudentName = a.User.FirstName + " " + a.User.LastName,
                               StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
-                              Class = a.SessionClass.Class.Name
-                          }).ToListAsync();
+                              Class = a.SessionClass.Class.Name,
+                              SessionClassId = sessionClassId.ToString()
+                                }).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
