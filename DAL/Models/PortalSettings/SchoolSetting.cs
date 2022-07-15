@@ -19,6 +19,7 @@ namespace SMP.DAL.Models.PortalSettings
         public string State { get; set; }
         public string PhoneNo1 { get; set; }
         public string PhoneNo2 { get; set; }
-        public string SchoolType  { get; set; } 
+        public string SchoolType  { get; set; }
+        public string Photo { get; set; }
     }
 }

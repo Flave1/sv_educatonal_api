@@ -1,4 +1,5 @@
-﻿using SMP.DAL.Models.PortalSettings;
+﻿using Microsoft.AspNetCore.Http;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace SMP.Contracts.PortalSettings
         public bool CumulativeResult { get; set; }
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
+        public IFormFile PrincipalStamp { get; set; }
+        public string Filepath { get; set; }
     }
     public class ResultSettingContract
     {

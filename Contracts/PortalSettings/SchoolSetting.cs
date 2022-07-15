@@ -1,4 +1,5 @@
-﻿using SMP.DAL.Models.PortalSettings;
+﻿using Microsoft.AspNetCore.Http;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace SMP.Contracts.PortalSettings
         public string PhoneNo1 { get; set; }
         public string PhoneNo2 { get; set; }
         public string SchoolType { get; set; }
+        public string Filepath { get; set; }
+        public IFormFile Photo { get; set; }
     }
         public class SchoolSettingContract
     {

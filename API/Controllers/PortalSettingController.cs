@@ -22,30 +22,30 @@ namespace API.Controllers
         #region portalsetting
 
 
-        [HttpPost("create-school-setting")]
-        public async Task<IActionResult> CreateScoolSettingAsync([FromBody] PostSchoolSetting request)
+        [HttpPost("create-update/school-setting")]
+        public async Task<IActionResult> CreateUpdateScoolSettingAsync([FromForm] PostSchoolSetting request)
         {
 
-            var response = await service.CreateSchollSettingsAsync(request);
+            var response = await service.CreateUpdateSchollSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
-        [HttpPost("create-result-setting")]
-        public async Task<IActionResult> CreateResultSettingAsync([FromBody] PostResultSetting request)
+        [HttpPost("create-update/result-setting")]
+        public async Task<IActionResult> CreateUpdateResultSettingAsync([FromForm] PostResultSetting request)
         {
 
-            var response = await service.CreateResultSettingsAsync(request);
+            var response = await service.CreateUpdateResultSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("create-notification-setting")]
+        [HttpPost("create-update-notification-setting")]
         public async Task<IActionResult> CreateNotificationSettingAsync([FromBody] PostNotificationSetting request)
         {
 
-            var response = await service.CreateNotificationSettingsAsync(request);
+            var response = await service.CreateUpdateNotificationSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
