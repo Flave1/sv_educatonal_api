@@ -133,24 +133,24 @@ namespace SMP.BLL.Services.PortalService
             async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
-            var getSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.Deleted == false);
-            res.Result = new SchoolSettingContract(getSettings);
+            var getSettings = await context.SchoolSettings.Where(x => x.Deleted == false).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync();
+            res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
         }
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            var getSettings = await context.ResultSetting.FirstOrDefaultAsync(x => x.Deleted == false);
-            res.Result = new ResultSettingContract(getSettings);
+            var getSettings = await context.ResultSetting.Where(x => x.Deleted == false).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync();
+            res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
-        }
+        } 
         async Task<APIResponse<NotificationSettingContract>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<NotificationSettingContract>();
-            var getSettings =  await  context.NotificationSetting.FirstOrDefaultAsync(x => x.Deleted == false);
-            res.Result = new NotificationSettingContract(getSettings);
+            var getSettings =  await  context.NotificationSetting.Where(x => x.Deleted == false).Select(f=> new NotificationSettingContract(f)).FirstOrDefaultAsync();
+            res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
         }

@@ -32,7 +32,8 @@ namespace SMP.Contracts.PortalSettings
         public string State { get; set; }
         public string PhoneNo1 { get; set; }
         public string PhoneNo2 { get; set; }
-        public string SchoolType { get; set; } 
+        public string SchoolType { get; set; }
+        public string Filepath { get; set; }
         public SchoolSettingContract(SchoolSetting db)
         {
             SchoolSettingsId = db.SchoolSettingsId;
@@ -43,7 +44,8 @@ namespace SMP.Contracts.PortalSettings
             State = db.State;
             PhoneNo1 = db.PhoneNo1;
             PhoneNo2 = db.PhoneNo2;
-            SchoolType = db.SchoolType; 
+            SchoolType = db.SchoolType;
+            Filepath = db.Photo;
         }
     }
 }
