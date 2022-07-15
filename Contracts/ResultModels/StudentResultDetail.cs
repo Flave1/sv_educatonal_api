@@ -177,6 +177,7 @@ namespace SMP.Contracts.ResultModels
             totalExamScore = studentsSubjects.Sum(d => d.ExamScore);
             totalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
             total = totalExamScore + totalAssessmentScore;
+            studentContactId = student.StudentContactId;
             average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
             if (StudentContactId == studentContactId)
             {

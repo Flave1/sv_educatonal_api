@@ -72,6 +72,7 @@ namespace BLL.StudentServices
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
                         SessionClassId = Guid.Parse(student.SessionClassId),
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled
                         
                     };
                     context.StudentContact.Add(item);

@@ -93,8 +93,12 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
-                   
+
                 }
+
+                res.Result = await context.SessionClassSubject
+                     .Include(d => d.Subject)
+                     .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -567,7 +571,11 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(e => e.Class).ThenInclude(d => d.GradeLevel)
                 .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
                 .Include(d => d.Students).ThenInclude(d => d.User)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f=>f.GradeLevel).ThenInclude(s=>s.Grades)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.PublishStatus)
                 .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(s => s.Subject)
                 .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
                 .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students.Where(d => d.EnrollmentStatus == 1)).SelectMany(s => s).Select(g => new PreviewResult(g, regNoFormat, sessionClassId, term.SessionTermId, studentContactId)).ToListAsync() ?? new List<PreviewResult>();
 
