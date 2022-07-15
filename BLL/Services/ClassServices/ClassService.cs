@@ -220,7 +220,6 @@ namespace BLL.ClassServices
                 var classesAsASujectTeacher = context.SessionClass
                      .Include(s => s.Class)
                      .Include(s => s.Session)
-                     .Include(s => s.SessionClassSubjects)
                      .OrderBy(s => s.Class.Name)
                      .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
@@ -228,10 +227,9 @@ namespace BLL.ClassServices
                 var classesAsAFormTeacher = context.SessionClass
                     .Include(s => s.Class)
                     .Include(s => s.Session)
-                    .Include(s => s.SessionClassSubjects)
                     .OrderBy(s => s.Class.Name)
                     .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
-                res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetSessionClass(s)).ToList();
+                res.Result = classesAsASujectTeacher.AsEnumerable().Concat(classesAsAFormTeacher.AsEnumerable()).Distinct().Select(s => new GetSessionClass(s)).ToList();
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;

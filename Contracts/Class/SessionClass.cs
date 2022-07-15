@@ -50,7 +50,7 @@ namespace Contracts.Class
             AssessmentScore = sClass.AssessmentScore;
             PassMark = sClass.PassMark;
             Session = sClass.Session.StartDate + " / " + sClass.Session.EndDate;
-            FormTeacher = sClass.Teacher.User.FirstName + " " + sClass.Teacher.User.LastName;
+            FormTeacher = sClass?.Teacher?.User?.FirstName + " " + sClass?.Teacher?.User?.LastName;
 
             if (sClass.SessionClassSubjects != null && sClass.SessionClassSubjects.Any())
             {
@@ -60,7 +60,7 @@ namespace Contracts.Class
                     SubjectId = w.SubjectId.ToString().ToLower(),
                     SubjectTeacherId = w.SubjectTeacherId.ToString().ToLower(),
                     SubjectName = w.Subject.Name,
-                    SubjectTeacherName = w.SubjectTeacher.User.FirstName + " " + w.SubjectTeacher.User.LastName,
+                    SubjectTeacherName = w?.SubjectTeacher?.User?.FirstName + " " + w.SubjectTeacher?.User?.LastName,
                     Assessment = w.AssessmentScore,
                     ExamSCore = w.ExamScore
                 }).ToArray();
