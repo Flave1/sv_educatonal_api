@@ -52,23 +52,23 @@ namespace API.Controllers
         }
 
         [HttpGet("get/school-settings")]
-        public async Task<IActionResult> GetSchoolSettings(Guid schoolSettingId)
+        public async Task<IActionResult> GetSchoolSettings()
         {
-            var response = await service.GetSchollSettingsAsync(schoolSettingId);
+            var response = await service.GetSchollSettingsAsync();
             return Ok(response);
         }
          
         [HttpGet("get/result-settings")]
-        public async Task<IActionResult> GetResultSettings(Guid resultlSettingId)
+        public async Task<IActionResult> GetResultSettings()
         {
-            var response = await service.GetResultSettingsAsync(resultlSettingId);
+            var response = await service.GetResultSettingsAsync();
             return Ok(response);
         }
          
         [HttpGet("get/notification-settings")]
-        public async Task<IActionResult> GetNotificationSettings(Guid notificationSettingId)
+        public async Task<IActionResult> GetNotificationSettings()
         {
-            var response = await service.GetNotificationSettingsAsync(notificationSettingId);
+            var response = await service.GetNotificationSettingsAsync();
             return Ok(response);
         }
           
