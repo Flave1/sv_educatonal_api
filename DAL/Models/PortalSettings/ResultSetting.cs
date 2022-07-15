@@ -18,5 +18,6 @@ namespace SMP.DAL.Models.PortalSettings
         public bool CumulativeResult { get; set; }
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
+        public string PrincipalStample { get; set; }
     }
 }

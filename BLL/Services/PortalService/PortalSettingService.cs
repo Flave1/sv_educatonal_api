@@ -2,6 +2,7 @@
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.Contracts.FileUpload;
 using SMP.Contracts.PortalSettings;
 using SMP.DAL.Models.PortalSettings;
 using System;
@@ -15,15 +16,18 @@ namespace SMP.BLL.Services.PortalService
     public class PortalSettingService : IPortalSettingService
     {
         private readonly DataContext context;
-        public PortalSettingService(DataContext context)
+        private readonly IFileUploadService upload;
+
+        public PortalSettingService(DataContext context, IFileUploadService upload)
         {
             this.context = context;
+            this.upload = upload;
         }
-        async Task<APIResponse<PostSchoolSetting>> IPortalSettingService.CreateSchollSettingsAsync(PostSchoolSetting contract)
+        async Task<APIResponse<PostSchoolSetting>> IPortalSettingService.CreateUpdateSchollSettingsAsync(PostSchoolSetting contract)
         {
             var res = new APIResponse<PostSchoolSetting>();
             var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.SchoolSettingsId == contract.SchoolSettingsId);
-
+            var uploadPhoto = upload.UploadProfileImage(contract.Photo);
             if (schoolSetting == null)
             {
 
@@ -37,6 +41,7 @@ namespace SMP.BLL.Services.PortalService
                     SchoolType = contract.SchoolType,
                     Country = contract.Country,
                     State = contract.State,
+                    Photo = uploadPhoto
 
                 };
                 await context.SchoolSettings.AddAsync(schoolSetting);
@@ -44,6 +49,7 @@ namespace SMP.BLL.Services.PortalService
             }
             else
             {
+                var updatePhoto = upload.UpdateProfileImage(contract.Photo,contract.Filepath);
                 schoolSetting.SchoolName = contract.SchoolName;
                 schoolSetting.SchoolAddress = contract.SchoolAddress;
                 schoolSetting.SchoolAbbreviation = contract.SchoolAbbreviation;
@@ -52,6 +58,7 @@ namespace SMP.BLL.Services.PortalService
                 schoolSetting.SchoolType = contract.SchoolType;
                 schoolSetting.Country = contract.Country;
                 schoolSetting.State = contract.State;
+                schoolSetting.Photo = updatePhoto;
             }
             await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Created;
@@ -60,11 +67,11 @@ namespace SMP.BLL.Services.PortalService
             return res;
         }
 
-        async Task<APIResponse<PostResultSetting>> IPortalSettingService.CreateResultSettingsAsync(PostResultSetting contract)
+        async Task<APIResponse<PostResultSetting>> IPortalSettingService.CreateUpdateResultSettingsAsync(PostResultSetting contract)
         {
             var res = new APIResponse<PostResultSetting>();
             var setting = await context.ResultSetting.FirstOrDefaultAsync(x => x.ResultSettingId == contract.ResultSettingId);
-            
+            var uploadPhoto = upload.UploadProfileImage(contract.PrincipalStamp);
             if (setting == null)
             {
                 setting = new ResultSetting()
@@ -75,18 +82,21 @@ namespace SMP.BLL.Services.PortalService
                     ShowNewsletter = contract.ShowNewsletter,
                     CumulativeResult = contract.CumulativeResult,
                     BatchPrinting = contract.BatchPrinting,
+                    PrincipalStample = uploadPhoto
                 };
                 await context.ResultSetting.AddAsync(setting);
                  
             }
             else
             {
+                var updatePhoto = upload.UpdateProfileImage(contract.PrincipalStamp, contract.Filepath);
                 setting.PromoteByPassmark = contract.PromoteByPassmark;
                 setting.PromoteAll = contract.PromoteAll;
                 setting.ShowPositionOnResult = contract.ShowPositionOnResult;
                 setting.ShowNewsletter = contract.ShowNewsletter;
                 setting.CumulativeResult = contract.CumulativeResult;
                 setting.BatchPrinting = contract.BatchPrinting;
+                setting.PrincipalStample = updatePhoto;
             }
             await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Created;
@@ -95,7 +105,7 @@ namespace SMP.BLL.Services.PortalService
             return res;
              
         }
-        async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateNotificationSettingsAsync(PostNotificationSetting contract)
+        async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting contract)
         {
             var res = new APIResponse<PostNotificationSetting>();
             var setting = await context.NotificationSetting.FirstOrDefaultAsync(x => x.NotificationSettingId == contract.NotificationSettingId);
@@ -120,26 +130,26 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         }
-            async Task<APIResponse<List<SchoolSettingContract>>> IPortalSettingService.GetSchollSettingsAsync(Guid schoolSettingId)
+            async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
-            var res = new APIResponse<List<SchoolSettingContract>>();
-            var getSettings = await context.SchoolSettings.Where(x => x.Deleted == false && x.SchoolSettingsId == schoolSettingId).Select(a => new SchoolSettingContract(a)).ToListAsync();
+            var res = new APIResponse<SchoolSettingContract>();
+            var getSettings = await context.SchoolSettings.OrderByDescending(x=>x.CreatedOn).Where(x => x.Deleted == false).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync();
             res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<List<ResultSettingContract>>> IPortalSettingService.GetResultSettingsAsync(Guid resultSettingId)
+        async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
-            var res = new APIResponse<List<ResultSettingContract>>();
-            var getSettings = await context.ResultSetting.Where(x => x.Deleted == false && x.ResultSettingId == resultSettingId).Select(a => new ResultSettingContract(a)).ToListAsync();
+            var res = new APIResponse<ResultSettingContract>();
+            var getSettings = await context.ResultSetting.OrderByDescending(x=>x.CreatedOn).Where(x => x.Deleted == false).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync();
             res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
-        }
-        async Task<APIResponse<List<NotificationSettingContract>>> IPortalSettingService.GetNotificationSettingsAsync(Guid notificationSettingId)
+        } 
+        async Task<APIResponse<NotificationSettingContract>>IPortalSettingService.GetNotificationSettingsAsync()
         {
-            var res = new APIResponse<List<NotificationSettingContract>>();
-            var getSettings = await context.NotificationSetting.Where(x => x.Deleted == false && x.NotificationSettingId == notificationSettingId).Select(a => new NotificationSettingContract(a)).ToListAsync();
+            var res = new APIResponse<NotificationSettingContract>();
+            var getSettings =  await  context.NotificationSetting.OrderByDescending(x=>x.CreatedOn).Where(x => x.Deleted == false).Select(f=> new NotificationSettingContract(f)).FirstOrDefaultAsync();
             res.Result = getSettings;
             res.IsSuccessful = true;
             return res;
