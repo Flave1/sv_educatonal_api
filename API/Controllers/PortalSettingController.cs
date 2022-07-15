@@ -22,53 +22,53 @@ namespace API.Controllers
         #region portalsetting
 
 
-        [HttpPost("create-school-setting")]
-        public async Task<IActionResult> CreateScoolSettingAsync([FromBody] PostSchoolSetting request)
+        [HttpPost("create-update/school-setting")]
+        public async Task<IActionResult> CreateUpdateScoolSettingAsync([FromForm] PostSchoolSetting request)
         {
 
-            var response = await service.CreateSchollSettingsAsync(request);
+            var response = await service.CreateUpdateSchollSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
-        [HttpPost("create-result-setting")]
-        public async Task<IActionResult> CreateResultSettingAsync([FromBody] PostResultSetting request)
+        [HttpPost("create-update/result-setting")]
+        public async Task<IActionResult> CreateUpdateResultSettingAsync([FromForm] PostResultSetting request)
         {
 
-            var response = await service.CreateResultSettingsAsync(request);
+            var response = await service.CreateUpdateResultSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("create-notification-setting")]
+        [HttpPost("create-update-notification-setting")]
         public async Task<IActionResult> CreateNotificationSettingAsync([FromBody] PostNotificationSetting request)
         {
 
-            var response = await service.CreateNotificationSettingsAsync(request);
+            var response = await service.CreateUpdateNotificationSettingsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
         [HttpGet("get/school-settings")]
-        public async Task<IActionResult> GetSchoolSettings(Guid schoolSettingId)
+        public async Task<IActionResult> GetSchoolSettings()
         {
-            var response = await service.GetSchollSettingsAsync(schoolSettingId);
+            var response = await service.GetSchollSettingsAsync();
             return Ok(response);
         }
          
         [HttpGet("get/result-settings")]
-        public async Task<IActionResult> GetResultSettings(Guid resultlSettingId)
+        public async Task<IActionResult> GetResultSettings()
         {
-            var response = await service.GetResultSettingsAsync(resultlSettingId);
+            var response = await service.GetResultSettingsAsync();
             return Ok(response);
         }
          
         [HttpGet("get/notification-settings")]
-        public async Task<IActionResult> GetNotificationSettings(Guid notificationSettingId)
+        public async Task<IActionResult> GetNotificationSettings()
         {
-            var response = await service.GetNotificationSettingsAsync(notificationSettingId);
+            var response = await service.GetNotificationSettingsAsync();
             return Ok(response);
         }
           

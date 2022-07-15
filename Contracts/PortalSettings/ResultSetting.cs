@@ -1,4 +1,5 @@
-﻿using SMP.DAL.Models.PortalSettings;
+﻿using Microsoft.AspNetCore.Http;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,8 @@ namespace SMP.Contracts.PortalSettings
         public bool CumulativeResult { get; set; }
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
+        public IFormFile PrincipalStamp { get; set; }
+        public string Filepath { get; set; }
     }
     public class ResultSettingContract
     {
@@ -26,6 +29,7 @@ namespace SMP.Contracts.PortalSettings
         public bool CumulativeResult { get; set; }
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
+        public string Filepath { get; set; }
         public ResultSettingContract( ResultSetting db)
         {
             ResultSettingId = db.ResultSettingId;
@@ -35,6 +39,7 @@ namespace SMP.Contracts.PortalSettings
             CumulativeResult = db.CumulativeResult;
             ShowNewsletter = db.ShowNewsletter;
             BatchPrinting = db.BatchPrinting;
+            Filepath = db.PrincipalStample;
         }
     }
 }

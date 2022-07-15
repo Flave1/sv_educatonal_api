@@ -590,5 +590,23 @@ namespace SMP.BLL.Services.ResultServices
             res.IsSuccessful = true;
             return res;
         }
+        async Task<APIResponse<ScoreEntry>> IResultsService.PrintResultAsync(string RegNo, Guid sessionClassId, Guid termId, Guid studentContactId)
+        {
+            var res = new APIResponse<ScoreEntry>();
+            var student = context.StudentContact.FirstOrDefaultAsync(e => e.RegistrationNumber == RegNo);
+            if(student == null)
+            {
+                res.Message.FriendlyMessage = "Student with this Registration Number is not Found";
+            }
+
+            var scoreEntry = await context.ScoreEntry.FirstOrDefaultAsync(rr => rr.StudentContactId == studentContactId);
+            if (scoreEntry != null)
+            { 
+
+            }
+            res.IsSuccessful = true;
+            res.Result = scoreEntry;
+            return res;
+        }
     }
 }
