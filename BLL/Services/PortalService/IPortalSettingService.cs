@@ -16,6 +16,6 @@ namespace SMP.BLL.Services.PortalService
         Task<APIResponse<NotificationSettingContract>> GetNotificationSettingsAsync();
         Task<APIResponse<SchoolSettingContract>> GetSchollSettingsAsync();
         Task<APIResponse<ResultSettingContract>> GetResultSettingsAsync();
-        Task<APIResponse<PostResultSetting>> UpdateResultSettingTemplateAsync(string template);
+        Task<APIResponse<UpdateResultSetting>> UpdateResultSettingTemplateAsync(UpdateResultSetting request);
     }
 }

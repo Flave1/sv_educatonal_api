@@ -42,9 +42,9 @@ namespace API.Controllers
             return BadRequest(response);
         }
         [HttpPost("update/result-setting-template")]
-        public async Task<IActionResult> UpdateResultSettingTemplateAsync([FromBody]string template)
+        public async Task<IActionResult> UpdateResultSettingTemplateAsync([FromBody] UpdateResultSetting request)
         { 
-            var response = await service.UpdateResultSettingTemplateAsync(template);
+            var response = await service.UpdateResultSettingTemplateAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

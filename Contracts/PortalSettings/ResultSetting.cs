@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.PortalSettings
 {
-    public class PostResultSetting
+    public class UpdateResultSetting
+    {
+        public string SelectedTemplate { get; set; }
+    }
+        public class PostResultSetting
     {
         public Guid ResultSettingId { get; set; }
         public bool PromoteByPassmark { get; set; }
