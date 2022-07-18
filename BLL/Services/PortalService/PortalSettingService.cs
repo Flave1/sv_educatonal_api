@@ -108,14 +108,18 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostResultSetting>> IPortalSettingService.UpdateTemplateAsync(string template)
         {
             var res = new APIResponse<PostResultSetting>();
-            var result = await context.ResultSetting.FirstOrDefaultAsync(x => x.Template == template);
-            if (result != null)
-            {
-                context.ResultSetting.Update(result);
+            var result = await context.ResultSetting.FirstOrDefaultAsync(x => x.Deleted == false);
+            if (result == null)
+            { 
+                res.Message.FriendlyMessage = "Result Settings Not Found";
             }
-            await context.SaveChangesAsync();
+            else
+            {
+                result.SelectedTemplate = template;
+                await context.SaveChangesAsync();
+            }
             res.Message.FriendlyMessage = "Updated Successfully";
-            res.Result = new PostResultSetting { ResultSettingId = result.ResultSettingId, BatchPrinting = result.BatchPrinting, CumulativeResult = result.CumulativeResult, Template = result.Template, PromoteAll = result.PromoteAll, PromoteByPassmark = result.PromoteByPassmark, ShowNewsletter = result.ShowNewsletter, ShowPositionOnResult = result.ShowPositionOnResult,   };
+            res.Result = new PostResultSetting { ResultSettingId = result.ResultSettingId, BatchPrinting = result.BatchPrinting, CumulativeResult = result.CumulativeResult, SelectedTemplate = result.SelectedTemplate, PromoteAll = result.PromoteAll, PromoteByPassmark = result.PromoteByPassmark, ShowNewsletter = result.ShowNewsletter, ShowPositionOnResult = result.ShowPositionOnResult };
             return res;
         }
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting contract)
@@ -143,7 +147,7 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         }
-            async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
+        async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
             var getSettings = await context.SchoolSettings.OrderByDescending(x=>x.CreatedOn).Where(x => x.Deleted == false).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync();

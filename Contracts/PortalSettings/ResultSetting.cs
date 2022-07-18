@@ -19,7 +19,7 @@ namespace SMP.Contracts.PortalSettings
         public bool BatchPrinting { get; set; }
         public IFormFile PrincipalStamp { get; set; }
         public string Filepath { get; set; }
-        public string Template { get; set; }
+        public string SelectedTemplate { get; set; }
     }
     public class ResultSettingContract
     {
