@@ -105,6 +105,19 @@ namespace SMP.BLL.Services.PortalService
             return res;
              
         }
+        async Task<APIResponse<PostResultSetting>> IPortalSettingService.UpdateTemplateAsync(string template)
+        {
+            var res = new APIResponse<PostResultSetting>();
+            var result = await context.ResultSetting.FirstOrDefaultAsync(x => x.Template == template);
+            if (result != null)
+            {
+                context.ResultSetting.Update(result);
+            }
+            await context.SaveChangesAsync();
+            res.Message.FriendlyMessage = "Updated Successfully";
+            res.Result = new PostResultSetting { ResultSettingId = result.ResultSettingId, BatchPrinting = result.BatchPrinting, CumulativeResult = result.CumulativeResult, Template = result.Template, PromoteAll = result.PromoteAll, PromoteByPassmark = result.PromoteByPassmark, ShowNewsletter = result.ShowNewsletter, ShowPositionOnResult = result.ShowPositionOnResult,   };
+            return res;
+        }
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting contract)
         {
             var res = new APIResponse<PostNotificationSetting>();

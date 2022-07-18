@@ -19,5 +19,6 @@ namespace SMP.DAL.Models.PortalSettings
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
         public string PrincipalStample { get; set; }
+        public string Template { get; set; }
     }
 }

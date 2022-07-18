@@ -41,6 +41,15 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpPost("create-update/result-setting")]
+        public async Task<IActionResult> UpdateResultSettingTemplateAsync(string template)
+        {
+
+            var response = await service.UpdateTemplateAsync(template);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
         [HttpPost("create-update-notification-setting")]
         public async Task<IActionResult> CreateNotificationSettingAsync([FromBody] PostNotificationSetting request)
         {
