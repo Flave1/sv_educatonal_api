@@ -109,15 +109,19 @@ namespace SMP.BLL.Services.PortalService
             if (result == null)
             { 
                 res.Message.FriendlyMessage = "Result Settings Not Found";
+
+                return res;
             }
             else
             {
                 result.SelectedTemplate = request.SelectedTemplate;
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = "Updated Successfully";
+                res.IsSuccessful = true;
                 res.Result = request;
+
+                return res;
             }
-            return res;
         }
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
