@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.PortalSettings
 {
-    public class PostResultSetting
+    public class UpdateResultSetting
+    {
+        public string SelectedTemplate { get; set; }
+    }
+        public class PostResultSetting
     {
         public Guid ResultSettingId { get; set; }
         public bool PromoteByPassmark { get; set; }
@@ -19,6 +23,7 @@ namespace SMP.Contracts.PortalSettings
         public bool BatchPrinting { get; set; }
         public IFormFile PrincipalStamp { get; set; }
         public string Filepath { get; set; }
+        public string SelectedTemplate { get; set; }
     }
     public class ResultSettingContract
     {
