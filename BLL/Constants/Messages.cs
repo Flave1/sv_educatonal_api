@@ -9,6 +9,7 @@ namespace SMP.BLL.Constants
     public static class Messages
     {
         public const string Created = "Successfully created";
+        public const string Saved = "Successfully Saved";
         public const string Updated = "Successfully updated";
         public const string GetSuccess = "Fetched successfully";
         public const string DeletedSuccess = "Deleted successfully";

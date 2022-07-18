@@ -25,11 +25,12 @@ namespace BLL.AuthenticationServices
     {
 
 
-        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters, DataContext dataContext, RoleManager<UserRole> roleManager, ILoggerService logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IOptions<JwtSettings> jwtSettings, DataContext context)
+        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters, 
+            RoleManager<UserRole> roleManager, ILoggerService logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IOptions<JwtSettings> jwtSettings,
+            DataContext context)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
-            this.dataContext = dataContext;
             this.roleManager = roleManager;
             this.logger = logger;
             this.httpContextAccessor = httpContextAccessor;
@@ -41,7 +42,6 @@ namespace BLL.AuthenticationServices
         private readonly UserManager<AppUser> userManager;
         private readonly JwtSettings jwtSettings;
         private readonly TokenValidationParameters tokenValidationParameters;
-        private readonly DataContext dataContext;
         private readonly RoleManager<UserRole> roleManager;
         private readonly ILoggerService logger;
         private readonly IHttpContextAccessor httpContextAccessor;
@@ -100,7 +100,7 @@ namespace BLL.AuthenticationServices
 
 
                 var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value;
-                var storedRefreshToken = dataContext.RefreshToken.SingleOrDefault(x => x.Token == refreshToken);
+                var storedRefreshToken = context.RefreshToken.SingleOrDefault(x => x.Token == refreshToken);
 
                 if (storedRefreshToken == null)
                     throw new ArgumentException("This Token Hasn't Expired Yet");
@@ -119,8 +119,8 @@ namespace BLL.AuthenticationServices
 
 
                 storedRefreshToken.Used = true;
-                dataContext.RefreshToken.Update(storedRefreshToken);
-                await dataContext.SaveChangesAsync();
+                context.RefreshToken.Update(storedRefreshToken);
+                await context.SaveChangesAsync();
 
                 var user = await userManager.FindByIdAsync(validatedToken.Claims.SingleOrDefault(x => x.Type == "userId").Value);
 
@@ -218,8 +218,8 @@ namespace BLL.AuthenticationServices
 
                 try
                 {
-                    await dataContext.RefreshToken.AddAsync(refreshToken);
-                    await dataContext.SaveChangesAsync();
+                    await context.RefreshToken.AddAsync(refreshToken);
+                    await context.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
