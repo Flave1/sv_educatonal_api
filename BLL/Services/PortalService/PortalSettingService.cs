@@ -101,6 +101,27 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
              
+        } 
+        async Task<APIResponse<UpdateResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(UpdateResultSetting request)
+        {
+            var res = new APIResponse<UpdateResultSetting>();
+            var result = await context.ResultSetting.FirstOrDefaultAsync();
+            if (result == null)
+            { 
+                res.Message.FriendlyMessage = "Result Settings Not Found";
+
+                return res;
+            }
+            else
+            {
+                result.SelectedTemplate = request.SelectedTemplate;
+                await context.SaveChangesAsync();
+                res.Message.FriendlyMessage = "Updated Successfully";
+                res.IsSuccessful = true;
+                res.Result = request;
+
+                return res;
+            }
         }
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
@@ -126,7 +147,7 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         }
-
+         
         async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
