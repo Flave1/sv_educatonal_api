@@ -41,10 +41,10 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("create-update/result-setting")]
+        [HttpPost("update/result-setting-template")]
         public async Task<IActionResult> UpdateResultSettingTemplateAsync([FromBody]string template)
         { 
-            var response = await service.UpdateTemplateAsync(template);
+            var response = await service.UpdateResultSettingTemplateAsync(template);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

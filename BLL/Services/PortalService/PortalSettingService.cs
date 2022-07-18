@@ -102,7 +102,7 @@ namespace SMP.BLL.Services.PortalService
             return res;
              
         } 
-        async Task<APIResponse<PostResultSetting>> IPortalSettingService.UpdateTemplateAsync(string template)
+        async Task<APIResponse<PostResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(string template)
         {
             var res = new APIResponse<PostResultSetting>();
             var result = await context.ResultSetting.FirstOrDefaultAsync(x => x.Deleted == false);
