@@ -42,9 +42,8 @@ namespace API.Controllers
             return BadRequest(response);
         }
         [HttpPost("create-update/result-setting")]
-        public async Task<IActionResult> UpdateResultSettingTemplateAsync(string template)
-        {
-
+        public async Task<IActionResult> UpdateResultSettingTemplateAsync([FromBody]string template)
+        { 
             var response = await service.UpdateTemplateAsync(template);
             if (response.IsSuccessful)
                 return Ok(response);

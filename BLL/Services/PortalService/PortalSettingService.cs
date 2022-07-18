@@ -101,8 +101,7 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
              
-        }
-        async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
+        } 
         async Task<APIResponse<PostResultSetting>> IPortalSettingService.UpdateTemplateAsync(string template)
         {
             var res = new APIResponse<PostResultSetting>();
@@ -120,7 +119,7 @@ namespace SMP.BLL.Services.PortalService
             res.Result = new PostResultSetting { ResultSettingId = result.ResultSettingId, BatchPrinting = result.BatchPrinting, CumulativeResult = result.CumulativeResult, SelectedTemplate = result.SelectedTemplate, PromoteAll = result.PromoteAll, PromoteByPassmark = result.PromoteByPassmark, ShowNewsletter = result.ShowNewsletter, ShowPositionOnResult = result.ShowPositionOnResult };
             return res;
         }
-        async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting contract)
+        async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
             var res = new APIResponse<PostNotificationSetting>();
             var setting = await context.NotificationSetting.FirstOrDefaultAsync();
@@ -144,8 +143,7 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         }
-
-        async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
+         
         async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
