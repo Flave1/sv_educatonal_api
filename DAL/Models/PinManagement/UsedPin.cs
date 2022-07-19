@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAL;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.PinManagement
 {
-    public class UsedPin
+    public class UsedPin : CommonEntity
     {
         [Key]
         public Guid UsedPinId { get; set; }
