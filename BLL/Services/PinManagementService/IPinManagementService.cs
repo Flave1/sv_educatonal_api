@@ -8,5 +8,6 @@ namespace SMP.BLL.Services.PinManagementService
 {
     public interface IPinManagementService
     {
+
     }
 }
