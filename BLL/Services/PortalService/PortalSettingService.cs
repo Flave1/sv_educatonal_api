@@ -38,7 +38,8 @@ namespace SMP.BLL.Services.PortalService
                     SchoolType = request.SchoolType,
                     Country = request.Country,
                     State = request.State,
-                    Photo = filePath
+                    Photo = filePath,
+
 
                 };
                 await context.SchoolSettings.AddAsync(schoolSetting);
@@ -151,7 +152,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
-            res.Result = await context.SchoolSettings.Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync();
+            res.Result = await context.SchoolSettings.Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
             res.IsSuccessful = true;
             return res;
         }
@@ -159,14 +160,14 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            res.Result = await context.ResultSetting.Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync();
+            res.Result = await context.ResultSetting.Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
             res.IsSuccessful = true;
             return res;
         } 
         async Task<APIResponse<NotificationSettingContract>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<NotificationSettingContract>();
-            res.Result =  await  context.NotificationSetting.Select(f=> new NotificationSettingContract(f)).FirstOrDefaultAsync();
+            res.Result =  await  context.NotificationSetting.Select(f=> new NotificationSettingContract(f)).FirstOrDefaultAsync() ?? new NotificationSettingContract();
             res.IsSuccessful = true;
             return res;
         }

@@ -35,6 +35,10 @@ namespace SMP.Contracts.PortalSettings
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
         public string Filepath { get; set; }
+        public ResultSettingContract()
+        {
+
+        }
         public ResultSettingContract( ResultSetting db)
         {
             ResultSettingId = db.ResultSettingId;

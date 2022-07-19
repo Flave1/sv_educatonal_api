@@ -55,7 +55,7 @@ namespace SMP.Contracts.FileUpload
 
             if (file == null || file.Length == 0)
             {
-                return "";
+                return filePath;
             }
 
             if (file.FileName.EndsWith(".jpg")

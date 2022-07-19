@@ -34,6 +34,10 @@ namespace SMP.Contracts.PortalSettings
         public string PhoneNo2 { get; set; }
         public string SchoolType { get; set; }
         public string Filepath { get; set; }
+        public SchoolSettingContract()
+        {
+
+        }
         public SchoolSettingContract(SchoolSetting db)
         {
             SchoolSettingsId = db.SchoolSettingsId;

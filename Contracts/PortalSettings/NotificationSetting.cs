@@ -20,6 +20,10 @@ namespace SMP.Contracts.PortalSettings
     {
         public Guid NotificationSettingId { get; set; }
         public bool NotifyByEmail { get; set; }
+        public NotificationSettingContract()
+        {
+
+        }
         public NotificationSettingContract(NotificationSetting notification)
         {
             NotificationSettingId = notification.NotificationSettingId;
