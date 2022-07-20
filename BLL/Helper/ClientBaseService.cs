@@ -16,8 +16,8 @@ namespace BLL.Helper
         {
             _config = config;
              
-            base.Headers.Add("Authorization", "Bearer " + _config["Config:apikey"]);
-            base.Headers.Add("Authorization", _config["Config:clientId"]);
+            base.Headers.Add("apikey", _config["Config:apikey"]);
+            base.Headers.Add("clientId", _config["Config:clientId"]);
         }
 
         public override Uri BaseUrl => new Uri(_config["Config:BaseUrl"]);
