@@ -50,6 +50,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     else
                     {
                         var result = await response.Content.ReadAsStringAsync();
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
                     }
                 }
                 catch (HttpRequestException)

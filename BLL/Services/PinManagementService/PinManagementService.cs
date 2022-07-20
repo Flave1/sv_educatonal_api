@@ -60,7 +60,7 @@ namespace SMP.BLL.Services.PinManagementService
                     }
                     else
                     {
-                        await AddPinAsUsedAsync(request, student.StudentContactId);
+                        await AddPinAsUsedAsync(request, student.StudentContactId, pin.FirstOrDefault().UploadedPinId);
                         res.Result = studentResult.Result;
                         res.IsSuccessful = true;
                         res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -76,14 +76,21 @@ namespace SMP.BLL.Services.PinManagementService
                         StudentRegNo = regNo,
                     };
 
+                    FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{ fwsOptions.FwsBaseUrl}sms/validate-pin", fwsPayload);
+                    if(fwsResponse.status != "success")
                     FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}validate-pin", fwsPayload);
                     if (fwsResponse.status != "success")
                     {
                         res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;
                         return res;
                     }
-
-                    await AddPinAsUsedAsync(request, student.StudentContactId);
+                    var uploadedPin = await context.UploadedPin.FirstOrDefaultAsync(x => x.Pin == request.Pin);
+                    if(uploadedPin == null)
+                    {
+                        res.Message.FriendlyMessage = "Pin not uploaded";
+                        return res;
+                    }
+                    await AddPinAsUsedAsync(request, student.StudentContactId, uploadedPin.UploadedPinId);
 
                     res.Result = studentResult.Result;
                     res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -100,15 +107,27 @@ namespace SMP.BLL.Services.PinManagementService
         }
 
 
-        private async Task AddPinAsUsedAsync(PrintResultRequest request, Guid studentContactId)
+        private async Task AddPinAsUsedAsync(PrintResultRequest request, Guid studentContactId, Guid UploadedPinId)
         {
-            var newPin = new UsedPin();
-            newPin.SessionClassId = Guid.Parse(request.SessionClassid);
-            newPin.SessionTermId = Guid.Parse(request.TermId);
-            newPin.StudentContactId = studentContactId;
-            newPin.DateUsed = DateTime.UtcNow;
-            await context.UsedPin.AddAsync(newPin);
-            await context.SaveChangesAsync();
+
+
+            try
+            {
+                var newPin = new UsedPin();
+                newPin.SessionClassId = Guid.Parse(request.SessionClassid);
+                newPin.SessionTermId = Guid.Parse(request.TermId);
+                newPin.StudentContactId = studentContactId;
+                newPin.DateUsed = DateTime.UtcNow;
+                newPin.UploadedPinId = UploadedPinId;
+                await context.UsedPin.AddAsync(newPin);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception dbEx)
+            {
+                throw dbEx;
+            }
+
+            
         }
 
         private string GetStudentRealRegNumber(string regNo)
