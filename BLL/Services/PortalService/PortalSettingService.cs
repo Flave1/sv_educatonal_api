@@ -39,7 +39,7 @@ namespace SMP.BLL.Services.PortalService
                     Country = request.Country,
                     State = request.State,
                     Photo = filePath,
-
+                    Email = request.Email
 
                 };
                 await context.SchoolSettings.AddAsync(schoolSetting);
@@ -57,6 +57,7 @@ namespace SMP.BLL.Services.PortalService
                 schoolSetting.Country = request.Country;
                 schoolSetting.State = request.State;
                 schoolSetting.Photo = filePath;
+                schoolSetting.Email = request.Email;
             }
             await context.SaveChangesAsync();
             res.Message.FriendlyMessage = Messages.Saved;
@@ -130,10 +131,11 @@ namespace SMP.BLL.Services.PortalService
             var setting = await context.NotificationSetting.FirstOrDefaultAsync();
 
             if (setting == null)
-            { 
+            {
                 setting = new NotificationSetting
                 {
                     NotifyByEmail = request.NotifyByEmail,
+                    NotifyBySms = request.NotifyBySms,
                 };
                 await context.NotificationSetting.AddAsync(setting);
             }

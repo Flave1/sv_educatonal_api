@@ -13,5 +13,6 @@ namespace SMP.DAL.Models.PortalSettings
         [Key]
         public Guid NotificationSettingId { get; set; }
         public bool NotifyByEmail { get; set; }
+        public bool NotifyBySms { get; set; }
     }
 }

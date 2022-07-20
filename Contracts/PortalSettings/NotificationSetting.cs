@@ -1,9 +1,5 @@
 ﻿using SMP.DAL.Models.PortalSettings;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.PortalSettings
 {
@@ -11,15 +7,15 @@ namespace SMP.Contracts.PortalSettings
     public class PostNotificationSetting
     {
         public Guid NotificationSettingId { get; set; }
-        public bool NotifyByEmail
-        {
-            get; set;
-        }
+        public bool NotifyByEmail { get; set; }
+        public bool NotifyBySms { get; set; }
     }
+    
     public class NotificationSettingContract
     {
         public Guid NotificationSettingId { get; set; }
         public bool NotifyByEmail { get; set; }
+        public bool NotifyBySms { get; set; }
         public NotificationSettingContract()
         {
 
@@ -28,6 +24,7 @@ namespace SMP.Contracts.PortalSettings
         {
             NotificationSettingId = notification.NotificationSettingId;
             NotifyByEmail = notification.NotifyByEmail;
+            NotifyBySms = notification.NotifyBySms;
         }
     }
 }

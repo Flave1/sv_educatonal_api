@@ -21,6 +21,7 @@ namespace SMP.Contracts.PortalSettings
         public string SchoolType { get; set; }
         public string Filepath { get; set; }
         public IFormFile Photo { get; set; }
+        public string Email { get; set; }
     }
         public class SchoolSettingContract
     {
@@ -34,6 +35,7 @@ namespace SMP.Contracts.PortalSettings
         public string PhoneNo2 { get; set; }
         public string SchoolType { get; set; }
         public string Filepath { get; set; }
+        public  string Email { get; set; }
         public SchoolSettingContract()
         {
 
@@ -41,15 +43,16 @@ namespace SMP.Contracts.PortalSettings
         public SchoolSettingContract(SchoolSetting db)
         {
             SchoolSettingsId = db.SchoolSettingsId;
-            SchoolName = db.SchoolName;
-            SchoolAddress = db.SchoolAddress;
-            SchoolAbbreviation = db.SchoolAbbreviation;
-            Country = db.Country;
-            State = db.State;
-            PhoneNo1 = db.PhoneNo1;
-            PhoneNo2 = db.PhoneNo2;
-            SchoolType = db.SchoolType;
+            SchoolName = db?.SchoolName??"";
+            SchoolAddress = db?.SchoolAddress ?? "";
+            SchoolAbbreviation = db?.SchoolAbbreviation ?? "";
+            Country = db?.Country ?? "";
+            State = db?.State ?? "";
+            PhoneNo1 = db?.PhoneNo1 ?? "";
+            PhoneNo2 = db?.PhoneNo2 ?? "";
+            SchoolType = db?.SchoolType ?? "";
             Filepath = db.Photo;
+            Email = db?.Email ?? "";
         }
     }
 }
