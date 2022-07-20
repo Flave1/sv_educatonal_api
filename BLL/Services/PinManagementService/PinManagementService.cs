@@ -78,7 +78,7 @@ namespace SMP.BLL.Services.PinManagementService
 
                     FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{ fwsOptions.FwsBaseUrl}sms/validate-pin", fwsPayload);
                     if(fwsResponse.status != "success")
-                    FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}validate-pin", fwsPayload);
+                    //FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}validate-pin", fwsPayload);
                     if (fwsResponse.status != "success")
                     {
                         res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;

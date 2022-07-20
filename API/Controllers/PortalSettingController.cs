@@ -85,13 +85,6 @@ namespace API.Controllers
             return Ok(response);
         }
         
-        [HttpPost("upload/pin")]
-        public async Task<IActionResult> UploadPin(IFormFile files)
-        {
-            UploadPinRequest request = new UploadPinRequest();
-            var response = await pinservice.UploadPin(request);
-            return Ok(response);
-        }
           
         #endregion
          
