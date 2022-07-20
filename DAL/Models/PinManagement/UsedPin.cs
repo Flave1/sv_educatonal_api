@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.ClassEntities;
 using DAL.SessionEntities;
 using DAL.StudentInformation;
 using SMP.DAL.Models.SessionEntities;
@@ -17,9 +18,6 @@ namespace SMP.DAL.Models.PinManagement
         public Guid StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact Student { get; set; }
-        public Guid SessionId { get; set; }
-        [ForeignKey("SessionId")]
-        public Session Session { get; set; }
         public Guid SessionTermId { get; set; }
 
         [ForeignKey("SessionTermId")]
@@ -27,5 +25,9 @@ namespace SMP.DAL.Models.PinManagement
         public Guid UploadedPinId { get; set; }
         [ForeignKey("UploadedPinId")]
         public UploadedPin UploadedPin { get; set; }
+
+        public Guid SessionClassId { get; set; }
+        [ForeignKey("SessionClassId")]
+        public SessionClass SessionClass { get; set; }
     }
 }

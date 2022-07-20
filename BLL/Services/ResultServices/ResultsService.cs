@@ -564,8 +564,13 @@ namespace SMP.BLL.Services.ResultServices
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
             var res = new APIResponse<PreviewResult>();
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+            if(term == null)
+            {
+                res.Message.FriendlyMessage = "Term not found";
+                return res;
+            }
             var result = await context.SessionClass
                 .Include(e => e.PublishStatus)
                 .Include(e => e.Class).ThenInclude(d => d.GradeLevel)

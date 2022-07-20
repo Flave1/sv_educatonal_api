@@ -1,5 +1,6 @@
 ﻿using BLL;
 using SMP.Contracts.PinManagement;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,6 @@ namespace SMP.BLL.Services.PinManagementService
     public interface IPinManagementService
     {
 
-        Task<APIResponse<UploadedPins>> PrintResultAsync(UploadedPins request);
+        Task<APIResponse<PreviewResult>> PrintResultAsync(PrintResultRequest request);
     }
 }

@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Data;
 using SMP.Contracts.FileUpload;
+using SMP.Contracts.Options;
 
 namespace BLL.AuthenticationServices
 {

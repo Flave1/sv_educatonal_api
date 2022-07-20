@@ -1,7 +1,6 @@
 ﻿using API.Installers;
 using BLL.AuthenticationServices;
 using BLL.ClassServices;
-using BLL.Helper;
 using BLL.Services.SubjectServices;
 using BLL.SessionServices;
 using BLL.StudentServices;
@@ -10,10 +9,10 @@ using DAL.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SMP.BLL.Helper;
 using SMP.BLL.Services.AttendanceServices;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.GradeServices;
+using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService; 
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
@@ -59,10 +58,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IResultsService, ResultsService>();
             services.AddScoped<IFileUploadService, FileUploadService>();
             services.AddScoped<IPortalSettingService, PortalSettingService>();
-            services.AddTransient<IClientService, ClientService>();
-            services.AddTransient<IClientBaseService, ClientBaseService>();
-            services.AddHttpClient();
-
+            services.AddScoped<IPinManagementService, PinManagementService>();
         }
     }
 }
