@@ -1,7 +1,10 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Common; 
+using Contracts.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService;
+using SMP.Contracts.PinManagement;
 using SMP.Contracts.PortalSettings;
 using System;
 using System.Threading.Tasks;  
@@ -14,9 +17,11 @@ namespace API.Controllers
     public class PortalSettingController : Controller
     {
         private readonly IPortalSettingService service;  
-        public PortalSettingController(IPortalSettingService service)
+        private readonly IPinManagementService pinservice;
+        public PortalSettingController(IPortalSettingService service, IPinManagementService pinservice)
         {
-            this.service = service; 
+            this.service = service;
+            this.pinservice = pinservice;
         }
 
         #region portalsetting
@@ -79,6 +84,7 @@ namespace API.Controllers
             var response = await service.GetNotificationSettingsAsync();
             return Ok(response);
         }
+        
           
         #endregion
          

@@ -18,6 +18,8 @@ using BLL.LoggerService;
 using DAL;
 using Contracts.Options;
 using Microsoft.AspNetCore.Builder;
+using SMP.Contracts.Options;
+using SMP.BLL.Services.WebRequestServices;
 
 namespace API.Installers
 {
@@ -63,8 +65,12 @@ namespace API.Installers
             services.Configure<SchoolSettings>(
        configuration.GetSection("SchoolSettings"));
 
+            services.Configure<FwsConfigSeetings>(
+       configuration.GetSection("FwsConfigSeetings"));
+
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILoggerService, LoggerService>();
+            services.AddScoped<IWebRequestService, WebRequestService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
@@ -107,6 +113,7 @@ namespace API.Installers
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddHttpClient();
 
             services.AddSwaggerGen(x =>
             {

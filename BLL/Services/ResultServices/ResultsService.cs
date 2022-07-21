@@ -564,8 +564,13 @@ namespace SMP.BLL.Services.ResultServices
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
             var res = new APIResponse<PreviewResult>();
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+            if(term == null)
+            {
+                res.Message.FriendlyMessage = "Term not found";
+                return res;
+            }
             var result = await context.SessionClass
                 .Include(e => e.PublishStatus)
                 .Include(e => e.Class).ThenInclude(d => d.GradeLevel)
@@ -590,23 +595,6 @@ namespace SMP.BLL.Services.ResultServices
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<ScoreEntry>> IResultsService.PrintResultAsync(string RegNo, Guid sessionClassId, Guid termId, Guid studentContactId)
-        {
-            var res = new APIResponse<ScoreEntry>();
-            var student = context.StudentContact.FirstOrDefaultAsync(e => e.RegistrationNumber == RegNo);
-            if(student == null)
-            {
-                res.Message.FriendlyMessage = "Student with this Registration Number is not Found";
-            }
 
-            var scoreEntry = await context.ScoreEntry.FirstOrDefaultAsync(rr => rr.StudentContactId == studentContactId);
-            if (scoreEntry != null)
-            { 
-
-            }
-            res.IsSuccessful = true;
-            res.Result = scoreEntry;
-            return res;
-        }
     }
 }

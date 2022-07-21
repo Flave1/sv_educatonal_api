@@ -1,7 +1,11 @@
 ﻿using API.Controllers.BaseControllers;
 using BLL.MiddleWares;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
+using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
 using System;
 using System.Threading.Tasks;
@@ -13,9 +17,11 @@ namespace API.Controllers
     public class ResultsController : BaseController
     {
         private readonly IResultsService service;
-        public ResultsController(IResultsService service)
+        private readonly IPinManagementService pinService;
+        public ResultsController(IResultsService service, IPinManagementService pinService)
         {
             this.service = service;
+            this.pinService = pinService;
         }
 
         [HttpGet("get/staff-classes")]
@@ -136,5 +142,16 @@ namespace API.Controllers
             var response = await service.GetStudentResultAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
             return Ok(response);
         }
+
+        [HttpPost("print/result")]
+        public async Task<IActionResult> PrintResultAsync([FromBody] PrintResultRequest request)
+        {
+            var response = await pinService.PrintResultAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+       
     }
 } 

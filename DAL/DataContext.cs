@@ -20,6 +20,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SMP.DAL.Models.PortalSettings;
+using SMP.DAL.Models.PinManagement;
 
 namespace DAL
 {
@@ -59,6 +60,8 @@ namespace DAL
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }
         public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        public DbSet<UploadedPin> UploadedPin { get; set; }
+        public DbSet<UsedPin> UsedPin { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

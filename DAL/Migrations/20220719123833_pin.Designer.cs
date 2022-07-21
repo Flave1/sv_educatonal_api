@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220719123833_pin")]
+    partial class pin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -933,7 +935,7 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("SessionClassId")
+                    b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SessionTermId")
@@ -953,7 +955,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasKey("UsedPinId");
 
-                    b.HasIndex("SessionClassId");
+                    b.HasIndex("SessionId");
 
                     b.HasIndex("SessionTermId");
 
@@ -980,9 +982,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("NotifyByEmail")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("NotifyBySms")
                         .HasColumnType("bit");
 
                     b.Property<string>("UpdatedBy")
@@ -1063,9 +1062,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNo1")
                         .HasColumnType("nvarchar(max)");
@@ -1626,9 +1622,9 @@ namespace SMP.DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.PinManagement.UsedPin", b =>
                 {
-                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                    b.HasOne("DAL.SessionEntities.Session", "Session")
                         .WithMany()
-                        .HasForeignKey("SessionClassId")
+                        .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1650,7 +1646,7 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SessionClass");
+                    b.Navigation("Session");
 
                     b.Navigation("Sessionterm");
 
