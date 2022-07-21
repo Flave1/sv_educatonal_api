@@ -30,16 +30,6 @@ namespace SMP.API.Controllers
         }
 
 
-        [HttpGet("get/pins")]
-        public async Task<IActionResult> GetAllPinsAsync()
-        {
-            var response = await service.GetAllPinsAsync();
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
-        }
-
-
         #endregion
 
 

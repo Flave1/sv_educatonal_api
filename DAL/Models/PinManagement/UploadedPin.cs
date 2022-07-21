@@ -10,6 +10,7 @@ namespace SMP.DAL.Models.PinManagement
         [Key]
         public Guid UploadedPinId { get; set; }
         public string Pin { get; set; }
+        public string Serial { get; set; }
         public ICollection<UsedPin> UsedPin { get; set; }
     }
 } 
