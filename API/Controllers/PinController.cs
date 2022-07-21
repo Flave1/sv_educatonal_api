@@ -28,6 +28,30 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpGet("get/uploadedpins")]
+        public async Task<IActionResult> GetUploadedPin()
+        {
+            var response = await service.GetUploadedPinAsync();
+            return Ok(response);
+        }
+        [HttpGet("get/usedpins")]
+        public async Task<IActionResult> GetUsedPin()
+        {
+            var response = await service.GetUsedPinAsync();
+            return Ok(response); 
+        }
+        [HttpGet("get/uploadedpin-detailed")]
+        public async Task<IActionResult> GetUploadedPinDetails(string uploadedPinId)
+        {
+            var response = await service.GetUploadedPinDetailAsync(uploadedPinId);
+            return Ok(response);
+        }
+        [HttpGet("get/usedpin-details")]
+        public async Task<IActionResult> GetUsedPinDetails(string usedPinId)
+        {
+            var response = await service.GetUsedPinDetailedAsync(usedPinId);
+            return Ok(response);
+        }
 
 
 

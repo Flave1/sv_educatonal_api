@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using SMP.DAL.Models.PinManagement;
+using SMP.DAL.Models.PortalSettings;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +17,61 @@ namespace SMP.Contracts.PinManagement
         public Guid SessionClassid;
         public string TermId { get; set; }
     }
+
     public class UploadPinRequest
     {
         public string Pin;
         public int ExcelLineNumber;
         public IFormFile File { get; set; }
     }
-        public class FwsPinValidationRequest
+    public class GetUploadPinRequest
+    {
+        public string UploadedPinId;
+        public string Pin;
+        public int PinCount;
+        public string TermPrinted;
+
+        public GetUploadPinRequest(UploadedPin db)
+        {
+            List<UploadedPin> pins = new();
+            UploadedPinId = db.UploadedPinId.ToString();
+            Pin = db.Pin;
+            PinCount = pins.Count;
+        }
+        public GetUploadPinRequest(UploadedPin db, SessionTerm session)
+        {
+
+            List<UploadedPin> pins = new();
+            UploadedPinId = db.UploadedPinId.ToString();
+            Pin = db.Pin;
+            PinCount = pins.Count;
+            TermPrinted = session.TermName;
+        }
+    } 
+    public class GetUsedPinRequest
+    {
+        public string UsedPinId;
+        public string Pin;
+        public int PinCount;
+        public string TermPrinted;
+
+        public GetUsedPinRequest(UsedPin db)
+        {
+            List<UsedPin> pins = new();
+            UsedPinId = db.UsedPinId.ToString();
+            Pin = db.UploadedPin.Pin;
+            PinCount = pins.Count; 
+        }
+        public GetUsedPinRequest(UsedPin db, SessionTerm session)
+        {
+            List<UsedPin> pins = new();
+            UsedPinId = db.UsedPinId.ToString();
+            Pin = db.UploadedPin.Pin;
+            PinCount = pins.Count;
+            TermPrinted = session.TermName; 
+        }
+    }
+    public class FwsPinValidationRequest
     {
         public string Pin { get; set; }
         public string StudentRegNo { get; set; }
