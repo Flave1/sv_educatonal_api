@@ -191,7 +191,7 @@ namespace SMP.Contracts.ResultModels
                 sessionClassName = student.SessionClass.Class.Name;
                 term = studentsSubjects.FirstOrDefault().SessionTerm.TermName;
                 noOfStudents = student.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Count();
-                isPublished = student.SessionClass.PublishStatus.IsPublished;
+                isPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
                 studentSubjectEntries = studentsSubjects.Select(e => new StudentSubjectEntry(e, student.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
                 gradeSetting = student.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
             }

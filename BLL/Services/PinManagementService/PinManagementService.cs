@@ -47,7 +47,8 @@ namespace SMP.BLL.Services.PinManagementService
                 res.Message.FriendlyMessage = "Invalid student registration number";
                 return res;
             }
-            var studentResult = await resultService.GetStudentResultAsync(Guid.Parse(request.SessionClassid), Guid.Parse(request.TermId), student.StudentContactId);
+            request.SessionClassid = student.SessionClassId;
+            var studentResult = await resultService.GetStudentResultAsync(student.SessionClassId, Guid.Parse(request.TermId), student.StudentContactId);
             if (studentResult.Result != null)
             {
                 var pin = await context.UsedPin.Include(d => d.UploadedPin).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
@@ -60,6 +61,7 @@ namespace SMP.BLL.Services.PinManagementService
                     }
                     else
                     {
+                       
                         await AddPinAsUsedAsync(request, student.StudentContactId, pin.FirstOrDefault().UploadedPinId);
                         res.Result = studentResult.Result;
                         res.IsSuccessful = true;
@@ -111,7 +113,7 @@ namespace SMP.BLL.Services.PinManagementService
             try
             {
                 var newPin = new UsedPin();
-                newPin.SessionClassId = Guid.Parse(request.SessionClassid);
+                newPin.SessionClassId = request.SessionClassid;
                 newPin.SessionTermId = Guid.Parse(request.TermId);
                 newPin.StudentContactId = studentContactId;
                 newPin.DateUsed = DateTime.UtcNow;

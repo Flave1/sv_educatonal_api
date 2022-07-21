@@ -11,13 +11,13 @@ namespace SMP.Contracts.PinManagement
     {
         public string Pin { get; set; } 
         public string RegistractionNumber { get; set; }
-        public string SessionClassid { get; set; }
+        public Guid SessionClassid;
         public string TermId { get; set; }
     }
     public class UploadPinRequest
     {
-        public string Pin { get; set; }
-        public int ExcelLineNumber { get; set; } 
+        public string Pin;
+        public int ExcelLineNumber;
         public IFormFile File { get; set; }
     }
         public class FwsPinValidationRequest
