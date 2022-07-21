@@ -559,7 +559,6 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-
         async Task<APIResponse<PreviewResult>> IResultsService.GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
@@ -596,5 +595,28 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
+        async Task<StudentResultRecord> IResultsService.GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
+        {
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+
+            var result = await context.SessionClass
+                 .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(x => x.SessionTerm)
+                 .Where(r => r.SessionClassId == sessionClassId)
+                 .Select(g => new StudentResultRecord(g.Students.FirstOrDefault(x => x.StudentContactId == studentContactId), termId)).FirstOrDefaultAsync();
+
+            return result;
+        }
+
+        async Task<StudentResultRecord> IResultsService.GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId)
+        {
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+
+            var result = await context.SessionClass
+                 .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(x => x.SessionTerm)
+                 .Where(r => r.SessionClassId == sessionClassId)
+                 .Select(g => new StudentResultRecord(g.Students, termId)).FirstOrDefaultAsync();
+
+            return result;
+        }
     }
 }

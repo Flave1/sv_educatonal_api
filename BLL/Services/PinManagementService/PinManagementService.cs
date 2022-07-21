@@ -186,6 +186,7 @@ namespace SMP.BLL.Services.PinManagementService
                                 uploadedRecord.Add(new UploadPinRequest
                                 {
                                     ExcelLineNumber = i,
+                                    Serial = workSheet.Cells[i, 1].Value != null ? workSheet.Cells[i, 1].Value.ToString() : null,
                                     Pin = workSheet.Cells[i, 2].Value != null ? workSheet.Cells[i, 2].Value.ToString() : null,
 
                                 });
@@ -208,6 +209,7 @@ namespace SMP.BLL.Services.PinManagementService
                         {
                             current_item = new UploadedPin();
                             current_item.Pin = item.Pin;
+                            current_item.Serial = item.Serial;
                             await context.UploadedPin.AddAsync(current_item);
                         }
                         else
@@ -230,5 +232,17 @@ namespace SMP.BLL.Services.PinManagementService
                 return res;
             }
         }
+    
+
+        public async Task<bool> GetAllUnusedPinsAsync()
+        {
+            throw new NotFiniteNumberException();
+        }
+
+        public async Task<bool> GetAllUsedPinsAsync()
+        {
+            throw new NotFiniteNumberException();
+        }
+
     }
 }

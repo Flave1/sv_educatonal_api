@@ -189,7 +189,7 @@ namespace SMP.Contracts.ResultModels
                 studentName = student.User?.FirstName + " " + student.User?.LastName;
                 studentContactId = student.StudentContactId;
                 sessionClassName = student.SessionClass.Class.Name;
-                term = studentsSubjects.FirstOrDefault().SessionTerm.TermName;
+                term = studentsSubjects?.FirstOrDefault()?.SessionTerm?.TermName ??"";
                 noOfStudents = student.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Count();
                 isPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
                 studentSubjectEntries = studentsSubjects.Select(e => new StudentSubjectEntry(e, student.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
@@ -225,6 +225,47 @@ namespace SMP.Contracts.ResultModels
                 grade = gradeSetup.GradeName;
                 remark = gradeSetup.Remark;
             }
+        }
+    }
+
+    public class StudentResultRecord
+    {
+        public int AssessmentScore { get; set; }
+        public int ExamScore { get; set; }
+        public decimal TotalScore { get; set; }
+        public decimal AverageScore { get; set; }
+        public bool ShouldPromoteStudent { get; set; }
+        public int PassedStudents { get; set; } = 0;
+        public int FailedStudents { get; set; } = 0;
+        public StudentResultRecord() { }
+        public StudentResultRecord(StudentContact st, Guid termId)
+        {
+            var studentScoreEntries = st.ScoreEntries.Where(x => x.IsOffered && x.SessionTermId == termId);
+            AssessmentScore = studentScoreEntries.Sum(d => d.AssessmentScore);
+            ExamScore = studentScoreEntries.Sum(d => d.ExamScore);
+            TotalScore = AssessmentScore + ExamScore;
+            var totalSubjects = studentScoreEntries.Count();
+            AverageScore = Math.Round(totalSubjects > 0 ? TotalScore / totalSubjects : 0, 2);
+            ShouldPromoteStudent = AverageScore > st.SessionClass.PassMark;
+
+        }
+
+        public StudentResultRecord(ICollection<StudentContact> sts, Guid termId)
+        {
+            foreach(var st in sts)
+            {
+                var studentScoreEntries = st.ScoreEntries.Where(x => x.IsOffered && x.SessionTermId == termId);
+                AssessmentScore = studentScoreEntries.Sum(d => d.AssessmentScore);
+                ExamScore = studentScoreEntries.Sum(d => d.ExamScore);
+                TotalScore = AssessmentScore + ExamScore;
+                var totalSubjects = studentScoreEntries.Count();
+                AverageScore = Math.Round(totalSubjects > 0 ? TotalScore / totalSubjects : 0, 2);
+                ShouldPromoteStudent = AverageScore > st.SessionClass.PassMark;
+                PassedStudents = ShouldPromoteStudent ? PassedStudents + 1 : PassedStudents + 0;
+                FailedStudents = !ShouldPromoteStudent ? FailedStudents + 1 : FailedStudents + 0;
+            }
+            
+
         }
     }
 }

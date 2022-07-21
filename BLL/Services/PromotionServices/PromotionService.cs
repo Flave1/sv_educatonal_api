@@ -1,11 +1,14 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.SessionServices;
 using BLL.StudentServices;
 using BLL.Utilities;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.EnrollmentServices;
+using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.PromotionModels;
 using SMP.DAL.Models.PromotionEntities;
 using System;
@@ -20,11 +23,17 @@ namespace SMP.BLL.Services.PromorionServices
     {
         private readonly DataContext context;
         private readonly IStudentService studentService;
+        private readonly IResultsService resultsService;
+        private readonly ISessionService sessionService;
+        private readonly IEnrollmentService enrollmentService;
 
-        public PromotionService(DataContext context, IStudentService studentService)
+        public PromotionService(DataContext context, IStudentService studentService, IResultsService resultsService, ISessionService sessionService, IEnrollmentService enrollmentService)
         {
             this.context = context;
             this.studentService = studentService;
+            this.resultsService = resultsService;
+            this.sessionService = sessionService;
+            this.enrollmentService = enrollmentService;
         }
 
         async Task<APIResponse<List<PreviousSessionClasses>>> IPromotionService.GetPreviousSessionClassesAsync()
@@ -36,20 +45,16 @@ namespace SMP.BLL.Services.PromorionServices
             if (lastTwoSessions.Any())
             {
                 Guid previousSessionId = lastTwoSessions.Last().SessionId;
-
+                var lastTermOfPreviousSession = sessionService.GetPreviousSessionLastTermAsync(previousSessionId);
                 var result = await context.SessionClass
-                    .Include(rr => rr.Class)
+                    .Include(rr => rr.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
                     .OrderBy(d => d.Class.Name)
-                    .Include(d => d.Students)
+                    .Include(d => d.PromotedSessionClass)
+                    .Include(d => d.Students).ThenInclude(s => s.ScoreEntries)
                     .Where(r => r.InSession && r.Deleted == false && r.SessionId == previousSessionId)
-                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new PreviousSessionClasses(g)).ToListAsync();
+                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new PreviousSessionClasses(g, lastTermOfPreviousSession.SessionTermId)).ToListAsync();
 
                 await CreateCopyOfClassesToPromoteAsync(result, previousSessionId);
-
-                foreach(var cl in result)
-                {
-                    cl.IsPromoted = context.PromotedSessionClass.FirstOrDefault(d => d.SessionClassId == Guid.Parse(cl.SessionClassId)).IsPromoted;
-                }
 
                 res.Result = result;
             }
@@ -67,24 +72,51 @@ namespace SMP.BLL.Services.PromorionServices
             {
                 try
                 {
-                    
                     var allStudentsInClassToPromote = context.SessionClass
                         .Include(s => s.Students)
                         .FirstOrDefault(w => w.SessionClassId == classToPromote).Students;
 
                     if (allStudentsInClassToPromote.Any())
                     {
-                        string session = Convert.ToString(allStudentsInClassToPromote.FirstOrDefault().SessionClass.SessionId);
-                        foreach (var student in allStudentsInClassToPromote)
+                        var resultSettings = context.ResultSetting.FirstOrDefault();
+                        if(resultSettings == null)
                         {
-                            var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
-                            if (enrollment != null)
-                                enrollment.Status = (int)EnrollmentStatus.Enrolled;
-                            await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
-
+                            res.Message.FriendlyMessage = "Result settings not found";
+                            return res;
                         }
-                        await context.SaveChangesAsync();
-                        //return null;
+
+                        string session = Convert.ToString(allStudentsInClassToPromote.FirstOrDefault().SessionClass.SessionId);
+
+                        if (resultSettings.PromoteAll)
+                        {
+                            foreach (var student in allStudentsInClassToPromote)
+                            {
+                                var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
+                                if (enrollment != null)
+                                    enrollment.Status = (int)EnrollmentStatus.Enrolled;
+                                await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
+                            }
+                        }
+                        else
+                        {
+                            var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(Guid.Parse(session));
+                            foreach (var student in allStudentsInClassToPromote)
+                            {
+                                var studentPreviousExamRecord = await resultsService.GetStudentResultOnPromotionAsync(classToPromote, lastTermOfPreviousSessionTerm.SessionTermId, student.StudentContactId);
+                                if (studentPreviousExamRecord.ShouldPromoteStudent)
+                                {
+                                    var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
+                                    if (enrollment != null)
+                                        enrollment.Status = (int)EnrollmentStatus.Enrolled;
+                                    await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
+                                }
+                                else
+                                {
+                                    enrollmentService.UnenrollStudent(student.StudentContactId);
+                                }
+                            }
+                        }
+                        
                         await UpdatePromotedClassAsync(classToPromote, session);
                         await transaction.CommitAsync();
                         res.Message.FriendlyMessage = "Promotion Successful";

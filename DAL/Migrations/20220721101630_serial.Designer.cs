@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220721101630_serial")]
+    partial class serial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1123,7 +1125,7 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("IsPromoted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("SessionClassId")
+                    b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SessionId")
@@ -1136,10 +1138,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("PromotedClassId");
-
-                    b.HasIndex("SessionClassId")
-                        .IsUnique()
-                        .HasFilter("[SessionClassId] IS NOT NULL");
 
                     b.ToTable("PromotedSessionClass");
                 });
@@ -1666,15 +1664,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("UploadedPin");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", b =>
-                {
-                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
-                        .WithOne("PromotedSessionClass")
-                        .HasForeignKey("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", "SessionClassId");
-
-                    b.Navigation("SessionClass");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
@@ -1800,8 +1789,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ClassRegisters");
 
                     b.Navigation("ClassScoreEntries");
-
-                    b.Navigation("PromotedSessionClass");
 
                     b.Navigation("SessionClassSubjects");
 

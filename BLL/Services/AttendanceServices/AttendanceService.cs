@@ -150,7 +150,7 @@ namespace SMP.BLL.Services.AttendanceServices
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
-            var presentStudentIds = classRegister.StudentAttendances.Select(x=>x.ClassRegisterId).ToList();
+            var presentStudentIds = classRegister.StudentAttendances.Select(x=>x.StudentContactId).ToList();
             var absentStudents = classRegister.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Where(x => !presentStudentIds.Contains(x.StudentContactId)).Select(s => new AttendanceList(s, regNoFormat, false)).ToList();
            
 

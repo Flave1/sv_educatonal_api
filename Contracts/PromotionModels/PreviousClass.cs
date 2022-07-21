@@ -1,5 +1,6 @@
 ﻿using DAL.ClassEntities;
 using DAL.StudentInformation;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,14 +16,22 @@ namespace SMP.Contracts.PromotionModels
         public int TotalStudentsInClass { get; set; }
         public int TotalStudentsPassed { get; set; }
         public int TotalStudentsFailed { get; set; }
-        public bool IsPromoted { get; set; }
-        public PreviousSessionClasses(SessionClass cl)
+        public bool? IsPromoted { get; set; }
+        public int PassedStudents { get; set; } = 0;
+        public int FailedStudents { get; set; } = 0;
+        public PreviousSessionClasses(SessionClass cl, Guid termId)
         {
             SessionClassId = cl.SessionClassId.ToString();
             SessionClassName = cl.Class.Name;
             TotalStudentsInClass = cl.Students.Count();
-            TotalStudentsPassed = cl.Students.Count();
-            TotalStudentsFailed = 0;
+            IsPromoted = cl?.PromotedSessionClass?.IsPromoted ?? false;
+            var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
+            if (studentRecords.Any())
+            {
+                TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
+                TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
+            }
+            
         }
 
     }

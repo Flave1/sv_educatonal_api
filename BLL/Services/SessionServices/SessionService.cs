@@ -328,6 +328,12 @@ namespace BLL.SessionServices
             return res;
         }
 
+        SessionTerm ISessionService.GetPreviousSessionLastTermAsync(Guid sessionId)
+        {
+            return context.Session.Include(s => s.Terms)
+                                .FirstOrDefault(e => e.SessionId == sessionId).Terms
+                                .OrderBy(d => d.TermName).LastOrDefault();
+        }
 
     }
 }
