@@ -1,6 +1,7 @@
 ﻿using API.Controllers.BaseControllers;
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
@@ -149,6 +150,14 @@ namespace API.Controllers
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
+        }
+
+        [HttpPost("upload/pin")]
+        public async Task<IActionResult> UploadPin(IFormFile files)
+        {
+            UploadPinRequest request = new UploadPinRequest();
+            var response = await pinService.UploadPin(request);
+            return Ok(response);
         }
     }
 } 

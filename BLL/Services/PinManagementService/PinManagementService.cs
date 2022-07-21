@@ -1,8 +1,10 @@
 ﻿using BLL;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using OfficeOpenXml;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.WebRequestServices;
@@ -11,6 +13,8 @@ using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.PinManagement;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,27 +27,29 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSeetings fwsOptions;
         private readonly RegNumber regNumberOptions;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSeetings> options, IOptions<RegNumber> regNoOptions)
+        private readonly IHttpContextAccessor accessor;
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSeetings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.resultService = resultService;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
             regNumberOptions = regNoOptions.Value;
+            this.accessor = accessor;
         }
         async Task<APIResponse<PreviewResult>> IPinManagementService.PrintResultAsync(PrintResultRequest request)
         {
             var res = new APIResponse<PreviewResult>();
             var regNo = GetStudentRealRegNumber(request.RegistractionNumber);
             var student = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower());
-            if(student == null)
+            if (student == null)
             {
                 res.Message.FriendlyMessage = "Invalid student registration number";
                 return res;
             }
             var studentResult = await resultService.GetStudentResultAsync(Guid.Parse(request.SessionClassid), Guid.Parse(request.TermId), student.StudentContactId);
             if (studentResult.Result != null)
-            {  
+            {
                 var pin = await context.UsedPin.Include(d => d.UploadedPin).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
                 if (pin.Any())
                 {
@@ -72,6 +78,8 @@ namespace SMP.BLL.Services.PinManagementService
 
                     FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{ fwsOptions.FwsBaseUrl}sms/validate-pin", fwsPayload);
                     if(fwsResponse.status != "success")
+                    //FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}validate-pin", fwsPayload);
+                    if (fwsResponse.status != "success")
                     {
                         res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;
                         return res;
@@ -91,7 +99,7 @@ namespace SMP.BLL.Services.PinManagementService
                 }
             }
             else
-            { 
+            {
                 res.Message.FriendlyMessage = "Student Result does not exist";
                 return res;
             }
@@ -133,6 +141,104 @@ namespace SMP.BLL.Services.PinManagementService
                 return splited[0];
             }
             return regNo;
+        }
+        async Task<APIResponse<UploadPinRequest>> IPinManagementService.UploadPin(UploadPinRequest request)
+        {
+
+            var res = new APIResponse<UploadPinRequest>();
+
+            List<UploadPinRequest> uploadedRecord = new List<UploadPinRequest>();
+            var files = accessor.HttpContext.Request.Form.Files;
+
+            var byteList = new List<byte[]>();
+            foreach (var fileBit in files)
+            {
+                if (fileBit.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        await fileBit.CopyToAsync(ms);
+                        byteList.Add(ms.ToArray());
+                    }
+                }
+            }
+
+            try
+            {
+                if (byteList.Count() > 0)
+                {
+                    foreach (var item in byteList)
+                    {
+                        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                        using (MemoryStream stream = new MemoryStream(item))
+                        using (ExcelPackage excelPackage = new ExcelPackage(stream))
+                        {
+                            ExcelWorksheet workSheet = excelPackage.Workbook.Worksheets[0];
+                            int totalRows = workSheet.Dimension.Rows;
+                            int totalColumns = workSheet.Dimension.Columns;
+                            if (totalColumns != 1)
+                            {
+                                res.Message.FriendlyMessage = $"One (1) Columns Expected";
+                                return res;
+                            }
+                            for (int i = 2; i <= totalRows; i++)
+                            {
+                                uploadedRecord.Add(new UploadPinRequest
+                                {
+                                    ExcelLineNumber = i,
+                                    Pin = workSheet.Cells[i, 1].Value != null ? workSheet.Cells[i, 1].Value.ToString() : null,
+
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = $" {ex?.Message}";
+                return res;
+            }
+
+
+            try
+            {
+                if (uploadedRecord.Count > 0)
+                {
+                    foreach (var item in uploadedRecord)
+                    {
+                        if (string.IsNullOrEmpty(item.Pin))
+                        {
+                            res.Message.FriendlyMessage = $"Pin cannot be empty detected on line {item.ExcelLineNumber}";
+                            return res;
+                        }
+                        var current_item = context.UploadedPin.FirstOrDefault(e => e.Pin == item.Pin);
+                        if (current_item == null)
+                        {
+                            current_item = new UploadedPin();
+                            current_item.Pin = item.Pin;
+
+                            await context.UploadedPin.AddAsync(current_item);
+
+                        }
+                        else
+                        {
+                            current_item.Pin = item.Pin;
+
+                        }
+                        await context.SaveChangesAsync();
+                    }
+                }
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Record saved successfully";
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = ex?.Message;
+                return res;
+            }
         }
     }
 }
