@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,8 @@ namespace SMP.Contracts.PinManagement
     public class UploadPinRequest
     {
         public string Pin { get; set; }
-        public int ExcelLineNumber { get; set; }
+        public int ExcelLineNumber { get; set; } 
+        public IFormFile File { get; set; }
     }
         public class FwsPinValidationRequest
     {
@@ -45,5 +47,7 @@ namespace SMP.Contracts.PinManagement
         public string status { get; set; }
         public Message message { get; set; }
     }
+
+  
 
 }

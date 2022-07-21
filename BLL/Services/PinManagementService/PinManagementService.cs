@@ -142,29 +142,27 @@ namespace SMP.BLL.Services.PinManagementService
             }
             return regNo;
         }
-        async Task<APIResponse<UploadPinRequest>> IPinManagementService.UploadPin(UploadPinRequest request)
+        async Task<APIResponse<UploadPinRequest>> IPinManagementService.UploadPinAsync(UploadPinRequest request)
         {
-
             var res = new APIResponse<UploadPinRequest>();
-
-            List<UploadPinRequest> uploadedRecord = new List<UploadPinRequest>();
-            var files = accessor.HttpContext.Request.Form.Files;
-
-            var byteList = new List<byte[]>();
-            foreach (var fileBit in files)
-            {
-                if (fileBit.Length > 0)
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        await fileBit.CopyToAsync(ms);
-                        byteList.Add(ms.ToArray());
-                    }
-                }
-            }
 
             try
             {
+                List<UploadPinRequest> uploadedRecord = new List<UploadPinRequest>();
+                var files = accessor.HttpContext.Request.Form.Files;
+                var byteList = new List<byte[]>();
+                foreach (var fileBit in files)
+                {
+                    if (fileBit.Length > 0)
+                    {
+                        using (var ms = new MemoryStream())
+                        {
+                            await fileBit.CopyToAsync(ms);
+                            byteList.Add(ms.ToArray());
+                        }
+                    }
+                }
+
                 if (byteList.Count() > 0)
                 {
                     foreach (var item in byteList)
@@ -176,9 +174,9 @@ namespace SMP.BLL.Services.PinManagementService
                             ExcelWorksheet workSheet = excelPackage.Workbook.Worksheets[0];
                             int totalRows = workSheet.Dimension.Rows;
                             int totalColumns = workSheet.Dimension.Columns;
-                            if (totalColumns != 1)
+                            if (totalColumns != 2)
                             {
-                                res.Message.FriendlyMessage = $"One (1) Columns Expected";
+                                res.Message.FriendlyMessage = $"Two (2) Columns Expected";
                                 return res;
                             }
                             for (int i = 2; i <= totalRows; i++)
@@ -186,23 +184,14 @@ namespace SMP.BLL.Services.PinManagementService
                                 uploadedRecord.Add(new UploadPinRequest
                                 {
                                     ExcelLineNumber = i,
-                                    Pin = workSheet.Cells[i, 1].Value != null ? workSheet.Cells[i, 1].Value.ToString() : null,
+                                    Pin = workSheet.Cells[i, 2].Value != null ? workSheet.Cells[i, 2].Value.ToString() : null,
 
                                 });
                             }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                res.Message.FriendlyMessage = $" {ex?.Message}";
-                return res;
-            }
 
-
-            try
-            {
                 if (uploadedRecord.Count > 0)
                 {
                     foreach (var item in uploadedRecord)
@@ -217,26 +206,25 @@ namespace SMP.BLL.Services.PinManagementService
                         {
                             current_item = new UploadedPin();
                             current_item.Pin = item.Pin;
-
                             await context.UploadedPin.AddAsync(current_item);
-
                         }
                         else
                         {
-                            current_item.Pin = item.Pin;
-
+                            res.Message.FriendlyMessage = $"{item.Pin} already uploaded detected on line {item.ExcelLineNumber}";
+                            return res;
                         }
-                        await context.SaveChangesAsync();
                     }
+                    await context.SaveChangesAsync();
                 }
+               
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Record saved successfully";
+                res.Message.FriendlyMessage = "Pin uploaded successfully";
                 return res;
+
             }
             catch (Exception ex)
             {
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = ex?.Message;
+                res.Message.FriendlyMessage = $" {ex?.Message}";
                 return res;
             }
         }

@@ -13,6 +13,6 @@ namespace SMP.BLL.Services.PinManagementService
     {
 
         Task<APIResponse<PreviewResult>> PrintResultAsync(PrintResultRequest request);
-        Task<APIResponse<UploadPinRequest>> UploadPin(UploadPinRequest request);
+        Task<APIResponse<UploadPinRequest>> UploadPinAsync(UploadPinRequest request);
     }
 }
