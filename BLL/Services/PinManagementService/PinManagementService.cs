@@ -230,5 +230,17 @@ namespace SMP.BLL.Services.PinManagementService
                 return res;
             }
         }
+    
+
+        public async Task<bool> GetAllUnusedPinsAsync()
+        {
+            throw new NotFiniteNumberException();
+        }
+
+        public async Task<bool> GetAllUsedPinsAsync()
+        {
+            throw new NotFiniteNumberException();
+        }
+
     }
 }

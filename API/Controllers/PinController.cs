@@ -21,7 +21,7 @@ namespace SMP.API.Controllers
 
 
         [HttpPost("upload/pin")]
-        public async Task<IActionResult> UploadPin([FromForm] UploadPinRequest request)
+        public async Task<IActionResult> UploadPinAsync([FromForm] UploadPinRequest request)
         {
             var response = await service.UploadPinAsync(request);
             if (response.IsSuccessful)
@@ -29,6 +29,15 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+
+        [HttpGet("get/pins")]
+        public async Task<IActionResult> GetAllPinsAsync()
+        {
+            var response = await service.GetAllPinsAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
 
         #endregion
