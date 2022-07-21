@@ -24,51 +24,64 @@ namespace SMP.Contracts.PinManagement
         public int ExcelLineNumber;
         public IFormFile File { get; set; }
     }
+ 
     public class GetUploadPinRequest
-    {
-        public string UploadedPinId;
+    { 
         public string Pin;
+        public long SerialNumber;
         public int PinCount;
+        public string Session;
+        public string StudentName;
         public string TermPrinted;
 
         public GetUploadPinRequest(UploadedPin db)
         {
-            List<UploadedPin> pins = new();
-            UploadedPinId = db.UploadedPinId.ToString();
-            Pin = db.Pin;
-            PinCount = pins.Count;
+            List<UploadedPin> pins = new() ;
+            foreach(var pin in pins)
+            {
+                //SerialNumber = db.SerialNumber;
+                Pin = pin.Pin;
+                PinCount = pins.Where(x => x.Pin == pin.Pin).Count();
+                
+            }
         }
         public GetUploadPinRequest(UploadedPin db, SessionTerm session)
-        {
-
-            List<UploadedPin> pins = new();
-            UploadedPinId = db.UploadedPinId.ToString();
-            Pin = db.Pin;
-            PinCount = pins.Count;
+        { 
+            List<UploadedPin> pins  = new() {db};
+            
+             Pin =  db.Pin;
+            StudentName = $"{db.UsedPin.FirstOrDefault(x=>x.UploadedPin.Pin == db.Pin).Student.User.LastName}" + $"{db.UsedPin.FirstOrDefault(x => x.UploadedPin.Pin == db.Pin).Student.User.FirstName}";
+            Session = $"{session.Session.StartDate}" +"/" +  $"{session.Session.EndDate}";
+            PinCount = pins.Select(x => new UploadedPin().Pin).ToList().Count;
             TermPrinted = session.TermName;
+            
         }
     } 
     public class GetUsedPinRequest
-    {
-        public string UsedPinId;
+    { 
         public string Pin;
+        public long SerialNumber;
         public int PinCount;
+        public string StudentName;
+        public string Session;
         public string TermPrinted;
 
         public GetUsedPinRequest(UsedPin db)
         {
             List<UsedPin> pins = new();
-            UsedPinId = db.UsedPinId.ToString();
-            Pin = db.UploadedPin.Pin;
-            PinCount = pins.Count; 
+            //SerialNumber = db.SerialNumber;
+            Pin = db.UploadedPin.Pin; 
+            PinCount = pins.Where(x => x.UsedPinId == db.UsedPinId).Count(); 
         }
         public GetUsedPinRequest(UsedPin db, SessionTerm session)
-        {
-            List<UsedPin> pins = new();
-            UsedPinId = db.UsedPinId.ToString();
+        { 
+            List<UsedPin> pins = new() {db};
             Pin = db.UploadedPin.Pin;
-            PinCount = pins.Count;
-            TermPrinted = session.TermName; 
+            //SerialNumber = db.UploadedPin.SerialNumber;
+            StudentName = $"{db.UploadedPin.UsedPin.FirstOrDefault().Student.User.LastName}" + $"{db.UploadedPin.UsedPin.FirstOrDefault().Student.User.FirstName}";
+            Session = $"{session.Session.StartDate}" + "/" + $"{session.Session.EndDate}";
+            PinCount = pins.Select(x=>new UsedPin().UploadedPin.UsedPin.Any()).Count();
+            TermPrinted = session.TermName;
         }
     }
     public class FwsPinValidationRequest

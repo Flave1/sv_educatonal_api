@@ -233,7 +233,9 @@ namespace SMP.BLL.Services.PinManagementService
         async Task<APIResponse<List<GetUploadPinRequest>>> IPinManagementService.GetUploadedPinAsync()
         {
             var res = new APIResponse<List<GetUploadPinRequest>>();
-            res.Result = await context.UploadedPin.Select(f => new GetUploadPinRequest(f)).ToListAsync();
+            var result = res.Result;
+            res.Result = await context.UploadedPin
+            .Include(x => x.UsedPin).Where(x=>x.Deleted == false).Select(f => new GetUploadPinRequest(f)).ToListAsync();
             res.IsSuccessful = true;
             return res;
         }
@@ -241,14 +243,21 @@ namespace SMP.BLL.Services.PinManagementService
         {
             var res = new APIResponse<GetUploadPinRequest>();
             var sessionTerm = await context.SessionTerm.FirstOrDefaultAsync(x => x.SessionTermId.ToString() == sessionTermId);
-            res.Result = await context.UploadedPin.Where(x=>x.UploadedPinId.ToString() == uploadedPinId).Select(f => new GetUploadPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
+            res.Result = await context.UploadedPin
+                .Include(x=>x.UsedPin)
+                .ThenInclude(x=>x.Student)
+                .ThenInclude(x=>x.SessionClass)
+                .ThenInclude(x=>x.Session)
+                .ThenInclude(x=>x.Terms).Select(f => new GetUploadPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }
         async Task<APIResponse<List<GetUsedPinRequest>>> IPinManagementService.GetUsedPinAsync()
         {
             var res = new APIResponse<List<GetUsedPinRequest>>();
-            res.Result = await context.UsedPin.Select(f => new GetUsedPinRequest(f)).ToListAsync();
+            res.Result = await context.UsedPin
+            .Include(x=>x.UploadedPin)
+            .Include(x=>x.Sessionterm).Select(f => new GetUsedPinRequest(f)).ToListAsync();
             res.IsSuccessful = true;
             return res;
         }
@@ -256,7 +265,9 @@ namespace SMP.BLL.Services.PinManagementService
         {
             var res = new APIResponse<GetUsedPinRequest>();
             var sessionTerm = await context.SessionTerm.FirstOrDefaultAsync(x=>x.SessionTermId.ToString() == SessionTermId);
-            res.Result = await context.UsedPin.Include(x=>x.Sessionterm).Where(x=>x.UsedPinId.ToString() == usedPinId).Select(f => new GetUsedPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
+            res.Result = await context.UsedPin
+                .Include(x=>x.Student).ThenInclude(x=>x.User)
+                .Include(x=>x.Sessionterm).Include(x=>x.UploadedPin).Select(f => new GetUsedPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }

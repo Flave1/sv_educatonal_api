@@ -29,5 +29,6 @@ namespace SMP.DAL.Models.PinManagement
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
+       
     }
 }

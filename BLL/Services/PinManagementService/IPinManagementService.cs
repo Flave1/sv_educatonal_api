@@ -16,7 +16,7 @@ namespace SMP.BLL.Services.PinManagementService
         Task<APIResponse<UploadPinRequest>> UploadPinAsync(UploadPinRequest request);
         Task<APIResponse<List<GetUsedPinRequest>>> GetUsedPinAsync();
         Task<APIResponse<List<GetUploadPinRequest>>> GetUploadedPinAsync(); 
-        Task<APIResponse<GetUsedPinRequest>> GetUsedPinDetailedAsync(string usedPinId, string SessionTermId);
+        Task<APIResponse<GetUsedPinRequest>> GetUsedPinDetailedAsync(string usedPinId, string sessionTermId);
         Task<APIResponse<GetUploadPinRequest>> GetUploadedPinDetailAsync(string uploadedPinId, string sessionTermId);
     }
 }

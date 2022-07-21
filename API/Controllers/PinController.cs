@@ -41,15 +41,15 @@ namespace SMP.API.Controllers
             return Ok(response); 
         }
         [HttpGet("get/uploadedpin-detailed")]
-        public async Task<IActionResult> GetUploadedPinDetails(string uploadedPinId)
+        public async Task<IActionResult> GetUploadedPinDetails(string uploadedPinId, string sessionTermId)
         {
-            var response = await service.GetUploadedPinDetailAsync(uploadedPinId);
+            var response = await service.GetUploadedPinDetailAsync(uploadedPinId,sessionTermId);
             return Ok(response);
         }
         [HttpGet("get/usedpin-details")]
-        public async Task<IActionResult> GetUsedPinDetails(string usedPinId)
+        public async Task<IActionResult> GetUsedPinDetails(string usedPinId, string sessionTermId)
         {
-            var response = await service.GetUsedPinDetailedAsync(usedPinId);
+            var response = await service.GetUsedPinDetailedAsync(usedPinId, sessionTermId);
             return Ok(response);
         }
 
