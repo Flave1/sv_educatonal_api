@@ -36,13 +36,13 @@ namespace SMP.Contracts.PinManagement
 
         public GetUploadPinRequest(UploadedPin db)
         {
-            List<UploadedPin> pins = new() ;
+            List<UploadedPin> pins = new() { db} ;
             foreach(var pin in pins)
             {
                 //SerialNumber = db.SerialNumber;
                 Pin = pin.Pin;
-                PinCount = pins.Where(x => x.Pin == pin.Pin).Count();
-                
+                PinCount = pins.Select(x => new UploadedPin().Pin.Any()).Count();
+
             }
         }
         public GetUploadPinRequest(UploadedPin db, SessionTerm session)
@@ -52,7 +52,7 @@ namespace SMP.Contracts.PinManagement
              Pin =  db.Pin;
             StudentName = $"{db.UsedPin.FirstOrDefault(x=>x.UploadedPin.Pin == db.Pin).Student.User.LastName}" + $"{db.UsedPin.FirstOrDefault(x => x.UploadedPin.Pin == db.Pin).Student.User.FirstName}";
             Session = $"{session.Session.StartDate}" +"/" +  $"{session.Session.EndDate}";
-            PinCount = pins.Select(x => new UploadedPin().Pin).ToList().Count;
+            PinCount = pins.Where(x=>x.UploadedPinId == db.UploadedPinId).Count();
             TermPrinted = session.TermName;
             
         }
@@ -68,10 +68,10 @@ namespace SMP.Contracts.PinManagement
 
         public GetUsedPinRequest(UsedPin db)
         {
-            List<UsedPin> pins = new();
+            List<UsedPin> pins = new() {db};
             //SerialNumber = db.SerialNumber;
             Pin = db.UploadedPin.Pin; 
-            PinCount = pins.Where(x => x.UsedPinId == db.UsedPinId).Count(); 
+            PinCount = pins.Select(x => new UsedPin().UploadedPin.UsedPin.Any(x=>x.UsedPinId == db.UsedPinId)).Count(); 
         }
         public GetUsedPinRequest(UsedPin db, SessionTerm session)
         { 
