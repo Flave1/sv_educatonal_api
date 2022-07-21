@@ -142,7 +142,6 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [AllowAnonymous]
         [HttpPost("print/result")]
         public async Task<IActionResult> PrintResultAsync([FromBody] PrintResultRequest request)
         {

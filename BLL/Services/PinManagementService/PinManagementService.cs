@@ -89,7 +89,6 @@ namespace SMP.BLL.Services.PinManagementService
                     res.IsSuccessful = true;
                     return res;
                 }
-
             }
             else
             { 
@@ -101,8 +100,6 @@ namespace SMP.BLL.Services.PinManagementService
 
         private async Task AddPinAsUsedAsync(PrintResultRequest request, Guid studentContactId, Guid UploadedPinId)
         {
-
-
             try
             {
                 var newPin = new UsedPin();
@@ -114,12 +111,10 @@ namespace SMP.BLL.Services.PinManagementService
                 await context.UsedPin.AddAsync(newPin);
                 await context.SaveChangesAsync();
             }
-            catch (Exception dbEx)
+            catch (Exception)
             {
-                throw dbEx;
+                throw;
             }
-
-            
         }
 
         private string GetStudentRealRegNumber(string regNo)

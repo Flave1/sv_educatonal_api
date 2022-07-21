@@ -35,6 +35,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
+                    client.Timeout = TimeSpan.FromSeconds(1000);
 
                     var serializeOptions = new JsonSerializerOptions
                     {
