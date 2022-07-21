@@ -260,8 +260,8 @@ namespace BLL.StudentServices
                 if (std != null)
                 {
                     std.SessionClassId = classId;
+                    std.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
                     await CreateStudentSessionClassHistoryAsync(std);
-                    //await resultsService.CreateClassScoreSubjectEntriesAsync(std.StudentContactId);
                 }
             }
             catch (Exception)
