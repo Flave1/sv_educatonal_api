@@ -33,10 +33,7 @@ namespace Contracts.Annoucements
         public string Body { get; set; }
         public DateTime AnnouncementDate { get; set; }
         public GetAnnouncementsContract(Announcements db)
-        {
-            IHttpContextAccessor accessor = new HttpContextAccessor();
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
-            { }
+        { 
 
             AnnouncementsId = db.AnnouncementsId;
             SeenBy = db.SeenById.ToString();

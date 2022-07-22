@@ -13,14 +13,10 @@ using System.Threading.Tasks;
 namespace SMP.Contracts.Annoucement
 {
     public class SeenAnnouncements: CommonEntity
-    {
-        [Key]
+    { 
         public Guid SeenAnnouncementsId { get; set; }
-        public Guid StudentContactId { get; set; }
-        [ForeignKey("StudentContactId")]
-        public StudentContact StudentContact { get; set; }
-        public Guid ClassRegisterId { get; set; }
-        [ForeignKey("ClassRegisterId")]
-        public ClassRegister ClassRegister { get; set; }
+        public Guid SeenById { get; set; }
+        public Guid AnnouncementsId { get; set; }
+        public DateTime DateSent { get; set; }
     }
 }

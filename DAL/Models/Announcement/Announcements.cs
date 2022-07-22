@@ -1,5 +1,6 @@
 ﻿using DAL;
 using DAL.ClassEntities;
+using DAL.TeachersInfor;
 using SMP.DAL.Models.Attendance;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,9 @@ namespace SMP.DAL.Models.Annoucement
         public string Body { get; set; }  
         public DateTime AnnouncementDate { get; set; }  
         public Guid SeenAnnouncementsId { get; set; }
+        public Guid SubjectTeacherId { get; set; }
+        [ForeignKey("SubjectTeacherId")]
+        public Teacher SubjectTeacher { get; set; }
         public ICollection<SeenAnnouncements> SeenAnnouncements { get; set; }
     }
 }
