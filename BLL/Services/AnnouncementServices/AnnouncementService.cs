@@ -28,11 +28,11 @@ namespace SMP.BLL.Services.AnnouncementServices
             this.accessor = accessor;
         }
 
-        async Task<APIResponse<UpdatSeenAnnouncement>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
+        async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
         {
-            var res = new APIResponse<UpdatSeenAnnouncement>();
+            var res = new APIResponse<GetAnnouncements>();
             var userId = accessor.HttpContext.User.FindFirst(d => d.Type == "userId").Value;
-            var announcement = await context.Announcement.FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
+            var announcement = await context.Announcement.Include(d => d.Sender).FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
             if(announcement != null)
             {
                 var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
@@ -41,10 +41,12 @@ namespace SMP.BLL.Services.AnnouncementServices
                     splitedIds.Add(userId);
                     announcement.SeenByIds = string.Join(',', splitedIds);
                     await context.SaveChangesAsync();
+                    
                 }
-                res.Message.FriendlyMessage = Messages.Saved;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.Result = new GetAnnouncements(announcement, userId);
                 res.IsSuccessful = true;
-                res.Result = request;
+                
                 return res;
             }
             else
@@ -61,30 +63,33 @@ namespace SMP.BLL.Services.AnnouncementServices
             
             if (!string.IsNullOrEmpty(userid))
             {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
-                {
-                    res.Result = await context.Announcement
-                        .OrderByDescending(d => d.CreatedOn)
-                        .Take(100)
-                        .Where(d => d.AssignedTo == "admin")
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                }
+             
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
                     res.Result = await context.Announcement
+                        .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
                         .Where(d => d.AssignedTo == "teacher")
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();   
                 }
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
                 {
                     res.Result = await context.Announcement
+                          .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
                         .Where(d => d.AssignedTo == "student")
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                    
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                {
+                    res.Result = await context.Announcement
+                          .Include(d => d.Sender)
+                        .OrderByDescending(d => d.CreatedOn)
+                        .Take(100)
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                 }
             }
 
@@ -136,6 +141,8 @@ namespace SMP.BLL.Services.AnnouncementServices
             res.Result = request;
             return res;
         }
+
+       
 
     }
 }
