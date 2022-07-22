@@ -51,7 +51,7 @@ namespace SMP.BLL.Services.PinManagementService
             var studentResult = await resultService.GetStudentResultAsync(student.SessionClassId, Guid.Parse(request.TermId), student.StudentContactId);
             if (studentResult.Result != null)
             {
-                var pin = await context.UsedPin.Include(d => d.UploadedPin).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
+                var pin = await context.UsedPin.Include(d => d.UploadedPin).Include(d => d.Sessionterm).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
                 if (pin.Any())
                 {
                     if (pin.Count >= 3)
@@ -62,6 +62,16 @@ namespace SMP.BLL.Services.PinManagementService
                     else
                     {
                        
+                        if(pin.FirstOrDefault().SessionTermId != Guid.Parse(request.TermId))
+                        {
+                            res.Message.FriendlyMessage = $"Pin can only be used for {pin.FirstOrDefault().Sessionterm.TermName} term";
+                            return res;
+                        }
+                        if (pin.FirstOrDefault().StudentContactId != student.StudentContactId)
+                        {
+                            res.Message.FriendlyMessage = $"Pin can only be used by one (1) student";
+                            return res;
+                        }
                         await AddPinAsUsedAsync(request, student.StudentContactId, pin.FirstOrDefault().UploadedPinId);
                         res.Result = studentResult.Result;
                         res.IsSuccessful = true;
@@ -232,44 +242,58 @@ namespace SMP.BLL.Services.PinManagementService
                 return res;
             }
         }
-        async Task<APIResponse<List<GetUploadPinRequest>>> IPinManagementService.GetUploadedPinAsync()
+       
+        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUnusedPinsAsync()
         {
-            var res = new APIResponse<List<GetUploadPinRequest>>();
+            var res = new APIResponse<List<GetPins>>();
             var result = res.Result;
-            res.Result = await context.UploadedPin
-            .Include(x => x.UsedPin).Where(x=>x.Deleted == false).Select(f => new GetUploadPinRequest(f)).ToListAsync();
+            var allPins = context.UploadedPin.Where(d => d.Deleted == false);
+            var usedPinIds = context.UsedPin.Where(d => d.Deleted == false).Select(x => x.UploadedPinId);
+
+            res.Result = await allPins.OrderByDescending(x => x.CreatedOn).Where(d => !usedPinIds.Contains(d.UploadedPinId)).Select(f => new GetPins(f)).ToListAsync();
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<GetUploadPinRequest>> IPinManagementService.GetUploadedPinDetailAsync(string uploadedPinId, string sessionTermId)
+
+        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync()
         {
-            var res = new APIResponse<GetUploadPinRequest>();
-            var sessionTerm = await context.SessionTerm.FirstOrDefaultAsync(x => x.SessionTermId.ToString() == sessionTermId);
-            res.Result = await context.UploadedPin
-                .Include(x=>x.UsedPin)
-                .ThenInclude(x=>x.Student)
-                .ThenInclude(x=>x.SessionClass)
-                .ThenInclude(x=>x.Session)
-                .ThenInclude(x=>x.Terms).Select(f => new GetUploadPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
+
+            
+
+            var res = new APIResponse<List<GetPins>>();
+            res.Result =  context.UsedPin.Where(d => d.Deleted == false)
+                .Include(x => x.UploadedPin)
+                .Include(x => x.Student).ThenInclude(d => d.User)
+                .Include(x => x.Sessionterm)
+                .OrderByDescending(x => x.CreatedOn)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                .AsEnumerable()
+                .GroupBy(d => d.UploadedPinId).Select(grp => grp)
+                .Select(f => new GetPins(f)).ToList();
+
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<List<GetUsedPinRequest>>> IPinManagementService.GetUsedPinAsync()
+
+        async Task<APIResponse<PinDetail>> IPinManagementService.GetUnusedPinDetailAsync(string pin)
         {
-            var res = new APIResponse<List<GetUsedPinRequest>>();
-            res.Result = await context.UsedPin
-            .Include(x=>x.UploadedPin)
-            .Include(x=>x.Sessionterm).Select(f => new GetUsedPinRequest(f)).ToListAsync();
+            var res = new APIResponse<PinDetail>();
+            res.Result = await context.UploadedPin.Where(x => x.Pin == pin).Select(e => new PinDetail(e)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }
-        async Task<APIResponse<GetUsedPinRequest>> IPinManagementService.GetUsedPinDetailedAsync(string usedPinId,string SessionTermId)
+
+        async Task<APIResponse<PinDetail>> IPinManagementService.GetUsedPinDetailAsync(string pin)
         {
-            var res = new APIResponse<GetUsedPinRequest>();
-            var sessionTerm = await context.SessionTerm.FirstOrDefaultAsync(x=>x.SessionTermId.ToString() == SessionTermId);
-            res.Result = await context.UsedPin
-                .Include(x=>x.Student).ThenInclude(x=>x.User)
-                .Include(x=>x.Sessionterm).Include(x=>x.UploadedPin).Select(f => new GetUsedPinRequest(f, sessionTerm)).FirstOrDefaultAsync();
+            var res = new APIResponse<PinDetail>();
+            res.Result = context.UsedPin
+            .Include(x => x.UploadedPin)
+            .Include(x => x.Student).ThenInclude(d => d.User)
+            .Include(x => x.Sessionterm)
+            .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+            .Where(x => x.UploadedPin.Pin == pin).AsEnumerable()
+            .GroupBy(d => d.UploadedPinId).Select(grp => grp)
+                .Select(f => new PinDetail(f)).FirstOrDefault();
             res.IsSuccessful = true;
             return res;
         }

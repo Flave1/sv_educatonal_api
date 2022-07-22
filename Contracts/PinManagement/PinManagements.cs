@@ -25,66 +25,7 @@ namespace SMP.Contracts.PinManagement
         public string Serial;
         public IFormFile File { get; set; }
     }
- 
-    public class GetUploadPinRequest
-    { 
-        public string Pin;
-        public long SerialNumber;
-        public int PinCount;
-        public string Session;
-        public string StudentName;
-        public string TermPrinted;
 
-        public GetUploadPinRequest(UploadedPin db)
-        {
-            List<UploadedPin> pins = new() { db} ;
-            foreach(var pin in pins)
-            {
-                //SerialNumber = db.SerialNumber;
-                Pin = pin.Pin;
-                PinCount = pins.Select(x => new UploadedPin().Pin.Any()).Count();
-
-            }
-        }
-        public GetUploadPinRequest(UploadedPin db, SessionTerm session)
-        { 
-            List<UploadedPin> pins  = new() {db};
-            
-             Pin =  db.Pin;
-            StudentName = $"{db.UsedPin.FirstOrDefault(x=>x.UploadedPin.Pin == db.Pin).Student.User.LastName}" + $"{db.UsedPin.FirstOrDefault(x => x.UploadedPin.Pin == db.Pin).Student.User.FirstName}";
-            Session = $"{session.Session.StartDate}" +"/" +  $"{session.Session.EndDate}";
-            PinCount = pins.Where(x=>x.UploadedPinId == db.UploadedPinId).Count();
-            TermPrinted = session.TermName;
-            
-        }
-    } 
-    public class GetUsedPinRequest
-    { 
-        public string Pin;
-        public long SerialNumber;
-        public int PinCount;
-        public string StudentName;
-        public string Session;
-        public string TermPrinted;
-
-        public GetUsedPinRequest(UsedPin db)
-        {
-            List<UsedPin> pins = new() {db};
-            //SerialNumber = db.SerialNumber;
-            Pin = db.UploadedPin.Pin; 
-            PinCount = pins.Select(x => new UsedPin().UploadedPin.UsedPin.Any(x=>x.UsedPinId == db.UsedPinId)).Count(); 
-        }
-        public GetUsedPinRequest(UsedPin db, SessionTerm session)
-        { 
-            List<UsedPin> pins = new() {db};
-            Pin = db.UploadedPin.Pin;
-            //SerialNumber = db.UploadedPin.SerialNumber;
-            StudentName = $"{db.UploadedPin.UsedPin.FirstOrDefault().Student.User.LastName}" + $"{db.UploadedPin.UsedPin.FirstOrDefault().Student.User.FirstName}";
-            Session = $"{session.Session.StartDate}" + "/" + $"{session.Session.EndDate}";
-            PinCount = pins.Select(x=>new UsedPin().UploadedPin.UsedPin.Any()).Count();
-            TermPrinted = session.TermName;
-        }
-    }
     public class FwsPinValidationRequest
     {
         public string Pin { get; set; }
@@ -113,6 +54,71 @@ namespace SMP.Contracts.PinManagement
         public Message message { get; set; }
     }
 
-  
+
+    public class GetPins
+    {
+        public string Pin { get; set; }
+        public string SerialNumber { get; set; }
+        public int NumberOfTimesUsed { get; set; }
+        public string StudentName { get; set; }
+        public string Session { get; set; }
+        public string Term { get; set; }
+        public string PinStatus { get; set; }
+        public GetPins(UploadedPin db)
+        {
+            Pin = db.Pin;
+            SerialNumber = db.Serial;
+            NumberOfTimesUsed = 0;
+            StudentName = "unused";
+            Session = "unused";
+            Term = "unused";
+            PinStatus = "unused";
+            SerialNumber = db.Serial;
+        }
+        public GetPins(IGrouping<Guid, UsedPin> db)
+        {
+            Pin = db.FirstOrDefault().UploadedPin.Pin;
+            SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+            NumberOfTimesUsed = db.Count();
+            StudentName = db.FirstOrDefault().Student.User.FirstName + " " + db.FirstOrDefault().Student.User.LastName;
+            Session = db.FirstOrDefault().SessionClass.Session.StartDate + " " + db.FirstOrDefault().SessionClass.Session.EndDate;
+            Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
+            PinStatus = "used";
+            SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+        }
+    }
+
+    public class PinDetail
+    {
+        public string Pin { get; set; }
+        public string SerialNumber { get; set; }
+        public int NumberOfTimesUsed { get; set; }
+        public string StudentName { get; set; }
+        public string Session { get; set; }
+        public string Term { get; set; }
+        public string PinStatus { get; set; }
+        public PinDetail(UploadedPin db)
+        {
+            Pin = db.Pin;
+            SerialNumber = db.Serial;
+            NumberOfTimesUsed = 0;
+            StudentName = "unused";
+            Session = "unused";
+            Term = "unused";
+            SerialNumber = db.Serial;
+        }
+        public PinDetail(IGrouping<Guid, UsedPin> db)
+        {
+            Pin = db.FirstOrDefault().UploadedPin.Pin;
+            SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+            NumberOfTimesUsed = db.Count();
+            StudentName = db.FirstOrDefault().Student.User.FirstName + " " + db.FirstOrDefault().Student.User.LastName;
+            Session = db.FirstOrDefault().SessionClass.Session.StartDate + " " + db.FirstOrDefault().SessionClass.Session.EndDate;
+            Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
+            PinStatus = "used";
+            SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+        }
+    }
+
 
 }
