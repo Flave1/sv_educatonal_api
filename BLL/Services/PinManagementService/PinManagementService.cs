@@ -266,9 +266,6 @@ namespace SMP.BLL.Services.PinManagementService
 
         async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync()
         {
-
-            
-
             var res = new APIResponse<List<GetPins>>();
             res.Result =  context.UsedPin.Where(d => d.Deleted == false)
                 .Include(x => x.UploadedPin)

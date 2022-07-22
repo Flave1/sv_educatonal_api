@@ -45,11 +45,13 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("get/announcementss")]
+        [HttpGet("get/announcements")]
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var response = await service.GetAnnouncementsAsync();
             return Ok(response);
         }
+
+
     }
 }
