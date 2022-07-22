@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SMP.BLL.Services.AnnouncementServices;
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.AttendanceServices;
+using SMP.BLL.Services.DashboardServices;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.GradeServices;
 using SMP.BLL.Services.PinManagementService;
@@ -62,6 +63,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IPortalSettingService, PortalSettingService>();
             services.AddScoped<IPinManagementService, PinManagementService>();
             services.AddScoped<IAnnouncementsService, AnnouncementService>();
+            services.AddScoped<IDashboardService, DashboardService>();
         }
     }
 }
