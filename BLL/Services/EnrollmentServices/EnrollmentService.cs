@@ -149,16 +149,26 @@ namespace SMP.BLL.Services.EnrollmentServices
             return res;
 
         }
-    
-        //async Task IEnrollmentService.ReEnrollOnUpdateStudentAsync(StudentContact std)
-        //{
-        //    var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentId == std.StudentContactId);
-        //    if(enrollment != null)
-        //    {
-        //        enrollment.StudentId = std.SessionClassId;
-        //        enrollment.ClassId = std.SessionClassId;
-        //        await context.SaveChangesAsync();
-        //    }
-        //}
+
+        void IEnrollmentService.UnenrollStudent(Guid studentId)
+        {
+            var res = new APIResponse<UnEnroll>();
+            try
+            {
+                var enrollment =  context.Enrollment.Include(d => d.Student).FirstOrDefault(e => e.StudentContactId == studentId);
+                if (enrollment != null)
+                {
+                    enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
+                    enrollment.Status = (int)EnrollmentStatus.UnEnrolled;
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+
+        }
     }
 }

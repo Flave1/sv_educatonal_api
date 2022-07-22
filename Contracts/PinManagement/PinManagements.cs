@@ -22,6 +22,7 @@ namespace SMP.Contracts.PinManagement
     {
         public string Pin;
         public int ExcelLineNumber;
+        public string Serial;
         public IFormFile File { get; set; }
     }
  

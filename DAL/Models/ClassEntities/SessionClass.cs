@@ -2,6 +2,7 @@
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.PromotionEntities;
 using SMP.DAL.Models.Register;
 using SMP.DAL.Models.ResultModels;
 using System;
@@ -36,5 +37,6 @@ namespace DAL.ClassEntities
         public Guid? PublishStatusId { get; set; }
         [ForeignKey("PublishStatusId")]
         public PublishStatus PublishStatus { get; set; }
+        public PromotedSessionClass PromotedSessionClass { get; set; }
     }
 }

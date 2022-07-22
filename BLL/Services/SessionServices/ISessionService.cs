@@ -1,5 +1,6 @@
 ﻿using Contracts.Session;
 using DAL.SessionEntities;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,5 +19,6 @@ namespace BLL.SessionServices
         Task<APIResponse<bool>> UpdateSessionHeadTeacherAsync(UpdateHeadTeacher req);
         Task<APIResponse<List<Terms>>> GetSessionTermsAsync(Guid sessionId);
         Task<APIResponse<List<GetSessionClass>>> GetSessionClassesAsync(Guid sessionId);
+        SessionTerm GetPreviousSessionLastTermAsync(Guid sessionId);
     }
 }
