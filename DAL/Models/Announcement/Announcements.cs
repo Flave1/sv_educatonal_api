@@ -16,16 +16,12 @@ namespace SMP.DAL.Models.Annoucement
     {
         [Key]  
         public Guid AnnouncementsId { get; set; } 
-        public Guid SeenById { get; set; }
-        public string AssignedBy { get; set; }  
+        public string SeenByIds { get; set; }
+        public string SentBy { get; set; }  
         public string AssignedTo { get; set; }  
-        public string Subject { get; set; }  
-        public string Body { get; set; }  
-        public DateTime AnnouncementDate { get; set; }  
-        public Guid SeenAnnouncementsId { get; set; }
-        public Guid SubjectTeacherId { get; set; }
-        [ForeignKey("SubjectTeacherId")]
-        public Teacher SubjectTeacher { get; set; }
-        public ICollection<SeenAnnouncements> SeenAnnouncements { get; set; }
+        public string Header { get; set; }  
+        public string Content { get; set; }  
+        public bool IsEdited { get; set; }
+        public DateTime AnnouncementDate { get; set; }
     }
 }

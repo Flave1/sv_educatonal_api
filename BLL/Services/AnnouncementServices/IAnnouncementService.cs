@@ -7,8 +7,9 @@ namespace SMP.BLL.Services.AnnouncementsServices
 {
     public interface IAnnouncementsService
     {
-        Task<APIResponse<AnnouncementsContract>> CreateAnnouncementsAsync(AnnouncementsContract request);
-        Task<APIResponse<List<GetAnnouncementsContract>>> GetAnnouncementsAsync();
-        Task<APIResponse<AnnouncementsContract>> UpdateAnnouncementsAsync(AnnouncementsContract request);
+        Task<APIResponse<CreateAnnouncement>> CreateAnnouncementsAsync(CreateAnnouncement request);
+        Task<APIResponse<List<GetAnnouncements>>> GetAnnouncementsAsync();
+        Task<APIResponse<UpdatSeenAnnouncement>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
+        Task<APIResponse<UpdateAnnouncement>> UpdateAnnouncementsAsync(UpdateAnnouncement request);
     }
 }

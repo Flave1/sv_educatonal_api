@@ -18,16 +18,17 @@ namespace SMP.API.Controllers
             this.service = sertvice;
         }
          
-        [HttpPost("make/announcement")]
-        public async Task<IActionResult> MakeAnnouncement([FromBody] AnnouncementsContract request)
+        [HttpPost("create/announcement")]
+        public async Task<IActionResult> CreateAnnouncementsAsync([FromBody] CreateAnnouncement request)
         {
             var response = await service.CreateAnnouncementsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
+
         [HttpPost("update/announcement")]
-        public async Task<IActionResult> UpdateAnnouncement([FromBody] AnnouncementsContract request)
+        public async Task<IActionResult> UpdateAnnouncementsAsync([FromBody] UpdateAnnouncement request)
         {
             var response = await service.UpdateAnnouncementsAsync(request);
             if (response.IsSuccessful)
@@ -35,8 +36,17 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("get/announcement")]
-        public async Task<IActionResult> GetAnnouncementAsync()
+        [HttpPost("update/seen-announcement")]
+        public async Task<IActionResult> UpdateSeenAnnouncementAsync([FromBody] UpdatSeenAnnouncement request)
+        {
+            var response = await service.UpdateSeenAnnouncementAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/announcementss")]
+        public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var response = await service.GetAnnouncementsAsync();
             return Ok(response);

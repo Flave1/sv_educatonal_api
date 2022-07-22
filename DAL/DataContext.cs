@@ -64,7 +64,6 @@ namespace DAL
         public DbSet<UploadedPin> UploadedPin { get; set; }
         public DbSet<UsedPin> UsedPin { get; set; }
         public DbSet<Announcements> Announcement { get; set; }
-        public DbSet<SeenAnnouncements> SeenAnnouncements { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

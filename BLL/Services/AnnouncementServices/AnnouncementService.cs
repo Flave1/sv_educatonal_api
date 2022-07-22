@@ -28,85 +28,113 @@ namespace SMP.BLL.Services.AnnouncementServices
             this.accessor = accessor;
         }
 
-        async Task<APIResponse<AnnouncementsContract>> IAnnouncementsService.UpdateAnnouncementsAsync(AnnouncementsContract request)
+        async Task<APIResponse<UpdatSeenAnnouncement>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
         {
-            var res = new APIResponse<AnnouncementsContract>();
-            var announcement = await context.Announcement.FirstOrDefaultAsync(x=>x.AnnouncementsId == request.AnnouncementsId);
+            var res = new APIResponse<UpdatSeenAnnouncement>();
+            var userId = accessor.HttpContext.User.FindFirst(d => d.Type == "userId").Value;
+            var announcement = await context.Announcement.FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
             if(announcement != null)
-            { 
-                announcement.SeenById = new Guid();
-                announcement.Subject = request.Subject;
-                announcement.AnnouncementDate = DateTime.UtcNow;
-                announcement.AssignedTo = request.AssignedTo;
-                announcement.AssignedBy = request.AssignedBy;
-                announcement.Body = request.Body;
-
-                await context.SaveChangesAsync();
+            {
+                var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
+                if(!splitedIds.Any(d => d == userId))
+                {
+                    splitedIds.Add(userId);
+                    announcement.SeenByIds = string.Join(',', splitedIds);
+                    await context.SaveChangesAsync();
+                }
+                res.Message.FriendlyMessage = Messages.Saved;
+                res.IsSuccessful = true;
+                res.Result = request;
+                return res;
             }
             else
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
-            res.Message.FriendlyMessage = Messages.Created;
-            res.IsSuccessful = true;
-            res.Result = request;
-            return res;
         }
 
-        async Task<APIResponse<List<GetAnnouncementsContract>>> IAnnouncementsService.GetAnnouncementsAsync()
+        async Task<APIResponse<List<GetAnnouncements>>> IAnnouncementsService.GetAnnouncementsAsync()
         { 
-            var res = new APIResponse<List<GetAnnouncementsContract>>();
+            var res = new APIResponse<List<GetAnnouncements>>();
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var announcements = await context.Announcement.Select(x => new GetAnnouncementsContract(x)).ToListAsync();
+            
             if (!string.IsNullOrEmpty(userid))
             {
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
                 {
-                    announcements.Any();
+                    res.Result = await context.Announcement
+                        .OrderByDescending(d => d.CreatedOn)
+                        .Take(100)
+                        .Where(d => d.AssignedTo == "admin")
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                 }
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
-                    announcements = await context.Announcement.Where(x=>x.SubjectTeacherId == Guid.Parse(teacherId)).Select(f=>new GetAnnouncementsContract(f)).ToListAsync();
-                } 
-
+                    res.Result = await context.Announcement
+                        .OrderByDescending(d => d.CreatedOn)
+                        .Take(100)
+                        .Where(d => d.AssignedTo == "teacher")
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                }
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                {
+                    res.Result = await context.Announcement
+                        .OrderByDescending(d => d.CreatedOn)
+                        .Take(100)
+                        .Where(d => d.AssignedTo == "student")
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                }
             }
 
+            res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = announcements;
             return res;
 
         }
 
-        async Task<APIResponse<AnnouncementsContract>> IAnnouncementsService.CreateAnnouncementsAsync(AnnouncementsContract request)
+        async Task<APIResponse<CreateAnnouncement>> IAnnouncementsService.CreateAnnouncementsAsync(CreateAnnouncement request)
         {
-            var res = new APIResponse<AnnouncementsContract>();
-            if(request != null)
+            var res = new APIResponse<CreateAnnouncement>();
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var newAnnouncement = new Announcements()
             {
-                var newAnnouncement = new Announcements()
-                {
-                    //todo: getseenby
-                    SeenById = new Guid(),
-                    Subject = request.Subject,
-                    AnnouncementDate = DateTime.UtcNow,
-                    AssignedTo = request.AssignedTo,
-                    AssignedBy = request.AssignedBy,
-                    Body = request.Body
-                };
-                await context.Announcement.AddAsync(newAnnouncement);
-                await context.SaveChangesAsync();
-            }
-            else
-            {
-                res.Message.FriendlyMessage = "Make some Announcement";
-                return res;
-            }
+                Header = request.Header,
+                AnnouncementDate = DateTime.UtcNow,
+                AssignedTo = request.AssignedTo,
+                SentBy = userid,
+                Content = request.Content
+            };
+            await context.Announcement.AddAsync(newAnnouncement);
+            await context.SaveChangesAsync();
+
             res.Message.FriendlyMessage = Messages.Created;
             res.IsSuccessful = true;
             res.Result = request;
             return res;
-        }  
-         
+        }
+
+        async Task<APIResponse<UpdateAnnouncement>> IAnnouncementsService.UpdateAnnouncementsAsync(UpdateAnnouncement request)
+        {
+            var res = new APIResponse<UpdateAnnouncement>();
+            var ann = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == request.AnnouncementsId);
+            if(ann == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            ann.Header = request.Header;
+            ann.AssignedTo = request.AssignedTo;
+            ann.Content = request.Content;
+            ann.IsEdited = true;
+            await context.SaveChangesAsync();
+
+            res.Message.FriendlyMessage = Messages.Updated;
+            res.IsSuccessful = true;
+            res.Result = request;
+            return res;
+        }
+
     }
 }

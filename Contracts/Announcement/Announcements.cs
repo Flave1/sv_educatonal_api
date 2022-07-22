@@ -13,35 +13,44 @@ using System.Threading.Tasks;
 
 namespace Contracts.Annoucements
 {
-    public class AnnouncementsContract
-    {
-        public Guid AnnouncementsId { get; set; }
-        public string SeenBy { get; set; }
-        public string AssignedBy { get; set; }
-        public string AssignedTo { get; set; }
-        public string Subject { get; set; }
-        public string Body { get; set; }
-        public DateTime AnnouncementDate { get; set; }
-    }
-    public class GetAnnouncementsContract
-    {
-        public Guid AnnouncementsId { get; set; }
-        public string SeenBy { get; set; }
-        public string AssignedBy { get; set; }
-        public string AssignedTo { get; set; }
-        public string Subject { get; set; }
-        public string Body { get; set; }
-        public DateTime AnnouncementDate { get; set; }
-        public GetAnnouncementsContract(Announcements db)
-        { 
 
+    public class UpdatSeenAnnouncement
+    {
+        public string AnnouncementsId { get; set; }
+    }
+    public class CreateAnnouncement
+    {
+        public string AssignedTo { get; set; }
+        public string Header { get; set; }
+        public string Content { get; set; }
+    }
+    public class UpdateAnnouncement
+    {
+        public Guid AnnouncementsId { get; set; }
+        public string AssignedTo { get; set; }
+        public string Header { get; set; }
+        public string Content { get; set; }
+    }
+    public class GetAnnouncements
+    {
+        public Guid AnnouncementsId { get; set; }
+        public string SentBy { get; set; }
+        public string AssignedTo { get; set; }
+        public string Header { get; set; }
+        public string Content { get; set; }
+        public DateTime AnnouncementDate { get; set; }
+        public bool IsSeen { get; set; }
+        public bool IsEdited { get; set; }
+        public GetAnnouncements(Announcements db, string userId)
+        { 
             AnnouncementsId = db.AnnouncementsId;
-            SeenBy = db.SeenById.ToString();
-            AssignedBy = db.AssignedBy;
+            SentBy = db.SentBy;
             AssignedTo = db.AssignedTo;
-            Subject = db.Subject;
-            Body = db.Body;
+            Header = db.Header;
+            Content = db.Content;
             AnnouncementDate = db.AnnouncementDate;
+            IsEdited = db.IsEdited;
+            IsSeen = !string.IsNullOrEmpty(db.SeenByIds) ? db.SeenByIds.Split(',').ToList().Contains(userId) : false;
         }
     }
 }
