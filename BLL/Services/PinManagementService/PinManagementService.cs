@@ -162,6 +162,12 @@ namespace SMP.BLL.Services.PinManagementService
             {
                 List<UploadPinRequest> uploadedRecord = new List<UploadPinRequest>();
                 var files = accessor.HttpContext.Request.Form.Files;
+
+                if(files.Count() == 0)
+                {
+                    res.Message.FriendlyMessage = $"No File selected";
+                    return res;
+                }
                 var byteList = new List<byte[]>();
                 foreach (var fileBit in files)
                 {
@@ -229,10 +235,13 @@ namespace SMP.BLL.Services.PinManagementService
                         }
                     }
                     await context.SaveChangesAsync();
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = "Pin uploaded successfully";
+                    return res;
                 }
                
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Pin uploaded successfully";
+                res.Message.FriendlyMessage = "File not found";
                 return res;
 
             }

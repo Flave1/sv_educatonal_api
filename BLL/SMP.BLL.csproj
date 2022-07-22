@@ -4,6 +4,10 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
   <ItemGroup>
 	  <PackageReference Include="EPPlus" Version="6.0.6" />
 	  <PackageReference Include="MailKit" Version="2.6.0" />
