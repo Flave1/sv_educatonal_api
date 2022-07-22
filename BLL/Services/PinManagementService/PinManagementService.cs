@@ -51,7 +51,7 @@ namespace SMP.BLL.Services.PinManagementService
             var studentResult = await resultService.GetStudentResultAsync(student.SessionClassId, Guid.Parse(request.TermId), student.StudentContactId);
             if (studentResult.Result != null)
             {
-                var pin = await context.UsedPin.Include(d => d.UploadedPin).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
+                var pin = await context.UsedPin.Include(d => d.UploadedPin).Include(d => d.Sessionterm).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
                 if (pin.Any())
                 {
                     if (pin.Count >= 3)
@@ -62,6 +62,16 @@ namespace SMP.BLL.Services.PinManagementService
                     else
                     {
                        
+                        if(pin.FirstOrDefault().SessionTermId != Guid.Parse(request.TermId))
+                        {
+                            res.Message.FriendlyMessage = $"Pin can only be used for {pin.FirstOrDefault().Sessionterm.TermName} term";
+                            return res;
+                        }
+                        if (pin.FirstOrDefault().StudentContactId != student.StudentContactId)
+                        {
+                            res.Message.FriendlyMessage = $"Pin can only be used by one (1) student";
+                            return res;
+                        }
                         await AddPinAsUsedAsync(request, student.StudentContactId, pin.FirstOrDefault().UploadedPinId);
                         res.Result = studentResult.Result;
                         res.IsSuccessful = true;
@@ -232,17 +242,60 @@ namespace SMP.BLL.Services.PinManagementService
                 return res;
             }
         }
-    
-
-        public async Task<bool> GetAllUnusedPinsAsync()
+       
+        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUnusedPinsAsync()
         {
-            throw new NotFiniteNumberException();
+            var res = new APIResponse<List<GetPins>>();
+            var result = res.Result;
+            var allPins = context.UploadedPin.Where(d => d.Deleted == false);
+            var usedPinIds = context.UsedPin.Where(d => d.Deleted == false).Select(x => x.UploadedPinId);
+
+            res.Result = await allPins.OrderByDescending(x => x.CreatedOn).Where(d => !usedPinIds.Contains(d.UploadedPinId)).Select(f => new GetPins(f)).ToListAsync();
+            res.IsSuccessful = true;
+            return res;
         }
 
-        public async Task<bool> GetAllUsedPinsAsync()
+        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync()
         {
-            throw new NotFiniteNumberException();
+
+            
+
+            var res = new APIResponse<List<GetPins>>();
+            res.Result =  context.UsedPin.Where(d => d.Deleted == false)
+                .Include(x => x.UploadedPin)
+                .Include(x => x.Student).ThenInclude(d => d.User)
+                .Include(x => x.Sessionterm)
+                .OrderByDescending(x => x.CreatedOn)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                .AsEnumerable()
+                .GroupBy(d => d.UploadedPinId).Select(grp => grp)
+                .Select(f => new GetPins(f)).ToList();
+
+            res.IsSuccessful = true;
+            return res;
         }
 
+        async Task<APIResponse<PinDetail>> IPinManagementService.GetUnusedPinDetailAsync(string pin)
+        {
+            var res = new APIResponse<PinDetail>();
+            res.Result = await context.UploadedPin.Where(x => x.Pin == pin).Select(e => new PinDetail(e)).FirstOrDefaultAsync();
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<PinDetail>> IPinManagementService.GetUsedPinDetailAsync(string pin)
+        {
+            var res = new APIResponse<PinDetail>();
+            res.Result = context.UsedPin
+            .Include(x => x.UploadedPin)
+            .Include(x => x.Student).ThenInclude(d => d.User)
+            .Include(x => x.Sessionterm)
+            .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+            .Where(x => x.UploadedPin.Pin == pin).AsEnumerable()
+            .GroupBy(d => d.UploadedPinId).Select(grp => grp)
+                .Select(f => new PinDetail(f)).FirstOrDefault();
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }

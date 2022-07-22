@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
 {
-    //[PortalAuthorize]
+    [PortalAuthorize]
     [Route("pin/api/v1")]
     public class PinController : Controller
     {
@@ -21,13 +21,38 @@ namespace SMP.API.Controllers
 
 
         [HttpPost("upload/pin")]
-        public async Task<IActionResult> UploadPinAsync([FromForm] UploadPinRequest request)
+        public async Task<IActionResult> UploadPin([FromForm] UploadPinRequest request)
         {
             var response = await service.UploadPinAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpGet("get/unused-pins")]
+        public async Task<IActionResult> GetAllUnusedPinsAsync()
+        {
+            var response = await service.GetAllUnusedPinsAsync();
+            return Ok(response);
+        }
+        [HttpGet("get/used-pins")]
+        public async Task<IActionResult> GetAllUsedPinsAsync()
+        {
+            var response = await service.GetAllUsedPinsAsync();
+            return Ok(response); 
+        }
+        [HttpGet("get-unused/pin-details")]
+        public async Task<IActionResult> GetUnusedPinDetailAsync(string pin)
+        {
+            var response = await service.GetUnusedPinDetailAsync(pin);
+            return Ok(response);
+        }
+        [HttpGet("get-used/pin-details")]
+        public async Task<IActionResult> GetUsedPinDetails(string pin)
+        {
+            var response = await service.GetUsedPinDetailAsync(pin);
+            return Ok(response);
+        }
+
 
 
         #endregion
