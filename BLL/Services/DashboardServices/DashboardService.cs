@@ -46,12 +46,7 @@ namespace SMP.BLL.Services.DashboardServices
                 {
                     res.Result = new GetDashboard { TotalClass = totalClass, TotalEnrolledStudent = totalEnrolledstudent, TotalPins = totalPins, TotalStaff = totalStaff, TotalSubjects = totalSubject };
                 }
-            }
-            else
-            { 
-                res.Message.FriendlyMessage = "Invalid User";
-                return res;
-            }
+            } 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
