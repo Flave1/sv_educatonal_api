@@ -68,7 +68,6 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .Take(100)
                         .Where(d => d.AssignedTo == "admin")
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    return res;
                 }
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
@@ -76,8 +75,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
                         .Where(d => d.AssignedTo == "teacher")
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    return res;
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();   
                 }
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
                 {
@@ -86,7 +84,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .Take(100)
                         .Where(d => d.AssignedTo == "student")
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    return res;
+                   
                 }
             }
 

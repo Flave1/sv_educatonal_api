@@ -10,6 +10,6 @@ namespace SMP.BLL.Services.DashboardServices
 {
     public interface IDashboardService
     {
-        Task<APIResponse<GetDashboard>> GetDashboardInfoAsync();
+        Task<APIResponse<GetDashboard>> GetDashboardCountAsync();
     }
 }
