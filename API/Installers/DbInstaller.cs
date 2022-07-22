@@ -9,6 +9,8 @@ using DAL.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SMP.BLL.Services.AnnouncementServices;
+using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.AttendanceServices;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.GradeServices;
@@ -59,6 +61,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IFileUploadService, FileUploadService>();
             services.AddScoped<IPortalSettingService, PortalSettingService>();
             services.AddScoped<IPinManagementService, PinManagementService>();
+            services.AddScoped<IAnnouncementsService, AnnouncementService>();
         }
     }
 }

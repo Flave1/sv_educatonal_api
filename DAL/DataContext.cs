@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SMP.DAL.Models.PortalSettings;
 using SMP.DAL.Models.PinManagement;
+using SMP.DAL.Models.Annoucement;
 
 namespace DAL
 {
@@ -62,6 +63,7 @@ namespace DAL
         public DbSet<NotificationSetting> NotificationSetting { get; set; }
         public DbSet<UploadedPin> UploadedPin { get; set; }
         public DbSet<UsedPin> UsedPin { get; set; }
+        public DbSet<Announcements> Announcement { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
