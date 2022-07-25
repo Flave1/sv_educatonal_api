@@ -41,7 +41,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
         {
             var res = new APIResponse<UserCommand>();
-            var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
+            var uploadProfile = upload.UploadProfileImageAsync(request.ProfileImage);
             if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
             {
                 res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
@@ -112,7 +112,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<UserCommand>> ITeacherService.UpdateTeacherAsync(UserCommand userDetail)
         {
             var res = new APIResponse<UserCommand>();
-            var uploadProfile = upload.UpdateProfileImage(userDetail.ProfileImage, userDetail.Photo);
+            var uploadProfile = upload.UpdateProfileImageAsync(userDetail.ProfileImage, userDetail.Photo);
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {

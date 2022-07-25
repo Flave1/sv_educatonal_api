@@ -73,7 +73,7 @@ namespace BLL.AuthenticationServices
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
             var email  = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
-            var filePath = uploadService.UploadProfileImage(student.ProfileImage);
+            var filePath = uploadService.UploadProfileImageAsync(student.ProfileImage);
             var user = new AppUser
             {
                 UserName = email,
@@ -116,7 +116,7 @@ namespace BLL.AuthenticationServices
                 throw new ArgumentException("Account not found");
             }
 
-            var filePath = uploadService.UpdateProfileImage(student.ProfileImage, account.Photo);
+            var filePath = uploadService.UpdatePrincipalStampAsync(student.ProfileImage, account.Photo);
             account.UserName = student.Email;
             account.Email = student.Email;
             account.UserType = (int)UserTypes.Student;

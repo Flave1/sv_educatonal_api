@@ -30,22 +30,35 @@ namespace SMP.BLL.Services.DashboardServices
             var res = new APIResponse<GetDashboard>();
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
 
-            var totalEnrolledstudent = context.StudentContact.Where(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
-            var totalClass = context.SessionClass.Where(x => x.Deleted == false && x.Session.IsActive == true).Count();
-            var totalSubject = context.Subject.Where(x => x.Deleted == false && x.IsActive == true).Count();
-            var totalPins = context.UploadedPin.Where(x => x.Deleted == false).Count();
-            var totalStaff = context.Teacher.Where(x => x.Deleted == false).Count();
             if (!string.IsNullOrEmpty(userid))
             { 
 
                 if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
                 {
+
+                    var totalEnrolledstudent = context.StudentContact.Where(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
+                    var totalClass = context.SessionClass.Where(x => x.Deleted == false && x.Session.IsActive == true).Count();
+                    var totalSubject = context.Subject.Where(x => x.Deleted == false && x.IsActive == true).Count();
+                    var totalPins = context.UploadedPin.Where(x => x.Deleted == false).Count();
+                    var totalStaff = context.Teacher.Where(x => x.Deleted == false).Count();
+
                     res.Result = new GetDashboard { TotalClass = totalClass, TotalEnrolledStudent = totalEnrolledstudent, TotalPins = totalPins, TotalStaff = totalStaff, TotalSubjects = totalSubject };
                 }
                 else
                 {
-                    res.Result = new GetDashboard { TotalClass = totalClass, TotalEnrolledStudent = totalEnrolledstudent, TotalPins = totalPins, TotalStaff = totalStaff, TotalSubjects = totalSubject };
-                }
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                    { 
+                        var totalClass = context.SessionClass.Where(x => x.Deleted == false && x.Session.IsActive == true).Count();
+                        var totalSubject = context.Subject.Where(x => x.Deleted == false && x.IsActive == true).Count();
+                         
+                        res.Result = new GetDashboard { TotalClass = totalClass, TotalSubjects = totalSubject };
+                    }
+                    else
+                    {
+                        res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                        return res;
+                    }
+                } 
             } 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;

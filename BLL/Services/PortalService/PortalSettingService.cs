@@ -27,7 +27,7 @@ namespace SMP.BLL.Services.PortalService
           
             if (schoolSetting == null)
             {
-                var filePath = upload.UploadProfileImage(request.Photo);
+                var filePath = upload.UploadSchoolLogoAsync(request.Photo);
                 schoolSetting = new SchoolSetting()
                 {
                     SchoolName = request.SchoolName,
@@ -47,7 +47,7 @@ namespace SMP.BLL.Services.PortalService
             }
             else
             {
-                var filePath = upload.UpdateProfileImage(request.Photo, request.Filepath);
+                var filePath = upload.UpdateSchoolLogoAsync(request.Photo, request.Filepath);
                 schoolSetting.SchoolName = request.SchoolName;
                 schoolSetting.SchoolAddress = request.SchoolAddress;
                 schoolSetting.SchoolAbbreviation = request.SchoolAbbreviation;
@@ -72,7 +72,7 @@ namespace SMP.BLL.Services.PortalService
             var setting = await context.ResultSetting.FirstOrDefaultAsync();
             if (setting == null)
             {
-                var filePath = upload.UploadProfileImage(request.PrincipalStamp);
+                var filePath = upload.UploadPrincipalStampAsync(request.PrincipalStamp);
                 setting = new ResultSetting()
                 {
                     PromoteByPassmark = request.PromoteByPassmark,
@@ -83,12 +83,11 @@ namespace SMP.BLL.Services.PortalService
                     BatchPrinting = request.BatchPrinting,
                     PrincipalStample = filePath
                 };
-                await context.ResultSetting.AddAsync(setting);
-                 
+                await context.ResultSetting.AddAsync(setting); 
             }
             else
             {
-                var filePath = upload.UpdateProfileImage(request.PrincipalStamp, request.Filepath);
+                var filePath = upload.UpdatePrincipalStampAsync(request.PrincipalStamp, request.Filepath);
                 setting.PromoteByPassmark = request.PromoteByPassmark;
                 setting.PromoteAll = request.PromoteAll;
                 setting.ShowPositionOnResult = request.ShowPositionOnResult;
