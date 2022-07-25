@@ -9,7 +9,7 @@ namespace SMP.BLL.Services.AnnouncementsServices
     {
         Task<APIResponse<CreateAnnouncement>> CreateAnnouncementsAsync(CreateAnnouncement request);
         Task<APIResponse<List<GetAnnouncements>>> GetAnnouncementsAsync();
-        Task<APIResponse<UpdatSeenAnnouncement>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
+        Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
         Task<APIResponse<UpdateAnnouncement>> UpdateAnnouncementsAsync(UpdateAnnouncement request);
     }
 }

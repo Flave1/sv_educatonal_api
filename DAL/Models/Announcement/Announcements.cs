@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.Authentication;
 using DAL.ClassEntities;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.Attendance;
@@ -23,5 +24,7 @@ namespace SMP.DAL.Models.Annoucement
         public string Content { get; set; }  
         public bool IsEdited { get; set; }
         public DateTime AnnouncementDate { get; set; }
+        [ForeignKey("SentBy")]
+        public AppUser Sender { get; set; }
     }
 }
