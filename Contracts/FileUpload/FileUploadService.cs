@@ -34,7 +34,7 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than";
+                return $"file limit exceeded, greater than {maxFileSize}";
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -73,7 +73,7 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than  ";
+                return $"file limit exceeded, greater than {maxFileSize}";
             }
             if (file.FileName.EndsWith(".jpg")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
@@ -97,7 +97,7 @@ namespace SMP.Contracts.FileUpload
                 else
                 {
                     filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + ProfileImagePath, fileName);
-
+                     
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         fileStream.Position = 0;
@@ -125,7 +125,7 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than";
+                return $"file limit exceeded, greater than {maxFileSize}";
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -164,7 +164,7 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than  ";
+                return $"file limit exceeded, greater than {maxFileSize}";
             }
             if (file.FileName.EndsWith(".jpg")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
@@ -216,7 +216,7 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than";
+                return $"file limit exceeded, greater than {maxFileSize}";
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -255,7 +255,8 @@ namespace SMP.Contracts.FileUpload
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return "file limit exceeded, greater than  ";
+                return $"file limit exceeded, greater than {maxFileSize}";
+
             }
             if (file.FileName.EndsWith(".jpg")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")

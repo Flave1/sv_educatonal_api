@@ -25,6 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\PrincipalStamp\" />
+    <Folder Include="wwwroot\SchoolLogo\" />
     <Folder Include="wwwroot\ProfileImage\" />
   </ItemGroup>
 
