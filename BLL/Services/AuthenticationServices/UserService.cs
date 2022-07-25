@@ -116,7 +116,7 @@ namespace BLL.AuthenticationServices
                 throw new ArgumentException("Account not found");
             }
 
-            var filePath = uploadService.UpdatePrincipalStampAsync(student.ProfileImage, account.Photo);
+            var filePath = uploadService.UpdateProfileImageAsync(student.ProfileImage, account.Photo);
             account.UserName = student.Email;
             account.Email = student.Email;
             account.UserType = (int)UserTypes.Student;
