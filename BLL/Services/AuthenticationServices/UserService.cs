@@ -72,66 +72,80 @@ namespace BLL.AuthenticationServices
 
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
-            var email  = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
-            var filePath = uploadService.UploadProfileImage(student.ProfileImage);
-            var user = new AppUser
+            try
             {
-                UserName = email,
-                Active = true,
-                Deleted = false,
-                CreatedOn = DateTime.UtcNow,
-                CreatedBy = "",
-                Email = email,
-                UserType = (int)UserTypes.Student,
-                LastName = student.LastName,
-                DOB = student.DOB,
-                FirstName = student.FirstName,
-                MiddleName = student.MiddleName,
-                Phone = student.Phone,
-                Photo = filePath
-                
-            };
-            var result = await manager.CreateAsync(user, regNoFormat);
-            if (!result.Succeeded)
-            {
-                if(result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
+                var filePath = uploadService.UploadProfileImage(student.ProfileImage);
+                var user = new AppUser
                 {
-                    throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
-                }
-                else
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-            }
-            var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
-            if (!addTorole.Succeeded)
-                throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+                    UserName = email,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    Email = email,
+                    UserType = (int)UserTypes.Student,
+                    LastName = student.LastName,
+                    DOB = student.DOB,
+                    FirstName = student.FirstName,
+                    MiddleName = student.MiddleName,
+                    Phone = student.Phone,
+                    Photo = filePath
 
-            return user.Id;
+                };
+                var result = await manager.CreateAsync(user, regNoFormat);
+                if (!result.Succeeded)
+                {
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                    }
+                    else
+                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
+                if (!addTorole.Succeeded)
+                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+
+                return user.Id;
+            }
+            catch (ArgumentException ex)
+            { 
+                throw new ArgumentException(ex.Message);
+            }
         }
 
         async Task IUserService.UpdateStudentUserAccountAsync(StudentContactCommand student)
         {
-            var account = await manager.FindByIdAsync(student.UserAccountId);
-            if(account == null)
+            try
             {
-                throw new ArgumentException("Account not found");
-            }
+                var account = await manager.FindByIdAsync(student.UserAccountId);
+                if (account == null)
+                {
+                    throw new ArgumentException("Account not found");
+                }
 
-            var filePath = uploadService.UpdateProfileImage(student.ProfileImage, account.Photo);
-            account.UserName = student.Email;
-            account.Email = student.Email;
-            account.UserType = (int)UserTypes.Student;
-            account.LastName = student.LastName;
-            account.DOB = student.DOB;
-            account.FirstName = student.FirstName;
-            account.MiddleName = student.MiddleName;
-            account.Phone = student.Phone;
-            account.Photo = filePath;
-            var result = await manager.UpdateAsync(account);
-            if (!result.Succeeded)
-            {
-                throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                var filePath = uploadService.UpdateProfileImage(student.ProfileImage, account.Photo);
+                account.UserName = student.Email;
+                account.Email = student.Email;
+                account.UserType = (int)UserTypes.Student;
+                account.LastName = student.LastName;
+                account.DOB = student.DOB;
+                account.FirstName = student.FirstName;
+                account.MiddleName = student.MiddleName;
+                account.Phone = student.Phone;
+                account.Photo = filePath;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
             }
-
+            catch (ArgumentException ex)
+            { 
+                throw new ArgumentException(ex.Message);
+            }
+            
         }
 
         void IUserService.ValidateResetOption(ResetPassword request)

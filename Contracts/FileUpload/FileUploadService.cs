@@ -22,19 +22,18 @@ namespace SMP.Contracts.FileUpload
             this.accessor = httpContext;
         }
         string IFileUploadService.UploadProfileImage(IFormFile file)
-        {
-
+        { 
             if (file == null || file.Length == 0)
             {
                 return "";
             }
 
-            int maxFileSize = 3 * 1024 * 1024;
+            int maxFileSize = (1024 * 1024)/2;
             var fileSize = file.Length;
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException( $"file limit exceeded, greater than {maxFileSize}");
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -68,12 +67,12 @@ namespace SMP.Contracts.FileUpload
                 return filePath;
             }
 
-            int maxFileSize = 3 * 1024 * 1024;
+            int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
             if (file.FileName.EndsWith(".jpg")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
@@ -120,12 +119,12 @@ namespace SMP.Contracts.FileUpload
                 return "";
             }
 
-            int maxFileSize = 3 * 1024 * 1024;
+            int maxFileSize = (1024 * 1024) /1000;
             var fileSize = file.Length;
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -157,14 +156,12 @@ namespace SMP.Contracts.FileUpload
             if (file == null || file.Length == 0)
             {
                 return filePath;
-            }
-
-            int maxFileSize = 3 * 1024 * 1024;
-            var fileSize = file.Length;
-
-            if (fileSize / 1048576.0 > maxFileSize)
+            } 
+            int maxFileSize = (1024 * 1024)/2;
+            var fileSize = file.Length; 
+            if (fileSize > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
             if (file.FileName.EndsWith(".jpg")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
@@ -211,12 +208,12 @@ namespace SMP.Contracts.FileUpload
                 return "";
             }
 
-            int maxFileSize = 3 * 1024 * 1024;
+            int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
                  
             if (file.FileName.EndsWith(".jpg")
@@ -249,12 +246,12 @@ namespace SMP.Contracts.FileUpload
                 return filePath;
             }
 
-            int maxFileSize = 3 * 1024 * 1024;
+            int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
             if (fileSize / 1048576.0 > maxFileSize)
             {
-                return $"file limit exceeded, greater than {maxFileSize}";
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
 
             }
             if (file.FileName.EndsWith(".jpg")

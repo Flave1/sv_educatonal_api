@@ -39,54 +39,63 @@ namespace SMP.BLL.Services.TeacherServices
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
-        {
+        { 
             var res = new APIResponse<UserCommand>();
-            var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
-            if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
+            try
             {
-                res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
-                return res;
-            }
-            var user = new AppUser
-            {
-                UserName = request.Email,
-                Active = true,
-                Deleted = false,
-                CreatedOn = DateTime.UtcNow,
-                CreatedBy = "",
-                Email = request.Email,
-                UserType = (int)UserTypes.Teacher,
-                EmailConfirmed = false,
-                DOB = request.DOB,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                MiddleName = request.MiddleName,
-                Phone = request.Phone,
-                PhoneNumber = request.Phone,
-                PhoneNumberConfirmed = false,
-                Photo = uploadProfile
-            };
-            var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
-            if (!result.Succeeded)
-            {
-                res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                return res;
-            }
-            var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.TEACHER);
-            if (!addTorole.Succeeded)
-            {
-                res.Message.FriendlyMessage = addTorole.Errors.FirstOrDefault().Description;
-                return res;
-            }
+                var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
+                if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
+                {
+                    res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                    return res;
+                }
+                var user = new AppUser
+                {
+                    UserName = request.Email,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    Email = request.Email,
+                    UserType = (int)UserTypes.Teacher,
+                    EmailConfirmed = false,
+                    DOB = request.DOB,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    MiddleName = request.MiddleName,
+                    Phone = request.Phone,
+                    PhoneNumber = request.Phone,
+                    PhoneNumberConfirmed = false,
+                    Photo = uploadProfile
+                };
+                var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
+                if (!result.Succeeded)
+                {
+                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.TEACHER);
+                if (!addTorole.Succeeded)
+                {
+                    res.Message.FriendlyMessage = addTorole.Errors.FirstOrDefault().Description;
+                    return res;
+                }
 
-            context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
-            await context.SaveChangesAsync();
+                context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
+                await context.SaveChangesAsync();
 
-            //await SendEmailToTeacherOnCreateAsync(user);
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "Successfully added a staff";
-            res.Result = request;
-            return res;
+                //await SendEmailToTeacherOnCreateAsync(user);
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successfully added a staff";
+                res.Result = request;
+                return res;
+
+            }
+            catch (ArgumentException ex)
+            {
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         private async Task SendEmailToTeacherOnCreateAsync(AppUser obj)

@@ -23,84 +23,102 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostSchoolSetting>> IPortalSettingService.CreateUpdateSchollSettingsAsync(PostSchoolSetting request)
         {
             var res = new APIResponse<PostSchoolSetting>();
-            var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync();
-          
-            if (schoolSetting == null)
+            try
             {
-                var filePath = upload.UploadSchoolLogo(request.Photo);
-                schoolSetting = new SchoolSetting()
+                var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync();
+
+                if (schoolSetting == null)
                 {
-                    SchoolName = request.SchoolName,
-                    SchoolAddress = request.SchoolAddress,
-                    SchoolAbbreviation = request.SchoolAbbreviation,
-                    PhoneNo1 = request.PhoneNo1,
-                    PhoneNo2 = request.PhoneNo2,
-                    SchoolType = request.SchoolType,
-                    Country = request.Country,
-                    State = request.State,
-                    Photo = filePath,
-                    Email = request.Email
+                    var filePath = upload.UploadSchoolLogo(request.Photo);
+                    schoolSetting = new SchoolSetting()
+                    {
+                        SchoolName = request.SchoolName,
+                        SchoolAddress = request.SchoolAddress,
+                        SchoolAbbreviation = request.SchoolAbbreviation,
+                        PhoneNo1 = request.PhoneNo1,
+                        PhoneNo2 = request.PhoneNo2,
+                        SchoolType = request.SchoolType,
+                        Country = request.Country,
+                        State = request.State,
+                        Photo = filePath,
+                        Email = request.Email
 
-                };
-                await context.SchoolSettings.AddAsync(schoolSetting);
+                    };
+                    await context.SchoolSettings.AddAsync(schoolSetting);
+
+                }
+                else
+                {
+                    var filePath = upload.UpdateSchoolLogo(request.Photo, request.Filepath);
+                    schoolSetting.SchoolName = request.SchoolName;
+                    schoolSetting.SchoolAddress = request.SchoolAddress;
+                    schoolSetting.SchoolAbbreviation = request.SchoolAbbreviation;
+                    schoolSetting.PhoneNo1 = request.PhoneNo1;
+                    schoolSetting.PhoneNo2 = request.PhoneNo2;
+                    schoolSetting.SchoolType = request.SchoolType;
+                    schoolSetting.Country = request.Country;
+                    schoolSetting.State = request.State;
+                    schoolSetting.Photo = filePath;
+                    schoolSetting.Email = request.Email;
+                }
+                await context.SaveChangesAsync();
+                res.Message.FriendlyMessage = Messages.Saved;
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
 
             }
-            else
+            catch (System.ArgumentException ex)
             {
-                var filePath = upload.UpdateSchoolLogo(request.Photo, request.Filepath);
-                schoolSetting.SchoolName = request.SchoolName;
-                schoolSetting.SchoolAddress = request.SchoolAddress;
-                schoolSetting.SchoolAbbreviation = request.SchoolAbbreviation;
-                schoolSetting.PhoneNo1 = request.PhoneNo1;
-                schoolSetting.PhoneNo2 = request.PhoneNo2;
-                schoolSetting.SchoolType = request.SchoolType;
-                schoolSetting.Country = request.Country;
-                schoolSetting.State = request.State;
-                schoolSetting.Photo = filePath;
-                schoolSetting.Email = request.Email;
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
             }
-            await context.SaveChangesAsync();
-            res.Message.FriendlyMessage = Messages.Saved;
-            res.Result = request;
-            res.IsSuccessful = true;
-            return res;
         }
 
         async Task<APIResponse<PostResultSetting>> IPortalSettingService.CreateUpdateResultSettingsAsync(PostResultSetting request)
         {
             var res = new APIResponse<PostResultSetting>();
-            var setting = await context.ResultSetting.FirstOrDefaultAsync();
-            if (setting == null)
+            try
             {
-                var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
-                setting = new ResultSetting()
+                var setting = await context.ResultSetting.FirstOrDefaultAsync();
+                if (setting == null)
                 {
-                    PromoteByPassmark = request.PromoteByPassmark,
-                    PromoteAll = request.PromoteAll,
-                    ShowPositionOnResult = request.ShowPositionOnResult,
-                    ShowNewsletter = request.ShowNewsletter,
-                    CumulativeResult = request.CumulativeResult,
-                    BatchPrinting = request.BatchPrinting,
-                    PrincipalStample = filePath
-                };
-                await context.ResultSetting.AddAsync(setting); 
+                    var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
+                    setting = new ResultSetting()
+                    {
+                        PromoteByPassmark = request.PromoteByPassmark,
+                        PromoteAll = request.PromoteAll,
+                        ShowPositionOnResult = request.ShowPositionOnResult,
+                        ShowNewsletter = request.ShowNewsletter,
+                        CumulativeResult = request.CumulativeResult,
+                        BatchPrinting = request.BatchPrinting,
+                        PrincipalStample = filePath
+                    };
+                    await context.ResultSetting.AddAsync(setting);
+                }
+                else
+                {
+                    var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
+                    setting.PromoteByPassmark = request.PromoteByPassmark;
+                    setting.PromoteAll = request.PromoteAll;
+                    setting.ShowPositionOnResult = request.ShowPositionOnResult;
+                    setting.ShowNewsletter = request.ShowNewsletter;
+                    setting.CumulativeResult = request.CumulativeResult;
+                    setting.BatchPrinting = request.BatchPrinting;
+                    setting.PrincipalStample = filePath;
+                }
+                await context.SaveChangesAsync();
+                res.Message.FriendlyMessage = Messages.Saved;
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
+
             }
-            else
-            {
-                var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
-                setting.PromoteByPassmark = request.PromoteByPassmark;
-                setting.PromoteAll = request.PromoteAll;
-                setting.ShowPositionOnResult = request.ShowPositionOnResult;
-                setting.ShowNewsletter = request.ShowNewsletter;
-                setting.CumulativeResult = request.CumulativeResult;
-                setting.BatchPrinting = request.BatchPrinting;
-                setting.PrincipalStample = filePath;
+            catch (System.ArgumentException ex)
+            { 
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
             }
-            await context.SaveChangesAsync();
-            res.Message.FriendlyMessage = Messages.Saved;
-            res.Result = request;
-            res.IsSuccessful = true;
-            return res;
              
         } 
         async Task<APIResponse<UpdateResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(UpdateResultSetting request)
