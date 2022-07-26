@@ -44,14 +44,13 @@ namespace DAL
         public DbSet<SessionTerm> SessionTerm { get; set; }
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<Subject> Subject { get; set; }
-        public DbSet<ActivityParent> ActivityParent { get; set; }
-        public DbSet<Activity> Activity { get; set; }
+        public DbSet<AppActivityParent> AppActivityParent { get; set; }
+        public DbSet<AppActivity> AppActivity { get; set; }
         public DbSet<RoleActivity> RoleActivity { get; set; }
         public DbSet<StudentSessionClassHistory> StudentSessionClassHistory { get; set; }
         public DbSet<Enrollment> Enrollment { get; set; }
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
-        //public DbSet<ClassGrade> ClassGrade { get; set; }
         public DbSet<StudentAttendance> StudentAttendance { get; set; }
         public DbSet<ClassRegister> ClassRegister { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }

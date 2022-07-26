@@ -38,7 +38,8 @@ namespace SMP.BLL.Services.DashboardServices
             if (!string.IsNullOrEmpty(userid))
             { 
 
-                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+
+                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = new GetDashboard { TotalClass = totalClass, TotalEnrolledStudent = totalEnrolledstudent, TotalPins = totalPins, TotalStaff = totalStaff, TotalSubjects = totalSubject };
                 }

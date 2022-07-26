@@ -16,6 +16,12 @@ namespace Contracts.Authentication
         public string ParentName { get; set; }
     }
 
+    public class GetActivityParent
+    {
+        public string ParentActivityId { get; set; }
+        public string Name { get; set; }
+    }
+
     public class RoleActivities
     {
         public string ActivityId { get; set; }
@@ -32,7 +38,7 @@ namespace Contracts.Authentication
     public class CreateRoleActivity
     {
         public string Name { get; set; }
-        public RoleActivitiesCommand[] Activities { get; set; }
+        public string[] Activities { get; set; }
     }
 
     public class RoleActivitiesCommand
@@ -49,6 +55,6 @@ namespace Contracts.Authentication
     {
         public string RoleId { get; set; }
         public string Name { get; set; }
-        public RoleActivitiesCommand[] Activities { get; set; }
+        public string[] Activities { get; set; }
     }
 }

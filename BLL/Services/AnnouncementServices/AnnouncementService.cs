@@ -83,7 +83,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                    
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.Announcement
                           .Include(d => d.Sender)

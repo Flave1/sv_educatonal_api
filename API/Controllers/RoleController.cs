@@ -50,6 +50,13 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("getall-activity-parent")]
+        public async Task<IActionResult> GetActivityParentsAsync()
+        {
+            var result = await roleService.GetActivityParentsAsync();
+            return Ok(result);
+        }
+
         [HttpGet("getall-activities-by-roleId")]
         public async Task<IActionResult> GetActivitiesByRoleAsync(string roleId)
         {

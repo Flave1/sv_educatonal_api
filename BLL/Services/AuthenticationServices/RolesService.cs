@@ -1,4 +1,5 @@
-﻿using Contracts.Authentication;
+﻿using BLL.Constants;
+using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using DAL.Authentication;
@@ -58,20 +59,20 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        private async Task CreateRoleActivitiesAsync(RoleActivitiesCommand[] activities, string roleId)
+        private async Task CreateRoleActivitiesAsync(string[] activities, string roleId)
         {
             var activitiesList = new List<RoleActivity>();
             foreach(var item in activities)
             {
                 var roleActivity = new RoleActivity
                 {
-                    ActivityId = Guid.Parse(item.ActivityId),
+                    ActivityId = Guid.Parse(item),
                     RoleId = roleId,
-                    CanCreate = item.CanCreate,
-                    CanDelete = item.CanDelete,
-                    CanExport = item.CanExport,
-                    CanImport = item.CanImport,
-                    CanUpdate = item.CanUpdate,
+                    CanCreate = true,
+                    CanDelete = true,
+                    CanExport = true,
+                    CanImport = true,
+                    CanUpdate = true,
                 };
                 activitiesList.Add(roleActivity);
             }
@@ -89,22 +90,9 @@ namespace BLL.AuthenticationServices
                 return res;
             }
 
-
-            if (role.Name == "TEACHER")
+            if (role.Name == DefaultRoles.FLAVETECH)
             {
-                res.Message.FriendlyMessage = "Teacher role cannot be edited ";
-                return res;
-            }
-
-            if (role.Name == "STUDENT")
-            {
-                res.Message.FriendlyMessage = "Student role cannot be edited ";
-                return res;
-            }
-
-            if (role.Name == "SCHOOL_ADMIN")
-            {
-                res.Message.FriendlyMessage = "Admin role cannot be edited ";
+                res.Message.FriendlyMessage = "Role cannot be edited ";
                 return res;
             }
             role.Name = request.Name;
@@ -137,7 +125,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.Name != DefaultRoles.FLAVETECH)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;
@@ -148,11 +136,11 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result =  await context.Activity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
+            var result =  await context.AppActivity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new GetActivities {  
                     ActivityId = a.Id.ToString(), 
-                    Name = a.Permission, 
+                    Name = a.DisplayName, 
                     ParentId = a.ActivityParentId.ToString(), 
                     ParentName = a.Parent.Name
                 }).ToListAsync();
@@ -161,14 +149,28 @@ namespace BLL.AuthenticationServices
             res.Result = result;
             return res;
         }
-   
+        async Task<APIResponse<List<GetActivityParent>>> IRolesService.GetActivityParentsAsync()
+        {
+            var res = new APIResponse<List<GetActivityParent>>();
+            var result = await context.AppActivityParent.Where(d => d.Deleted != true)
+                .Select(a => new GetActivityParent
+                {
+                    ParentActivityId = a.Id.ToString(),
+                    Name = a.Name,
+                }).ToListAsync();
+
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
 
         async Task<APIResponse<GetRoleActivities>> IRolesService.GetSingleRoleAsync(string roleId)
         {
             var res = new APIResponse<GetRoleActivities>();
             var roleActivities = new List<RoleActivities>();
 
-            var allActivities = await context.Activity.Where(d => d.Deleted != true)
+            var allActivities = await context.AppActivity.Where(d => d.Deleted != true)
               .OrderByDescending(we => we.UpdatedBy)
               .Select(a => new RoleActivities
               {
@@ -189,11 +191,6 @@ namespace BLL.AuthenticationServices
                 new RoleActivities
                 {
                     ActivityId = a.Activity.Id.ToString(),
-                    CanCreate = a.CanCreate,
-                    CanDelete = a.CanDelete,
-                    CanUpdate = a.CanUpdate,
-                    CanExport = a.CanExport,
-                    CanImport = a.CanImport,
                     Name = a.Activity.Permission,
                     ParentId = a.Activity.ActivityParentId.ToString(),
                     ParentName = a.Activity.Parent.Name,
@@ -224,21 +221,26 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (role.Name == "TEACHER")
+                if (role.Name == DefaultRoles.TEACHER)
                 {
                     res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == "STUDENT")
+                if (role.Name == DefaultRoles.STUDENT)
                 {
                     res.Message.FriendlyMessage = "Student role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == "SCHOOL_ADMIN")
+                if (role.Name == DefaultRoles.SCHOOLADMIN)
                 {
                     res.Message.FriendlyMessage = "Admin role cannot be deleted";
+                    return res;
+                }
+                if (role.Name == DefaultRoles.SCHOOLADMIN)
+                {
+                    res.Message.FriendlyMessage = "Role cannot be deleted";
                     return res;
                 }
                 role.Deleted = true;

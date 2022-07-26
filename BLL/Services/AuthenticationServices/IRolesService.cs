@@ -17,5 +17,6 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<UserRole>> UpdateRoleAsync(UpdateRoleActivity request);
         Task<APIResponse<UserRole>> DeleteRoleAsync(MultipleDelete request);
         Task<APIResponse<List<GetActivities>>> GetAllActivitiesAsync();
+        Task<APIResponse<List<GetActivityParent>>> GetActivityParentsAsync();
     }
 }

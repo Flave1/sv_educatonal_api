@@ -201,8 +201,9 @@ namespace BLL.AuthenticationServices
 
 
 
-        async Task<AuthenticationResult> IUserService.ResetAccountAsync(ResetAccount request)
+        async Task<APIResponse<AuthenticationResult>> IUserService.ResetAccountAsync(ResetAccount request)
         {
+            var res = new APIResponse<AuthenticationResult>();
             var user = await manager.FindByIdAsync(request.UserId);
             request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
             if (user == null)
@@ -213,8 +214,8 @@ namespace BLL.AuthenticationServices
             {
                 await SendResetSuccessEmailToUserAsync(user);
                 var loginResult = await identityService.LoginAsync(new LoginCommand { Password = request.Password, UserName = user.UserName });
-                if (!string.IsNullOrEmpty(loginResult.Token))
-                    return loginResult;
+                if (!string.IsNullOrEmpty(loginResult.Result.AuthResult.Token))
+                    return res;
             }
             else
                 throw new ArgumentException(changePassword.Errors.FirstOrDefault().Description);

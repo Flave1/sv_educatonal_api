@@ -204,7 +204,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetSessionClass>>();
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             //GET SUPER ADMIN CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
                 res.Result = await context.SessionClass
                    .Include(rr => rr.Session)
