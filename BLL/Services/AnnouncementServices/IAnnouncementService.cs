@@ -1,5 +1,6 @@
 ﻿using BLL; 
 using Contracts.Annoucements;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,5 +12,6 @@ namespace SMP.BLL.Services.AnnouncementsServices
         Task<APIResponse<List<GetAnnouncements>>> GetAnnouncementsAsync();
         Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
         Task<APIResponse<UpdateAnnouncement>> UpdateAnnouncementsAsync(UpdateAnnouncement request);
+        Task<APIResponse<bool>> DeleteAnnouncementsAsync(Guid Id);
     }
 }

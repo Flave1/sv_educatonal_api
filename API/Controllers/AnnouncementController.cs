@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.PinManagementService;
 using SMP.Contracts.PinManagement;
+using System;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
@@ -49,6 +50,13 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetAnnouncementsAsync()
         {
             var response = await service.GetAnnouncementsAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("delete/announcements")]
+        public async Task<IActionResult> DeleteAnnouncementsAsync(Guid Id)
+        {
+            var response = await service.DeleteAnnouncementsAsync(Id);
             return Ok(response);
         }
 
