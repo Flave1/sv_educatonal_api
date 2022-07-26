@@ -27,11 +27,10 @@ namespace SMP.Contracts.FileUpload
             {
                 return "";
             }
-
-            int maxFileSize = (1024 * 1024)/2;
+            int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
-            if (fileSize / 1048576.0 > maxFileSize)
+            if (fileSize > maxFileSize)
             {
                 throw new ArgumentException( $"file limit exceeded, greater than {maxFileSize}");
             }
@@ -70,7 +69,7 @@ namespace SMP.Contracts.FileUpload
             int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
-            if (fileSize / 1048576.0 > maxFileSize)
+            if (fileSize > maxFileSize)
             {
                 throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
@@ -118,11 +117,10 @@ namespace SMP.Contracts.FileUpload
             {
                 return "";
             }
-
-            int maxFileSize = (1024 * 1024) /1000;
+            int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
-            if (fileSize / 1048576.0 > maxFileSize)
+            if (fileSize > maxFileSize)
             {
                 throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
@@ -211,7 +209,7 @@ namespace SMP.Contracts.FileUpload
             int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
-            if (fileSize / 1048576.0 > maxFileSize)
+            if (fileSize > maxFileSize)
             {
                 throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
             }
@@ -249,7 +247,7 @@ namespace SMP.Contracts.FileUpload
             int maxFileSize = (1024 * 1024) / 2;
             var fileSize = file.Length;
 
-            if (fileSize / 1048576.0 > maxFileSize)
+            if (fileSize > maxFileSize)
             {
                 throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
 
