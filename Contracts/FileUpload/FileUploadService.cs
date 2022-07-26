@@ -21,7 +21,7 @@ namespace SMP.Contracts.FileUpload
             this.environment = environment;
             this.accessor = httpContext;
         }
-        string IFileUploadService.UploadProfileImageAsync(IFormFile file)
+        string IFileUploadService.UploadProfileImage(IFormFile file)
         {
 
             if (file == null || file.Length == 0)
@@ -60,7 +60,7 @@ namespace SMP.Contracts.FileUpload
             }
             throw new ArgumentException("Invalid Profile Image");
         }
-        string IFileUploadService.UpdateProfileImageAsync(IFormFile file, string filePath)
+        string IFileUploadService.UpdateProfileImage(IFormFile file, string filePath)
         {
 
             if (file == null || file.Length == 0)
@@ -112,7 +112,7 @@ namespace SMP.Contracts.FileUpload
             }
             throw new ArgumentException("Invalid Profile Image");
         }
-        string IFileUploadService.UploadPrincipalStampAsync(IFormFile file)
+        string IFileUploadService.UploadPrincipalStamp(IFormFile file)
         {
 
             if (file == null || file.Length == 0)
@@ -151,7 +151,7 @@ namespace SMP.Contracts.FileUpload
             }
             throw new ArgumentException("Invalid Principal Stamp");
         }
-        string IFileUploadService.UpdatePrincipalStampAsync(IFormFile file, string filePath)
+        string IFileUploadService.UpdatePrincipalStamp(IFormFile file, string filePath)
         {
 
             if (file == null || file.Length == 0)
@@ -203,7 +203,7 @@ namespace SMP.Contracts.FileUpload
             }
             throw new ArgumentException("Invalid Principal Stamp");
         }
-        string IFileUploadService.UploadSchoolLogoAsync(IFormFile file)
+        string IFileUploadService.UploadSchoolLogo(IFormFile file)
         {
 
             if (file == null || file.Length == 0)
@@ -242,9 +242,8 @@ namespace SMP.Contracts.FileUpload
             }
             throw new ArgumentException("Invalid School Logo");
         }
-        string IFileUploadService.UpdateSchoolLogoAsync(IFormFile file, string filePath)
-        {
-
+        string IFileUploadService.UpdateSchoolLogo(IFormFile file, string filePath)
+        { 
             if (file == null || file.Length == 0)
             {
                 return filePath;

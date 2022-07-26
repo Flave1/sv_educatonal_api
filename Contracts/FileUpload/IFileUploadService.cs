@@ -9,11 +9,11 @@ namespace SMP.Contracts.FileUpload
 {
     public interface IFileUploadService
     {
-        string UploadProfileImageAsync(IFormFile file);
-        string UpdateProfileImageAsync(IFormFile file, string filePath);
-        string UploadSchoolLogoAsync(IFormFile file);
-        string UpdateSchoolLogoAsync(IFormFile file, string filePath);
-        string UploadPrincipalStampAsync(IFormFile file);
-        string UpdatePrincipalStampAsync(IFormFile file, string filePath);
+        string UploadProfileImage(IFormFile file);
+        string UpdateProfileImage(IFormFile file, string filePath);
+        string UploadSchoolLogo(IFormFile file);
+        string UpdateSchoolLogo(IFormFile file, string filePath);
+        string UploadPrincipalStamp(IFormFile file);
+        string UpdatePrincipalStamp(IFormFile file, string filePath);
     }
 }

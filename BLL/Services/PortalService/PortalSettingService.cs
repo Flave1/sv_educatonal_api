@@ -27,7 +27,7 @@ namespace SMP.BLL.Services.PortalService
           
             if (schoolSetting == null)
             {
-                var filePath = upload.UploadSchoolLogoAsync(request.Photo);
+                var filePath = upload.UploadSchoolLogo(request.Photo);
                 schoolSetting = new SchoolSetting()
                 {
                     SchoolName = request.SchoolName,
@@ -47,7 +47,7 @@ namespace SMP.BLL.Services.PortalService
             }
             else
             {
-                var filePath = upload.UpdateSchoolLogoAsync(request.Photo, request.Filepath);
+                var filePath = upload.UpdateSchoolLogo(request.Photo, request.Filepath);
                 schoolSetting.SchoolName = request.SchoolName;
                 schoolSetting.SchoolAddress = request.SchoolAddress;
                 schoolSetting.SchoolAbbreviation = request.SchoolAbbreviation;
@@ -72,7 +72,7 @@ namespace SMP.BLL.Services.PortalService
             var setting = await context.ResultSetting.FirstOrDefaultAsync();
             if (setting == null)
             {
-                var filePath = upload.UploadPrincipalStampAsync(request.PrincipalStamp);
+                var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
                 setting = new ResultSetting()
                 {
                     PromoteByPassmark = request.PromoteByPassmark,
@@ -87,7 +87,7 @@ namespace SMP.BLL.Services.PortalService
             }
             else
             {
-                var filePath = upload.UpdatePrincipalStampAsync(request.PrincipalStamp, request.Filepath);
+                var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
                 setting.PromoteByPassmark = request.PromoteByPassmark;
                 setting.PromoteAll = request.PromoteAll;
                 setting.ShowPositionOnResult = request.ShowPositionOnResult;
