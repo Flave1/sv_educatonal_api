@@ -93,7 +93,6 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
-
                 }
 
                 res.Result = await context.SessionClassSubject

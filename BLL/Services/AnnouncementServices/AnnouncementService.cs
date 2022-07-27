@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using Contracts.Annoucements;
+using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +71,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
-                        .Where(d => d.AssignedTo == "teacher")
+                        .Where(d => d.AssignedTo == "teacher" && d.Deleted == false)
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();   
                 }
                 else if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
@@ -79,7 +80,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                           .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
-                        .Where(d => d.AssignedTo == "student")
+                        .Where(d => d.AssignedTo == "student" && d.Deleted == false)
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                    
                 }
@@ -88,7 +89,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                     res.Result = await context.Announcement
                           .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
-                        .Take(100)
+                        .Take(100).Where(d=>d.Deleted == false)
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
                 }
             }
@@ -142,7 +143,25 @@ namespace SMP.BLL.Services.AnnouncementServices
             return res;
         }
 
-       
-
+        async Task<APIResponse<bool>> IAnnouncementsService.DeleteAnnouncementsAsync(SingleDelete request)
+        {
+            var res = new APIResponse<bool>();
+            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item));
+            if (result != null)
+            {
+                result.Deleted = true;
+                await context.SaveChangesAsync();
+            }
+            else
+            { 
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+            res.IsSuccessful = true;
+            res.Result = true;
+            res.Message.FriendlyMessage = Messages.DeletedSuccess;
+            return res;
+            
+        }
     }
 }
