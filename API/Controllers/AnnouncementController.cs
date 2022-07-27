@@ -1,5 +1,6 @@
 ﻿using BLL.MiddleWares;
 using Contracts.Annoucements;
+using Contracts.Common;
 using Microsoft.AspNetCore.Mvc; 
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.PinManagementService;
@@ -53,11 +54,13 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
-        [HttpGet("delete/announcements")]
-        public async Task<IActionResult> DeleteAnnouncementsAsync(Guid Id)
+        [HttpPost("delete/announcements")]
+        public async Task<IActionResult> DeleteAnnouncementsAsync([FromBody]SingleDelete request)
         {
-            var response = await service.DeleteAnnouncementsAsync(Id);
-            return Ok(response);
+            var response = await service.DeleteAnnouncementsAsync(request);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
 

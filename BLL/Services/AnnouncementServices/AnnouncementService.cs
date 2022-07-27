@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using Contracts.Annoucements;
+using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -142,10 +143,10 @@ namespace SMP.BLL.Services.AnnouncementServices
             return res;
         }
 
-        async Task<APIResponse<bool>> IAnnouncementsService.DeleteAnnouncementsAsync(Guid Id)
+        async Task<APIResponse<bool>> IAnnouncementsService.DeleteAnnouncementsAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
-            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Id);
+            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item));
             if (result != null)
             {
                 result.Deleted = true;
