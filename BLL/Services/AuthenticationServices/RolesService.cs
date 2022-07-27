@@ -157,6 +157,7 @@ namespace BLL.AuthenticationServices
                 {
                     ParentActivityId = a.Id.ToString(),
                     Name = a.Name,
+                    DisplayName = a.DisplayName,
                 }).ToListAsync();
 
             res.IsSuccessful = true;
@@ -168,17 +169,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<GetRoleActivities>> IRolesService.GetSingleRoleAsync(string roleId)
         {
             var res = new APIResponse<GetRoleActivities>();
-            var roleActivities = new List<RoleActivities>();
 
-            var allActivities = await context.AppActivity.Where(d => d.Deleted != true)
-              .OrderByDescending(we => we.UpdatedBy)
-              .Select(a => new RoleActivities
-              {
-                  ActivityId = a.Id.ToString(),
-                  Name = a.Permission,
-                  ParentId = a.ActivityParentId.ToString(),
-                  ParentName = a.Parent.Name
-              }).ToListAsync();
 
             var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new GetRoleActivities
             {
@@ -187,22 +178,8 @@ namespace BLL.AuthenticationServices
             }).FirstOrDefaultAsync();
             if(role != null)
             {
-                var activities = await context.RoleActivity.Include(d => d.Activity).Include(d => d.UserRole).Where(d => d.RoleId == roleId).Select(a =>
-                new RoleActivities
-                {
-                    ActivityId = a.Activity.Id.ToString(),
-                    Name = a.Activity.Permission,
-                    ParentId = a.Activity.ActivityParentId.ToString(),
-                    ParentName = a.Activity.Parent.Name,
-                }).ToListAsync();
-
-                roleActivities = activities;
+                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
             }
-
-            roleActivities.AddRange(allActivities);
-
-            role.Activities = roleActivities.GroupBy(p => p.Name).Select(grp => grp.First()).ToList();
-
             res.Result = role;
             res.IsSuccessful = true;
             res.Result = role;

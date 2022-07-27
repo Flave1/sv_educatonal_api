@@ -114,6 +114,8 @@ namespace API
             {
                 Email = userSettings.Email,
                 UserName = userSettings.UserName,
+                UserType = (int)UserTypes.Admin,
+                Active = true,
             };
 
             var user = await UserManager.FindByEmailAsync(userSettings.Email);

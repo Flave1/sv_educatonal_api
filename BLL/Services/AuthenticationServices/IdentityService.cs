@@ -67,6 +67,12 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
+                if(userAccount.UserType == (int)UserTypes.Admin)
+                {
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                }
+
                 if (userAccount.UserType == (int)UserTypes.Teacher)
                 {
                     var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
@@ -78,7 +84,7 @@ namespace BLL.AuthenticationServices
                     id = techerAccount.TeacherId;
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).ToList();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
@@ -196,7 +202,7 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
-                    new Claim("permisssions", string.Join(',', permissions)),
+                    new Claim("permissions", string.Join(',', permissions)),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentCoontactId", ID.ToString()),
                 };
 

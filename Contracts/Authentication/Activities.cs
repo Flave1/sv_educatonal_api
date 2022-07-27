@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Contracts.Authentication
 {
@@ -6,7 +7,7 @@ namespace Contracts.Authentication
     { 
         public string RoleId { get; set; }
         public string Name { get; set; }
-        public List<RoleActivities> Activities { get; set; } = new List<RoleActivities>();
+        public List<Guid> Activities { get; set; }
     }
     public class GetActivities
     {
@@ -20,6 +21,7 @@ namespace Contracts.Authentication
     {
         public string ParentActivityId { get; set; }
         public string Name { get; set; }
+        public string DisplayName { get; set; }
     }
 
     public class RoleActivities
