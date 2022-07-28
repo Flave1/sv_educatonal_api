@@ -162,7 +162,7 @@ namespace SMP.DAL.Initializer
                     new AppActivity {
                         Id = Guid.Parse("f0199b7e-1427-4899-b852-04f79c3b099a"),
                         ActivityParentId = Guid.Parse("93f95f2d-0601-4710-971e-6284ee0e01e3"),
-                        Permission = "session-class",
+                        Permission = "session-session-class",
                         DisplayName = "Class List", IsActive = true, Deleted = false},
                     new AppActivity {
                         Id = Guid.Parse("0dec4f8b-f41a-4630-a45d-46bf2aba0c29"),
@@ -196,7 +196,7 @@ namespace SMP.DAL.Initializer
                     new AppActivity { 
                         Id = Guid.Parse("b1a0c6ca-2b0e-41f8-b188-13b7fdaf6e59"),  
                         ActivityParentId = Guid.Parse("7f70b61e-4dac-465c-8ad5-909c8a822c24"), 
-                        Permission = "class-class", 
+                        Permission = "session-class", 
                         DisplayName = "Class", 
                         IsActive = true, Deleted = false},
                     new AppActivity {
@@ -214,7 +214,7 @@ namespace SMP.DAL.Initializer
 
                      //staff-management
                     new AppActivity {
-                        Id = Guid.Parse("b1a0c6ca-2b0e-41f8-b188-13b7fdaf6e59"),
+                        Id = Guid.Parse("e124e4ef-1bf7-4ab7-94f2-e58096afd816"),
                         ActivityParentId = Guid.Parse("c27936ff-87be-4915-8f95-a5ce6a5cdfb9"),
                         Permission = "staff-list",
                         DisplayName = "All Staff",
@@ -324,7 +324,7 @@ namespace SMP.DAL.Initializer
                         Id = Guid.Parse("1481cdcd-ea1e-4690-a36e-c899c35c4d07"),
                         ActivityParentId = Guid.Parse("6ac6237e-63fe-4860-8f29-32151b5fce7d"),
                         Permission = "export-master-list",
-                        DisplayName = "Can Export Master",
+                        DisplayName = "Can Export Master List",
                         IsActive = true, Deleted = false},
                     new AppActivity {
                         Id = Guid.Parse("f79340fc-a4fa-47dc-8ab2-d4e1e0f40798"),

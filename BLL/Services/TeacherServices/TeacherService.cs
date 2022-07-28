@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
-using SMP.Contracts.FileUpload;
+using SMP.BLL.Services.FileUploadService;
 using System;
 using System.Collections.Generic;
 using System.IO;

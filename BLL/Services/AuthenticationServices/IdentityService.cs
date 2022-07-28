@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -98,8 +99,11 @@ namespace BLL.AuthenticationServices
                     id = studentAccount?.StudentContactId ?? new Guid();
                 }
 
+                var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
+
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount);
                 res.IsSuccessful = true;
                 return res;
             }

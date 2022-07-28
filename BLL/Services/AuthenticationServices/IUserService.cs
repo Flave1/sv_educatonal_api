@@ -9,7 +9,7 @@ namespace BLL.AuthenticationServices
 {
     public interface IUserService
     {
-        Task AddUserToRoleAsync(string roleId, AppUser user, string[] userIds);
+        Task<APIResponse<string[]>> AddUserToRoleAsync(string roleId, AppUser user, string[] userIds);
         void ValidateResetOption(ResetPassword request);
         Task GenerateResetLinkAndSendToUserEmail(ResetPassword request);
         Task<APIResponse<AuthenticationResult>> ResetAccountAsync(ResetAccount request);

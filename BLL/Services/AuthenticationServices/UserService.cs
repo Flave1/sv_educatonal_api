@@ -15,8 +15,9 @@ using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Data;
-using SMP.Contracts.FileUpload;
 using SMP.Contracts.Options;
+using SMP.BLL.Services.FileUploadService;
+using SMP.BLL.Constants;
 
 namespace BLL.AuthenticationServices
 {
@@ -40,9 +41,10 @@ namespace BLL.AuthenticationServices
             this.uploadService = uploadService;
         }
 
-        async Task IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
+        async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
         {
-            if(user == null)
+            var res = new APIResponse<string[]>();
+            if (user == null)
             {
                 var role = await roleManager.FindByIdAsync(roleId);
                 if (role == null)
@@ -63,8 +65,11 @@ namespace BLL.AuthenticationServices
                     }
                  
                 }
-                
             }
+            res.IsSuccessful = true;
+            res.Result = userIds;
+            res.Message.FriendlyMessage = Messages.Saved;
+            return res;
             
         }
 

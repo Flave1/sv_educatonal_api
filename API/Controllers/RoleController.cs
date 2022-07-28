@@ -97,8 +97,10 @@ namespace API.Controllers
 
             try
             {
-                await userService.AddUserToRoleAsync(request.RoleId, null, request.UserIds);
-                return Ok(new { result = "Successfully added user to selected role" });
+                var res = await userService.AddUserToRoleAsync(request.RoleId, null, request.UserIds);
+                if(res.IsSuccessful)
+                    return Ok(res);
+                return BadRequest(res);
             }
             catch (ArgumentException ex)
             {

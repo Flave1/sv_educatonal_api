@@ -2,7 +2,7 @@
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
-using SMP.Contracts.FileUpload;
+using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
 using SMP.DAL.Models.PortalSettings;
 using System.Linq;

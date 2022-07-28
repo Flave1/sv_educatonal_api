@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.Contracts.FileUpload
+namespace SMP.BLL.Services.FileUploadService
 {
     public interface IFileUploadService
     {

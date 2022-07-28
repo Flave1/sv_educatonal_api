@@ -14,13 +14,13 @@ using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.AttendanceServices;
 using SMP.BLL.Services.DashboardServices;
 using SMP.BLL.Services.EnrollmentServices;
+using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.GradeServices;
 using SMP.BLL.Services.PinManagementService;
-using SMP.BLL.Services.PortalService; 
+using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.TeacherServices;
-using SMP.Contracts.FileUpload;
 
 namespace GODP.APIsContinuation.Installers
 {
