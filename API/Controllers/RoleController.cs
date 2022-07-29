@@ -114,5 +114,21 @@ namespace API.Controllers
             var result = await roleService.GetNotAddedUsersAsync(roldeId);
             return Ok(result);
         }
+
+        [HttpGet("get-role-users")]
+        public async Task<IActionResult> GetUsersInRoleAsync(GetUsersInRoleRequest request)
+        {
+            var result = await roleService.GetUsersInRoleAsync(request);
+            return Ok(result);
+        }
+
+        [HttpPost("remove-user/from-role")]
+        public async Task<IActionResult> RemoveUserRoleAsync(RemoveUserFromRoleRequest request)
+        {
+            var response = await roleService.RemoveUserFromRoleAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }
