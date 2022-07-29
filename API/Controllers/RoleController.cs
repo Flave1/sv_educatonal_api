@@ -85,11 +85,13 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("remove-user-role")]
-        public async Task<IActionResult> RemoveUserRoleAsync(GetUsersInRoleRequest request)
+        [HttpPost("remove-user-role")]
+        public async Task<IActionResult> RemoveUserRoleAsync(RemoveUserFromRoleRequest request)
         { 
-            var result = await roleService.RemoveUserRoleAsync(request);
-            return Ok(result);
+            var response = await roleService.RemoveUserFromRoleAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpPost("delete")]
