@@ -260,36 +260,29 @@ namespace BLL.AuthenticationServices
             return res;
         }
 
-        async Task<APIResponse<GetUserRole>> IRolesService.GetUserRoleAsync(GetUserRoleRequest request)
+        async Task<APIResponse<GetUsersInRole>> IRolesService.GetUsersInRoleAsync(GetUsersInRoleRequest request)
         {
-            var res = new APIResponse<GetUserRole>(); 
-            var user = await userManager.FindByIdAsync(request.UserId);
-            if(user != null)
+            var res = new APIResponse<GetUsersInRole>();
+            var role = await manager.Roles.Where(d => d.Id == request.RoleId).Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
+            if (role != null)
             {
-                var role = await manager.Roles.Where(d=>d.Id == request.RoleId).Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
-                if(role != null)
-                { 
-                    res.IsSuccessful = true;
-                    res.Result = role;
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    return res;
-                }
-                else
-                {
-                    res.IsSuccessful = false;
-                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-                    return res;
-                }
+                res.IsSuccessful = true;
+                res.Result = role;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
             }
             else
             {
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
-            } 
+            }
+
+
+
         }
 
-        async Task<APIResponse<bool>> IRolesService.RemoveUserRoleAsync(GetUserRoleRequest request)
+        async Task<APIResponse<bool>> IRolesService.RemoveUserRoleAsync(GetUsersInRoleRequest request)
         {
             var res = new APIResponse<bool>();
             var user = await userManager.FindByIdAsync(request.UserId);

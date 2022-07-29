@@ -54,28 +54,21 @@ namespace Contracts.Authentication
         public RoleActivitiesCommand[] Activities { get; set; }
     }
 
-    public class GetUserRoleRequest 
+    public class GetUsersInRoleRequest 
     {
         public string RoleId { get; set; } 
-        public string UserId { get; set; }
     }
-        public class GetUserRole
+
+        public class GetUsersInRole
     {
         public string RoleId { get; set; }
         public string Name { get; private set; }
         public string UserId { get; set; } 
-        public GetUserRole(UserRole role, AppUser user)
+        public GetUsersInRole(UserRole role, AppUser user)
         {
-            if(role.Deleted == true)
-            {
-                throw new ArgumentException("Role does not exist");
-            }
-            else
-            {
-                RoleId = role.Id;
-                Name = role.Name;
-                UserId = user.Id;
-            }
+            RoleId = role.Id;
+            Name = role.Name;
+            UserId = user.Id;
         }
     } 
 }

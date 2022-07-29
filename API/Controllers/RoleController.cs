@@ -71,15 +71,15 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("get-user-role")]
-        public async Task<IActionResult> GetUserRoleAsync(GetUserRoleRequest request)
+        [HttpGet("get-role-users")]
+        public async Task<IActionResult> GetUsersInRoleAsync(GetUsersInRoleRequest request)
         { 
-            var result = await roleService.GetUserRoleAsync(request);
+            var result = await roleService.GetUsersInRoleAsync(request);
             return Ok(result);
         }
 
         [HttpGet("remove-user-role")]
-        public async Task<IActionResult> RemoveUserRoleAsync(GetUserRoleRequest request)
+        public async Task<IActionResult> RemoveUserRoleAsync(GetUsersInRoleRequest request)
         { 
             var result = await roleService.RemoveUserRoleAsync(request);
             return Ok(result);
