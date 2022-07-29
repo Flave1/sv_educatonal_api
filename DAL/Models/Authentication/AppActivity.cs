@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DAL.Authentication
 {
-    public class Activity: CommonEntity
+    public class AppActivity: CommonEntity
     {
 
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -16,7 +16,7 @@ namespace DAL.Authentication
         public Guid ActivityParentId { get; set; }
 
         [ForeignKey("ActivityParentId")]
-        public ActivityParent Parent { get; set; }
+        public AppActivityParent Parent { get; set; }
 
     }
 }

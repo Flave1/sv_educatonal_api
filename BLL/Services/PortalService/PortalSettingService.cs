@@ -2,7 +2,7 @@
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
-using SMP.Contracts.FileUpload;
+using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
 using SMP.DAL.Models.PortalSettings;
 using System.Linq;
@@ -86,7 +86,6 @@ namespace SMP.BLL.Services.PortalService
                     var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
                     setting = new ResultSetting()
                     {
-                        PromoteByPassmark = request.PromoteByPassmark,
                         PromoteAll = request.PromoteAll,
                         ShowPositionOnResult = request.ShowPositionOnResult,
                         ShowNewsletter = request.ShowNewsletter,
@@ -99,7 +98,6 @@ namespace SMP.BLL.Services.PortalService
                 else
                 {
                     var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
-                    setting.PromoteByPassmark = request.PromoteByPassmark;
                     setting.PromoteAll = request.PromoteAll;
                     setting.ShowPositionOnResult = request.ShowPositionOnResult;
                     setting.ShowNewsletter = request.ShowNewsletter;

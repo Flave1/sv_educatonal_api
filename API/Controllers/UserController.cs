@@ -34,8 +34,10 @@ namespace API.Controllers
         { 
             try
             {
-                var result  = await identityService.LoginAsync(request);
-                return Ok(new { result = result });
+                var response  = await identityService.LoginAsync(request);
+                if(response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
             }
             catch (ArgumentException ex)
             {

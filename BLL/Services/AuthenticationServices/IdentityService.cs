@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,18 +26,17 @@ namespace BLL.AuthenticationServices
     {
 
 
-        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters, 
-            RoleManager<UserRole> roleManager, ILoggerService logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IOptions<JwtSettings> jwtSettings,
-            DataContext context)
+        public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
+            RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
+            DataContext context, IHttpContextAccessor accessor)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
             this.roleManager = roleManager;
             this.logger = logger;
-            this.httpContextAccessor = httpContextAccessor;
-            this.env = env;
             this.jwtSettings = jwtSettings.Value;
             this.context = context;
+            this.accessor = accessor;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -44,41 +44,73 @@ namespace BLL.AuthenticationServices
         private readonly TokenValidationParameters tokenValidationParameters;
         private readonly RoleManager<UserRole> roleManager;
         private readonly ILoggerService logger;
-        private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly IWebHostEnvironment env;
         private readonly DataContext context;
+        private readonly IHttpContextAccessor accessor;
 
-        async Task<AuthenticationResult> IIdentityService.LoginAsync(LoginCommand loginRequest)
+        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.LoginAsync(LoginCommand loginRequest)
         {
-            var id = Guid.NewGuid();
-            var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
-            if (userAccount == null)
-                throw new ArgumentException($"User account with {loginRequest.UserName} is not available");
-
-            if(!await userManager.CheckPasswordAsync(userAccount, loginRequest.Password))
-                throw new ArgumentException($"Password seems to be incorrect");
-
-            if(userAccount.UserType == (int)UserTypes.Teacher)
+            var res = new APIResponse<LoginSuccessResponse>();
+            res.Result = new LoginSuccessResponse();
+            try
             {
-                var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
-                if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
-                { 
-                    throw new ArgumentException($"Teacher account is currently unavailable!! Please contact school administration");
-                }
-                id = techerAccount.TeacherId;
-            }
-
-            if (userAccount.UserType == (int)UserTypes.Student)
-            {
-                var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
-                if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                var id = Guid.NewGuid();
+                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
+                var permisions = new List<string>();
+                if (userAccount == null)
                 {
-                    throw new ArgumentException($"Student account is currently unavailable!! Please contact school administration");
+                    res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
+                    return res;
                 }
-                id = studentAccount?.StudentContactId ?? new Guid();
-            }
 
-            return await GenerateAuthenticationResultForUserAsync(userAccount, id);
+                if (!await userManager.CheckPasswordAsync(userAccount, loginRequest.Password))
+                {
+                    res.Message.FriendlyMessage = $"Password seems to be incorrect";
+                    return res;
+                }
+
+                if(userAccount.UserType == (int)UserTypes.Admin)
+                {
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Teacher)
+                {
+                    var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = techerAccount.TeacherId;
+
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Student)
+                {
+                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = studentAccount?.StudentContactId ?? new Guid();
+                }
+
+                var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
+
+                res.Result = new LoginSuccessResponse();
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount);
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public async Task<AuthenticationResult> RefreshTokenAsync(string refreshToken, string token)
@@ -159,7 +191,7 @@ namespace BLL.AuthenticationServices
 
 
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null)
         {
             try
             {
@@ -167,15 +199,16 @@ namespace BLL.AuthenticationServices
                 var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
 
                 var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("userId", user.Id),
-                new Claim("userType", user.UserType.ToString()),
-                new Claim("userName",user.UserName),
-                user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentCoontactId", ID.ToString()),
-            };
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim("userId", user.Id),
+                    new Claim("userType", user.UserType.ToString()),
+                    new Claim("userName",user.UserName),
+                    new Claim("permissions", string.Join(',', permissions)),
+                    user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentCoontactId", ID.ToString()),
+                };
 
                 var userClaims = await userManager.GetClaimsAsync(user);
 

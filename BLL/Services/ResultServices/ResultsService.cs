@@ -38,7 +38,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass
                         .Include(s => s.Class) 
@@ -88,7 +88,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)

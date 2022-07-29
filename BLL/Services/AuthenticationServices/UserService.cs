@@ -15,12 +15,13 @@ using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Data;
-using SMP.Contracts.FileUpload;
 using SMP.Contracts.Options;
+using SMP.BLL.Services.FileUploadService;
+using SMP.BLL.Constants;
 
 namespace BLL.AuthenticationServices
 {
-    public class UserService  : IUserService
+    public class UserService : IUserService
     {
         private readonly UserManager<AppUser> manager;
         private readonly IEmailService emailService;
@@ -40,9 +41,10 @@ namespace BLL.AuthenticationServices
             this.uploadService = uploadService;
         }
 
-        async Task IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
+        async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
         {
-            if(user == null)
+            var res = new APIResponse<string[]>();
+            if (user == null)
             {
                 var role = await roleManager.FindByIdAsync(roleId);
                 if (role == null)
@@ -50,25 +52,28 @@ namespace BLL.AuthenticationServices
 
                 if (userIds.Any())
                 {
-                    foreach(var userId in userIds)
+                    foreach (var userId in userIds)
                     {
                         user = manager.Users.FirstOrDefault(f => f.Id == userId);
                         if (user == null)
                             throw new ArgumentException("User account not found");
 
-                        
+
                         var result = await manager.AddToRoleAsync(user, role.Name);
                         if (!result.Succeeded)
                             throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                 
+
                 }
-                
             }
-            
+            res.IsSuccessful = true;
+            res.Result = userIds;
+            res.Message.FriendlyMessage = Messages.Saved;
+            return res;
+
         }
 
-       
+
 
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
@@ -110,7 +115,7 @@ namespace BLL.AuthenticationServices
                 return user.Id;
             }
             catch (ArgumentException ex)
-            { 
+            {
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -142,16 +147,16 @@ namespace BLL.AuthenticationServices
                 }
             }
             catch (ArgumentException ex)
-            { 
+            {
                 throw new ArgumentException(ex.Message);
             }
-            
+
         }
 
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")
-            { 
+            {
                 if (string.IsNullOrEmpty(request.ResetOptionValue))
                 {
                     throw new ArgumentException("Email is required to reset password");
@@ -178,23 +183,23 @@ namespace BLL.AuthenticationServices
                 }
 
                 throw new ArgumentException("Password reset by phone number is not available please make use of email reset option");
-            } 
+            }
         }
 
         async Task IUserService.GenerateResetLinkAndSendToUserEmail(ResetPassword request)
         {
-            if(int.Parse(request.UserType) == (int)UserTypes.Student)
+            if (int.Parse(request.UserType) == (int)UserTypes.Student)
             {
                 var user = await manager.Users.FirstOrDefaultAsync(d => d.UserType == (int)UserTypes.Student && d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
                 if (user == null)
                     throw new ArgumentException("Student account with this email address is not registered");
 
-                var token = await manager.GeneratePasswordResetTokenAsync(user); 
-                var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id="+ user.Id;
+                var token = await manager.GeneratePasswordResetTokenAsync(user);
+                var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link);
             }
-           
+
         }
 
         private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link)
@@ -215,8 +220,9 @@ namespace BLL.AuthenticationServices
 
 
 
-        async Task<AuthenticationResult> IUserService.ResetAccountAsync(ResetAccount request)
+        async Task<APIResponse<AuthenticationResult>> IUserService.ResetAccountAsync(ResetAccount request)
         {
+            var res = new APIResponse<AuthenticationResult>();
             var user = await manager.FindByIdAsync(request.UserId);
             request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
             if (user == null)
@@ -227,8 +233,8 @@ namespace BLL.AuthenticationServices
             {
                 await SendResetSuccessEmailToUserAsync(user);
                 var loginResult = await identityService.LoginAsync(new LoginCommand { Password = request.Password, UserName = user.UserName });
-                if (!string.IsNullOrEmpty(loginResult.Token))
-                    return loginResult;
+                if (!string.IsNullOrEmpty(loginResult.Result.AuthResult.Token))
+                    return res;
             }
             else
                 throw new ArgumentException(changePassword.Errors.FirstOrDefault().Description);

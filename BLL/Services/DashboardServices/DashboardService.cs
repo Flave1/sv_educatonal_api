@@ -33,7 +33,8 @@ namespace SMP.BLL.Services.DashboardServices
             if (!string.IsNullOrEmpty(userid))
             { 
 
-                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+
+                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
 
                     var totalEnrolledstudent = context.StudentContact.Where(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();

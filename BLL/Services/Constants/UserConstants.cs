@@ -15,7 +15,9 @@ namespace BLL.Constants
 
     public enum UserTypes
     {
+        Admin = -1,
         Teacher = 1,
         Student = 0,
+        Parent = 2
     }
 }

@@ -195,6 +195,14 @@ namespace SMP.Contracts.ResultModels
                 studentSubjectEntries = studentsSubjects.Select(e => new StudentSubjectEntry(e, student.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
                 gradeSetting = student.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
             }
+            cognitiveBehaviour = new List<CognitiveBehaviour>
+            {
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"}
+            };
         }
     }
 

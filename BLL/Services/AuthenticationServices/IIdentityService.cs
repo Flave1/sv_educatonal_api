@@ -5,6 +5,6 @@ namespace BLL.AuthenticationServices
 {
     public interface IIdentityService
     {
-        Task<AuthenticationResult> LoginAsync(LoginCommand user);
+        Task<APIResponse<LoginSuccessResponse>>  LoginAsync(LoginCommand user);
     }
 }

@@ -8,7 +8,7 @@ namespace Contracts.Authentication
     { 
         public string RoleId { get; set; }
         public string Name { get; set; }
-        public List<RoleActivities> Activities { get; set; } = new List<RoleActivities>();
+        public List<Guid> Activities { get; set; }
     }
     public class GetActivities
     {
@@ -16,6 +16,13 @@ namespace Contracts.Authentication
         public string Name { get; set; }
         public string ParentId { get; set; }
         public string ParentName { get; set; }
+    }
+
+    public class GetActivityParent
+    {
+        public string ParentActivityId { get; set; }
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
     }
 
     public class RoleActivities
@@ -34,7 +41,7 @@ namespace Contracts.Authentication
     public class CreateRoleActivity
     {
         public string Name { get; set; }
-        public RoleActivitiesCommand[] Activities { get; set; }
+        public string[] Activities { get; set; }
     }
 
     public class RoleActivitiesCommand
@@ -51,7 +58,20 @@ namespace Contracts.Authentication
     {
         public string RoleId { get; set; }
         public string Name { get; set; }
-        public RoleActivitiesCommand[] Activities { get; set; }
+        public string[] Activities { get; set; }
+    }
+
+    public class NotAddedUserRole
+    {
+        public string RoleName { get; set; }
+        public string RoleId { get; set; }
+        public List<UserNames> Users { get; set; }
+    }
+
+    public class UserNames
+    {
+        public string UserName { get; set; }
+        public string UserId { get; set; }
     }
 
     public class GetUsersInRoleRequest 

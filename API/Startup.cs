@@ -14,6 +14,7 @@ using System.IO;
 using NLog;
 using BLL.Utilities;
 using Contracts.Options;
+using System.Linq;
 
 namespace API
 {
@@ -92,7 +93,7 @@ namespace API
         {
             var RoleManager = serviceProvider.GetRequiredService<RoleManager<UserRole>>();
             var UserManager = serviceProvider.GetRequiredService<UserManager<AppUser>>();
-            string[] roleNames = { DefaultRoles.SCHOOLADMIN, DefaultRoles.STUDENT, DefaultRoles.TEACHER };
+            string[] roleNames = { DefaultRoles.FLAVETECH, DefaultRoles.SCHOOLADMIN, DefaultRoles.STUDENT, DefaultRoles.TEACHER };
 
             IdentityResult roleResult;
 
@@ -113,6 +114,10 @@ namespace API
             {
                 Email = userSettings.Email,
                 UserName = userSettings.UserName,
+                UserType = (int)UserTypes.Admin,
+                Active = true,
+                FirstName = "Admin",
+                LastName = "User"
             };
 
             var user = await UserManager.FindByEmailAsync(userSettings.Email);
@@ -121,7 +126,7 @@ namespace API
                 var created = await UserManager.CreateAsync(adminUser, adminPassword);
                 if (created.Succeeded)
                 {
-                    var added = await UserManager.AddToRolesAsync(adminUser, roleNames);
+                    var added = await UserManager.AddToRolesAsync(adminUser, roleNames.Where(d => d == DefaultRoles.FLAVETECH).ToArray());
                     if (!added.Succeeded)
                     {
                         Console.Write(added.Errors);

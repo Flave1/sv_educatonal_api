@@ -161,25 +161,15 @@ namespace SMP.BLL.Services.GradeServices
         {
             var res = new APIResponse<List<GetGradeGroupModel>>();
 
-            var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
-            if(currentSession != null)
-            {
-                var result = await context.GradeGroup
-                    .Include(d => d.Classes)
-                    .Include(d => d.Grades)
-                    .Where(d => d.SessionId == currentSession.SessionId)
-                    .Select(d => new GetGradeGroupModel(d)).ToListAsync();
+            var result = await context.GradeGroup
+                     .Include(d => d.Classes)
+                     .Include(d => d.Grades)
+                     .Where(d => d.Deleted == false)
+                     .Select(d => new GetGradeGroupModel(d)).ToListAsync();
 
-                res.IsSuccessful = true;
-                res.Result = result;
-                res.Message.FriendlyMessage = Messages.GetSuccess;
-            }
-            else
-            {
-                //return some messge
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = "There is no session setted up for school";
-            }
+            res.IsSuccessful = true;
+            res.Result = result;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
 

@@ -1,11 +1,8 @@
 ﻿using BLL.MiddleWares;
 using Contracts.Annoucements;
 using Contracts.Common;
-using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AnnouncementsServices;
-using SMP.BLL.Services.PinManagementService;
-using SMP.Contracts.PinManagement;
-using System;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
@@ -15,11 +12,11 @@ namespace SMP.API.Controllers
     public class AnnouncementController : Controller
     {
         private readonly IAnnouncementsService service;
-        public AnnouncementController(IAnnouncementsService sertvice)
+        public AnnouncementController(IAnnouncementsService service)
         {
-            this.service = sertvice;
+            this.service = service;
         }
-         
+
         [HttpPost("create/announcement")]
         public async Task<IActionResult> CreateAnnouncementsAsync([FromBody] CreateAnnouncement request)
         {

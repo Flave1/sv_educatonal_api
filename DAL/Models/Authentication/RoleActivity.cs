@@ -18,6 +18,6 @@ namespace DAL.Authentication
         [ForeignKey("RoleId")]
         public UserRole UserRole { get; set; }
         [ForeignKey("ActivityId")]
-        public Activity Activity { get; set; }
+        public AppActivity Activity { get; set; }
     }
 }

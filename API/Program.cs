@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using SMP.DAL.Initializer;
+
 namespace API
 {
     public class Program
@@ -7,13 +9,16 @@ namespace API
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();
-        }
+        }//.SeedData()
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+        //public static IWebHost CreateHostBuilder(string[] args) =>
+        //    Host.CreateDefaultBuilder(args)
+        //        .ConfigureWebHostDefaults(webBuilder =>
+        //        {
+        //            webBuilder.UseStartup<Startup>();
+        //        });
+
+        public static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args)
+         .UseStartup<Startup>();
     }
 }

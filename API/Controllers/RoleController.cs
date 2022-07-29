@@ -50,6 +50,13 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("getall-activity-parent")]
+        public async Task<IActionResult> GetActivityParentsAsync()
+        {
+            var result = await roleService.GetActivityParentsAsync();
+            return Ok(result);
+        }
+
         [HttpGet("getall-activities-by-roleId")]
         public async Task<IActionResult> GetActivitiesByRoleAsync(string roleId)
         {
@@ -104,8 +111,10 @@ namespace API.Controllers
 
             try
             {
-                await userService.AddUserToRoleAsync(request.RoleId, null, request.UserIds);
-                return Ok(new { result = "Successfully added user to selected role" });
+                var res = await userService.AddUserToRoleAsync(request.RoleId, null, request.UserIds);
+                if(res.IsSuccessful)
+                    return Ok(res);
+                return BadRequest(res);
             }
             catch (ArgumentException ex)
             {
@@ -113,7 +122,11 @@ namespace API.Controllers
             }
         }
 
-
-
+        [HttpGet("get/not-added-users/{roleId}")]
+        public async Task<IActionResult> GetNotAddedUsersAsync(string roldeId)
+        {
+            var result = await roleService.GetNotAddedUsersAsync(roldeId);
+            return Ok(result);
+        }
     }
 }
