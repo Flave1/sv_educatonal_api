@@ -4,6 +4,8 @@ using DAL;
 using DAL.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SMP.BLL.Constants;
+using SMP.Contracts.PinManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -258,5 +260,75 @@ namespace BLL.AuthenticationServices
             return res;
         }
 
+        async Task<APIResponse<GetUserRole>> IRolesService.GetUserRoleAsync(GetUserRoleRequest request)
+        {
+            var res = new APIResponse<GetUserRole>(); 
+            var user = await userManager.FindByIdAsync(request.UserId);
+            if(user != null)
+            {
+                var role = await manager.Roles.Where(d=>d.Id == request.RoleId).Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
+                if(role != null)
+                { 
+                    res.IsSuccessful = true;
+                    res.Result = role;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+                else
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+            }
+            else
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            } 
+        }
+
+        async Task<APIResponse<bool>> IRolesService.RemoveUserRoleAsync(GetUserRoleRequest request)
+        {
+            var res = new APIResponse<bool>();
+            var user = await userManager.FindByIdAsync(request.UserId);
+            if (user != null)
+            {
+                var role = await manager.Roles.Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
+                if (role != null)
+                { 
+                    var userRole = await context.UserRole.FirstOrDefaultAsync(x => x.Id == role.RoleId && user.Id == role.UserId);
+                    if(userRole is not null)
+                    {
+                        userRole.Deleted = true;
+                        await context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                        return res;
+                    }
+                     
+                    res.IsSuccessful = true;
+                    res.Result = true;
+                    res.Message.FriendlyMessage = Messages.DeletedSuccess;
+                    return res;
+                }
+                else
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+            }
+            else
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+        }
     }
 }

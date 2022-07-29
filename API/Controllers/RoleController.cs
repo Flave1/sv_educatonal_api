@@ -71,6 +71,20 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("get-user-role")]
+        public async Task<IActionResult> GetUserRoleAsync(GetUserRoleRequest request)
+        { 
+            var result = await roleService.GetUserRoleAsync(request);
+            return Ok(result);
+        }
+
+        [HttpGet("remove-user-role")]
+        public async Task<IActionResult> RemoveUserRoleAsync(GetUserRoleRequest request)
+        { 
+            var result = await roleService.RemoveUserRoleAsync(request);
+            return Ok(result);
+        }
+
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteRoleAsync([FromBody] MultipleDelete request)
         {

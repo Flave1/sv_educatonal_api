@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using DAL.Authentication;
+using System;
+using System.Collections.Generic;
 
 namespace Contracts.Authentication
 {
@@ -51,4 +53,29 @@ namespace Contracts.Authentication
         public string Name { get; set; }
         public RoleActivitiesCommand[] Activities { get; set; }
     }
+
+    public class GetUserRoleRequest 
+    {
+        public string RoleId { get; set; } 
+        public string UserId { get; set; }
+    }
+        public class GetUserRole
+    {
+        public string RoleId { get; set; }
+        public string Name { get; private set; }
+        public string UserId { get; set; } 
+        public GetUserRole(UserRole role, AppUser user)
+        {
+            if(role.Deleted == true)
+            {
+                throw new ArgumentException("Role does not exist");
+            }
+            else
+            {
+                RoleId = role.Id;
+                Name = role.Name;
+                UserId = user.Id;
+            }
+        }
+    } 
 }
