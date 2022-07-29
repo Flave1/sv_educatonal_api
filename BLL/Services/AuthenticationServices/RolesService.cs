@@ -269,7 +269,7 @@ namespace BLL.AuthenticationServices
             var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d)).FirstOrDefault();
             if (selectedRole != null)
             {
-                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id)).Select(x => new UserNames
+                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher).Select(x => new UserNames
                 {
                     UserId = x.Id,
                     UserName = x.FirstName + " " + x.LastName,
@@ -302,7 +302,7 @@ namespace BLL.AuthenticationServices
                     {
                         res.IsSuccessful = true;
                         res.Result = true;
-                        res.Message.FriendlyMessage = Messages.DeletedSuccess;
+                        res.Message.FriendlyMessage = "Successfully removed User from role";
                         return res;
                     }
                     else
