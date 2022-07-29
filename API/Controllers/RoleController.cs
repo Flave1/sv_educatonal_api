@@ -108,7 +108,11 @@ namespace API.Controllers
             }
         }
 
-
-
+        [HttpGet("get/not-added-users/{roleId}")]
+        public async Task<IActionResult> GetNotAddedUsersAsync(string roldeId)
+        {
+            var result = await roleService.GetNotAddedUsersAsync(roldeId);
+            return Ok(result);
+        }
     }
 }

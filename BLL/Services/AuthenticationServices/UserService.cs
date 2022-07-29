@@ -21,7 +21,7 @@ using SMP.BLL.Constants;
 
 namespace BLL.AuthenticationServices
 {
-    public class UserService  : IUserService
+    public class UserService : IUserService
     {
         private readonly UserManager<AppUser> manager;
         private readonly IEmailService emailService;
@@ -52,28 +52,28 @@ namespace BLL.AuthenticationServices
 
                 if (userIds.Any())
                 {
-                    foreach(var userId in userIds)
+                    foreach (var userId in userIds)
                     {
                         user = manager.Users.FirstOrDefault(f => f.Id == userId);
                         if (user == null)
                             throw new ArgumentException("User account not found");
 
-                        
+
                         var result = await manager.AddToRoleAsync(user, role.Name);
                         if (!result.Succeeded)
                             throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                 
+
                 }
             }
             res.IsSuccessful = true;
             res.Result = userIds;
             res.Message.FriendlyMessage = Messages.Saved;
             return res;
-            
+
         }
 
-       
+
 
         async Task<string> IUserService.CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat)
         {
@@ -115,7 +115,7 @@ namespace BLL.AuthenticationServices
                 return user.Id;
             }
             catch (ArgumentException ex)
-            { 
+            {
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -147,16 +147,16 @@ namespace BLL.AuthenticationServices
                 }
             }
             catch (ArgumentException ex)
-            { 
+            {
                 throw new ArgumentException(ex.Message);
             }
-            
+
         }
 
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")
-            { 
+            {
                 if (string.IsNullOrEmpty(request.ResetOptionValue))
                 {
                     throw new ArgumentException("Email is required to reset password");
@@ -183,23 +183,23 @@ namespace BLL.AuthenticationServices
                 }
 
                 throw new ArgumentException("Password reset by phone number is not available please make use of email reset option");
-            } 
+            }
         }
 
         async Task IUserService.GenerateResetLinkAndSendToUserEmail(ResetPassword request)
         {
-            if(int.Parse(request.UserType) == (int)UserTypes.Student)
+            if (int.Parse(request.UserType) == (int)UserTypes.Student)
             {
                 var user = await manager.Users.FirstOrDefaultAsync(d => d.UserType == (int)UserTypes.Student && d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
                 if (user == null)
                     throw new ArgumentException("Student account with this email address is not registered");
 
-                var token = await manager.GeneratePasswordResetTokenAsync(user); 
-                var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id="+ user.Id;
+                var token = await manager.GeneratePasswordResetTokenAsync(user);
+                var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link);
             }
-           
+
         }
 
         private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link)

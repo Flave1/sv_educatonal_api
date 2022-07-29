@@ -15,8 +15,7 @@ namespace SMP.Contracts.PortalSettings
     }
         public class PostResultSetting
     {
-        public Guid ResultSettingId { get; set; }
-        public bool PromoteByPassmark { get; set; }
+        public string ResultSettingId { get; set; }
         public bool PromoteAll { get; set; }
         public bool ShowPositionOnResult { get; set; }
         public bool CumulativeResult { get; set; }
@@ -28,8 +27,7 @@ namespace SMP.Contracts.PortalSettings
     }
     public class ResultSettingContract
     {
-        public Guid ResultSettingId { get; set; }
-        public bool PromoteByPassmark { get; set; }
+        public string ResultSettingId { get; set; }
         public bool PromoteAll { get; set; }
         public bool ShowPositionOnResult { get; set; }
         public bool CumulativeResult { get; set; }
@@ -42,8 +40,7 @@ namespace SMP.Contracts.PortalSettings
         }
         public ResultSettingContract( ResultSetting db)
         {
-            ResultSettingId = db.ResultSettingId;
-            PromoteByPassmark = db.PromoteByPassmark;
+            ResultSettingId = db.ResultSettingId.ToString();
             PromoteAll = db.PromoteAll;
             ShowPositionOnResult = db.ShowPositionOnResult;
             CumulativeResult = db.CumulativeResult;

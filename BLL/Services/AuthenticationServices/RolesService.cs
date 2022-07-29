@@ -50,7 +50,7 @@ namespace BLL.AuthenticationServices
                 res.Result = role;
                 res.Message.FriendlyMessage = "Successfully created role";
                 return res;
-               
+
             }
             catch (Exception ex)
             {
@@ -62,7 +62,7 @@ namespace BLL.AuthenticationServices
         private async Task CreateRoleActivitiesAsync(string[] activities, string roleId)
         {
             var activitiesList = new List<RoleActivity>();
-            foreach(var item in activities)
+            foreach (var item in activities)
             {
                 var roleActivity = new RoleActivity
                 {
@@ -115,8 +115,8 @@ namespace BLL.AuthenticationServices
 
         async Task DeleteExistingActivitiesAsync(string roleId)
         {
-            
-            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId).ToListAsync();  
+
+            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId).ToListAsync();
             if (existingActivities.Any())
                 context.RoleActivity.RemoveRange(existingActivities);
             await context.SaveChangesAsync();
@@ -136,12 +136,13 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result =  await context.AppActivity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
+            var result = await context.AppActivity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
-                .Select(a => new GetActivities {  
-                    ActivityId = a.Id.ToString(), 
-                    Name = a.DisplayName, 
-                    ParentId = a.ActivityParentId.ToString(), 
+                .Select(a => new GetActivities
+                {
+                    ActivityId = a.Id.ToString(),
+                    Name = a.DisplayName,
+                    ParentId = a.ActivityParentId.ToString(),
                     ParentName = a.Parent.Name
                 }).ToListAsync();
 
@@ -176,9 +177,32 @@ namespace BLL.AuthenticationServices
                 Name = w.Name,
                 RoleId = roleId
             }).FirstOrDefaultAsync();
-            if(role != null)
+            if (role != null)
             {
                 role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
+            }
+            res.Result = role;
+            res.IsSuccessful = true;
+            res.Result = role;
+            return res;
+        }
+        async Task<APIResponse<NotAddedUserRole>> IRolesService.GetNotAddedUsersAsync(string roleId)
+        {
+            var res = new APIResponse<NotAddedUserRole>();
+
+            var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new NotAddedUserRole
+            {
+                RoleName = w.Name,
+                RoleId = roleId
+            }).FirstOrDefaultAsync();
+            if (role != null)
+            {
+                var addedUserIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
+                role.Users = context.Users.Where(d => !addedUserIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.Deleted == false).Select(a => new UserNames
+                {
+                    UserId = a.Id,
+                    UserName = a.FirstName + " " + a.LastName,
+                }).ToList();
             }
             res.Result = role;
             res.IsSuccessful = true;
@@ -189,7 +213,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<UserRole>> IRolesService.DeleteRoleAsync(MultipleDelete request)
         {
             var res = new APIResponse<UserRole>();
-            foreach(var roleId in request.Items)
+            foreach (var roleId in request.Items)
             {
                 var role = await manager.FindByIdAsync(roleId);
                 if (role == null)
@@ -231,7 +255,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = role;
             }
-          
+
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "Successfully delted role";
             return res;

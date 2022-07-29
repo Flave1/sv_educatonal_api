@@ -11,8 +11,7 @@ namespace SMP.DAL.Models.PortalSettings
     public class ResultSetting: CommonEntity
     {
         [Key]
-        public Guid ResultSettingId { get; set; }
-        public bool PromoteByPassmark { get; set; }
+        public Guid ResultSettingId { get; set; } 
         public bool PromoteAll { get; set; }
         public bool ShowPositionOnResult { get; set; }
         public bool CumulativeResult { get; set; }

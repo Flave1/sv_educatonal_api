@@ -51,7 +51,12 @@ namespace SMP.BLL.Services.PinManagementService
             var studentResult = await resultService.GetStudentResultAsync(student.SessionClassId, Guid.Parse(request.TermId), student.StudentContactId);
             if (studentResult.Result != null)
             {
-                var pin = await context.UsedPin.Include(d => d.UploadedPin).Include(d => d.Sessionterm).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
+                if (!studentResult.Result.isPublished)
+                {
+                    res.Message.FriendlyMessage = "Result not published";
+                    return res;
+                }
+                var pin = await context.UsedPin.Include(d => d.UploadedPin).Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
                 if (pin.Any())
                 {
                     if (pin.Count >= 3)
@@ -64,7 +69,8 @@ namespace SMP.BLL.Services.PinManagementService
                        
                         if(pin.FirstOrDefault().SessionTermId != Guid.Parse(request.TermId))
                         {
-                            res.Message.FriendlyMessage = $"Pin can only be used for {pin.FirstOrDefault().Sessionterm.TermName} term";
+                            res.Message.FriendlyMessage = $"Pin can only be used for {pin.FirstOrDefault().Sessionterm.TermName} " +
+                                $"term of {pin.FirstOrDefault().Sessionterm.Session.StartDate }/{pin.FirstOrDefault().Sessionterm.Session.EndDate } Session";
                             return res;
                         }
                         if (pin.FirstOrDefault().StudentContactId != student.StudentContactId)

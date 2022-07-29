@@ -190,6 +190,11 @@ namespace SMP.DAL.Initializer
                         ActivityParentId = Guid.Parse("93f95f2d-0601-4710-971e-6284ee0e01e3"),
                         Permission = "promote-students",
                         DisplayName = "Can Promote Students", IsActive = true, Deleted = false},
+                    new AppActivity {
+                        Id = Guid.Parse("49697613-386f-4639-b10c-4f07839f48e5"),
+                        ActivityParentId = Guid.Parse("93f95f2d-0601-4710-971e-6284ee0e01e3"),
+                        Permission = "delete-session",
+                        DisplayName = "Can Delete Session", IsActive = true, Deleted = false},
 
 
                     //class-management

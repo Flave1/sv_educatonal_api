@@ -59,4 +59,17 @@ namespace Contracts.Authentication
         public string Name { get; set; }
         public string[] Activities { get; set; }
     }
+
+    public class NotAddedUserRole
+    {
+        public string RoleName { get; set; }
+        public string RoleId { get; set; }
+        public List<UserNames> Users { get; set; }
+    }
+
+    public class UserNames
+    {
+        public string UserName { get; set; }
+        public string UserId { get; set; }
+    }
 }
