@@ -1,5 +1,4 @@
-﻿using BLL.Constants;
-using Contracts.Authentication;
+﻿using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using DAL.Authentication;
@@ -52,7 +51,7 @@ namespace BLL.AuthenticationServices
                 res.Result = role;
                 res.Message.FriendlyMessage = "Successfully created role";
                 return res;
-
+               
             }
             catch (Exception ex)
             {
@@ -61,20 +60,20 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        private async Task CreateRoleActivitiesAsync(string[] activities, string roleId)
+        private async Task CreateRoleActivitiesAsync(RoleActivitiesCommand[] activities, string roleId)
         {
             var activitiesList = new List<RoleActivity>();
-            foreach (var item in activities)
+            foreach(var item in activities)
             {
                 var roleActivity = new RoleActivity
                 {
-                    ActivityId = Guid.Parse(item),
+                    ActivityId = Guid.Parse(item.ActivityId),
                     RoleId = roleId,
-                    CanCreate = true,
-                    CanDelete = true,
-                    CanExport = true,
-                    CanImport = true,
-                    CanUpdate = true,
+                    CanCreate = item.CanCreate,
+                    CanDelete = item.CanDelete,
+                    CanExport = item.CanExport,
+                    CanImport = item.CanImport,
+                    CanUpdate = item.CanUpdate,
                 };
                 activitiesList.Add(roleActivity);
             }
@@ -92,9 +91,22 @@ namespace BLL.AuthenticationServices
                 return res;
             }
 
-            if (role.Name == DefaultRoles.FLAVETECH)
+
+            if (role.Name == "TEACHER")
             {
-                res.Message.FriendlyMessage = "Role cannot be edited ";
+                res.Message.FriendlyMessage = "Teacher role cannot be edited ";
+                return res;
+            }
+
+            if (role.Name == "STUDENT")
+            {
+                res.Message.FriendlyMessage = "Student role cannot be edited ";
+                return res;
+            }
+
+            if (role.Name == "SCHOOL_ADMIN")
+            {
+                res.Message.FriendlyMessage = "Admin role cannot be edited ";
                 return res;
             }
             role.Name = request.Name;
@@ -117,8 +129,8 @@ namespace BLL.AuthenticationServices
 
         async Task DeleteExistingActivitiesAsync(string roleId)
         {
-
-            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId).ToListAsync();
+            
+            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId).ToListAsync();  
             if (existingActivities.Any())
                 context.RoleActivity.RemoveRange(existingActivities);
             await context.SaveChangesAsync();
@@ -127,7 +139,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.Name != DefaultRoles.FLAVETECH)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;
@@ -138,13 +150,12 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result = await context.AppActivity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
+            var result =  await context.Activity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
                 .OrderByDescending(we => we.UpdatedBy)
-                .Select(a => new GetActivities
-                {
-                    ActivityId = a.Id.ToString(),
-                    Name = a.DisplayName,
-                    ParentId = a.ActivityParentId.ToString(),
+                .Select(a => new GetActivities {  
+                    ActivityId = a.Id.ToString(), 
+                    Name = a.Permission, 
+                    ParentId = a.ActivityParentId.ToString(), 
                     ParentName = a.Parent.Name
                 }).ToListAsync();
 
@@ -152,60 +163,51 @@ namespace BLL.AuthenticationServices
             res.Result = result;
             return res;
         }
-        async Task<APIResponse<List<GetActivityParent>>> IRolesService.GetActivityParentsAsync()
-        {
-            var res = new APIResponse<List<GetActivityParent>>();
-            var result = await context.AppActivityParent.Where(d => d.Deleted != true)
-                .Select(a => new GetActivityParent
-                {
-                    ParentActivityId = a.Id.ToString(),
-                    Name = a.Name,
-                    DisplayName = a.DisplayName,
-                }).ToListAsync();
-
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
-        }
-
+   
 
         async Task<APIResponse<GetRoleActivities>> IRolesService.GetSingleRoleAsync(string roleId)
         {
             var res = new APIResponse<GetRoleActivities>();
+            var roleActivities = new List<RoleActivities>();
 
+            var allActivities = await context.Activity.Where(d => d.Deleted != true)
+              .OrderByDescending(we => we.UpdatedBy)
+              .Select(a => new RoleActivities
+              {
+                  ActivityId = a.Id.ToString(),
+                  Name = a.Permission,
+                  ParentId = a.ActivityParentId.ToString(),
+                  ParentName = a.Parent.Name
+              }).ToListAsync();
 
             var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new GetRoleActivities
             {
                 Name = w.Name,
                 RoleId = roleId
             }).FirstOrDefaultAsync();
-            if (role != null)
+            if(role != null)
             {
-                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
-            }
-            res.Result = role;
-            res.IsSuccessful = true;
-            res.Result = role;
-            return res;
-        }
-        async Task<APIResponse<NotAddedUserRole>> IRolesService.GetNotAddedUsersAsync(string roleId)
-        {
-            var res = new APIResponse<NotAddedUserRole>();
-
-            var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new NotAddedUserRole
-            {
-                RoleName = w.Name,
-                RoleId = roleId
-            }).FirstOrDefaultAsync();
-            if (role != null)
-            {
-                var addedUserIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
-                role.Users = context.Users.Where(d => !addedUserIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.Deleted == false).Select(a => new UserNames
+                var activities = await context.RoleActivity.Include(d => d.Activity).Include(d => d.UserRole).Where(d => d.RoleId == roleId).Select(a =>
+                new RoleActivities
                 {
-                    UserId = a.Id,
-                    UserName = a.FirstName + " " + a.LastName,
-                }).ToList();
+                    ActivityId = a.Activity.Id.ToString(),
+                    CanCreate = a.CanCreate,
+                    CanDelete = a.CanDelete,
+                    CanUpdate = a.CanUpdate,
+                    CanExport = a.CanExport,
+                    CanImport = a.CanImport,
+                    Name = a.Activity.Permission,
+                    ParentId = a.Activity.ActivityParentId.ToString(),
+                    ParentName = a.Activity.Parent.Name,
+                }).ToListAsync();
+
+                roleActivities = activities;
             }
+
+            roleActivities.AddRange(allActivities);
+
+            role.Activities = roleActivities.GroupBy(p => p.Name).Select(grp => grp.First()).ToList();
+
             res.Result = role;
             res.IsSuccessful = true;
             res.Result = role;
@@ -215,7 +217,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<UserRole>> IRolesService.DeleteRoleAsync(MultipleDelete request)
         {
             var res = new APIResponse<UserRole>();
-            foreach (var roleId in request.Items)
+            foreach(var roleId in request.Items)
             {
                 var role = await manager.FindByIdAsync(roleId);
                 if (role == null)
@@ -224,26 +226,21 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.TEACHER)
+                if (role.Name == "TEACHER")
                 {
                     res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.STUDENT)
+                if (role.Name == "STUDENT")
                 {
                     res.Message.FriendlyMessage = "Student role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.SCHOOLADMIN)
+                if (role.Name == "SCHOOL_ADMIN")
                 {
                     res.Message.FriendlyMessage = "Admin role cannot be deleted";
-                    return res;
-                }
-                if (role.Name == DefaultRoles.SCHOOLADMIN)
-                {
-                    res.Message.FriendlyMessage = "Role cannot be deleted";
                     return res;
                 }
                 role.Deleted = true;
@@ -257,7 +254,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = role;
             }
-
+          
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "Successfully delted role";
             return res;
@@ -266,11 +263,18 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<GetUsersInRole>> IRolesService.GetUsersInRoleAsync(GetUsersInRoleRequest request)
         {
             var res = new APIResponse<GetUsersInRole>();
-            var role = await manager.Roles.Where(d => d.Id == request.RoleId).Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
-            if (role != null)
+            var userIds = context.UserRoles.Where(d => d.RoleId == request.RoleId).Select(x => x.UserId);
+            var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d)).FirstOrDefault();
+            if (selectedRole != null)
             {
+                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id)).Select(x => new UserNames
+                {
+                    UserId = x.Id,
+                    UserName = x.FirstName + " " + x.LastName,
+                }).ToListAsync();
+
                 res.IsSuccessful = true;
-                res.Result = role;
+                res.Result = selectedRole;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
                 return res;
             }
@@ -280,48 +284,39 @@ namespace BLL.AuthenticationServices
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
-
-
-
         }
 
-        async Task<APIResponse<bool>> IRolesService.RemoveUserRoleAsync(GetUsersInRoleRequest request)
+        async Task<APIResponse<bool>> IRolesService.RemoveUserFromRoleAsync(RemoveUserFromRoleRequest request)
         {
             var res = new APIResponse<bool>();
             var user = await userManager.FindByIdAsync(request.UserId);
             if (user != null)
             {
-                var role = await manager.Roles.Select(x => new GetUserRole(x, user)).FirstOrDefaultAsync();
+                var role = manager.Roles.FirstOrDefault(d => d.Id == request.RoleId);
                 if (role != null)
-                { 
-                    var userRole = await context.UserRole.FirstOrDefaultAsync(x => x.Id == role.RoleId && user.Id == role.UserId);
-                    if(userRole is not null)
+                {
+                    var removeResult = await userManager.RemoveFromRoleAsync(user, role.Name);
+                    if (removeResult.Succeeded)
                     {
-                        userRole.Deleted = true;
-                        await context.SaveChangesAsync();
+                        res.IsSuccessful = true;
+                        res.Result = true;
+                        res.Message.FriendlyMessage = Messages.DeletedSuccess;
+                        return res;
                     }
                     else
                     {
-                        res.IsSuccessful = false;
-                        res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                        res.Message.FriendlyMessage = removeResult.Errors.FirstOrDefault().Description;
                         return res;
                     }
-                     
-                    res.IsSuccessful = true;
-                    res.Result = true;
-                    res.Message.FriendlyMessage = Messages.DeletedSuccess;
-                    return res;
                 }
                 else
                 {
-                    res.IsSuccessful = false;
-                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    res.Message.FriendlyMessage = "Role not found";
                     return res;
                 }
             }
             else
             {
-                res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }

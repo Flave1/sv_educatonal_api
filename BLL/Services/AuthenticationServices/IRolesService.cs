@@ -15,11 +15,11 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<List<ApplicationRoles>>> GetAllRolesAsync();
         Task<APIResponse<GetRoleActivities>> GetSingleRoleAsync(string roleId);
         Task<APIResponse<GetUsersInRole>> GetUsersInRoleAsync(GetUsersInRoleRequest request);
-        Task<APIResponse<bool>> RemoveUserRoleAsync(GetUsersInRoleRequest request);
         Task<APIResponse<UserRole>> UpdateRoleAsync(UpdateRoleActivity request);
         Task<APIResponse<UserRole>> DeleteRoleAsync(MultipleDelete request);
         Task<APIResponse<List<GetActivities>>> GetAllActivitiesAsync();
         Task<APIResponse<List<GetActivityParent>>> GetActivityParentsAsync();
         Task<APIResponse<NotAddedUserRole>> GetNotAddedUsersAsync(string roleId);
+        Task<APIResponse<bool>> RemoveUserFromRoleAsync(RemoveUserFromRoleRequest request);
     }
 }
