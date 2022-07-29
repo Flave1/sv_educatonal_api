@@ -65,6 +65,7 @@ namespace Contracts.Authentication
     public class NotAddedUserRole
     {
         public string RoleName { get; set; }
+
         public string RoleId { get; set; }
         public List<UserNames> Users { get; set; }
     }
