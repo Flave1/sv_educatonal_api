@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 
 namespace Contracts.Authentication
@@ -71,5 +72,27 @@ namespace Contracts.Authentication
     {
         public string UserName { get; set; }
         public string UserId { get; set; }
+    }
+
+    public class GetUsersInRoleRequest
+    {
+        public string RoleId { get; set; }
+    }
+    public class RemoveUserFromRoleRequest
+    {
+        public string UserId { get; set; }
+        public string RoleId { get; set; }
+    }
+
+    public class GetUsersInRole
+    {
+        public string RoleId { get; set; }
+        public string Name { get; private set; }
+        public List<UserNames> Users { get; set; }
+        public GetUsersInRole(IdentityRole role)
+        {
+            RoleId = role.Id;
+            Name = role.Name;
+        }
     }
 }

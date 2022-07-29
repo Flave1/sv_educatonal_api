@@ -5,6 +5,7 @@ using DAL;
 using DAL.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SMP.BLL.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -261,5 +262,66 @@ namespace BLL.AuthenticationServices
             return res;
         }
 
+        async Task<APIResponse<GetUsersInRole>> IRolesService.GetUsersInRoleAsync(GetUsersInRoleRequest request)
+        {
+            var res = new APIResponse<GetUsersInRole>();
+            var userIds = context.UserRoles.Where(d => d.RoleId == request.RoleId).Select(x => x.UserId);
+            var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d)).FirstOrDefault();
+            if (selectedRole != null)
+            {
+                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id)).Select(x => new UserNames
+                {
+                    UserId = x.Id,
+                    UserName = x.FirstName + " " + x.LastName,
+                }).ToListAsync();
+
+                res.IsSuccessful = true;
+                res.Result = selectedRole;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            else
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+        }
+
+        async Task<APIResponse<bool>> IRolesService.RemoveUserFromRoleAsync(RemoveUserFromRoleRequest request)
+        {
+            var res = new APIResponse<bool>();
+            var user = await userManager.FindByIdAsync(request.UserId);
+            if (user != null)
+            {
+                var role = manager.Roles.FirstOrDefault(d => d.Id == request.RoleId);
+                if (role != null)
+                {
+                    var removeResult = await userManager.RemoveFromRoleAsync(user, role.Name);
+                    if (removeResult.Succeeded)
+                    {
+                        res.IsSuccessful = true;
+                        res.Result = true;
+                        res.Message.FriendlyMessage = Messages.DeletedSuccess;
+                        return res;
+                    }
+                    else
+                    {
+                        res.Message.FriendlyMessage = removeResult.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "Role not found";
+                    return res;
+                }
+            }
+            else
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+        }
     }
 }
