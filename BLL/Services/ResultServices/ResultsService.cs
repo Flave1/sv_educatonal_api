@@ -83,6 +83,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<List<GetClassSubjects>>> IResultsService.GetCurrentStaffClassSubjectsAsync(Guid sessionClassId)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherid = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var res = new APIResponse<List<GetClassSubjects>>();
 
             if (!string.IsNullOrEmpty(userid))
@@ -93,6 +94,21 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+                //GET Teacher CLASSES
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                    res.Result = await context.SessionClassSubject
+                        .Include(d => d.Subject)
+                        .Include(d => d.SessionClass)
+                        .Where(e => e.SessionClassId == sessionClassId && e.SubjectTeacherId == Guid.Parse(teacherid) || e.SessionClass.FormTeacherId == Guid.Parse(teacherid)).Select(s => new GetClassSubjects(s)).ToListAsync();
+                    res.Result = res.Result.GroupBy(d => d.SubjectName).Select(f => f.First()).ToList();
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
                 }
 
                 res.Result = await context.SessionClassSubject
