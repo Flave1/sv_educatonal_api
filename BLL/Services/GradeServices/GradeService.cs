@@ -1,4 +1,5 @@
 ﻿using BLL;
+using Contracts.Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -125,20 +126,7 @@ namespace SMP.BLL.Services.GradeServices
                 }
             }
         }
-        //private async Task CreateClassGradeAsync(Guid groupId, List<string> classes)
-        //{
-        //    var cgList = new List<ClassGrade>();
-        //    foreach (var cls in classes)
-        //    {
-        //        cgList.Add(new ClassGrade
-        //        {
-        //            GradeGroupId = groupId,
-        //            SessionClassId = Guid.Parse(cls),
-        //        });
-        //        context.AddRange(cgList);
-        //    }
-        //    await context.SaveChangesAsync();
-        //}
+          
         private async Task CreateGradeAsync(Guid groupId, GradesModel[] grades)
         {
             var gList = new List<Grade>();
@@ -202,16 +190,7 @@ namespace SMP.BLL.Services.GradeServices
             }
         }
    
-        //private async Task DeleteClassGroupsAsync(Guid groupId)
-        //{
-        //    var classGroups = await context.ClassGrade.Where(d => d.GradeGroupId == groupId).ToListAsync();
-        //    if (classGroups.Any())
-        //    {
-        //        context.ClassGrade.RemoveRange(classGroups);
-        //        await context.SaveChangesAsync();
-        //    }
-        //}
-
+     
         private async Task DeleteGroupGradesAsync(Guid groupId)
         {
             var groupGrade = await context.Grade.Where(d => d.GradeGroupId == groupId).ToListAsync();
@@ -222,6 +201,40 @@ namespace SMP.BLL.Services.GradeServices
             }
         }
 
+        async Task<APIResponse<SingleDelete>> IGradeService.DeleteGradeAsync(SingleDelete request)
+        {
+            var res = new APIResponse<SingleDelete>();
+
+            using (var transaction = await context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == Guid.Parse(request.Item));
+
+                    if (gg == null)
+                    {
+                        res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                        return res;
+                    }
+
+                    gg.Deleted = true;
+                    context.SaveChanges();
+                    await transaction.CommitAsync();
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.DeletedSuccess;
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = Messages.FriendlyException;
+                    res.Message.TechnicalMessage = ex.ToString();
+                    return res;
+                }
+
+
+            }
+        }
 
 
     }

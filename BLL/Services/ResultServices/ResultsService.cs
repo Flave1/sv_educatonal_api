@@ -83,6 +83,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<List<GetClassSubjects>>> IResultsService.GetCurrentStaffClassSubjectsAsync(Guid sessionClassId)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId= accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var res = new APIResponse<List<GetClassSubjects>>();
 
             if (!string.IsNullOrEmpty(userid))
@@ -93,11 +94,29 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
+
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
                 }
 
-                res.Result = await context.SessionClassSubject
-                     .Include(d => d.Subject)
-                     .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                    var subjectTeacherSubjects = context.SessionClassSubject
+                        .Include(d => d.Subject)
+                        .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s));
+
+                    var formTeacherSubjects = context.SessionClassSubject
+                        .Include(d => d.Subject)
+                        .Include(d => d.SessionClass)
+                        .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)).Select(s => new GetClassSubjects(s));
+
+                    res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
+
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
