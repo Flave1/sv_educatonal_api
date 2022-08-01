@@ -290,8 +290,14 @@ namespace SMP.DAL.Initializer
                      new AppActivity {
                         Id = Guid.Parse("2a96ef32-dc12-4bd7-9e69-1485f1169bbb"),
                         ActivityParentId = Guid.Parse("a29a2a62-c814-4c06-bf79-cba341b1043c"),
-                        Permission = "unenroll students",
+                        Permission = "unenroll-students",
                         DisplayName = "Can Unenroll Students",
+                        IsActive = true, Deleted = false},
+                      new AppActivity {
+                        Id = Guid.Parse("f6d56f42-90a0-4e84-a024-9eb713bfeeb4"),
+                        ActivityParentId = Guid.Parse("a29a2a62-c814-4c06-bf79-cba341b1043c"),
+                        Permission = "change-session-in-unenrolled",
+                        DisplayName = "Can View Students In Previous Sessions",
                         IsActive = true, Deleted = false},
 
                      //result-management
@@ -347,7 +353,7 @@ namespace SMP.DAL.Initializer
                         Id = Guid.Parse("92304cbc-1664-4bc3-b1e2-5c113abba137"),
                         ActivityParentId = Guid.Parse("6ac6237e-63fe-4860-8f29-32151b5fce7d"),
                         Permission = "export-cummulative-master",
-                        DisplayName = "Can Export Master List",
+                        DisplayName = "Can Export Cummulative Master List",
                         IsActive = true, Deleted = false},
 
 
@@ -370,6 +376,7 @@ namespace SMP.DAL.Initializer
                         Permission = "used-pins",
                         DisplayName = "Used Pins List",
                         IsActive = true, Deleted = false},
+                     
 
                       //app-settings
                     new AppActivity {

@@ -63,5 +63,14 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteGradeAsync([FromBody] SingleDelete request)
+        {
+            var response = await service.DeleteGradeAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
     }
 }
