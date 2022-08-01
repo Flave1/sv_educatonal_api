@@ -17,9 +17,8 @@ namespace SMP.DAL.Models.Note
         [Key]
         public Guid StudentNoteId { get; set; }
         public string StudentNoteDetails { get; set; }
-        public bool IsApproved { get; set; }
-        public Guid SeenById { get; set; }
-        public string SeenBy { get; set; }
+        public bool IsApproved { get; set; } 
+        public string SeenByIds { get; set; }
         public bool IsShared { get; set; }
         public bool IsSubmitted { get; set; }
         public Guid StudentContactId { get; set; }
