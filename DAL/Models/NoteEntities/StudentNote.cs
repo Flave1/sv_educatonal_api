@@ -1,4 +1,5 @@
-﻿using DAL.ClassEntities;
+﻿using DAL;
+using DAL.ClassEntities;
 using DAL.StudentInformation;
 using DAL.SubjectModels;
 using DAL.TeachersInfor;
@@ -10,17 +11,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.DAL.Models.Note
+namespace SMP.DAL.Models.NoteEntities
 {
-    public class StudentNote
+    public class StudentNote : CommonEntity
     {
         [Key]
         public Guid StudentNoteId { get; set; }
-        public string StudentNoteDetails { get; set; }
-        public bool IsApproved { get; set; } = false;
-        public string SeenByIds { get; set; }
-        public bool IsShared { get; set; } = false;
-        public bool IsSubmitted { get; set; } =false;
+        public string NoteTitle { get; set; }
+        public string NoteContent { get; set; }
+        public int AprrovalStatus { get; set; }
         public Guid StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact Student { get; set; }
@@ -30,8 +29,9 @@ namespace SMP.DAL.Models.Note
         public Guid SubjectId { get; set; }
         [ForeignKey("SubjectId")]
         public Subject Subject { get; set; }
-        public Guid ClassId { get; set; }
-        public ICollection<ClassLookup> Class { get; set; }
+        public Guid SessionClassId { get; set; }
+        [ForeignKey("SessionClassId")]
+        public SessionClass SessionClass { get; set; }
 
     }
 }

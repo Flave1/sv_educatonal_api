@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.ClassEntities;
+using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
@@ -32,5 +33,6 @@ namespace DAL.StudentInformation
         public int Status { get; set; }
         public int EnrollmentStatus { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
+        public virtual ICollection<StudentNote> StudentNote { get; set; }
     }
 }

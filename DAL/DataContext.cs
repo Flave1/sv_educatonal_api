@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using SMP.DAL.Models.PortalSettings;
 using SMP.DAL.Models.PinManagement;
 using SMP.DAL.Models.Annoucement;
+using SMP.DAL.Models.NoteEntities;
 
 namespace DAL
 {
@@ -63,7 +64,9 @@ namespace DAL
         public DbSet<UploadedPin> UploadedPin { get; set; }
         public DbSet<UsedPin> UsedPin { get; set; }
         public DbSet<Announcements> Announcement { get; set; }
-
+        public DbSet<ClassNote> ClassNote { get; set; }
+        public DbSet<StudentNote> StudentNote { get; set; }
+        public DbSet<TeacherClassNote> TeacherClassNote { get;set;}
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
