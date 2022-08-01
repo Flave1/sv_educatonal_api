@@ -17,10 +17,10 @@ namespace SMP.DAL.Models.Note
         [Key]
         public Guid ClassNoteId { get; set; }
         public string ClassNoteDetails { get; set; }
-        public bool IsApproved { get; set; }
+        public bool IsApproved { get; set; } = false;
         public string SeenByIds { get; set; }
-        public bool IsShared { get; set; }
-        public bool IsSubmitted { get; set; }
+        public bool IsShared { get; set; } = false;
+        public bool IsSubmitted { get; set; } =false;   
         public Guid StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact Student { get; set; }
