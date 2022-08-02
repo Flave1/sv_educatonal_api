@@ -21,6 +21,7 @@ namespace SMP.DAL.Models.NoteEntities
         public string NoteContent { get; set; }
         public int AprrovalStatus { get; set; }
         public string Classes { get; set; }
+        public string Author { get; set; }
         public Guid SubjectId { get; set; }
         [ForeignKey("SubjectId")]
         public Subject Subject { get; set; }
