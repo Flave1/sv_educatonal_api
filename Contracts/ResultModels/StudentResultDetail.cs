@@ -152,6 +152,7 @@ namespace SMP.Contracts.ResultModels
 
     public class PreviewResult
     {
+        public bool IsPreview { get; set; } = true;
         public string studentName { get; set; }
         public Guid studentContactId { get; set; }
         public string registrationNumber { get; set; }
