@@ -36,7 +36,7 @@ namespace SMP.BLL.Services.NoteServices
                 var newClassNote = new TeacherClassNote()
                 {
                     ClassNoteId = sharedNoted.ClassNoteId,
-                    TeacherId = request.TeacherId
+                    TeacherId = Guid.Parse(string.Join(',',request.TeacherId))
                 };
                 await context.TeacherClassNote.AddAsync(newClassNote);
                 await context.SaveChangesAsync();
@@ -206,7 +206,6 @@ namespace SMP.BLL.Services.NoteServices
                 res.Message.FriendlyMessage = Messages.Updated;
                 res.IsSuccessful = true;
                 res.Result = request;
-               
             }
             return res;
              

@@ -8,10 +8,18 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.Notes
 {
+    public class GetTeacher
+    {
+        public Guid TeacherId { get; set; }
+        public GetTeacher(TeacherClassNote db)
+        {
+            TeacherId = db.TeacherId;
+        }
+    }
     public class ShareNotes
     {
         public string ClassNoteId { get; set; }
-        public Guid TeacherId { get; set; }
+        public List<Guid> TeacherId { get; set; }
     }
     public class ClassNotes
     {
