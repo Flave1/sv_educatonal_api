@@ -1,11 +1,6 @@
-﻿using DAL.Authentication;
-using DAL.SubjectModels;
-using SMP.DAL.Models.NoteEntities;
+﻿using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.Notes
 {
@@ -51,7 +46,7 @@ namespace SMP.Contracts.Notes
         public string ClassNoteId { get; set; }
         public string TeacherClassNoteId { get; set; }
         public string NoteTitle { get; set; }
-        public DateTime DateCreated { get; set; }
+        public string DateCreated { get; set; }
         public string NoteContent { get; set; }
         public string Author { get; set; }
         public string AuthorName { get; set; }
@@ -66,7 +61,7 @@ namespace SMP.Contracts.Notes
             ClassNoteId = db.ClassNoteId.ToString();
             TeacherClassNoteId = db.TeacherClassNoteId.ToString();
             NoteTitle = db.ClassNote.NoteTitle;
-            DateCreated = db.CreatedOn;
+            DateCreated = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
             NoteContent = db.ClassNote.NoteContent;
             Author = db.ClassNote.Author.ToString();
             AuthorName = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
@@ -90,7 +85,7 @@ namespace SMP.Contracts.Notes
         {
             ClassNoteId = db.ClassNoteId.ToString(); 
             NoteTitle = db.NoteTitle;
-            DateCreated = db.CreatedOn;
+            DateCreated = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
             NoteContent = db.NoteContent;
             Author = db.Author.ToString();
             AuthorName = db.AuthorDetail.FirstName + " " + db.AuthorDetail.LastName;
