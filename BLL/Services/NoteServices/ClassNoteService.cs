@@ -139,6 +139,25 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
+        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetClassNotesByAdminAsync()
+        {
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value; 
+            var res = new APIResponse<List<GetClassNotes>>();
+            if (!string.IsNullOrEmpty(userid))
+            {
+                var noteList = await context.ClassNote
+                         .Where(u => u.Deleted == false 
+                         && u.AprrovalStatus == (int)NoteApprovalStatus.Approved && u.Author == userid)
+                         .Select(x => new GetClassNotes(x)).ToListAsync();
+
+                res.Result = noteList;
+              
+            }
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
 
         async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetAllApprovalInProgressNoteAsync()
         {
@@ -165,12 +184,15 @@ namespace SMP.BLL.Services.NoteServices
             var noteToShare = await context.ClassNote.FindAsync(Guid.Parse(request.ClassNoteId));
             if(noteToShare is not null)
             {
-                var newClassNote = new TeacherClassNote()
+                foreach(var teacher in request.TeacherId)
                 {
-                    ClassNoteId = noteToShare.ClassNoteId,
-                    TeacherId = request.TeacherId
-                };
-                await context.TeacherClassNote.AddAsync(newClassNote);
+                    var newClassNote = new TeacherClassNote()
+                    {
+                        ClassNoteId = noteToShare.ClassNoteId,
+                        TeacherId = teacher
+                    };
+                    await context.TeacherClassNote.AddAsync(newClassNote);
+                }
                 await context.SaveChangesAsync();
             }
             else
@@ -230,9 +252,37 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.Updated;
             res.IsSuccessful = true;
             res.Result = request;
-
             return res;
              
+        }
+
+        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetSingleClassNotesByTeachersAsync(SingleTeacherClassNotes request)
+        {
+            var res = new APIResponse<List<GetClassNotes>>();
+            res.Result = await context.TeacherClassNote                            
+                .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                .Where(u => u.Deleted == false 
+                && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved
+                && u.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId)) 
+                .Select(x => new GetClassNotes(x)).ToListAsync();
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
+
+        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetSingleClassNotesByAdminAsync(SingleClassNotes request)
+        {
+            var res = new APIResponse<List<GetClassNotes>>();
+            res.Result = await context.ClassNote
+                .Include(d => d.Subject)         
+                .Where(u => u.Deleted == false && u.AprrovalStatus == (int)NoteApprovalStatus.Approved)
+                .Select(x => new GetClassNotes(x)).ToListAsync();
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
         }
     }
 }
