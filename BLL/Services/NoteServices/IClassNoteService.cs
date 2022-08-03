@@ -12,11 +12,12 @@ namespace SMP.BLL.Services.NoteServices
     public interface IClassNoteService
     {
         Task<APIResponse<ClassNotes>> CreateClassNotesAsync(ClassNotes request);
-        Task<APIResponse<List<GetClassNotes>>> GetClassNotesAsync(); 
-        Task<APIResponse<List<GetClassNotes>>> GetAllNotApprovedClassNotesAsync();
+        Task<APIResponse<List<GetClassNotes>>> GetClassNotesByTeachersAsync(); 
+        Task<APIResponse<List<GetClassNotes>>> GetAllApprovalInProgressNoteAsync();
         Task<APIResponse<UpdateClassNote>> UpdateClassNotesAsync(UpdateClassNote request);
-        Task<APIResponse<bool>> DeleteClassNotesAsync(SingleDelete request);
+        Task<APIResponse<bool>> DeleteClassNotesByAdminAsync(SingleDelete request);
         Task<APIResponse<bool>> ApproveOrDisapproveClassNotesAsync(ApproveClassNotes request);
         Task<APIResponse<ShareNotes>> ShareClassNotesAsync(ShareNotes request);
+        Task<APIResponse<bool>> DeleteTeacherClassNotesAsync(SingleDelete request);
     }
 }

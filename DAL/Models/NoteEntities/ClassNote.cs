@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.Authentication;
 using DAL.ClassEntities;
 using DAL.StudentInformation;
 using DAL.SubjectModels;
@@ -22,6 +23,8 @@ namespace SMP.DAL.Models.NoteEntities
         public int AprrovalStatus { get; set; }
         public string Classes { get; set; }
         public string Author { get; set; }
+        [ForeignKey("Author")]
+        public AppUser AuthorDetail { get; set; }
         public Guid SubjectId { get; set; }
         [ForeignKey("SubjectId")]
         public Subject Subject { get; set; }

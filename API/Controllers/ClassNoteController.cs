@@ -44,6 +44,20 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("get/classnotes/by-teacher")]
+        public async Task<IActionResult> GetClassNotesByTeachersAsync()
+        {
+            var response = await service.GetClassNotesByTeachersAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("get/not-approved/classnotes")]
+        public async Task<IActionResult> GetAllApprovalInProgressNoteAsync()
+        {
+            var response = await service.GetAllApprovalInProgressNoteAsync();
+            return Ok(response);
+        }
+
         [HttpPost("approve-or-dissaprove/classnote")]
         public async Task<IActionResult> ApproveOrDisapproveClassNotesAsync([FromBody] ApproveClassNotes request)
         {
@@ -52,19 +66,22 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-          
-        [HttpGet("get/classnotes")]
-        public async Task<IActionResult> GetClassNotesAsync()
+  
+
+        [HttpPost("delete/teacher/classnotes")]
+        public async Task<IActionResult> DeleteClassNotesAsync([FromBody]SingleDelete request)
         {
-            var response = await service.GetClassNotesAsync();
-            return Ok(response);
+            var response = await service.DeleteClassNotesByAdminAsync(request);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpPost("delete/classnotes")]
-        public async Task<IActionResult> DeleteClassNotesAsync([FromBody]SingleDelete request)
+        public async Task<IActionResult> DeleteTeacherClassNotesAsync([FromBody] SingleDelete request)
         {
-            var response = await service.DeleteClassNotesAsync(request);
-            if(response.IsSuccessful)
+            var response = await service.DeleteTeacherClassNotesAsync(request);
+            if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
