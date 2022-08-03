@@ -329,12 +329,11 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
                 .Include(d => d.Students).ThenInclude(d => d.User)
                 .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
-                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
+                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(s => s.PublishStatus)
                 .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students).Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
         
             if (result != null)
             {
-                result.IsPublished = context.PublishStatus.FirstOrDefault(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId)?.IsPublished ?? false;
                 var averages = result.PublishResult.Select(d => d.AverageScore);
                 var studentPositions = UtilTools.GetStudentPositions(averages);
                 foreach (var item in result.PublishResult)

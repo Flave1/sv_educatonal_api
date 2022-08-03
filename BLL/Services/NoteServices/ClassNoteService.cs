@@ -39,7 +39,7 @@ namespace SMP.BLL.Services.NoteServices
                 AprrovalStatus = request.ShouldSendForApproval ? (int)NoteApprovalStatus.InProgress : (int)NoteApprovalStatus.Pending,
                 Author = userid,
                 SubjectId = Guid.Parse(request.SubjectId),
-                Classes = string.Join(',', request.ClassId),
+                Classes = request.ClassId,
             };
             try
             {
@@ -223,7 +223,7 @@ namespace SMP.BLL.Services.NoteServices
             note.NoteTitle = request.NoteTitle;
             note.NoteContent = request.NoteContent;
             note.SubjectId = Guid.Parse(request.SubjectId);
-            note.Classes = string.Join(',', request.Classes);
+            note.Classes = request.Classes;
 
             await context.SaveChangesAsync();
 

@@ -20,7 +20,7 @@ namespace SMP.Contracts.Notes
         public string NoteContent { get; set; }
         public string SubjectId { get; set; }
         public bool ShouldSendForApproval { get; set; }
-        public List<string> ClassId { get; set; }
+        public string ClassId { get; set; }
     }
     public class UpdateClassNote
     { 
@@ -28,7 +28,7 @@ namespace SMP.Contracts.Notes
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public string SubjectId { get; set; }
-        public List<string> Classes { get; set; }
+        public string Classes { get; set; }
     }
     public class GetClassNotes
     {
@@ -42,7 +42,7 @@ namespace SMP.Contracts.Notes
         public string ApprovalStatusName { get; set; }
         public string Subject { get; set; }
         public string SubjectName { get; set; }
-        public List<string> Classes { get; set; }
+        public string Classes { get; set; }
 
         public GetClassNotes(TeacherClassNote db)
         {
@@ -65,7 +65,7 @@ namespace SMP.Contracts.Notes
 
             SubjectName = db.ClassNote.Subject.Name.ToString();
             Subject = db.ClassNote.SubjectId.ToString();
-            Classes = db.ClassNote.Classes.Split().ToList();
+            Classes = db.ClassNote.Classes;
 
         }
     }
