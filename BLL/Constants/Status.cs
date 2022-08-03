@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SMP.BLL.Constants
+﻿namespace SMP.BLL.Constants
 {
     public enum StudentStatus
     {
@@ -15,5 +9,13 @@ namespace SMP.BLL.Constants
     {
         Active = 1,
         Inactive = 2,
+    }
+
+    public enum NoteApprovalStatus
+    {
+        Approved = 1,
+        NotApproved = 0,
+        Pending = 2,
+        InProgress = 3,
     }
 }

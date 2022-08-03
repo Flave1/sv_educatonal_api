@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220801211243_notes")]
+    partial class notes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -944,9 +946,6 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("AprrovalStatus")
                         .HasColumnType("int");
 
-                    b.Property<string>("Author")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Classes")
                         .HasColumnType("nvarchar(max)");
 
@@ -975,8 +974,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("ClassNoteId");
-
-                    b.HasIndex("Author");
 
                     b.HasIndex("SubjectId");
 
@@ -1827,17 +1824,11 @@ namespace SMP.DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.NoteEntities.ClassNote", b =>
                 {
-                    b.HasOne("DAL.Authentication.AppUser", "AuthorDetail")
-                        .WithMany()
-                        .HasForeignKey("Author");
-
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("AuthorDetail");
 
                     b.Navigation("Subject");
                 });

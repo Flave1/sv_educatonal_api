@@ -2,6 +2,7 @@
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.PromotionEntities;
 using SMP.DAL.Models.Register;
 using SMP.DAL.Models.ResultModels;
@@ -38,5 +39,6 @@ namespace DAL.ClassEntities
         [ForeignKey("PublishStatusId")]
         public PublishStatus PublishStatus { get; set; }
         public PromotedSessionClass PromotedSessionClass { get; set; }
+        public virtual ICollection<StudentNote> StudentNotes { get; set; }
     }
 }

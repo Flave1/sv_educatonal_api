@@ -16,6 +16,7 @@ using SMP.BLL.Services.DashboardServices;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.GradeServices;
+using SMP.BLL.Services.NoteServices;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
@@ -49,6 +50,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<IClassService, ClassService>();
+            services.AddScoped<IClassNoteService, ClassNoteService>();
             services.AddScoped<IClassLookupService, ClassLookupService>();
             services.AddScoped<IStudentService, StudentService>();
             services.AddScoped<IIdentityService, IdentityService>();
