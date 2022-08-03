@@ -48,7 +48,35 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetClassNotesByTeachersAsync()
         {
             var response = await service.GetClassNotesByTeachersAsync();
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/single/classnotes/by-teacher")]
+        public async Task<IActionResult> GetSingleClassNotesByTeachersAsync(SingleTeacherClassNotes request)
+        {
+            var response = await service.GetSingleClassNotesByTeachersAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/single/classnotes/by-admin")]
+        public async Task<IActionResult> GetSingleClassNotesByAdminAsync(SingleClassNotes request)
+        {
+            var response = await service.GetSingleClassNotesByAdminAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/classnotes/by-admin")]
+        public async Task<IActionResult> GetClassNotesByAdminAsync()
+        {
+            var response = await service.GetClassNotesByAdminAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpGet("get/not-approved/classnotes")]
@@ -69,18 +97,18 @@ namespace SMP.API.Controllers
   
 
         [HttpPost("delete/teacher/classnotes")]
-        public async Task<IActionResult> DeleteClassNotesAsync([FromBody]SingleDelete request)
+        public async Task<IActionResult> DeleteTeacherClassNotesAsync([FromBody]SingleDelete request)
         {
-            var response = await service.DeleteClassNotesByAdminAsync(request);
+            var response = await service.DeleteTeacherClassNotesAsync(request);
             if(response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
         [HttpPost("delete/classnotes")]
-        public async Task<IActionResult> DeleteTeacherClassNotesAsync([FromBody] SingleDelete request)
+        public async Task<IActionResult> DeleteClassNotesByAdminAsync([FromBody] SingleDelete request)
         {
-            var response = await service.DeleteTeacherClassNotesAsync(request);
+            var response = await service.DeleteClassNotesByAdminAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
