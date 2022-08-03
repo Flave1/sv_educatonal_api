@@ -13,8 +13,12 @@ namespace SMP.Contracts.ResultModels
         public List<StudentResultDetail> PublishResult { get; set; } = new List<StudentResultDetail>();
         public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId, Guid termId)
         {
+            
             if (s.Any())
+            {
+                IsPublished = s.FirstOrDefault().SessionClass.PublishStatus.IsPublished;
                 PublishResult = s.Select(x => new StudentResultDetail(x, regNoFormat, sessionClassId, termId)).ToList();
+            }
         }
         public StudentResult(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {

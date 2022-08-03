@@ -32,6 +32,8 @@ namespace DAL.StudentInformation
         public SessionClass SessionClass { get; set; }
         public int Status { get; set; }
         public int EnrollmentStatus { get; set; }
+        public string Hobbies { get; set; }
+        public string BestSubjectIds { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
         public virtual ICollection<StudentNote> StudentNote { get; set; }
     }

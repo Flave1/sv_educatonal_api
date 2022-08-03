@@ -42,6 +42,15 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("update/by-student")]
+        public async Task<IActionResult> UpdateProfileByStudentAsync([FromForm] UpdateProfileByStudentRequest request)
+        {
+            var response = await service.UpdateProfileByStudentAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
         [HttpGet("getall/students")]
         public async Task<IActionResult> GetAllStudentsAsync()
         {

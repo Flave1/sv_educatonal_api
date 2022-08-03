@@ -177,6 +177,37 @@ namespace BLL.StudentServices
             }
         }
 
+        async Task<APIResponse<UpdateProfileByStudentRequest>> IStudentService.UpdateProfileByStudentAsync(UpdateProfileByStudentRequest request)
+        {
+            var res = new APIResponse<UpdateProfileByStudentRequest>();
+
+            try
+            {
+                var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(request.StudentContactId));
+                if (studentInfor == null)
+                {
+                    res.Message.FriendlyMessage = "Student Account not found";
+                    return res;
+                }
+
+                studentInfor.Hobbies = string.Join(',', request.Hobbies);
+                studentInfor.BestSubjectIds = string.Join(',', request.BestSubjectIds);
+                await context.SaveChangesAsync();
+
+                res.Message.FriendlyMessage = Messages.Updated;
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+
+        }
+
         async Task<APIResponse<List<GetStudentContacts>>> IStudentService.GetAllStudensAsync()
         {
             var res = new APIResponse<List<GetStudentContacts>>();
@@ -196,6 +227,7 @@ namespace BLL.StudentServices
             return res;
         }
 
+
         async Task<APIResponse<GetStudentContacts>> IStudentService.GetSingleStudentAsync(Guid studentContactId)
         {
             var res = new APIResponse<GetStudentContacts>();
@@ -205,6 +237,7 @@ namespace BLL.StudentServices
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.User)
+                .Include(x => x.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(s => s.Subject)
                 .Include(q=> q.SessionClass).ThenInclude(s => s.Class)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student && studentContactId == d.StudentContactId)
                 .Select(f => new GetStudentContacts(f, regNoFormat)).FirstOrDefaultAsync();
