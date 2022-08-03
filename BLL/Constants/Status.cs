@@ -15,6 +15,7 @@
     {
         Approved = 1,
         NotApproved = 0,
-        Pending = 2
+        Pending = 2,
+        InProgress = 3,
     }
 }
