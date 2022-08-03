@@ -57,26 +57,21 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetSingleClassNotesByTeachersAsync(SingleTeacherClassNotes request)
         {
             var response = await service.GetSingleClassNotesByTeachersAsync(request);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            return Ok(response);
         }
+
         [HttpGet("get/single/classnotes/by-admin")]
         public async Task<IActionResult> GetSingleClassNotesByAdminAsync(SingleClassNotes request)
         {
             var response = await service.GetSingleClassNotesByAdminAsync(request);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            return Ok(response);
         }
 
         [HttpGet("get/classnotes/by-admin")]
         public async Task<IActionResult> GetClassNotesByAdminAsync()
         {
             var response = await service.GetClassNotesByAdminAsync();
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
+            return Ok(response);
         }
 
         [HttpGet("get/not-approved/classnotes")]
