@@ -51,6 +51,7 @@ namespace SMP.Contracts.Notes
         public string ClassNoteId { get; set; }
         public string TeacherClassNoteId { get; set; }
         public string NoteTitle { get; set; }
+        public DateTime DateCreated { get; set; }
         public string NoteContent { get; set; }
         public string Author { get; set; }
         public string AuthorName { get; set; }
@@ -106,7 +107,7 @@ namespace SMP.Contracts.Notes
 
             SubjectName = db.Subject.Name.ToString();
             Subject = db.SubjectId.ToString();
-            Classes = db.Classes.Split().ToList();
+            Classes = db.Classes;
         }
     }
     public class ApproveClassNotes
