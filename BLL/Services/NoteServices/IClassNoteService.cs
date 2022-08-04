@@ -1,4 +1,5 @@
 ﻿using BLL;
+using Contracts.Authentication;
 using Contracts.Common;
 using SMP.Contracts.Notes;
 using System;
@@ -12,8 +13,8 @@ namespace SMP.BLL.Services.NoteServices
     public interface IClassNoteService
     {
         Task<APIResponse<ClassNotes>> CreateClassNotesAsync(ClassNotes request);
-        Task<APIResponse<List<GetClassNotes>>> GetClassNotesByTeachersAsync(); 
-        Task<APIResponse<List<GetClassNotes>>> GetSingleClassNotesByTeachersAsync(SingleTeacherClassNotes request); 
+        Task<APIResponse<List<GetClassNotes>>> GetClassNotesByTeachersAsync(string subjectId); 
+        Task<APIResponse<GetClassNotes>> GetSingleTeacherClassNotesAsync(SingleTeacherClassNotes request); 
         Task<APIResponse<List<GetClassNotes>>> GetAllApprovalInProgressNoteAsync();
         Task<APIResponse<UpdateClassNote>> UpdateClassNotesAsync(UpdateClassNote request);
         Task<APIResponse<bool>> DeleteClassNotesByAdminAsync(SingleDelete request);
@@ -22,5 +23,6 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<bool>> DeleteTeacherClassNotesAsync(SingleDelete request);
         Task<APIResponse<List<GetClassNotes>>> GetClassNotesByAdminAsync();
         Task<APIResponse<List<GetClassNotes>>> GetSingleClassNotesByAdminAsync(SingleClassNotes request);
+        Task<APIResponse<List<ApplicationUser>>> GetOtherTeachersAsync(Guid classNoteId);
     }
 }

@@ -111,7 +111,7 @@ namespace Contracts.Options
             SessionClass = db?.SessionClass?.Class?.Name;
             Hobbies = db.Hobbies is not null ? db.Hobbies.Split() : new string[0];
             BestSubjectIds = db.BestSubjectIds is not null ? db.BestSubjectIds.Split(): new string[0];
-            BestSubjectNames = db.BestSubjectIds is not null ? db.SessionClass.SessionClassSubjects.Where(x => BestSubjectIds.Select(Guid.Parse)
+            BestSubjectNames = db.BestSubjectIds is not null ? db.SessionClass.SessionClassSubjects?.Where(x => BestSubjectIds.Select(Guid.Parse)
             .Contains(x.SubjectId)).Select(a => a.Subject.Name).ToArray() : new string[0];
         }
 

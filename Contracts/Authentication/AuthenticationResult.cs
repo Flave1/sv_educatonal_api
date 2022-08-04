@@ -24,9 +24,11 @@ namespace Contracts.Authentication
         public string SchoolName { get; set; } = "";
         public string SchoolAbbreviation { get; set; } = "";
         public string SchoolLogo { get; set; } = "";
+        public string Id { get; set; }
         public UserDetail() { }
-        public UserDetail(SchoolSetting db, AppUser user)
+        public UserDetail(SchoolSetting db, AppUser user, Guid id)
         {
+            Id = id.ToString();
             SchoolAbbreviation = db.SchoolAbbreviation;
             SchoolLogo = db.Photo;
             SchoolName = db.SchoolName;

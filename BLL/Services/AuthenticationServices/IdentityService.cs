@@ -103,7 +103,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
                 res.IsSuccessful = true;
                 return res;
             }

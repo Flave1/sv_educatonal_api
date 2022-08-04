@@ -1,13 +1,16 @@
 ﻿using BLL.MiddleWares; 
 using Contracts.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc; 
 using SMP.BLL.Services.NoteServices;
 using SMP.Contracts.Notes;
+using System;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
+    [AllowAnonymous]
     [Route("classnotes/api/v1")]
     public class ClassNoteController : Controller
     {
@@ -45,16 +48,16 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/classnotes/by-teacher")]
-        public async Task<IActionResult> GetClassNotesByTeachersAsync()
+        public async Task<IActionResult> GetClassNotesByTeachersAsync(string subjectId)
         {
-            var response = await service.GetClassNotesByTeachersAsync();
+            var response = await service.GetClassNotesByTeachersAsync(subjectId);
             return Ok(response);
         }
 
-        [HttpGet("get/single/classnotes/by-teacher")]
-        public async Task<IActionResult> GetSingleClassNotesByTeachersAsync(SingleTeacherClassNotes request)
+        [HttpGet("get/single/teacher-classnote")]
+        public async Task<IActionResult> GetSingleTeacherClassNotesAsync(SingleTeacherClassNotes request)
         {
-            var response = await service.GetSingleClassNotesByTeachersAsync(request);
+            var response = await service.GetSingleTeacherClassNotesAsync(request);
             return Ok(response);
         }
 
@@ -105,6 +108,13 @@ namespace SMP.API.Controllers
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
+        }
+
+        [HttpGet("get-note/other-teachers")]
+        public async Task<IActionResult> GetOtherTeachersAsync(string classNoteId)
+        {
+            var response = await service.GetOtherTeachersAsync(Guid.Parse(classNoteId));
+            return Ok(response);
         }
     }
 }
