@@ -100,6 +100,13 @@ namespace API.Installers
                 x.MultipartBodyLengthLimit = 209715200;
             });
 
+            services.AddSpaStaticFiles(configure =>
+            {
+                configure.RootPath = "clientapp/build";
+            } );
+
+            services.AddSignalR();
+
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -15,6 +15,8 @@ using NLog;
 using BLL.Utilities;
 using Contracts.Options;
 using System.Linq;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using SMP.API.Hubs;
 
 namespace API
 {
@@ -70,6 +72,7 @@ namespace API
                 option.SwaggerEndpoint(swaggerOptions.UIEndpoint, swaggerOptions.Description);
                 option.InjectStylesheet("/css/site.css");
                 option.InjectJavascript("/js/site.js");
+                
             });
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -84,7 +87,18 @@ namespace API
             });
 
             app.UseMvc();
-
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "clientapp";
+                if (env.IsDevelopment())
+                {
+                    spa.UseReactDevelopmentServer(npmScript: "start");
+                }
+            });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<NotificationHub>("/notification");
+            });
             CreateRolesAndAdminUser(serviceProvider).Wait();
         }
 
