@@ -15,7 +15,7 @@
     {
         Approved = 1,
         NotApproved = 0,
-        Pending = 2,
+        Saved = 2,
         InProgress = 3,
     }
 }

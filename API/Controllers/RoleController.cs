@@ -90,7 +90,6 @@ namespace API.Controllers
         #endregion
 
 
-
         [HttpPost("assign/user-to-role")]
         public async Task<IActionResult> AssignUserToRole([FromBody] AddToRole request)
         {

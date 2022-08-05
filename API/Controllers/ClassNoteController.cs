@@ -55,9 +55,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/single/teacher-classnote")]
-        public async Task<IActionResult> GetSingleTeacherClassNotesAsync(SingleTeacherClassNotes request)
+        public async Task<IActionResult> GetSingleTeacherClassNotesAsync(string TeacherClassNoteId)
         {
-            var response = await service.GetSingleTeacherClassNotesAsync(request);
+            var response = await service.GetSingleTeacherClassNotesAsync(TeacherClassNoteId);
             return Ok(response);
         }
 
@@ -114,6 +114,40 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetOtherTeachersAsync(string classNoteId)
         {
             var response = await service.GetOtherTeachersAsync(Guid.Parse(classNoteId));
+            return Ok(response);
+        }
+
+        [HttpPost("send/classnotes/for-approval")]
+        public async Task<IActionResult> SendClassNoteForAprovalAsync([FromBody] SingleClassNotes request)
+        {
+            var response = await service.SendClassNoteForAprovalAsync(Guid.Parse(request.ClassNoteId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("add-comment/to-classnote")]
+        public async Task<IActionResult> AddCommentToClassNoteAsync([FromBody] AddCommentToClassNote request)
+        {
+            var response = await service.AddCommentToClassNoteAsync(Guid.Parse(request.ClassNoteId), request.Comment);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("reply/classnote-comment")]
+        public async Task<IActionResult> ReplyClassNoteCommentAsync([FromBody] ReplyCommentToClassNote request)
+        {
+            var response = await service.ReplyClassNoteCommentAsync(request.Comment, Guid.Parse(request.CommentId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get-classnote/comments")]
+        public async Task<IActionResult> GetClassNoteCommentsAsync(string classNoteId)
+        {
+            var response = await service.GetClassNoteCommentsAsync(classNoteId);
             return Ok(response);
         }
     }

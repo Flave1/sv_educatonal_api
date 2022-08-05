@@ -1,6 +1,8 @@
 ﻿using DAL.StudentInformation;
+using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -80,6 +82,41 @@ namespace Contracts.Options
         public string[] Hobbies { get; set; }
         public string[] BestSubjectNames { get; set; }
         public string[] BestSubjectIds { get; set; }
+        public GetStudentContacts(StudentContact db, string regNoFormat, List<Subject> subjects)
+        {
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
+            UserType = db.User.UserType;
+            Active = db.User.Active;
+            FirstName = db.User.FirstName;
+            LastName = db.User.LastName;
+            MiddleName = db.User.MiddleName;
+            Phone = db.User.Phone;
+            DOB = db.User.DOB;
+            Photo = db.User.Photo;
+            HomePhone = db.HomePhone;
+            EmergencyPhone = db.EmergencyPhone;
+            ParentOrGuardianName = db.ParentOrGuardianName;
+            ParentOrGuardianRelationship = db.ParentOrGuardianRelationship;
+            ParentOrGuardianPhone = db.ParentOrGuardianPhone;
+            ParentOrGuardianEmail = db.ParentOrGuardianEmail;
+            HomeAddress = db.HomeAddress;
+            CityId = db.CityId;
+            StateId = db.StateId;
+            CountryId = db.CountryId;
+            ZipCode = db.ZipCode;
+            UserAccountId = db.User.Id;
+            StudentAccountId = db.StudentContactId.ToString();
+            UserName = db.User.UserName;
+            Email = db.User.Email;
+            Photo = db.User.Photo;
+            SessionClassID = db.SessionClassId.ToString();
+            SessionClass = db?.SessionClass?.Class?.Name;
+            Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : new string[0];
+            BestSubjectIds = db.BestSubjectIds is not null ? db.BestSubjectIds.Split(',').ToArray(): new string[0];
+            BestSubjectNames = db.BestSubjectIds is not null ? subjects.Where(x => BestSubjectIds.Select(Guid.Parse)
+            .Contains(x.SubjectId)).Select(a => a.Name).ToArray() : new string[0];
+        }
+
         public GetStudentContacts(StudentContact db, string regNoFormat)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
@@ -109,10 +146,8 @@ namespace Contracts.Options
             Photo = db.User.Photo;
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
-            Hobbies = db.Hobbies is not null ? db.Hobbies.Split() : new string[0];
-            BestSubjectIds = db.BestSubjectIds is not null ? db.BestSubjectIds.Split(): new string[0];
-            BestSubjectNames = db.BestSubjectIds is not null ? db.SessionClass.SessionClassSubjects?.Where(x => BestSubjectIds.Select(Guid.Parse)
-            .Contains(x.SubjectId)).Select(a => a.Subject.Name).ToArray() : new string[0];
+            Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : new string[0];
+            BestSubjectIds = db.BestSubjectIds is not null ? db.BestSubjectIds.Split(',').ToArray() : new string[0];
         }
 
     }
@@ -122,5 +157,6 @@ namespace Contracts.Options
         public string StudentContactId { get; set; }
         public string[] Hobbies { get; set; }
         public string[] BestSubjectIds { get; set; }
+        public IFormFile File { get; set; }
     }
 }

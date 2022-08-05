@@ -18,6 +18,7 @@ using System.Data;
 using SMP.Contracts.Options;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Constants;
+using Microsoft.AspNetCore.Http;
 
 namespace BLL.AuthenticationServices
 {
@@ -153,6 +154,31 @@ namespace BLL.AuthenticationServices
 
         }
 
+        async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
+        {
+            try
+            {
+                var account = await manager.FindByIdAsync(studentId);
+                if (account == null)
+                {
+                    throw new ArgumentException("Account not found");
+                }
+
+                var filePath = uploadService.UpdateProfileImage(file, account.Photo);
+              
+                account.Photo = filePath;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")

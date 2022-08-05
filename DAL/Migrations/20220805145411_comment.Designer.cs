@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220805145411_comment")]
+    partial class comment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1104,9 +1106,6 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsParent")
-                        .HasColumnType("bit");
-
                     b.Property<Guid?>("RepliedToId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1961,7 +1960,7 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", "RepliedTo")
-                        .WithMany("Replies")
+                        .WithMany()
                         .HasForeignKey("RepliedToId");
 
                     b.HasOne("DAL.TeachersInfor.Teacher", "Teacher")
@@ -2180,11 +2179,6 @@ namespace SMP.DAL.Migrations
             modelBuilder.Entity("SMP.DAL.Models.NoteEntities.ClassNote", b =>
                 {
                     b.Navigation("TeacherClassNotes");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", b =>
-                {
-                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.PinManagement.UploadedPin", b =>

@@ -190,6 +190,8 @@ namespace BLL.StudentServices
                     return res;
                 }
 
+                await userService.UpdateStudentUserProfileImageAsync(request.File, request.StudentContactId);
+
                 studentInfor.Hobbies = string.Join(',', request.Hobbies);
                 studentInfor.BestSubjectIds = string.Join(',', request.BestSubjectIds);
                 await context.SaveChangesAsync();
@@ -237,10 +239,10 @@ namespace BLL.StudentServices
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.User)
-                .Include(x => x.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(s => s.Subject)
+                .Include(x => x.SessionClass)
                 .Include(q=> q.SessionClass).ThenInclude(s => s.Class)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student && studentContactId == d.StudentContactId)
-                .Select(f => new GetStudentContacts(f, regNoFormat)).FirstOrDefaultAsync();
+                .Select(f => new GetStudentContacts(f, regNoFormat, context.Subject.Where(d => d.IsActive && !d.Deleted).ToList())).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220805143235_dateApproved")]
+    partial class dateApproved
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1083,53 +1085,6 @@ namespace SMP.DAL.Migrations
                     b.ToTable("TeacherClassNote");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", b =>
-                {
-                    b.Property<Guid>("TeacherClassNoteCommentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassNoteId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsParent")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("RepliedToId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("TeacherClassNoteCommentId");
-
-                    b.HasIndex("ClassNoteId");
-
-                    b.HasIndex("RepliedToId");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherClassNoteComment");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.PinManagement.UploadedPin", b =>
                 {
                     b.Property<Guid>("UploadedPinId")
@@ -1952,31 +1907,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.NoteEntities.ClassNote", "ClassNote")
-                        .WithMany()
-                        .HasForeignKey("ClassNoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", "RepliedTo")
-                        .WithMany("Replies")
-                        .HasForeignKey("RepliedToId");
-
-                    b.HasOne("DAL.TeachersInfor.Teacher", "Teacher")
-                        .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ClassNote");
-
-                    b.Navigation("RepliedTo");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.PinManagement.UsedPin", b =>
                 {
                     b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
@@ -2180,11 +2110,6 @@ namespace SMP.DAL.Migrations
             modelBuilder.Entity("SMP.DAL.Models.NoteEntities.ClassNote", b =>
                 {
                     b.Navigation("TeacherClassNotes");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNoteComment", b =>
-                {
-                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.PinManagement.UploadedPin", b =>

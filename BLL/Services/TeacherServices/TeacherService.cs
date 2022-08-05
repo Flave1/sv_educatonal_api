@@ -174,7 +174,7 @@ namespace SMP.BLL.Services.TeacherServices
             var res = new APIResponse<List<ApplicationUser>>();
 
             var result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)StudentStatus.Active).Select(a => new ApplicationUser(a)).ToListAsync();
+                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active).Select(a => new ApplicationUser(a)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
