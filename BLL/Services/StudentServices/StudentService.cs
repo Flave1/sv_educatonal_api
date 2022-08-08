@@ -190,7 +190,7 @@ namespace BLL.StudentServices
                     return res;
                 }
 
-                await userService.UpdateStudentUserProfileImageAsync(request.File, request.StudentContactId);
+                await userService.UpdateStudentUserProfileImageAsync(request.File, studentInfor.UserId);
 
                 studentInfor.Hobbies = string.Join(',', request.Hobbies);
                 studentInfor.BestSubjectIds = string.Join(',', request.BestSubjectIds);

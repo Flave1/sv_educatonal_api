@@ -342,11 +342,13 @@ namespace SMP.BLL.Services.NoteServices
                 return res;
             }
 
-            if(note.AprrovalStatus != (int)NoteApprovalStatus.Saved || note.AprrovalStatus != (int)NoteApprovalStatus.NotApproved)
+            if(note.AprrovalStatus != (int)NoteApprovalStatus.Saved && note.AprrovalStatus != (int)NoteApprovalStatus.NotApproved)
             {
                 res.Message.FriendlyMessage = "Note Can Not Be Approved";
                 return res;
             }
+
+
 
             note.AprrovalStatus = (int)NoteApprovalStatus.InProgress;
             note.DateSentForApproval = DateTime.UtcNow;
