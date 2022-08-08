@@ -89,7 +89,7 @@ namespace API
             app.UseMvc();
             app.UseSpa(spa =>
             {
-                spa.Options.SourcePath = "clientapp";
+                spa.Options.SourcePath = "swagger";
                 if (env.IsDevelopment())
                 {
                     spa.UseReactDevelopmentServer(npmScript: "start");
@@ -97,7 +97,7 @@ namespace API
             });
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<NotificationHub>("/notification");
+                endpoints.MapHub<NotificationHub>("/notifications");
             });
             CreateRolesAndAdminUser(serviceProvider).Wait();
         }

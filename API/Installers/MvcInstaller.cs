@@ -102,7 +102,7 @@ namespace API.Installers
 
             services.AddSpaStaticFiles(configure =>
             {
-                configure.RootPath = "clientapp/build";
+                configure.RootPath = "swagger/build";
             } );
 
             services.AddSignalR();
