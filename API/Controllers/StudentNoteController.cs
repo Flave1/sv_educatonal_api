@@ -72,14 +72,14 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
-        [HttpGet("get/not-approved/Studentnotes")]
+        [HttpGet("get/not-approved/studentnote")]
         public async Task<IActionResult> GetAllApprovalInProgressNoteAsync()
         {
             var response = await service.GetAllApprovalInProgressNoteAsync();
             return Ok(response);
         }
 
-        [HttpPost("approve-or-dissaprove/Studentnote")]
+        [HttpPost("approve-or-dissaprove/studentnote")]
         public async Task<IActionResult> ApproveOrDisapproveStudentNotesAsync([FromBody] ApproveStudentNotes request)
         {
             var response = await service.ApproveOrDisapproveStudentNotesAsync(request);
@@ -90,7 +90,7 @@ namespace SMP.API.Controllers
   
          
 
-        [HttpPost("delete/Studentnotes")]
+        [HttpPost("delete/studentnote")]
         public async Task<IActionResult> DeleteStudentNotesAsync([FromBody] SingleDelete request)
         {
             var response = await service.DeleteStudentNotesAsync(request);
