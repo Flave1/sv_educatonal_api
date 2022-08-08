@@ -202,11 +202,15 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<ShareNotes>> IClassNoteService.ShareClassNotesAsync(ShareNotes request)
         {
                 var res = new APIResponse<ShareNotes>();
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+
+
             try
             {
                 var noteToShare = await context.ClassNote.FindAsync(Guid.Parse(request.ClassNoteId));
                 if (noteToShare is not null)
                 {
+                    request.TeacherId.Add(Guid.Parse(teacherId));
                     var alreadySharedWith = context.TeacherClassNote.Where(x => x.ClassNoteId == Guid.Parse(request.ClassNoteId)).ToList();
                     if (alreadySharedWith.Any())
                         context.TeacherClassNote.RemoveRange(alreadySharedWith);
