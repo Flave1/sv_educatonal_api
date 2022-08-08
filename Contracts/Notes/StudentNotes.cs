@@ -9,6 +9,7 @@ namespace SMP.Contracts.Notes
     public class StudentNotes
     {
         public string NoteTitle { get; set; }
-        public string NoteContent { get; set; } 
+        public string NoteContent { get; set; }
+        public bool ShouldSendForApproval { get; set; }
     }
 }
