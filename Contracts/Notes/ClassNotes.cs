@@ -199,6 +199,7 @@ namespace SMP.Contracts.Notes
         public Guid ClassNoteId { get; set; }
         public Guid TeacherId { get; set; }
         public Guid? RepliedToId { get; set; }
+        public string Name { get; set; }
         public List<ClassNoteComment> RepliedComments { get; set; }
         public ClassNoteComment() { }
         public ClassNoteComment(TeacherClassNoteComment db)
@@ -209,6 +210,7 @@ namespace SMP.Contracts.Notes
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
             TeacherId = db.TeacherId;
+            Name = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
                 RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();

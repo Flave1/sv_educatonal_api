@@ -178,7 +178,7 @@ namespace SMP.BLL.Services.NoteServices
                             .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
                              .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                          .Where(u => u.Deleted == false
-                         && u.ClassNote.AprrovalStatus != status
+                         && u.ClassNote.AprrovalStatus == status
                          && u.TeacherId == Guid.Parse(teacherid)
                          && u.ClassNote.SubjectId == Guid.Parse(subjectId))
                          .Select(x => new GetClassNotes(x, false)).ToListAsync();
@@ -192,7 +192,7 @@ namespace SMP.BLL.Services.NoteServices
                             .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
                              .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                         .Where(u => u.Deleted == false
-                           && u.ClassNote.AprrovalStatus != status
+                           && u.ClassNote.AprrovalStatus == status
                         && u.TeacherId == Guid.Parse(teacherid))
                         .Select(x => new GetClassNotes(x, false)).ToListAsync();
                 }
@@ -483,8 +483,10 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<ClassNoteComment>>();
             res.Result = await context.TeacherClassNoteComment
+                .Include(x => x.Teacher).ThenInclude(s => s.User)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies)
+                .Include(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
+                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
                 .Where(u => u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
                 .Select(x => new ClassNoteComment(x)).ToListAsync();
 
