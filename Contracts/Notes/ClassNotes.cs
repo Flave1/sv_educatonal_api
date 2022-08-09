@@ -178,6 +178,17 @@ namespace SMP.Contracts.Notes
             MiddleName = db.User.MiddleName;
             isShared = isShare;
         }
+
+        public ClassNoteTeachers(Teacher db)
+        {
+            TeacherAccountId = db.TeacherId.ToString();
+            TeacherUserAccountId = db.User.Id;
+            FullName = db.User.FirstName + " " + db.User.LastName;
+            FirstName = db.User.FirstName;
+            LastName = db.User.LastName;
+            MiddleName = db.User.MiddleName;
+            isShared = true;
+        }
     }
 
     public class ClassNoteComment

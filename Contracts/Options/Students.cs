@@ -111,10 +111,10 @@ namespace Contracts.Options
             Photo = db.User.Photo;
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
-            Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : new string[0];
-            BestSubjectIds = db.BestSubjectIds is not null ? db.BestSubjectIds.Split(',').ToArray(): new string[0];
-            BestSubjectNames = db.BestSubjectIds is not null ? subjects.Where(x => BestSubjectIds.Select(Guid.Parse)
-            .Contains(x.SubjectId)).Select(a => a.Name).ToArray() : new string[0];
+            Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : Array.Empty<string>();
+            BestSubjectIds = !string.IsNullOrEmpty(db.BestSubjectIds) ? db.BestSubjectIds.Split(',') : Array.Empty<string>();
+            BestSubjectNames = !string.IsNullOrEmpty(db.BestSubjectIds) ? subjects.Where(x => BestSubjectIds.Select(Guid.Parse)
+            .Contains(x.SubjectId)).Select(a => a.Name).ToArray() : Array.Empty<string>();
         }
 
         public GetStudentContacts(StudentContact db, string regNoFormat)
