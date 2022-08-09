@@ -61,6 +61,9 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+       
+
+
         [HttpGet("get/single/classnotes/by-admin")]
         public async Task<IActionResult> GetSingleClassNotesByAdminAsync(SingleClassNotes request)
         {
@@ -111,9 +114,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-note/other-teachers")]
-        public async Task<IActionResult> GetOtherTeachersAsync(string classNoteId)
+        public async Task<IActionResult> GetTeachersNoteSharedToAsync(string classNoteId)
         {
-            var response = await service.GetOtherTeachersAsync(Guid.Parse(classNoteId));
+            var response = await service.GetTeachersNoteSharedToAsync(Guid.Parse(classNoteId));
             return Ok(response);
         }
 
@@ -150,5 +153,30 @@ namespace SMP.API.Controllers
             var response = await service.GetClassNoteCommentsAsync(classNoteId);
             return Ok(response);
         }
+
+        [HttpGet("get/teacher-classnote/by-status")]
+        public async Task<IActionResult> GetSingleTeacherClassNotesAsync(string subjectId, int status)
+        {
+            var response = await service.GetClassNotesByStatusAsync(subjectId, status);
+            return Ok(response);
+        }
+
+        [HttpGet("get/classnote-viewers")]
+        public async Task<IActionResult> GetOtherTeachersAsync(string classNoteId)
+        {
+            var response = await service.GetOtherTeachersAsync(Guid.Parse(classNoteId));
+            return Ok(response);
+        }
+
+
+
+        [HttpGet("get/related-classnote")]
+        public async Task<IActionResult> GetRelatedClassNoteAsync(string classNoteId)
+        {
+            var response = await service.GetRelatedClassNoteAsync(Guid.Parse(classNoteId));
+            return Ok(response);
+        }
+
+
     }
 }
