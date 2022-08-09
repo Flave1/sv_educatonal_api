@@ -20,7 +20,7 @@ namespace SMP.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateNotificationsAsync([FromBody] SendNotification request)
         {
-            await hub.Clients.All.SendAsync("sendToReact", request.Message);
+            await hub.Clients.All.SendAsync("addNotification", request.Message);
             return Ok();
         }
 
