@@ -103,7 +103,7 @@ namespace SMP.API.Controllers
         [HttpPost("add-comment/to-studentnote")]
         public async Task<IActionResult> AddCommentToStudentNoteAsync([FromBody] AddCommentToStudentNote request)
         {
-            var response = await service.AddCommentToStudentNoteAsync(Guid.Parse(request.ClassNoteId), request.Comment);
+            var response = await service.AddCommentToStudentNoteAsync(Guid.Parse(request.StudentNoteId), request.Comment);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

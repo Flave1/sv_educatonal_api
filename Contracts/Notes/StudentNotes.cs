@@ -30,7 +30,7 @@ namespace SMP.Contracts.Notes
 
     public class AddCommentToStudentNote
     {
-        public string ClassNoteId { get; set; }
+        public string StudentNoteId { get; set; }
         public string Comment { get; set; }
     }
 

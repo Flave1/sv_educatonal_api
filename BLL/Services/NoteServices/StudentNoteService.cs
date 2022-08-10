@@ -360,6 +360,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<List<StudentNoteComments>>
             {
                 Result = await context.StudentNoteComment
+                .Include(d=>d.StudentNote)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
                 .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies)
                 .Where(u => u.Deleted == false && u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
