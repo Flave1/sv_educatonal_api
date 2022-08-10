@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220810072149_teacgerAct")]
+    partial class teacgerAct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -811,15 +813,6 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("AssessmentScore")
                         .HasColumnType("int");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<int>("ExamScore")
                         .HasColumnType("int");
 
@@ -831,12 +824,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("SubjectTeacherId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("SessionClassSubjectId");
 
@@ -977,6 +964,9 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("Author")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Classes")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1076,9 +1066,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassNoteId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Classes")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");

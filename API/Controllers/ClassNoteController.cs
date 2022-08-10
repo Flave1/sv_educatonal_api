@@ -177,6 +177,14 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+        [HttpPost("send/classnotes/to-students")]
+        public async Task<IActionResult> SendClassNoteToClassesAsync([FromBody] SendNote request)
+        {
+            var response = await service.SendClassNoteToClassesAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
     }
 }

@@ -14,6 +14,12 @@ namespace SMP.Contracts.Notes
             TeacherId = db.TeacherId;
         }
     }
+
+    public class SendNote
+    {
+        public string TeacherClassNoteId { get; set; }
+        public List<Guid> Classes { get; set; }
+    }
     public class ShareNotes
     {
         public string ClassNoteId { get; set; }
@@ -46,7 +52,6 @@ namespace SMP.Contracts.Notes
         public string NoteContent { get; set; }
         public string SubjectId { get; set; }
         public bool ShouldSendForApproval { get; set; }
-        public string ClassId { get; set; }
     }
     public class UpdateClassNote
     { 
@@ -54,7 +59,6 @@ namespace SMP.Contracts.Notes
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public string SubjectId { get; set; }
-        public string Classes { get; set; }
     }
     public class GetClassNotes
     {
@@ -69,7 +73,7 @@ namespace SMP.Contracts.Notes
         public string ApprovalStatusName { get; set; }
         public string Subject { get; set; }
         public string SubjectName { get; set; }
-        public string Classes { get; set; }
+        public string[] Classes { get; set; }
         public string DateSentForApproval { get; set; }
         public NoteAuthordetail NoteAuthordetail { get; set; }
 
@@ -95,7 +99,7 @@ namespace SMP.Contracts.Notes
 
             SubjectName = db.ClassNote.Subject.Name.ToString();
             Subject = db.ClassNote.SubjectId.ToString();
-            Classes = db.ClassNote.Classes;
+            Classes = !string.IsNullOrEmpty(db.Classes) ? db.Classes.Split(',').ToArray() : Array.Empty<string>();
             DateSentForApproval = db.ClassNote?.DateSentForApproval is not null ? db.ClassNote.DateSentForApproval.Value.ToString("dd-MM-yyy hh:mm") : "";
             NoteAuthordetail = isSingle ? new NoteAuthordetail
             {
@@ -128,7 +132,6 @@ namespace SMP.Contracts.Notes
 
             SubjectName = db.Subject.Name.ToString();
             Subject = db.SubjectId.ToString();
-            Classes = db.Classes;
 
             DateSentForApproval = db.DateSentForApproval.Value.ToString("dd-MM-yyy hh:mm");
             NoteAuthordetail = new NoteAuthordetail

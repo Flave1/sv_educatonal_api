@@ -1,4 +1,5 @@
-﻿using DAL.ClassEntities;
+﻿using DAL;
+using DAL.ClassEntities;
 using DAL.SubjectModels;
 using DAL.TeachersInfor;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.ClassEntities
 {
-    public class SessionClassSubject
+    public class SessionClassSubject : CommonEntity
     {
         [Key]
         public Guid SessionClassSubjectId { get; set; }

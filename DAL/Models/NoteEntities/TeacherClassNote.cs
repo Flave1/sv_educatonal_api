@@ -16,5 +16,6 @@ namespace SMP.DAL.Models.NoteEntities
         public Guid TeacherId { get; set; }
         [ForeignKey("TeacherId")]
         public Teacher Teacher { get; set; }
+        public string Classes { get; set; }
     }
 }
