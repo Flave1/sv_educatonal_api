@@ -6,6 +6,7 @@ using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.Contracts.Common;
 using SMP.Contracts.Notes;
 using SMP.DAL.Models.NoteEntities;
 using System;
@@ -29,23 +30,18 @@ namespace SMP.BLL.Services.NoteServices
 
         async Task<APIResponse<StudentNotes>> IStudentNoteService.CreateStudentNotesAsync(StudentNotes request)
         {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value; 
+            var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var res = new APIResponse<StudentNotes>();
-            var sessionClass = await context.SessionClass
-                .Include(u=>u.Students)
-                .Include(u=>u.Teacher)
-                .Include(u=>u.SessionClassSubjects)
-                .FirstOrDefaultAsync(x => x.SessionClassId == request.SessionClassId);
-            var subject = sessionClass.SessionClassSubjects.FirstOrDefault(x=>x.SessionClassId == request.SessionClassId);
+         
             var newStudentNote = new StudentNote()
             {
                 NoteTitle = request.NoteTitle,
                 NoteContent = request.NoteContent,
-                AprrovalStatus = request.ShouldSendForApproval ? (int)NoteApprovalStatus.InProgress : (int)NoteApprovalStatus.Saved,
-                StudentContactId = sessionClass.Students.FirstOrDefault(x=>x.UserId == userid).StudentContactId,
-                SubjectId =subject.SubjectId,
-                TeacherId = sessionClass.Teacher.TeacherId,
-                SessionClassId = request.SessionClassId
+                AprrovalStatus = request.SubmitForReview ? (int)NoteApprovalStatus.InProgress : (int)NoteApprovalStatus.Saved,
+                StudentContactId = Guid.Parse(studentContactId),
+                SubjectId = Guid.Parse(request.SubjectId),
+                TeacherId = Guid.Parse(request.TeacherId),
+                SessionClassId = Guid.Parse(request.SessionClassId),
             };
              
             await context.StudentNote.AddAsync(newStudentNote);
@@ -56,6 +52,7 @@ namespace SMP.BLL.Services.NoteServices
             res.Result = request;
             return res;
         }
+
 
         async Task<APIResponse<bool>> IStudentNoteService.DeleteStudentNotesAsync(SingleDelete request)
         {

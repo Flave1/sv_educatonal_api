@@ -10,4 +10,5 @@ namespace SMP.Contracts.Notes
     {
         public string ClassNoteId { get; set; }
     }
+
 }

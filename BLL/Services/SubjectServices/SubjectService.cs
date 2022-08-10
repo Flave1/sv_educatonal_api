@@ -5,6 +5,7 @@ using DAL.SubjectModels;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
+using SMP.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,6 +131,32 @@ namespace BLL.Services.SubjectServices
            
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "You have successfuly deleted a class lookp";
+            return res;
+        }
+
+        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects(Guid studentId)
+        {
+            var res = new APIResponse<List<DropdownSelect>>();
+
+            var student = context.StudentContact.Include(d => d.SessionClass)
+                .ThenInclude(s => s.SessionClassSubjects)
+                .ThenInclude(d => d.Subject).FirstOrDefault();
+
+            if(student is null)
+            {
+                res.Result = new List<DropdownSelect>();
+                res.IsSuccessful = true;
+                return res;
+            }
+
+            res.Result = student.SessionClass.SessionClassSubjects
+                .Select(a => new DropdownSelect { 
+                    Value = a.SubjectId.ToString().ToLower(), 
+                    Name = a.Subject.Name,
+                    SupplimentId = a.SubjectTeacherId.ToString()
+                }).ToList();
+
+            res.IsSuccessful = true;
             return res;
         }
     }

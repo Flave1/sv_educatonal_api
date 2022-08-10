@@ -75,6 +75,8 @@ namespace API.Controllers
             var response = await service.GetAllActiveTeachersAsync();
             return Ok(response);
         }
+
+
         #endregion
 
 

@@ -207,7 +207,7 @@ namespace BLL.AuthenticationServices
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
                     new Claim("permissions", string.Join(',', permissions)),
-                    user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentCoontactId", ID.ToString()),
+                    user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
                 };
 
                 var userClaims = await userManager.GetClaimsAsync(user);

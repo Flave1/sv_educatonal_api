@@ -1,9 +1,6 @@
 ﻿using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.Notes
 {
@@ -11,8 +8,10 @@ namespace SMP.Contracts.Notes
     {
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
-        public bool ShouldSendForApproval { get; set; }
-        public Guid SessionClassId { get; set; }
+        public bool SubmitForReview { get; set; }
+        public string SessionClassId { get; set; }
+        public string SubjectId { get; set; }
+        public string TeacherId { get; set; }
     }
     public class ApproveStudentNotes
     {
@@ -22,7 +21,7 @@ namespace SMP.Contracts.Notes
     public class UpdateStudentNote
     {
         public string SessionClassId { get; set; }
-        public Guid StudentNoteId { get; set; }
+        public string StudentNoteId { get; set; }
         public string SubjectId { get; set; }
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
