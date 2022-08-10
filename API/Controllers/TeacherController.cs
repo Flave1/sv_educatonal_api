@@ -75,6 +75,25 @@ namespace API.Controllers
             var response = await service.GetAllActiveTeachersAsync();
             return Ok(response);
         }
+
+        [HttpPost("/update/teacher-profile/by-teacher")]
+        public async Task<IActionResult> UpdateTeacherProfileByTeacherAsync([FromForm] UpdateProfileByTeacher request)
+        {
+            var response = await service.UpdateTeacherProfileByTeacherAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+
+        [HttpGet("get-teacher/classes-subject")]
+        public async Task<IActionResult> GetSingleTeacherClassesAndSubjectsAsync(string teacherAccountId)
+        {
+            var response = await service.GetSingleTeacherClassesAndSubjectsAsync(Guid.Parse(teacherAccountId));
+            return Ok(response);
+        }
+
+
         #endregion
 
 

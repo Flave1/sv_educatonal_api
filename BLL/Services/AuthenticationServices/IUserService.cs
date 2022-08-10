@@ -17,5 +17,6 @@ namespace BLL.AuthenticationServices
         Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat);
         Task UpdateStudentUserAccountAsync(StudentContactCommand student);
         Task UpdateStudentUserProfileImageAsync(IFormFile file, string studentId);
+        Task UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account);
     }
 }

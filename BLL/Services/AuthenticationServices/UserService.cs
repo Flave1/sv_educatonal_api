@@ -179,6 +179,25 @@ namespace BLL.AuthenticationServices
             }
 
         }
+
+        async Task IUserService.UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account)
+        {
+            try
+            {
+                var filePath = uploadService.UpdateProfileImage(file, account.Photo);
+                account.Photo = filePath;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")

@@ -40,7 +40,6 @@ namespace SMP.BLL.Services.NoteServices
                 AprrovalStatus = request.ShouldSendForApproval ? (int)NoteApprovalStatus.InProgress : (int)NoteApprovalStatus.Saved,
                 Author = userid,
                 SubjectId = Guid.Parse(request.SubjectId),
-                Classes = request.ClassId,
             };
             try
             {
@@ -178,7 +177,7 @@ namespace SMP.BLL.Services.NoteServices
                             .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
                              .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                          .Where(u => u.Deleted == false
-                         && u.ClassNote.AprrovalStatus != status
+                         && u.ClassNote.AprrovalStatus == status
                          && u.TeacherId == Guid.Parse(teacherid)
                          && u.ClassNote.SubjectId == Guid.Parse(subjectId))
                          .Select(x => new GetClassNotes(x, false)).ToListAsync();
@@ -192,7 +191,7 @@ namespace SMP.BLL.Services.NoteServices
                             .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
                              .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                         .Where(u => u.Deleted == false
-                           && u.ClassNote.AprrovalStatus != status
+                           && u.ClassNote.AprrovalStatus == status
                         && u.TeacherId == Guid.Parse(teacherid))
                         .Select(x => new GetClassNotes(x, false)).ToListAsync();
                 }
@@ -326,7 +325,6 @@ namespace SMP.BLL.Services.NoteServices
             note.NoteTitle = request.NoteTitle;
             note.NoteContent = request.NoteContent;
             note.SubjectId = Guid.Parse(request.SubjectId);
-            note.Classes = request.Classes;
 
             await context.SaveChangesAsync();
 
@@ -483,8 +481,10 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<ClassNoteComment>>();
             res.Result = await context.TeacherClassNoteComment
+                .Include(x => x.Teacher).ThenInclude(s => s.User)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies)
+                .Include(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
+                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
                 .Where(u => u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
                 .Select(x => new ClassNoteComment(x)).ToListAsync();
 
@@ -521,6 +521,39 @@ namespace SMP.BLL.Services.NoteServices
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
+        }
+
+
+        async Task<APIResponse<SendNote>> IClassNoteService.SendClassNoteToClassesAsync(SendNote request)
+        {
+            var res = new APIResponse<SendNote>();
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            try
+            {
+                var noteToSend = context.TeacherClassNote.FirstOrDefault(x => x.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId));
+                if (noteToSend is not null)
+                {
+                    noteToSend.Classes = string.Join(',', request.Classes);
+
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Sent to class(s) Successfully";
+                res.Result = request;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
     }
 }
