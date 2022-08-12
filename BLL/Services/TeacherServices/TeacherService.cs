@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.EmailServices;
 using Contracts.Authentication;
@@ -29,14 +30,16 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IEmailService emailService;
         private readonly IWebHostEnvironment environment;
         private readonly IFileUploadService upload;
+        private readonly IUserService userService;
 
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload)
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload, IUserService userService)
         {
             this.userManager = userManager;
             this.context = context;
             this.emailService = emailService;
             this.environment = environment;
             this.upload = upload;
+            this.userService = userService;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -231,7 +234,73 @@ namespace SMP.BLL.Services.TeacherServices
 
         }
 
-     
+        async Task<APIResponse<UpdateProfileByTeacher>> ITeacherService.UpdateTeacherProfileByTeacherAsync(UpdateProfileByTeacher userDetail)
+        {
+            var res = new APIResponse<UpdateProfileByTeacher>();
+            var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
+
+            if (user == null)
+            {
+                res.Message.FriendlyMessage = "Teacher user account does not exist";
+                return res;
+            }
+            var uploadProfile = userService.UpdateTeacherUserProfileImageAsync(userDetail.ProfileImage, user);
+            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
+            if (teacherAct != null)
+            {
+                user.Email = userDetail.Email;
+                user.UserName = userDetail.Email;
+                user.UpdateOn = DateTime.Now;
+                user.FirstName = userDetail.FirstName;
+                user.LastName = userDetail.LastName;
+                user.MiddleName = userDetail.MiddleName;
+                user.Phone = userDetail.Phone;
+                user.DOB = userDetail.DOB;
+                user.EmailConfirmed = true;
+                teacherAct.Hobbies = string.Join(',', userDetail.Hobbies);
+                teacherAct.ShortBiography = userDetail.ShortBiography;
+                teacherAct.Address = userDetail.Address;
+
+                var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
+
+                await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
+                var result = await userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+            }
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = "Successfully updated a staff";
+            res.Result = userDetail;
+            return res;
+        }
+
+        async Task<APIResponse<TeacheerClassAndSibjects>> ITeacherService.GetSingleTeacherClassesAndSubjectsAsync(Guid teacherId)
+        {
+            var res = new APIResponse<TeacheerClassAndSibjects>();
+            
+            res.Result.ClassesAsFormTeacher = await context.SessionClass.Include(s => s.Class).Include(s => s.SessionClassSubjects).ThenInclude(d => d.Subject).OrderByDescending(d => d.Class.Name)
+                .Where(d => d.Deleted == false  && d.FormTeacherId == teacherId).Select(a => new TeacherClassesAsFormTeacher
+                {
+                    Class = a.Class.Name,
+                    SubjectsInClass = a.SessionClassSubjects.Select(d => d.Subject.Name).ToList()
+                }).ToListAsync();
+
+
+            res.Result.SubjectsAsSubjectTeacher = await context.SessionClassSubject.Include(s => s.SessionClass).ThenInclude(d => d.Class)
+                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId).Select(a => new TeacherSubjectsAsSubjectTeacher
+                {
+                    Subject = a.Subject.Name,
+                    Class = a.SessionClass.Class.Name
+                }).ToListAsync();
+
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
 
     }
 }

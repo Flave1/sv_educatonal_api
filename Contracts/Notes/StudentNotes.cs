@@ -27,12 +27,46 @@ namespace SMP.Contracts.Notes
         public string NoteContent { get; set; }
         public string TeacherId { get; set; }
     }
-    public class ShareStudentNotes
+
+    public class AddCommentToStudentNote
     {
         public string StudentNoteId { get; set; }
-        public List<Guid> StudentId { get; set; }
+        public string Comment { get; set; }
     }
 
+
+
+    public class StudentNoteComments
+    {
+        public Guid CommentId { get; set; }
+        public string Comment { get; set; }
+        public bool IsParent { get; set; }
+        public Guid StudentNoteId { get; set; }
+        public Guid StudentId { get; set; }
+        public Guid? RepliedToId { get; set; }
+        public List<StudentNoteComments> RepliedComments { get; set; }
+        public StudentNoteComments() { }
+        public StudentNoteComments(StudentNoteComment db)
+        {
+            CommentId = db.StudentNoteCommentId;
+            Comment = db.Comment;
+            IsParent = db.IsParent;
+            StudentNoteId = db.StudentNoteId;
+            RepliedToId = db.RepliedToId;
+            StudentId = db.StudentNote.StudentContactId;
+            if (db.Replies is not null && db.Replies.Any())
+            {
+                RepliedComments = db.Replies.Select(x => new StudentNoteComments(x)).ToList();
+            }
+        }
+    }
+
+
+    public class ReplyCommentToStudentNote
+    {
+        public string CommentId { get; set; }
+        public string Comment { get; set; }
+    }
 
 
     public class GetStudentNotes

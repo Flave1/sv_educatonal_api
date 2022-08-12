@@ -233,5 +233,84 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
+
+        async Task<APIResponse<string>> IStudentNoteService.AddCommentToStudentNoteAsync(Guid studentNoteId, string comment)
+        {
+            var res = new APIResponse<string>();
+
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var note = await context.StudentNote.FirstOrDefaultAsync(d => d.StudentNoteId == studentNoteId);
+            if (note == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            var commented = new StudentNoteComment
+            {
+                StudentNoteId = studentNoteId,
+                Comment = comment,
+                IsParent = true,
+                StudentNote = note
+            };
+
+            context.StudentNoteComment.Add(commented);
+            await context.SaveChangesAsync();
+
+            res.Message.FriendlyMessage = "Comment sent succesfully";
+            res.IsSuccessful = true;
+            res.Result = comment;
+            return res;
+        }
+
+        async Task<APIResponse<string>> IStudentNoteService.ReplyStudentNoteCommentAsync(string comment, Guid commentId)
+        {
+            var res = new APIResponse<string>();
+
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var note = await context.StudentNoteComment.FirstOrDefaultAsync(d => d.StudentNoteCommentId == commentId);
+            if (note == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            var commented = new StudentNoteComment
+            {
+                StudentNoteId = note.StudentNoteId,
+                Comment = comment,
+                StudentNote = note.StudentNote,
+                RepliedToId = commentId
+            };
+
+            context.StudentNoteComment.Add(commented);
+            await context.SaveChangesAsync();
+
+            res.Message.FriendlyMessage = "Comment sent";
+            res.IsSuccessful = true;
+            res.Result = comment;
+            return res;
+        }
+
+        async Task<APIResponse<List<StudentNoteComments>>> IStudentNoteService.GetStudentNoteCommentsAsync(string studentNoteId)
+        {
+            var res = new APIResponse<List<StudentNoteComments>>
+            {
+                Result = await context.StudentNoteComment
+                .Include(d=>d.StudentNote)
+                .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
+                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies)
+                .Where(u => u.Deleted == false && u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
+                .Select(x => new StudentNoteComments(x)).ToListAsync(),
+
+                IsSuccessful = true
+            };
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
     }
 }
