@@ -75,14 +75,14 @@ namespace SMP.API.Controllers
         [HttpGet("get/not-approved/studentnote")]
         public async Task<IActionResult> GetAllApprovalInProgressNoteAsync()
         {
-            var response = await service.GetAllApprovalInProgressNoteAsync();
+            var response = await service.GetAllUnreviewedAsync();
             return Ok(response);
         }
 
         [HttpPost("approve-or-dissaprove/studentnote")]
         public async Task<IActionResult> ApproveOrDisapproveStudentNotesAsync([FromBody] ApproveStudentNotes request)
         {
-            var response = await service.ApproveOrDisapproveStudentNotesAsync(request);
+            var response = await service.ReviewStudentNoteAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

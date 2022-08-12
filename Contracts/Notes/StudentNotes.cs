@@ -25,6 +25,7 @@ namespace SMP.Contracts.Notes
         public string SubjectId { get; set; }
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
+        public string TeacherId { get; set; }
     }
     public class ShareStudentNotes
     {
@@ -32,10 +33,7 @@ namespace SMP.Contracts.Notes
         public List<Guid> StudentId { get; set; }
     }
 
-    public class SingleStudentNotes
-    {
-        public string StudentNoteId { get; set; }
-    }
+
 
     public class GetStudentNotes
     {

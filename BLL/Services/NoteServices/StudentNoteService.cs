@@ -53,7 +53,6 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-
         async Task<APIResponse<bool>> IStudentNoteService.DeleteStudentNotesAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
@@ -75,10 +74,8 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
          
-
         async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByTeachersAsync(string subjectId)
         {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherid = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
             var res = new APIResponse<List<GetStudentNotes>>();
@@ -87,8 +84,10 @@ namespace SMP.BLL.Services.NoteServices
                 if (!string.IsNullOrEmpty(subjectId))
                 {
                     res.Result = await context.StudentNote
+                        .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                     .Include(d => d.Teacher).ThenInclude(d => d.User) 
                          .Where(u => u.Deleted == false
+                         && u.SessionClass.Session.IsActive == true
                          && u.TeacherId == Guid.Parse(teacherid)
                          && u.SubjectId == Guid.Parse(subjectId))
                          .Select(x => new GetStudentNotes(x)).ToListAsync();
@@ -96,8 +95,10 @@ namespace SMP.BLL.Services.NoteServices
                 else
                 {
                     res.Result = await context.StudentNote
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                    .Include(d => d.Teacher).ThenInclude(d => d.User)
                         .Where(u => u.Deleted == false
+                          && u.SessionClass.Session.IsActive == true
                         && u.TeacherId == Guid.Parse(teacherid))
                         .Select(x => new GetStudentNotes(x)).ToListAsync();
                 }
@@ -107,40 +108,17 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByAdminAsync()
-        {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value; 
-            var res = new APIResponse<List<GetStudentNotes>>();
-            if (!string.IsNullOrEmpty(userid))
-            {
-                var noteList = await context.StudentNote
-                          .Include(e => e.Subject)
-                          .Include(e => e.Student)
-                          .ThenInclude(e => e.User)
-                          .Include(e => e.SessionClass)
-                         .Where(u => u.Deleted == false 
-                         && u.AprrovalStatus == (int)NoteApprovalStatus.Approved)
-                         .Select(x => new GetStudentNotes(x)).ToListAsync();
-
-                res.Result = noteList;
-              
-            }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-        }
-
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetAllApprovalInProgressNoteAsync()
+    
+        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetAllUnreviewedAsync()
         {
             var res = new APIResponse<List<GetStudentNotes>>();
-
             var noteList = await context.StudentNote
                     .Include(e => e.Subject)
-                    .Include(e => e.Student)
-                    .ThenInclude(e => e.User)
-                    .Include(e => e.SessionClass)
-                    .Where(u => u.Deleted == false && u.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
+                    .Include(e => e.Student).ThenInclude(e => e.User)
+                    .Include(e => e.SessionClass).ThenInclude(s => s.Session)
+                    .Where(u => u.Deleted == false
+                         && u.SessionClass.Session.IsActive == true
+                    && u.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                     .Select(x => new GetStudentNotes(x)).ToListAsync();
 
             res.Result = noteList;
@@ -150,11 +128,11 @@ namespace SMP.BLL.Services.NoteServices
             return res;
 
         }
-
-        async Task<APIResponse<bool>> IStudentNoteService.ApproveOrDisapproveStudentNotesAsync(ApproveStudentNotes request)
+        async Task<APIResponse<bool>> IStudentNoteService.ReviewStudentNoteAsync(ApproveStudentNotes request)
         { 
             var res = new APIResponse<bool>();
-            var note = await context.StudentNote.FirstOrDefaultAsync(d => d.Deleted == false && d.StudentNoteId == Guid.Parse(request.StudentNoteId));
+            var note = await context.StudentNote.FirstOrDefaultAsync(d => d.Deleted == false 
+            && d.StudentNoteId == Guid.Parse(request.StudentNoteId));
             if (note != null)
             {
                 note.AprrovalStatus = request.ShouldApprove ? (int)NoteApprovalStatus.Approved : (int)NoteApprovalStatus.NotApproved;
@@ -169,7 +147,6 @@ namespace SMP.BLL.Services.NoteServices
             res.IsSuccessful = true;
             if (note.AprrovalStatus == 1)
             {
-
                 res.Result = true;
                 res.Message.FriendlyMessage = "Approved Successfully";
             }
@@ -180,118 +157,81 @@ namespace SMP.BLL.Services.NoteServices
             }
             return res;
         }
-
         async Task<APIResponse<UpdateStudentNote>> IStudentNoteService.UpdateStudentNotesAsync(UpdateStudentNote request)
         {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var res = new APIResponse<UpdateStudentNote>();
 
-            var sessionClass = await context.SessionClass
-                .Include(u => u.Students)
-                .Include(u => u.Teacher)
-                .Include(u => u.SessionClassSubjects)
-                .FirstOrDefaultAsync(x => x.SessionClassId == Guid.Parse(request.SessionClassId));
-            var subject = sessionClass.SessionClassSubjects.FirstOrDefault(x => x.SessionClassId == Guid.Parse(request.SessionClassId));
-            var note = await context.StudentNote.FirstOrDefaultAsync(d => d.StudentNoteId == request.StudentNoteId);
-            if (note == null)
+            var studentNote = context.StudentNote.FirstOrDefault(d => d.StudentNoteId == Guid.Parse(request.StudentNoteId));
+            if(studentNote is null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                 return res;
             }
+            else
+            {
+                studentNote.NoteTitle = request.NoteTitle;
+                studentNote.NoteContent = request.NoteContent;
+                studentNote.SubjectId = Guid.Parse(request.SubjectId);
+                studentNote.TeacherId = Guid.Parse(request.TeacherId);
+                await context.SaveChangesAsync();
+            }
 
-            note.NoteTitle = request.NoteTitle;
-            note.NoteContent = request.NoteContent;
-            note.SubjectId = subject.SubjectId;
-            note.StudentContactId = sessionClass.Students.FirstOrDefault(x=>x.UserId == userid).StudentContactId;
-            note.SessionClassId = Guid.Parse(request.SessionClassId);
-             
 
-            await context.SaveChangesAsync();
-
-            res.Message.FriendlyMessage = Messages.Updated;
             res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.Created;
             res.Result = request;
             return res;
-             
-        }
 
-        async Task<APIResponse<GetStudentNotes>> IStudentNoteService.GetSingleStudentNotesAsync(SingleStudentNotes request)
+        }
+        async Task<APIResponse<GetStudentNotes>> IStudentNoteService.GetSingleStudentNotesAsync(Guid studentNoteId)
         {
             var res = new APIResponse<GetStudentNotes>();
             res.Result = await context.StudentNote
                 .Include(e => e.Subject)
-                .Include(e => e.Student)
-                .ThenInclude(e => e.User)
+                .Include(e => e.Student).ThenInclude(e => e.User)
                 .Include(e => e.SessionClass)
                 .Where(u => u.Deleted == false 
-                && u.StudentNoteId == Guid.Parse(request.StudentNoteId)) 
+                && u.StudentNoteId == studentNoteId) 
                 .Select(x => new GetStudentNotes(x)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync()
+        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId)
         {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var res = new APIResponse<List<GetStudentNotes>>();
-            if (!string.IsNullOrEmpty(userid))
+            if (!string.IsNullOrEmpty(studentContactId))
             {
-                res.Result = await context.StudentNote
-                .Include(e => e.Subject)
-                .Include(e => e.Student).ThenInclude(e => e.User)
-                .Include(e => e.SessionClass)
-                .Where(u => u.Deleted == false
-                && u.AprrovalStatus == (int)NoteApprovalStatus.Approved)
-                //&& u.Subject.ScoreEntry.StudentContact.User.Id == userid)
-                .Select(x => new GetStudentNotes(x)).ToListAsync();
-
+                if (!string.IsNullOrEmpty(subjectId))
+                {
+                    res.Result = await context.StudentNote
+                        .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                    .Include(d => d.Teacher).ThenInclude(d => d.User)
+                         .Where(u => u.Deleted == false
+                         && u.SessionClass.Session.IsActive == true
+                         && u.StudentContactId == Guid.Parse(studentContactId)
+                         && u.SubjectId == Guid.Parse(subjectId))
+                         .Select(x => new GetStudentNotes(x)).ToListAsync();
+                }
+                else
+                {
+                    res.Result = await context.StudentNote
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                   .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Where(u => u.Deleted == false
+                          && u.SessionClass.Session.IsActive == true
+                        && u.StudentContactId == Guid.Parse(studentContactId))
+                        .Select(x => new GetStudentNotes(x)).ToListAsync();
+                }
             }
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetSingleStudentNotesByStudentAsync(SingleStudentNotes request)
-        {
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var res = new APIResponse<List<GetStudentNotes>>();
-            if (!string.IsNullOrEmpty(userid))
-            {
-                res.Result = await context.StudentNote
-                .Include(e => e.Subject) 
-                .Include(e => e.Student).ThenInclude(e => e.User)
-                .Include(e => e.SessionClass)
-                //.Include(e => e.Teacher)
-                .Where(u => u.Deleted == false
-                && u.AprrovalStatus == (int)NoteApprovalStatus.Approved
-                && u.StudentNoteId == Guid.Parse(request.StudentNoteId))
-                .Select(x => new GetStudentNotes(x)).ToListAsync();
 
-            }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-        }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetSingleStudentNotesByAdminAsync(SingleStudentNotes request)
-        {
-
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var res = new APIResponse<List<GetStudentNotes>>();
-            if (!string.IsNullOrEmpty(userid))
-            {
-                res.Result = await context.StudentNote
-                    .Include(e => e.Subject)
-                    .Include(e => e.Student).ThenInclude(e => e.User)
-                    .Include(e => e.SessionClass)
-                    .Where(u => u.Deleted == false && u.AprrovalStatus == (int)NoteApprovalStatus.Approved && u.StudentNoteId == Guid.Parse(request.StudentNoteId))
-                    .Select(x => new GetStudentNotes(x)).ToListAsync();
-            }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-        }
     }
 }

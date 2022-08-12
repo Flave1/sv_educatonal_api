@@ -14,14 +14,11 @@ namespace SMP.BLL.Services.NoteServices
     {
         Task<APIResponse<StudentNotes>> CreateStudentNotesAsync(StudentNotes request);
         Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByTeachersAsync(string subjectId); 
-        Task<APIResponse<List<GetStudentNotes>>> GetAllApprovalInProgressNoteAsync();
+        Task<APIResponse<List<GetStudentNotes>>> GetAllUnreviewedAsync();
         Task<APIResponse<UpdateStudentNote>> UpdateStudentNotesAsync(UpdateStudentNote request);
         Task<APIResponse<bool>> DeleteStudentNotesAsync(SingleDelete request);
-        Task<APIResponse<bool>> ApproveOrDisapproveStudentNotesAsync(ApproveStudentNotes request);
-        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByAdminAsync();
-        Task<APIResponse<List<GetStudentNotes>>> GetSingleStudentNotesByAdminAsync(SingleStudentNotes request);
-        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync();
-        Task<APIResponse<List<GetStudentNotes>>> GetSingleStudentNotesByStudentAsync(SingleStudentNotes request);
-        Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(SingleStudentNotes request);
+        Task<APIResponse<bool>> ReviewStudentNoteAsync(ApproveStudentNotes request);
+        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync(string subjectId);
+        Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(Guid studentNoteId);
     }
 }
