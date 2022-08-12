@@ -184,7 +184,7 @@ namespace BLL.AuthenticationServices
         {
             try
             {
-                var filePath = uploadService.UpdateProfileImage(file, account.Photo);
+                var filePath = await Task.Run(() => uploadService.UpdateProfileImage(file, account.Photo));
                 account.Photo = filePath;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)

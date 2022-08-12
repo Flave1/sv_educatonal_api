@@ -50,7 +50,8 @@ namespace SMP.BLL.Services.NoteServices
                 var teacherClassNote = new TeacherClassNote
                 {
                     ClassNoteId = newClassNote.ClassNoteId,
-                    TeacherId = Guid.Parse(teacherId)
+                    TeacherId = Guid.Parse(teacherId),
+                    Classes = string.Join(',', request.Classes)
                 };
 
                 await context.TeacherClassNote.AddAsync(teacherClassNote);

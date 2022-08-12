@@ -189,7 +189,8 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<ApplicationUser>();
             var result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId).Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();
+                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+                .Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
             res.IsSuccessful = true;
@@ -279,6 +280,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<TeacheerClassAndSibjects>> ITeacherService.GetSingleTeacherClassesAndSubjectsAsync(Guid teacherId)
         {
             var res = new APIResponse<TeacheerClassAndSibjects>();
+            res.Result = new TeacheerClassAndSibjects();
             
             res.Result.ClassesAsFormTeacher = await context.SessionClass.Include(s => s.Class).Include(s => s.SessionClassSubjects).ThenInclude(d => d.Subject).OrderByDescending(d => d.Class.Name)
                 .Where(d => d.Deleted == false  && d.FormTeacherId == teacherId).Select(a => new TeacherClassesAsFormTeacher
@@ -288,12 +290,15 @@ namespace SMP.BLL.Services.TeacherServices
                 }).ToListAsync();
 
 
-            res.Result.SubjectsAsSubjectTeacher = await context.SessionClassSubject.Include(s => s.SessionClass).ThenInclude(d => d.Class)
-                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId).Select(a => new TeacherSubjectsAsSubjectTeacher
+            res.Result.SubjectsAsSubjectTeacher =  context.SessionClassSubject
+                .Include(s => s.Subject)
+                .Include(s => s.SessionClass).ThenInclude(d => d.Class)
+                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId).AsEnumerable()
+                .GroupBy(s => s.SessionClassId).Select(a => new TeacherSubjectsAsSubjectTeacher
                 {
-                    Subject = a.Subject.Name,
-                    Class = a.SessionClass.Class.Name
-                }).ToListAsync();
+                    Subject = a.First().Subject.Name,
+                    Class = a.Select(d => d.SessionClass.Class.Name).ToList(),
+                }).ToList();
 
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

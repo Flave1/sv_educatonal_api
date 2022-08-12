@@ -3,6 +3,7 @@ using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Contracts.Authentication
 {
@@ -28,7 +29,9 @@ namespace Contracts.Authentication
         public string Phone { get; set; }
         public string dob { get; set; }
         public string Photo { get; set; }
-
+        public string[] Hobbies { get; set; }
+        public string ShortBiography { get; set; }
+        public string Address { get; set; }
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
         {
@@ -44,6 +47,9 @@ namespace Contracts.Authentication
             MiddleName = db.User.MiddleName;
             dob = db.User.DOB;
             Photo = db.User.Photo;
+            Hobbies = !string.IsNullOrEmpty(db.Hobbies) ? db.Hobbies.Split(',').ToArray() : Array.Empty<string>();
+            ShortBiography = db.ShortBiography;
+            Address = db.Address;
         }
     }
 
@@ -87,7 +93,7 @@ namespace Contracts.Authentication
     public class TeacherSubjectsAsSubjectTeacher
     {
         public string Subject { get; set; }
-        public string Class { get; set; }
+        public List<string> Class { get; set; }
     }
 
     public class TeacheerClassAndSibjects

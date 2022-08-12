@@ -25,6 +25,7 @@ namespace Contracts.Authentication
         public string SchoolAbbreviation { get; set; } = "";
         public string SchoolLogo { get; set; } = "";
         public string Id { get; set; }
+        public string UserAccountId { get; set; }
         public UserDetail() { }
         public UserDetail(SchoolSetting db, AppUser user, Guid id)
         {
@@ -33,6 +34,7 @@ namespace Contracts.Authentication
             SchoolLogo = db.Photo;
             SchoolName = db.SchoolName;
             UserName = user.FirstName + " " + user.LastName;
+            UserAccountId = user.Id;
             if (user.UserType == -1)
                 UserType = "Admin";
             if (user.UserType == 1)

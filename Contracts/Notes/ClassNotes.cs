@@ -52,6 +52,7 @@ namespace SMP.Contracts.Notes
         public string NoteContent { get; set; }
         public string SubjectId { get; set; }
         public bool ShouldSendForApproval { get; set; }
+        public List<string> Classes { get; set; }
     }
     public class UpdateClassNote
     { 
