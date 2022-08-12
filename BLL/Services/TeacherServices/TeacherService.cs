@@ -255,11 +255,13 @@ namespace SMP.BLL.Services.TeacherServices
                 user.LastName = userDetail.LastName;
                 user.MiddleName = userDetail.MiddleName;
                 user.Phone = userDetail.Phone;
-                user.DOB = userDetail.DOB;
+                user.DOB = userDetail.DOB; 
                 user.EmailConfirmed = true;
                 teacherAct.Hobbies = string.Join(',', userDetail.Hobbies);
                 teacherAct.ShortBiography = userDetail.ShortBiography;
                 teacherAct.Address = userDetail.Address;
+                teacherAct.Gender = userDetail.Gender;
+                teacherAct.MaritalStatus = userDetail.MaritalStatus;
 
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
@@ -282,8 +284,10 @@ namespace SMP.BLL.Services.TeacherServices
             var res = new APIResponse<TeacheerClassAndSibjects>();
             res.Result = new TeacheerClassAndSibjects();
             
-            res.Result.ClassesAsFormTeacher = await context.SessionClass.Include(s => s.Class).Include(s => s.SessionClassSubjects).ThenInclude(d => d.Subject).OrderByDescending(d => d.Class.Name)
-                .Where(d => d.Deleted == false  && d.FormTeacherId == teacherId).Select(a => new TeacherClassesAsFormTeacher
+            res.Result.ClassesAsFormTeacher = await context.SessionClass
+                .Include(d => d.Session)
+                .Include(s => s.Class).Include(s => s.SessionClassSubjects).ThenInclude(d => d.Subject).OrderByDescending(d => d.Class.Name)
+                .Where(d => d.Deleted == false  && d.FormTeacherId == teacherId && d.Session.IsActive).Select(a => new TeacherClassesAsFormTeacher
                 {
                     Class = a.Class.Name,
                     SubjectsInClass = a.SessionClassSubjects.Select(d => d.Subject.Name).ToList()
@@ -292,9 +296,10 @@ namespace SMP.BLL.Services.TeacherServices
 
             res.Result.SubjectsAsSubjectTeacher =  context.SessionClassSubject
                 .Include(s => s.Subject)
+                .Include(s => s.SessionClass).ThenInclude(d => d.Session)
                 .Include(s => s.SessionClass).ThenInclude(d => d.Class)
-                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId).AsEnumerable()
-                .GroupBy(s => s.SessionClassId).Select(a => new TeacherSubjectsAsSubjectTeacher
+                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId && d.SessionClass.Session.IsActive).AsEnumerable()
+                .GroupBy(s => s.SubjectId).Select(a => new TeacherSubjectsAsSubjectTeacher
                 {
                     Subject = a.First().Subject.Name,
                     Class = a.Select(d => d.SessionClass.Class.Name).ToList(),

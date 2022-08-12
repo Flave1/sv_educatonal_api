@@ -32,6 +32,8 @@ namespace Contracts.Authentication
         public string[] Hobbies { get; set; }
         public string ShortBiography { get; set; }
         public string Address { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
         {
@@ -50,6 +52,8 @@ namespace Contracts.Authentication
             Hobbies = !string.IsNullOrEmpty(db.Hobbies) ? db.Hobbies.Split(',').ToArray() : Array.Empty<string>();
             ShortBiography = db.ShortBiography;
             Address = db.Address;
+            Gender = db.Gender;
+            MaritalStatus = db.MaritalStatus;
         }
     }
 
@@ -83,6 +87,8 @@ namespace Contracts.Authentication
         public string DOB { get; set; }
         public string TeacherUserAccountId { get; set; }
         public string Address { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
     }
 
     public class TeacherClassesAsFormTeacher
