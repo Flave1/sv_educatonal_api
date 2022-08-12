@@ -233,10 +233,6 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-        }
 
         async Task<APIResponse<string>> IStudentNoteService.AddCommentToStudentNoteAsync(Guid studentNoteId, string comment)
         {
@@ -298,17 +294,18 @@ namespace SMP.BLL.Services.NoteServices
 
         async Task<APIResponse<List<StudentNoteComments>>> IStudentNoteService.GetStudentNoteCommentsAsync(string studentNoteId)
         {
-            var res = new APIResponse<List<StudentNoteComments>>
-            {
-                Result = await context.StudentNoteComment
-                .Include(d=>d.StudentNote)
-                .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(d => d.Replies)
-                .Where(u => u.Deleted == false && u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
-                .Select(x => new StudentNoteComments(x)).ToListAsync(),
+            var res = new APIResponse<List<StudentNoteComments>>();
 
-                IsSuccessful = true
-            };
+            res.Result = await context.StudentNoteComment
+               .Include(x => x.Teacher).ThenInclude(s => s.User)
+                .Include(x => x.StudentContact).ThenInclude(s => s.User)
+               .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
+               .Include(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
+               .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
+               .Where(u => u.Deleted == false && u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
+               .Select(x => new StudentNoteComments(x)).ToListAsync();
+
+            res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
