@@ -17,12 +17,9 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<List<GetStudentNotes>>> GetAllUnreviewedAsync();
         Task<APIResponse<UpdateStudentNote>> UpdateStudentNotesAsync(UpdateStudentNote request);
         Task<APIResponse<bool>> DeleteStudentNotesAsync(SingleDelete request);
-        Task<APIResponse<bool>> ApproveOrDisapproveStudentNotesAsync(ApproveStudentNotes request);
-        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByAdminAsync();
-        Task<APIResponse<List<GetStudentNotes>>> GetSingleStudentNotesByAdminAsync(SingleStudentNotes request);
-        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync();
-        Task<APIResponse<List<GetStudentNotes>>> GetSingleStudentNotesByStudentAsync(SingleStudentNotes request);
-        Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(SingleStudentNotes request);
+        Task<APIResponse<bool>> ReviewStudentNoteAsync(ApproveStudentNotes request);
+        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync(string subjectId);
+        Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(Guid studentNoteId);
         Task<APIResponse<string>> AddCommentToStudentNoteAsync(Guid studentNoteId, string comment);
         Task<APIResponse<string>> ReplyStudentNoteCommentAsync(string comment, Guid commentId); 
         Task<APIResponse<List<StudentNoteComments>>> GetStudentNoteCommentsAsync(string studentNoteId);
