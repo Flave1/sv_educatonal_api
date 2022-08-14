@@ -1,6 +1,7 @@
 ﻿using BLL;
 using Contracts.Authentication;
 using Contracts.Common;
+using SMP.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

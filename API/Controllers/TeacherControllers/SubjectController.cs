@@ -64,8 +64,15 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("getall/student-subjects")]
+        public IActionResult GetAllStudentSubjects(string studentId)
+        {
+            var response = service.GetAllStudentSubjects(Guid.Parse(studentId));
+            return Ok(response);
+        }
+
         #endregion
-         
+
 
     }
 } 

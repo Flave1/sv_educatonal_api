@@ -53,6 +53,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IClassNoteService, ClassNoteService>();
             services.AddScoped<IClassLookupService, ClassLookupService>();
             services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<IStudentNoteService, StudentNoteService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<ITeacherService, TeacherService>();
