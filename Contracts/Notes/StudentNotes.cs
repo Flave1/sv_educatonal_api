@@ -14,7 +14,7 @@ namespace SMP.Contracts.Notes
         public string SubjectId { get; set; }
         public string TeacherId { get; set; }
     }
-    public class ApproveStudentNotes
+    public class ReviewStudentNoteRequest
     {
         public string StudentNoteId { get; set; }
         public bool ShouldApprove { get; set; }

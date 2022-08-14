@@ -128,7 +128,7 @@ namespace SMP.BLL.Services.NoteServices
             return res;
 
         }
-        async Task<APIResponse<bool>> IStudentNoteService.ReviewStudentNoteAsync(ApproveStudentNotes request)
+        async Task<APIResponse<bool>> IStudentNoteService.ReviewStudentNoteAsync(ReviewStudentNoteRequest request)
         { 
             var res = new APIResponse<bool>();
             var note = await context.StudentNote.FirstOrDefaultAsync(d => d.Deleted == false 
