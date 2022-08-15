@@ -69,6 +69,7 @@ namespace DAL
         public DbSet<TeacherClassNote> TeacherClassNote { get;set;}
         public DbSet<TeacherClassNoteComment> TeacherClassNoteComment { get; set; }
         public DbSet<StudentNoteComment> StudentNoteComment { get; set; }
+        public DbSet<SessionClassGroup> SessionClassGroup { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
