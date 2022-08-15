@@ -208,8 +208,9 @@ namespace SMP.BLL.Services.NoteServices
                 if (!string.IsNullOrEmpty(subjectId))
                 {
                     res.Result = await context.StudentNote
+                        .Include(x=>x.Subject)
                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                    .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(d => d.Student).ThenInclude(d => d.User)
                          .Where(u => u.Deleted == false
                          && u.SessionClass.Session.IsActive == true
                          && u.StudentContactId == Guid.Parse(studentContactId)
@@ -219,8 +220,9 @@ namespace SMP.BLL.Services.NoteServices
                 else
                 {
                     res.Result = await context.StudentNote
-                    .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                   .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(x => x.Subject)
+                        .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                        .Include(d => d.Student).ThenInclude(d => d.User)
                         .Where(u => u.Deleted == false
                           && u.SessionClass.Session.IsActive == true
                         && u.StudentContactId == Guid.Parse(studentContactId))
@@ -297,6 +299,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<List<StudentNoteComments>>();
 
             res.Result = await context.StudentNoteComment
+               .Include(x=>x.StudentNote)
                .Include(x => x.Teacher).ThenInclude(s => s.User)
                 .Include(x => x.StudentContact).ThenInclude(s => s.User)
                .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
