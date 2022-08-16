@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220816135033_modifyTimeTable")]
+    partial class modifyTimeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -772,148 +774,6 @@ namespace SMP.DAL.Migrations
                     b.ToTable("Announcement");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.AssessmentScoreRecord", b =>
-                {
-                    b.Property<Guid>("AssessmentScoreRecordId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AssessmentType")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ClassAssessmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("HomeAssessmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("StudentContactId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("AssessmentScoreRecordId");
-
-                    b.HasIndex("ClassAssessmentId");
-
-                    b.HasIndex("HomeAssessmentId");
-
-                    b.HasIndex("StudentContactId");
-
-                    b.ToTable("AssessmentScoreRecord");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.ClassAssessment", b =>
-                {
-                    b.Property<Guid>("ClassAssessmentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ListOfStudentIds")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SessionClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ClassAssessmentId");
-
-                    b.HasIndex("SessionClassId");
-
-                    b.ToTable("ClassAssessment");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
-                {
-                    b.Property<Guid>("HomeAssessmentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AssessmentScore")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("SessionClassGroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SessionClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SessionClassSubjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("HomeAssessmentId");
-
-                    b.HasIndex("SessionClassGroupId");
-
-                    b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionClassSubjectId");
-
-                    b.HasIndex("SessionTermId");
-
-                    b.ToTable("HomeAssessment");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessmentFeedBack", b =>
-                {
-                    b.Property<Guid>("HomeAssessmentFeedBackId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AttachmentUrls")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("HomeAssessmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("StudentContactId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("HomeAssessmentFeedBackId");
-
-                    b.HasIndex("HomeAssessmentId");
-
-                    b.HasIndex("StudentContactId");
-
-                    b.ToTable("HomeAssessmentFeedBack");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.Attendance.StudentAttendance", b =>
                 {
                     b.Property<Guid>("ClassAttendanceId")
@@ -948,48 +808,6 @@ namespace SMP.DAL.Migrations
                     b.HasIndex("StudentContactId");
 
                     b.ToTable("StudentAttendance");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.ClassEntities.SessionClassGroup", b =>
-                {
-                    b.Property<Guid>("SessionClassGroupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("GroupName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ListOfStudentContactIds")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SessionClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SessionClassSubjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("SessionClassGroupId");
-
-                    b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionClassSubjectId");
-
-                    b.ToTable("SessionClassGroup");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ClassEntities.SessionClassSubject", b =>
@@ -2186,92 +2004,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.AssessmentScoreRecord", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.AssessmentEntities.ClassAssessment", "ClassAssessment")
-                        .WithMany()
-                        .HasForeignKey("ClassAssessmentId");
-
-                    b.HasOne("SMP.DAL.Models.AssessmentEntities.HomeAssessment", "HomeAssessment")
-                        .WithMany()
-                        .HasForeignKey("HomeAssessmentId");
-
-                    b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
-                        .WithMany()
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ClassAssessment");
-
-                    b.Navigation("HomeAssessment");
-
-                    b.Navigation("StudentContact");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.ClassAssessment", b =>
-                {
-                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
-                        .WithMany()
-                        .HasForeignKey("SessionClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SessionClass");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassGroup", "SessionClassGroup")
-                        .WithMany()
-                        .HasForeignKey("SessionClassGroupId");
-
-                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
-                        .WithMany()
-                        .HasForeignKey("SessionClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
-                        .WithMany()
-                        .HasForeignKey("SessionClassSubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SessionClass");
-
-                    b.Navigation("SessionClassGroup");
-
-                    b.Navigation("SessionClassSubject");
-
-                    b.Navigation("SessionTerm");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessmentFeedBack", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.AssessmentEntities.HomeAssessment", "HomeAssessment")
-                        .WithMany("HomeAssessmentFeedBacks")
-                        .HasForeignKey("HomeAssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
-                        .WithMany()
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HomeAssessment");
-
-                    b.Navigation("StudentContact");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.Attendance.StudentAttendance", b =>
                 {
                     b.HasOne("SMP.DAL.Models.Register.ClassRegister", "ClassRegister")
@@ -2289,25 +2021,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ClassRegister");
 
                     b.Navigation("StudentContact");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.ClassEntities.SessionClassGroup", b =>
-                {
-                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
-                        .WithMany()
-                        .HasForeignKey("SessionClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
-                        .WithMany()
-                        .HasForeignKey("SessionClassSubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SessionClass");
-
-                    b.Navigation("SessionClassSubject");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ClassEntities.SessionClassSubject", b =>
@@ -2746,11 +2459,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ScoreEntries");
 
                     b.Navigation("StudentNote");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
-                {
-                    b.Navigation("HomeAssessmentFeedBacks");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.GradeGroup", b =>
