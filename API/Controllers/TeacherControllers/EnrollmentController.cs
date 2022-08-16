@@ -1,11 +1,4 @@
-﻿using BLL.AuthenticationServices;
-using BLL.Constants;
-using BLL.MiddleWares;
-using BLL.StudentServices;
-using Contracts.Authentication;
-using Contracts.Common;
-using Contracts.Options;
-using Microsoft.AspNetCore.Authorization;
+﻿using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.Contracts.Enrollment;
