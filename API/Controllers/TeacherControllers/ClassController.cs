@@ -4,6 +4,7 @@ using BLL.MiddleWares;
 using Contracts.Class;
 using Contracts.Common;
 using Microsoft.AspNetCore.Mvc;
+using SMP.Contracts.ClassModels;
 using System;
 using System.Threading.Tasks;
 
@@ -15,11 +16,13 @@ namespace API.Controllers
     public class ClassController : BaseController
     { 
         private readonly IClassService service;
+        private readonly IClassGroupService classGoupService;
         private readonly IClassLookupService lookupService;
-        public ClassController(IClassService service, IClassLookupService lookupService)
+        public ClassController(IClassService service, IClassLookupService lookupService, IClassGroupService classGroupService)
         {
             this.lookupService = lookupService;
             this.service = service;
+            this.classGoupService = classGroupService;
         }
 
 
@@ -128,6 +131,57 @@ namespace API.Controllers
 
         #endregion
 
+
+        #region  GROUP
+
+        [HttpPost("create/class-group")]
+        public async Task<IActionResult> CreateClassGroupAsync([FromBody] CreateClassGroup request)
+        {
+            var response = await classGoupService.CreateClassGroupAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("update/class-group")]
+        public async Task<IActionResult> UpdateClassGroupAsync([FromBody] UpdateClassGroup request)
+        {
+            var response = await classGoupService.UpdateClassGroupAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("getall/class-group")]
+        public async Task<IActionResult> GetAllClassGroupsAsync(string sessionClassId)
+        {
+            var response = await classGoupService.GetAllClassGroupsAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpGet("getall/class-subjects")]
+        public async Task<IActionResult> GetSingleClassSubjectssAsync(string sessionClassId)
+        {
+            var response = await classGoupService.GetSessionClassSubjectsAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpGet("getall/single/class-group")]
+        public async Task<IActionResult> GetSingleClassGroupsAsync(string groupId, string sessionClassId)
+        {
+            var response = await classGoupService.GetSingleClassGroupsAsync(Guid.Parse(groupId), Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpPost("delete/class-group")]
+        public async Task<IActionResult> DeleteClassAsync([FromBody] MultipleDelete reguest)
+        {
+            var response = await classGoupService.DeleteClassGroupAsync(reguest);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        #endregion
 
     }
 } 
