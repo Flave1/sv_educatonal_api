@@ -155,11 +155,11 @@ namespace SMP.BLL.Services.AssessmentServices
             var studentsInClass = context.SessionClass.Include(s => s.Students).Where(d => d.SessionClassId == sessionClasId).SelectMany(s => s.Students).ToList();
             var result = await context.HomeAssessment
                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                .Include(s => s.SessionClass).ThenInclude(s => s.Students).ThenInclude(s => s.User)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
-                 .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact).ThenInclude(s => s.User)
+                 .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
                 .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
                 .Select(f => new GetHomeAssessmentRequest(f, studentsInClass)).ToListAsync();

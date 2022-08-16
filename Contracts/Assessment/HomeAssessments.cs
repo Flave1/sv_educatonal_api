@@ -44,13 +44,13 @@ namespace SMP.Contracts.Assessment
             
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - db.SessionClassGroup.ListOfStudentContactIds.Split(',').Count()).ToString().TrimStart('-'));
             if (db.Status == 1)
-                Status = "Open";
+                Status = "open";
             if (db.Status == 2)
-                Status = "Closed";
+                Status = "closed";
             if (db.Status == 3)
-                Status = "Submitted";
+                Status = "submitted";
             if (db.Status == 0)
-                Status = "Saved";
+                Status = "saved";
         }
         public GetHomeAssessmentRequest(HomeAssessment db, ICollection<StudentContact> classstudents)
         {
@@ -70,14 +70,14 @@ namespace SMP.Contracts.Assessment
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
             if (db.Status == 1)
-                Status = "Open";
+                Status = "open";
             if (db.Status == 2)
-                Status = "Closed";
+                Status = "closed";
             if (db.Status == 3)
-                Status = "Submitted";
+                Status = "submitted";
             if (db.Status == 0)
-                Status = "Saved";
-            if (db.HomeAssessmentFeedBacks.Any())
+                Status = "saved";
+            if (studentIds.Any())
                 StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classstudents)).ToList();
         }
     }
@@ -90,12 +90,20 @@ namespace SMP.Contracts.Assessment
         public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students)
         {
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
-            HomeAsessmentFeedbackId = feedBack.HomeAssessmentFeedBackId.ToString();
-            StudentName = feedBack.StudentContact.User.FirstName + " " + feedBack.StudentContact.User.FirstName;
-            if (feedBack.Status == 3)
-                Status = "Submitted";
-            if (feedBack.Status == 0)
-                Status = "Saved";
+            var student = students.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
+            HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
+            StudentName = student.User.FirstName + " " + student.User.FirstName;
+            if (feedBack is not null)
+            {
+                if (feedBack.Status == 3)
+                    Status = "submitted";
+                if (feedBack.Status == 0)
+                    Status = "uncompleted";
+            }
+            else
+            {
+                Status = "not started";
+            }
         }
     }
 
