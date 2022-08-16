@@ -1,5 +1,6 @@
 ﻿using DAL.ClassEntities;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,6 +15,7 @@ namespace SMP.DAL.Models.AssessmentEntities
         public int Type { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public int Status { get; set; }
         public int AssessmentScore { get; set; }
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
@@ -26,7 +28,7 @@ namespace SMP.DAL.Models.AssessmentEntities
         public SessionClassGroup SessionClassGroup { get; set; }
         public Guid SessionTermId { get; set; }
         [ForeignKey("SessionTermId")]
-        public SessionClass SessionTerm{ get; set; }
+        public SessionTerm SessionTerm { get; set; }
         public virtual ICollection<HomeAssessmentFeedBack> HomeAssessmentFeedBacks { get; set; }
     }
 }
