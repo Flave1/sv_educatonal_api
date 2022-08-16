@@ -72,8 +72,8 @@ namespace DAL
         public DbSet<StudentNoteComment> StudentNoteComment { get; set; }
         public DbSet<ClassTimeTable> ClassTimeTable { get; set; }
         public DbSet<ClassTimeTableDay> ClassTimeTableDay { get; set; }
-        public DbSet<ClassTimeTableDayActivity> ClassTimeTableDayActivity { get; set; }
-        public DbSet<ClassTimeTableDayTime> ClassTimeTableDayTime { get; set; }
+        public DbSet<ClassTimeTableTimeActivity> ClassTimeTableTimeActivity { get; set; }
+        public DbSet<ClassTimeTableTime> ClassTimeTableTime { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

@@ -14,6 +14,5 @@ namespace SMP.DAL.Models.Timetable
         public Guid ClassTimeTableId { get; set; }
         [ForeignKey("ClassTimeTableId")]
         public ClassTimeTable TimeTable { get; set; }
-        public virtual ICollection<ClassTimeTableDayTime> Times { get; set; }
     }
 }

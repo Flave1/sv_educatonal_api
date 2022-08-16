@@ -15,5 +15,7 @@ namespace SMP.DAL.Models.Timetable
         [ForeignKey("ClassId")]
         public ClassLookup Class { get; set; }
         public virtual ICollection<ClassTimeTableDay> Days { get; set; }
+
+        public virtual ICollection<ClassTimeTableTime> Times { get; set; }
     }
 }
