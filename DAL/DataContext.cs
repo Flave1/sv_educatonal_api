@@ -23,6 +23,7 @@ using SMP.DAL.Models.PortalSettings;
 using SMP.DAL.Models.PinManagement;
 using SMP.DAL.Models.Annoucement;
 using SMP.DAL.Models.NoteEntities;
+using SMP.DAL.Models.AssessmentEntities;
 
 namespace DAL
 {
@@ -70,6 +71,10 @@ namespace DAL
         public DbSet<TeacherClassNoteComment> TeacherClassNoteComment { get; set; }
         public DbSet<StudentNoteComment> StudentNoteComment { get; set; }
         public DbSet<SessionClassGroup> SessionClassGroup { get; set; }
+        public DbSet<ClassAssessment> ClassAssessment { get; set; }
+        public DbSet<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
+        public DbSet<HomeAssessment> HomeAssessment { get; set; }
+        public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
