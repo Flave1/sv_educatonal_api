@@ -34,13 +34,12 @@ namespace BLL.ClassServices
                     res.Message.FriendlyMessage = "Group Name Already exist";
                     return res;
                 }
-                var group = new SessionClassGroup
-                {
-                    GroupName = request.GroupName,
-                    SessionClassId = Guid.Parse(request.SessionClassId),
-                    SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId),
-                    ListOfStudentContactIds = string.Join(',', request.StudentContactIds)
-                };
+                var group = new SessionClassGroup();
+                group.GroupName = request.GroupName;
+                group.SessionClassId = Guid.Parse(request.SessionClassId);
+                group.SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId);
+                group.ListOfStudentContactIds = string.Join(',', request.StudentContactIds);
+            
                 context.SessionClassGroup.Add(group);
                 await context.SaveChangesAsync();
                 res.Result = request;
@@ -99,19 +98,46 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetAllClassGroupsAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetClassGroupRequest>>();
+            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId).ToList();
             var result = await context.SessionClassGroup
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Where(d => d.Deleted == false).Select(a => 
-                new GetClassGroupRequest(a, !string.IsNullOrEmpty(a.ListOfStudentContactIds) ? context.StudentContact.Where(e => 
-                a.ListOfStudentContactIds.Split().Select(Guid.Parse).ToList().Contains(e.StudentContactId)).ToList() : new List<StudentContact>())).ToListAsync();
+                new GetClassGroupRequest(a, student.Count())).ToListAsync();
             res.IsSuccessful = true;
             res.Result = result;
             return res;
         }
 
-       
+        async Task<APIResponse<List<SessionClassSubjects>>> IClassGroupService.GetSessionClassSubjectsAsync(Guid sessionClassId)
+        {
+            var res = new APIResponse<List<SessionClassSubjects>>();
+            var result = await context.SessionClassSubject
+                .Include(s => s.Subject)
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId).Select(a =>
+                new SessionClassSubjects(a)).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+        async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId)
+        {
+            var res = new APIResponse<List<GetClassGroupRequest>>();
+            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId).ToList();
+            var result = await context.SessionClassGroup
+                .OrderBy(s => s.GroupName)
+                .Include(d => d.SessionClass).ThenInclude(s => s.Class)
+                .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Where(d => d.Deleted == false && d.SessionClassGroupId == groupId).Select(a =>
+                new GetClassGroupRequest(a, student)).ToListAsync();
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+
         async Task<APIResponse<MultipleDelete>> IClassGroupService.DeleteClassGroupAsync(MultipleDelete request)
         {
             var res = new APIResponse<MultipleDelete>();

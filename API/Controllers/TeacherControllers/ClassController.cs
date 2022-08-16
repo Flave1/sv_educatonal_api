@@ -142,7 +142,7 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("update/class-lookup")]
+        [HttpPost("update/class-group")]
         public async Task<IActionResult> UpdateClassGroupAsync([FromBody] UpdateClassGroup request)
         {
             var response = await classGoupService.UpdateClassGroupAsync(request);
@@ -158,7 +158,21 @@ namespace API.Controllers
             return Ok(response);
         }
 
-        [HttpPost("delete/class-lookup")]
+        [HttpGet("getall/class-subjects")]
+        public async Task<IActionResult> GetSingleClassSubjectssAsync(string sessionClassId)
+        {
+            var response = await classGoupService.GetSessionClassSubjectsAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpGet("getall/single/class-group")]
+        public async Task<IActionResult> GetSingleClassGroupsAsync(string groupId, string sessionClassId)
+        {
+            var response = await classGoupService.GetSingleClassGroupsAsync(Guid.Parse(groupId), Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpPost("delete/class-group")]
         public async Task<IActionResult> DeleteClassAsync([FromBody] MultipleDelete reguest)
         {
             var response = await classGoupService.DeleteClassGroupAsync(reguest);

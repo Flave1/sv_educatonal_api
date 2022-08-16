@@ -67,6 +67,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IPinManagementService, PinManagementService>();
             services.AddScoped<IAnnouncementsService, AnnouncementService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IClassGroupService, ClassGroupService>();
         }
     }
 }
