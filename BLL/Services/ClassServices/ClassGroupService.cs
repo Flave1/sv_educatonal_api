@@ -121,16 +121,16 @@ namespace BLL.ClassServices
             return res;
         }
 
-        async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId)
+        async Task<APIResponse<GetClassGroupRequest>> IClassGroupService.GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId)
         {
-            var res = new APIResponse<List<GetClassGroupRequest>>();
+            var res = new APIResponse<GetClassGroupRequest>();
             var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId).ToList();
             var result = await context.SessionClassGroup
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Where(d => d.Deleted == false && d.SessionClassGroupId == groupId).Select(a =>
-                new GetClassGroupRequest(a, student)).ToListAsync();
+                new GetClassGroupRequest(a, student)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             res.Result = result;
             return res;

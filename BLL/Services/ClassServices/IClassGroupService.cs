@@ -16,7 +16,7 @@ namespace BLL.ClassServices
         Task<APIResponse<UpdateClassGroup>> UpdateClassGroupAsync(UpdateClassGroup request);
         Task<APIResponse<List<GetClassGroupRequest>>> GetAllClassGroupsAsync(Guid sessionClassId);
         Task<APIResponse<MultipleDelete>> DeleteClassGroupAsync(MultipleDelete GroupId);
-        Task<APIResponse<List<GetClassGroupRequest>>> GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId);
+        Task<APIResponse<GetClassGroupRequest>> GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId);
         Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsAsync(Guid sessionClassId);
     }
 }
