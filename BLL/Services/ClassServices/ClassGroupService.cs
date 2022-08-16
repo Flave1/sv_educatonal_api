@@ -59,7 +59,6 @@ namespace BLL.ClassServices
         async Task<APIResponse<UpdateClassGroup>> IClassGroupService.UpdateClassGroupAsync(UpdateClassGroup request)
         {
             var res = new APIResponse<UpdateClassGroup>();
-
             try
             {
                 if (context.SessionClassGroup.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(request.GroupName) == UtilTools.ReplaceWhitespace(r.GroupName) 
@@ -136,7 +135,6 @@ namespace BLL.ClassServices
             res.Result = result;
             return res;
         }
-
 
         async Task<APIResponse<MultipleDelete>> IClassGroupService.DeleteClassGroupAsync(MultipleDelete request)
         {
