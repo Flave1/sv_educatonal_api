@@ -35,6 +35,7 @@ namespace SMP.BLL.Services.TimetableServices
                     IsActive = a.IsActive,
                     GradeLevelId = a.GradeGroupId.ToString(),
                 }).ToListAsync();
+
                 res.IsSuccessful = true;
                 return res;
             }
