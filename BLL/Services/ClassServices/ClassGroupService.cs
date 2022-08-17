@@ -102,7 +102,7 @@ namespace BLL.ClassServices
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
-                .Where(d => d.Deleted == false).Select(a => 
+                .Where(d => d.Deleted == false && d.GroupName != "all-students").Select(a => 
                 new GetClassGroupRequest(a, student.Count())).ToListAsync();
             res.IsSuccessful = true;
             res.Result = result;

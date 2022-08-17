@@ -8,6 +8,7 @@ namespace SMP.DAL.Models.AssessmentEntities
     {
         public Guid  AssessmentScoreRecordId { get; set; }
         public int AssessmentType { get; set; }
+        public decimal Score { get; set; }
         public Guid StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact StudentContact { get; set; }

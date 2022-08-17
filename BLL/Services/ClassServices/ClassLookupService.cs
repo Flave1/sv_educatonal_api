@@ -114,6 +114,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
             var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true)
+                .OrderBy(d => d.Name)
                 .Select(a => new GetApplicationLookups { 
                     LookupId = a.ClassLookupId.ToString().ToLower(), 
                     Name = a.Name, 

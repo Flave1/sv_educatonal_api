@@ -15,5 +15,9 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<bool>> DeleteHomeAssessmentAsync(SingleDelete request);
         Task<APIResponse<bool>> SendHomeAssessmentToStudentsAsync(SendHomeAssessmentRequest request);
         Task<APIResponse<List<GetHomeAssessmentRequest>>> GetSingleHomeAssessmentAsync(Guid homeAssessmentId, Guid sessionClasId);
+        Task<APIResponse<GetClassAssessmentRecord>> GetSubjectAssessmentScoreRecordAsync(Guid sessionClassSubjectId, Guid sessionClasId);
+        Task<APIResponse<List<StudentHomeAssessmentRequest>>> GetHomeAssessmentsByStudentAsync();
+
+        Task<APIResponse<CreateHomeAssessmentFeedback>> SubmitHomeAssessmentByStudentAsync(CreateHomeAssessmentFeedback request);
     }
 }

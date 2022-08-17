@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("studentnotes/api/v1")]
     public class StudentNoteController : Controller
     {

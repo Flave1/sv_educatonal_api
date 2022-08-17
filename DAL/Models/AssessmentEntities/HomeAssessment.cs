@@ -31,5 +31,6 @@ namespace SMP.DAL.Models.AssessmentEntities
         [ForeignKey("SessionTermId")]
         public SessionTerm SessionTerm { get; set; }
         public virtual ICollection<HomeAssessmentFeedBack> HomeAssessmentFeedBacks { get; set; }
+        public virtual ICollection<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
     }
 }

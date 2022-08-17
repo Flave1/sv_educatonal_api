@@ -14,6 +14,7 @@ namespace SMP.DAL.Initializer
                 var context = services.GetRequiredService<DataContext>();
                 DALInitializers.SeedActivityParents(context);
                 DALInitializers.SeedActivities(context);
+                ClassInitilizer.SeedClassGroup(context);
             }
             return host;
         }

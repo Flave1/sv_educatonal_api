@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220817053229_classGrUpdate")]
+    partial class classGrUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -787,9 +789,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("HomeAssessmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("Score")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<Guid>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
@@ -819,14 +818,9 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SessionClassSubjectId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("ClassAssessmentId");
 
                     b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionClassSubjectId");
 
                     b.ToTable("ClassAssessment");
                 });
@@ -2075,7 +2069,7 @@ namespace SMP.DAL.Migrations
                         .HasForeignKey("ClassAssessmentId");
 
                     b.HasOne("SMP.DAL.Models.AssessmentEntities.HomeAssessment", "HomeAssessment")
-                        .WithMany("AssessmentScoreRecord")
+                        .WithMany()
                         .HasForeignKey("HomeAssessmentId");
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
@@ -2099,13 +2093,7 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
-                        .WithMany("ClassAssessments")
-                        .HasForeignKey("SessionClassSubjectId");
-
                     b.Navigation("SessionClass");
-
-                    b.Navigation("SessionClassSubject");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
@@ -2121,7 +2109,7 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
-                        .WithMany("HomeAssessments")
+                        .WithMany()
                         .HasForeignKey("SessionClassSubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2582,16 +2570,7 @@ namespace SMP.DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
                 {
-                    b.Navigation("AssessmentScoreRecord");
-
                     b.Navigation("HomeAssessmentFeedBacks");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.ClassEntities.SessionClassSubject", b =>
-                {
-                    b.Navigation("ClassAssessments");
-
-                    b.Navigation("HomeAssessments");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.GradeGroup", b =>
