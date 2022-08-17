@@ -16,6 +16,7 @@ namespace SMP.DAL.Models.AssessmentEntities
         public int Type { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string Comment { get; set; }
         public int Status { get; set; }
         public int AssessmentScore { get; set; }
         public Guid SessionClassId { get; set; }

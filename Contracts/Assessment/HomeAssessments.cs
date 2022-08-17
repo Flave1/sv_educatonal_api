@@ -19,6 +19,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupName { get; set; }
         public string SessionTermId { get; set; } 
         public string SessionTermName { get; set; }
+        public string Comment { get; }
         public int NumberOfStudentsSubmitted { get; set; } = 0;
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
@@ -37,6 +38,7 @@ namespace SMP.Contracts.Assessment
             SessionClassGroupName = db.SessionClassGroup.GroupName;
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
+            Comment = db.Comment;
             if(db.HomeAssessmentFeedBacks is not null && db.HomeAssessmentFeedBacks.Any())
             {
                 NumberOfStudentsSubmitted =  db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
@@ -84,6 +86,7 @@ namespace SMP.Contracts.Assessment
             SessionClassGroupName = db.SessionClassGroup.GroupName;
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
+            Comment = db.Comment;
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
             if (db.Status == 1)
@@ -133,6 +136,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassSubjectId { get; set; }
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
+        public string Comment { get; set; }
     }
 
     public class UpdateHomeAssessmentRequest
@@ -144,6 +148,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassSubjectId { get; set; }
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
+        public string Comment { get; set; }
     }
 
     public class SendHomeAssessmentRequest
