@@ -23,6 +23,7 @@ using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.TeacherServices;
+using SMP.BLL.Services.TimetableServices;
 
 namespace GODP.APIsContinuation.Installers
 {
@@ -70,6 +71,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IClassGroupService, ClassGroupService>();
             services.AddScoped<IHomeAssessmentService, HomeAssessmentService>();
+            services.AddScoped<ITimeTableService, TimeTableService>();
         }
     }
 }
