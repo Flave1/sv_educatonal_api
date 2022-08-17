@@ -8,9 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SMP.API.Controllers.TimetableController
+namespace SMP.API.Controllers.TeacherControllers
 {
     [PortalAuthorize]
+    [AllowAnonymous]
     [Route("api/v1/smp/timetable")]
     public class TimetableController : Controller
     {
@@ -19,6 +20,21 @@ namespace SMP.API.Controllers.TimetableController
         {
             this.service = service;
         }
+
+        [HttpGet("get/active-classes")]
+        public async Task<IActionResult> GetAllActiveClassesAsync()
+        {
+            var response = await service.GetAllActiveClassesAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("get/class-time-table/{classId}")]
+        public async Task<IActionResult> GetClassTimeTableAsync(string classId)
+        {
+            var response = await service.GetClassTimeTableAsync(Guid.Parse(classId));
+            return Ok(response);
+        }
+
         [HttpPost("create/class-timetable-day")]
         public async Task<IActionResult> CreateClassTimeTableDay([FromBody] CreateClassTimeTableDay request)
         {
@@ -27,14 +43,7 @@ namespace SMP.API.Controllers.TimetableController
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("create/class-timetable")]
-        public async Task<IActionResult> CreateClassTimeTable([FromBody] CreateClassTimeTable request)
-        {
-            var response = await service.CreateClassTimeTableAsync(request);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
-        }
+     
         [HttpPost("create/class-timetable-time")]
         public async Task<IActionResult> CreateClassTimeTable([FromBody] CreateClassTimeTableTime request)
         {
@@ -51,11 +60,6 @@ namespace SMP.API.Controllers.TimetableController
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpGet("get/class-time-table/{classId}")]
-        public async Task<IActionResult> GetClassTimeTableAsync(string classId)
-        {
-            var response = await service.GetClassTimeTableAsync(Guid.Parse(classId));
-            return Ok(response);
-        }
+        
     }
 }

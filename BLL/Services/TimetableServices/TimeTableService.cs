@@ -1,4 +1,5 @@
 ﻿using BLL;
+using Contracts.Class;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -20,30 +21,50 @@ namespace SMP.BLL.Services.TimetableServices
             this.context = context;
         }
 
-        public async Task<APIResponse<CreateClassTimeTable>> CreateClassTimeTableAsync(CreateClassTimeTable request)
+        async Task<APIResponse<List<GetApplicationLookups>>> ITimeTableService.GetAllActiveClassesAsync()
         {
-            var res = new APIResponse<CreateClassTimeTable>();
+            var res = new APIResponse<List<GetApplicationLookups>>();
+            var activeClasses =  context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true);
 
-            try
+            if (activeClasses.Count() == context.ClassTimeTable.Count())
             {
-                var req = new ClassTimeTable
+               res.Result = await activeClasses.Select(a => new GetApplicationLookups
                 {
-                    ClassId = Guid.Parse(request.ClassId)
-                };
-
-                await context.ClassTimeTable.AddAsync(req);
-                await context.SaveChangesAsync();
-
-                res.Result = request;
+                    LookupId = a.ClassLookupId.ToString().ToLower(),
+                    Name = a.Name,
+                    IsActive = a.IsActive,
+                    GradeLevelId = a.GradeGroupId.ToString(),
+                }).ToListAsync();
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception ex)
+            var noneAddedClassIds = context.ClassLookUp.Where(s => !context.ClassTimeTable.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+            && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
+
+            if (noneAddedClassIds.Any())
             {
-                throw ex;
+                foreach (var id in noneAddedClassIds)
+                {
+                    var req = new ClassTimeTable
+                    {
+                        ClassId = id
+                    };
+                    await context.ClassTimeTable.AddAsync(req);
+                }
+                await context.SaveChangesAsync();
             }
+            res.Result = await activeClasses.Select(a => new GetApplicationLookups
+            {
+                LookupId = a.ClassLookupId.ToString().ToLower(),
+                Name = a.Name,
+                IsActive = a.IsActive,
+                GradeLevelId = a.GradeGroupId.ToString(),
+            }).ToListAsync();
+
+            res.IsSuccessful = true;
+            return res;
         }
+
 
         public async Task<APIResponse<CreateClassTimeTableDay>> CreateClassTimeTableDayAsync(CreateClassTimeTableDay request)
         {
@@ -58,6 +79,32 @@ namespace SMP.BLL.Services.TimetableServices
                 };
 
                 await context.ClassTimeTableDay.AddAsync(req);
+                await context.SaveChangesAsync();
+
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<APIResponse<CreateClassTimeTableTime>> CreateClassTimeTableTimeAsync(CreateClassTimeTableTime request)
+        {
+            var res = new APIResponse<CreateClassTimeTableTime>();
+            try
+            {
+                var req = new ClassTimeTableTime
+                {
+                    Start = request.Start,
+                    End = request.End,
+                    ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
+                };
+
+                await context.ClassTimeTableTime.AddAsync(req);
                 await context.SaveChangesAsync();
 
                 res.Result = request;
@@ -98,44 +145,17 @@ namespace SMP.BLL.Services.TimetableServices
             }
         }
 
-        public async Task<APIResponse<CreateClassTimeTableTime>> CreateClassTimeTableTimeAsync(CreateClassTimeTableTime request)
+      
+        public async Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId)
         {
-            var res = new APIResponse<CreateClassTimeTableTime>();
-
-            try
-            {
-                var req = new ClassTimeTableTime
-                {
-                    Start = request.Start,
-                    End = request.End,
-                    ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
-                };
-
-                await context.ClassTimeTableTime.AddAsync(req);
-                await context.SaveChangesAsync();
-
-                res.Result = request;
-                res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
-                return res;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public async Task<APIResponse<List<GetClassActivity>>> GetClassTimeTableAsync(Guid classId)
-        {
-            var res = new APIResponse<List<GetClassActivity>>();
+            var res = new APIResponse<List<GetClassTimeActivity>>();
 
             var result = await context.ClassTimeTable
-                //.Include(s => s.ClassId)
                 .Include(s => s.Class)
                 .Include(s => s.Days)
-                .OrderByDescending(d => d.CreatedOn)
+                 .Include(s => s.Times).ThenInclude(d => d.Activities)
                 .Where(d => d.Deleted == false && d.ClassId == classId)
-                .Select(f => new GetClassActivity(f)).ToListAsync();
+                .Select(f => new GetClassTimeActivity(f)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

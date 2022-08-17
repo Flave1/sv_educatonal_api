@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static SMP.Contracts.Timetable.Timetable;
 
 namespace SMP.Contracts.Timetable
 {
@@ -31,61 +28,71 @@ namespace SMP.Contracts.Timetable
         public string ClassTimeTableDayId { get; set; }
     }
 
-    public class GetClassActivity
+    public class GetClassTimeActivity
     {
         public string ClassName { get; set; }
-        public string classTimeTableId { get; set; }
-        public Timetable timetable { get; set; }
+        public string ClassTimeTableId { get; set; }
+        public Timetable Timetable { get; set; }
 
-        public GetClassActivity(ClassTimeTable db)
+        public GetClassTimeActivity(ClassTimeTable db)
         {
-            var days = db.Days.ToList();
-            var times = db.Times.ToList();
             ClassName = db.Class.Name;
-            classTimeTableId = db.ClassTimeTableId.ToString();
-            timetable = new Timetable
-            {
-                days = days.Select(id => new Day(id.ClassTimeTableDayId, db.ClassTimeTableId.ToString(), db.Days)).ToList(),
-                times = times.Select(id => new Time(id.ClassTimeTableTimeId, db.Times)).ToList()
-
-            };
-       
+            ClassTimeTableId = db.ClassTimeTableId.ToString();
+            Timetable = new Timetable(db.Days, db.Times);
         }
-
-    }
-    public class Time
-    {
-        public string classTimeTableTimeId { get; set; }
-        public string period { get; set; }
-        
     }
 
     public class Timetable
     {
-        public List<Day> days { get; set; }
-        public List<Time> times { get; set; }
-
-        public class Day
+        public Day[] days { get; set; } = Array.Empty<Day>();
+        public Time[] times { get; set; } = Array.Empty<Time>();
+        public Timetable(ICollection<ClassTimeTableDay> dayList, ICollection<ClassTimeTableTime> timeList)
         {
-            public string day { get; set; }
-            public string classTimeTableDayId { get; set; }
-
-            public Day(Guid id, string classTimeTableId, ICollection<ClassTimeTableDay> timeTableDays)
+            if (dayList.Any())
             {
-                var feedBack = timeTableDays.ToList().Where(s => s.ClassTimeTableId == Guid.Parse(classTimeTableId));
-                day = feedBack.FirstOrDefault(x => x.ClassTimeTableDayId == id).Day;
-                classTimeTableDayId = feedBack.FirstOrDefault(x => x.ClassTimeTableDayId == id).ClassTimeTableDayId.ToString();
+                days = dayList.Select(s => new Day(s)).ToArray();
+            }
+            if (timeList.Any())
+            {
+                times = timeList.OrderBy(d => d.Start).Select(s => new Time(s)).ToArray();
             }
         }
 
-        public class Time
+    }
+
+    public class PeriodActivities
+    {
+        public string activity { get; set; }
+        public string classTimeTableDayId { get; set; }
+        public PeriodActivities(ClassTimeTableTimeActivity db)
         {
-            public string classTimeTableTimeId { get; set; }
-            public string period { get; set; }
-            public Time(Guid id, ICollection<ClassTimeTableTime> classTimeTableTime)
-            {
-                
-            }
+            activity = db.Activity;
+            classTimeTableDayId = db.Day.ClassTimeTableDayId.ToString();
+        }
+    }
+
+    public class Day
+    {
+        public string day { get; set; }
+        public string classTimeTableDayId { get; set; }
+        public Day(ClassTimeTableDay db)
+        {
+            day = db.Day;
+            classTimeTableDayId = db.ClassTimeTableDayId.ToString();
+        }
+
+    }
+
+    public class Time
+    {
+        public string classTimeTableTimeId { get; set; }
+        public string period { get; set; }
+        public PeriodActivities[] periodActivities { get; set; } = Array.Empty<PeriodActivities>();
+        public Time(ClassTimeTableTime time)
+        {
+            classTimeTableTimeId = time.ClassTimeTableTimeId.ToString();
+            period = time.Start + " - " + time.End;
+            periodActivities = time.Activities.Select(d => new PeriodActivities(d)).ToArray();
         }
     }
 }
