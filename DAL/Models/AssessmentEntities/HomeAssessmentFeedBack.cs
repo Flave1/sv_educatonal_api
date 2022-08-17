@@ -1,11 +1,12 @@
-﻿using DAL.StudentInformation;
+﻿using DAL;
+using DAL.StudentInformation;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMP.DAL.Models.AssessmentEntities
 {
-    public class HomeAssessmentFeedBack
+    public class HomeAssessmentFeedBack : CommonEntity
     {
         [Key]
         public Guid HomeAssessmentFeedBackId { get; set; }
