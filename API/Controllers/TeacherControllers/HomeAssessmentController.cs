@@ -72,5 +72,12 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("get/subject/assessment-score")]
+        public async Task<IActionResult> GetSubjectAssessmentScoreRecordAsync(string sessionClassSubjectId, string sessionClassid)
+        {
+            var response = await service.GetSubjectAssessmentScoreRecordAsync(Guid.Parse(sessionClassSubjectId), Guid.Parse(sessionClassid));
+            return Ok(response);
+        }
+
     }
 }
