@@ -1,0 +1,109 @@
+// See https://aka.ms/new-console-template for more information
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
+using Core;
+using Model;
+using System.Globalization;
+using System.Net;
+using System.Text.RegularExpressions;
+
+Console.WriteLine("Hello, World!");
+var adminConfig = new AdminClientConfig { BootstrapServers = "127.0.0.1:9092" };
+var schemaRegistryConfig = new SchemaRegistryConfig { Url = "http://127.0.0.1:8081" };
+var producerConfig = new ProducerConfig
+{
+    BootstrapServers = "127.0.0.1:9092",
+    // Guarantees delivery of message to topic.
+    EnableDeliveryReports = true,
+    ClientId = Dns.GetHostName()
+};
+using var adminClient = new AdminClientBuilder(adminConfig).Build();
+try
+{
+    await adminClient.CreateTopicsAsync(new[]
+    {
+        new TopicSpecification
+        {
+            Name = "Proxy",
+            ReplicationFactor = 1,
+            NumPartitions = 2
+        }
+    });
+}
+catch (CreateTopicsException e) when (e.Results.Select(r => r.Error.Code)
+    .Any(el => el == ErrorCode.TopicAlreadyExists))
+{
+    Console.WriteLine($"Topic {e.Results[0].Topic} already exists");
+}
+using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+using var producer = new ProducerBuilder<string, Proxy>(producerConfig)
+    .SetKeySerializer(new AvroSerializer<string>(schemaRegistry))
+    .SetValueSerializer(new AvroSerializer<Proxy>(schemaRegistry))
+    .Build();
+
+    var Id = 1;
+    var Sender = "Tunde";
+    var Phone = "Andriod";
+    var Send_at = (int)DateTime.Now.Ticks;
+    var Inserted_at = (int)DateTime.Now.Ticks;
+    var Dlr_timestamp = (int)DateTime.Now.Ticks;
+    var SmsCount = 3;
+    var SourceChannel = "Nibs";
+    var Dlr_description = "Nibs Gateway";
+    var Dlr_status = "NotProcessed";
+    var Dlr_statusCode = 0;
+    var Dlr_statusName = "Not Processed";
+    var Aans_currency = 4;
+    var Cost_per_Sms = 1;
+    var Currency = "EUR";
+    var Ledger_code = "123456";
+    var Network = "MTN";
+    var Nuban = "20220219qwerty";
+    var Text = "Good";
+    //var empEmail = "malik@gmail.com";
+    //ReadLine.Read("Enter your employee Email (e.g. none@example-company.com): ",
+    //"none@example.com").ToLowerInvariant();
+    //var status = 7;
+    //ReadLine.Read("Enter your department code (HR, IT, OPS): ").ToUpperInvariant();
+    //var leaveDurationInHours = TimeSpan.FromDays(1);
+    //int.Parse(ReadLine.Read("Enter number of hours of leave requested (e.g. 8): ", "8"));
+    //var leaveStartDate = DateTime.Now;
+        //DateTime.ParseExact(ReadLine.Read("Enter vacation start date (dd-mm-yy): ",
+        //$"{DateTime.Today:dd-MM-yy}"), "dd-mm-yy", CultureInfo.InvariantCulture);
+
+    var request = new Proxy
+    {
+        Id = Id,
+        Phone = Phone,
+        Sender = Sender,
+        Text = Text,
+        Inserted_at = Inserted_at,
+        Send_at = Send_at,
+        Dlr_timestamp = Dlr_timestamp,
+        Dlr_status = Dlr_status,
+        Dlr_statusCode = Dlr_statusCode,
+        Dlr_statusName = Dlr_statusName,
+        Dlr_description = Dlr_description,
+        Nuban = Nuban,
+        Ledger_code = Ledger_code,
+        Currency = Currency,
+        Network = Network,
+        Aans_currency = Aans_currency,
+        SmsCount = SmsCount,
+        SourceChannel = SourceChannel,
+        Cost_per_Sms = Cost_per_Sms,
+    };
+    var partition = new TopicPartition(
+    ApplicationConstants.ProxyTopicName,
+        new Partition((int)Enum.Parse<Departments>(request.Dlr_status)));
+    var result = await producer.ProduceAsync(partition,
+        new Message<string, Proxy>
+        {
+            Key = $"{request.Sender}-{DateTime.UtcNow.Ticks}",
+            Value = request
+        });
+     
+    Console.WriteLine(
+        $"\nMsg: Your request is queued at offset {result.Offset.Value} in the Topic {result.Topic}:{result.Partition.Value}\n\n");

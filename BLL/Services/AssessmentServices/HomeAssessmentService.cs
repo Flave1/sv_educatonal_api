@@ -7,6 +7,7 @@ using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.Attendance;
@@ -23,10 +24,12 @@ namespace SMP.BLL.Services.AssessmentServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor)
+        private readonly IFileUploadService upload;
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IFileUploadService upload)
         {
             this.context = context;
             this.accessor = accessor;
+            this.upload = upload;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -294,6 +297,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 if (!string.IsNullOrEmpty(request.HomeAssessmentFeedBackId))
                 {
+                    var uploadAssessments = upload.UpdateAssessmentFiles(request.Files, request.FilePath);
                     reg = context.HomeAssessmentFeedBack.FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
                     if(reg is null)
                     {
@@ -306,23 +310,21 @@ namespace SMP.BLL.Services.AssessmentServices
 
                     reg.Content = request.Content;
                     reg.Status = request.ShouldSubmit ? (int)HomeAssessmentStatus.Submitted : (int)HomeAssessmentStatus.Saved;
-                    reg.AttachmentUrls = "";
+                    reg.AttachmentUrls = string.Join(',', uploadAssessments);
                     reg.HomeAssessmentId = Guid.Parse(request.HomeAssessmentId);
                 }
                 else
                 {
                     reg = new HomeAssessmentFeedBack();
-
+                    var uploadAssessments = upload.UploadAssessmentFiles(request.Files);
                     reg.StudentContactId = Guid.Parse(studentContactid);
                     reg.Content = request.Content;
                     reg.Status = request.ShouldSubmit ? (int)HomeAssessmentStatus.Submitted : (int)HomeAssessmentStatus.Saved;
-                    reg.AttachmentUrls = "";
+                    reg.AttachmentUrls = string.Join(',', uploadAssessments);
                     reg.HomeAssessmentId = Guid.Parse(request.HomeAssessmentId);
                     await context.HomeAssessmentFeedBack.AddAsync(reg);
                 }
                 
-                
-
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;

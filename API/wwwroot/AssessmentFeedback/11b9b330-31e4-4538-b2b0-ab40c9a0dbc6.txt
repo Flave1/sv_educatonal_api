@@ -1,0 +1,19 @@
+"lookupId": "a6291eac-c4d3-4256-eabf-08da65e13784"
+"teacherUserAccountId": "17379a23-59f7-480a-86f7-370f9fcbf412",
+sessionclassid: 76b08a88-5ff3-43a7-aab8-08da716ad669
+
+{
+  "noteTitle": "Advise",
+  "noteContent": "Pls treat with caution",
+  "shouldSendForApproval": true,
+  "subjectId": "a6291eac-c4d3-4256-eabf-08da65e13784", 
+  "sessionClassId": "76b08a88-5ff3-43a7-aab8-08da716ad669"
+} 
+homeassessementId:f69ccca4-09c8-41fb-d3f8-08da80177857
+{
+  "userName": "0000031@school.com",
+  "password": "ABC/0000031/xyz"
+}
+
+https://aisphub2c.b2clogin.com/static/tenant/templates/AzureBlue/unified.cshtml
+https://aisphub2c.b2clogin.com/static/tenant/templates/AzureBlue/selfAsserted.cshtml

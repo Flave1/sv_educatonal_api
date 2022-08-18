@@ -16,6 +16,7 @@ namespace SMP.BLL.Services.FileUploadService
         private static string ProfileImagePath = "ProfileImage";
         private static string SchoolLogoPath = "SchoolLogo";
         private static string PrincipalStampPath = "PrincipalStamp";
+        private static string AssessmentFeedbackPath = "AssessmentFeedback";
         public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
         {
             this.environment = environment;
@@ -290,6 +291,99 @@ namespace SMP.BLL.Services.FileUploadService
             throw new ArgumentException("Invalid School Logo");
         }
 
-    }
+        List<string> IFileUploadService.UploadAssessmentFiles(List<IFormFile> files)
+        {
+            var res = new List<string>();
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return res;
+                }
 
+                int maxFileSize = 1024 * 1024 / 2;
+                var fileSize = file.Length;
+
+                if (fileSize > maxFileSize)
+                {
+                    throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+                }
+                 
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString() + extension;
+
+                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AssessmentFeedbackPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AssessmentFeedbackPath}/{fileName}";
+                     
+                    res.Add(url);
+            }
+            return res;
+        }
+
+        List<string> IFileUploadService.UpdateAssessmentFiles(List<IFormFile> files, List<string> filepaths)
+        {
+            var res = new List<string>();
+            foreach (var file in files)
+            {
+                foreach(var filePath in filepaths)
+                {
+                    if (file == null || file.Length == 0)
+                    {
+                        res.Add(filePath);
+                        return res;
+                    }
+
+                    int maxFileSize = 1024 * 1024 / 2;
+                    var fileSize = file.Length;
+
+                    if (fileSize > maxFileSize)
+                    {
+                        throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+
+                    }
+                    string ext = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString() + ext;
+
+                    bool fileExists = File.Exists(filePath);
+                    if (fileExists)
+                    {
+                        File.Delete(filePath);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            fileStream.Position = 0;
+                            file.CopyTo(fileStream);
+                            fileStream.Flush();
+                            fileStream.Close();
+                        }
+                    }
+                    else
+                    {
+                        var filepath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AssessmentFeedbackPath, fileName);
+
+                        using (var fileStream = new FileStream(filepath, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            fileStream.Position = 0;
+                            file.CopyTo(fileStream);
+                            fileStream.Flush();
+                            fileStream.Close();
+                        }
+                    }
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AssessmentFeedbackPath}/{fileName}";
+                    res.Add(url);
+                }
+            }
+            return res;
+        }
+    }
 }
