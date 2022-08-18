@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace SMP.BLL.Services.FileUploadService
 {
@@ -10,5 +11,7 @@ namespace SMP.BLL.Services.FileUploadService
         string UpdateSchoolLogo(IFormFile file, string filePath);
         string UploadPrincipalStamp(IFormFile file);
         string UpdatePrincipalStamp(IFormFile file, string filePath);
+        List<string> UploadAssessmentFiles(List<IFormFile> files);
+        List<string> UpdateAssessmentFiles(List<IFormFile> files, List<string> filepaths);
     }
 }

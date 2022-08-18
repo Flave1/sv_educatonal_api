@@ -14,6 +14,7 @@ namespace SMP.Contracts.Assessment
         public bool ShouldSubmit { get; set; }
         public string HomeAssessmentId { get; set; }
         public List<IFormFile> Files { get; set; }
+        public List<string> FilePath { get; set; }
     }
 
     public class StudentHomeAssessmentRequest
