@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SMP.BLL.Services.AnnouncementServices;
 using SMP.BLL.Services.AnnouncementsServices;
+using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.AttendanceServices;
 using SMP.BLL.Services.DashboardServices;
 using SMP.BLL.Services.EnrollmentServices;
@@ -22,6 +23,7 @@ using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.TeacherServices;
+using SMP.BLL.Services.TimetableServices;
 
 namespace GODP.APIsContinuation.Installers
 {
@@ -67,6 +69,9 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IPinManagementService, PinManagementService>();
             services.AddScoped<IAnnouncementsService, AnnouncementService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IClassGroupService, ClassGroupService>();
+            services.AddScoped<IHomeAssessmentService, HomeAssessmentService>();
+            services.AddScoped<ITimeTableService, TimeTableService>();
         }
     }
 }

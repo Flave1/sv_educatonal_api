@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220817125541_commentOnAssessmenttas")]
+    partial class commentOnAssessmenttas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1890,132 +1892,6 @@ namespace SMP.DAL.Migrations
                     b.ToTable("StudentSessionClassHistory");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTable", b =>
-                {
-                    b.Property<Guid>("ClassTimeTableId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ClassTimeTableId");
-
-                    b.HasIndex("ClassId");
-
-                    b.ToTable("ClassTimeTable");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableDay", b =>
-                {
-                    b.Property<Guid>("ClassTimeTableDayId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassTimeTableId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Day")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ClassTimeTableDayId");
-
-                    b.HasIndex("ClassTimeTableId");
-
-                    b.ToTable("ClassTimeTableDay");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTime", b =>
-                {
-                    b.Property<Guid>("ClassTimeTableTimeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassTimeTableId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("End")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Start")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ClassTimeTableTimeId");
-
-                    b.HasIndex("ClassTimeTableId");
-
-                    b.ToTable("ClassTimeTableTime");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTimeActivity", b =>
-                {
-                    b.Property<Guid>("ClassTimeTableTimeActivityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Activity")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("ClassTimeTableDayId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassTimeTableTimeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ClassTimeTableTimeActivityId");
-
-                    b.HasIndex("ClassTimeTableDayId");
-
-                    b.HasIndex("ClassTimeTableTimeId");
-
-                    b.ToTable("ClassTimeTableTimeActivity");
-                });
-
             modelBuilder.Entity("DAL.Authentication.UserRole", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
@@ -2688,56 +2564,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("StudentContact");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTable", b =>
-                {
-                    b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
-                        .WithMany()
-                        .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Class");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableDay", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.Timetable.ClassTimeTable", "TimeTable")
-                        .WithMany("Days")
-                        .HasForeignKey("ClassTimeTableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TimeTable");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTime", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.Timetable.ClassTimeTable", "TimeTable")
-                        .WithMany("Times")
-                        .HasForeignKey("ClassTimeTableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TimeTable");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTimeActivity", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.Timetable.ClassTimeTableDay", "Day")
-                        .WithMany()
-                        .HasForeignKey("ClassTimeTableDayId");
-
-                    b.HasOne("SMP.DAL.Models.Timetable.ClassTimeTableTime", "Time")
-                        .WithMany("Activities")
-                        .HasForeignKey("ClassTimeTableTimeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Day");
-
-                    b.Navigation("Time");
-                });
-
             modelBuilder.Entity("DAL.Authentication.AppActivityParent", b =>
                 {
                     b.Navigation("Activities");
@@ -2826,18 +2652,6 @@ namespace SMP.DAL.Migrations
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>
                 {
                     b.Navigation("ScoreEntries");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTable", b =>
-                {
-                    b.Navigation("Days");
-
-                    b.Navigation("Times");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTime", b =>
-                {
-                    b.Navigation("Activities");
                 });
 #pragma warning restore 612, 618
         }
