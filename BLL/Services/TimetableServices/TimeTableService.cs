@@ -163,5 +163,22 @@ namespace SMP.BLL.Services.TimetableServices
             res.IsSuccessful = true;
             return res;
         }
+
+        public async Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day)
+        {
+            var res = new APIResponse<List<GetClassTimeActivityByDay>>();
+            var actualDay = context.ClassTimeTableDay.Where(x => x.Day == day).FirstOrDefault();
+
+            var result = await context.ClassTimeTable
+                .Include(s => s.Days)
+                 .Include(s => s.Times).ThenInclude(d => d.Activities)
+                .Where(d => d.Deleted == false && d.Days.Contains(actualDay))
+                .Select(f => new GetClassTimeActivityByDay(f, actualDay)).ToListAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }

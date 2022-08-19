@@ -16,5 +16,6 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<CreateClassTimeTableTimeActivity>> CreateClassTimeTableTimeActivityAsync(CreateClassTimeTableTimeActivity request);
         Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassesAsync();
         Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId);
+        Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day);
     }
 }

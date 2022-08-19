@@ -60,6 +60,11 @@ namespace SMP.API.Controllers.TeacherControllers
                 return Ok(response);
             return BadRequest(response);
         }
-        
+        [HttpGet("get/class-time-table-by-day/{day}")]
+        public async Task<IActionResult> GetClassTimeTableByDayAsync(string day)
+        {
+            var response = await service.GetClassTimeActivityByDayAsync(day);
+            return Ok(response);
+        }
     }
 }
