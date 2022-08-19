@@ -98,7 +98,7 @@ namespace SMP.Contracts.Assessment
             if (db.Status == 0)
                 Status = "saved";
             if (studentIds.Any())
-                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
+                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents, db.AssessmentScoreRecord)).ToList();
         }
     }
 
@@ -107,12 +107,14 @@ namespace SMP.Contracts.Assessment
         public string StudentName { get; set; }
         public string Status { get; set; }
         public string HomeAsessmentFeedbackId { get; set; }
-        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students)
+        public decimal Score { get; set; }
+        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students, ICollection<AssessmentScoreRecord> fbs)
         {
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             var student = students.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
             StudentName = student.User.FirstName + " " + student.User.MiddleName + " " + student.User.LastName;
+            Score = fbs?.FirstOrDefault(d => d.StudentContactId == student.StudentContactId)?.Score ??0;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)

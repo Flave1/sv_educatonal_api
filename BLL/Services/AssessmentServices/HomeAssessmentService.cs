@@ -7,6 +7,7 @@ using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.Constants;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.Attendance;
@@ -200,10 +201,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
+                 .Include(q => q.AssessmentScoreRecord)
                  .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
                 .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
-                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass)).FirstOrDefaultAsync();
+                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass.Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList())).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
@@ -347,7 +349,6 @@ namespace SMP.BLL.Services.AssessmentServices
 
         async Task<APIResponse<GetHomeAssessmentFeedback>> IHomeAssessmentService.GetSingleHomeAssessmentsByStudentAsync(Guid homeAssessmentFeedBackId)
         {
-            var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
             var res = new APIResponse<GetHomeAssessmentFeedback>();
 
             var result = await context.HomeAssessmentFeedBack
@@ -362,6 +363,29 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
           
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<GetHomeAssessmentFeedback>> IHomeAssessmentService.GetSingleHomeAssessmentsByTeacherAsync(Guid homeAssessmentFeedBackId)
+        {
+            var res = new APIResponse<GetHomeAssessmentFeedback>();
+
+            var result = await context.HomeAssessmentFeedBack
+                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Students)
+                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Class)
+                .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionTerm)
+                .OrderByDescending(d => d.CreatedOn)
+                .Where(d => d.Deleted == false
+                && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+                .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
+
+
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

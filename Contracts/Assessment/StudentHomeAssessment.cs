@@ -66,6 +66,7 @@ namespace SMP.Contracts.Assessment
         public string HomeAssessmentFeedBackId { get; set; }
         public string Content { get; set; }
         public int Status { get; set; }
+        public decimal Score { get; set; }
         public string HomeAssessmentId { get; set; }
         public string StatusName { get; set; }
         public List<string> Files { get; set; }
