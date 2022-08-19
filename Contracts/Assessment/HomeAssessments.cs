@@ -112,7 +112,7 @@ namespace SMP.Contracts.Assessment
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             var student = students.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
-            StudentName = student.User.FirstName + " " + student.User.FirstName;
+            StudentName = student.User.FirstName + " " + student.User.MiddleName + " " + student.User.LastName;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)

@@ -30,5 +30,6 @@ namespace SMP.DAL.Models.ClassEntities
         public int AssessmentScore { get; set; }
         public virtual ICollection<ClassAssessment> ClassAssessments { get; set; }
         public virtual ICollection<HomeAssessment> HomeAssessments { get; set; }
+        public virtual ICollection<SessionClassGroup> SessionClassGroups { get; set; }
     }
 }

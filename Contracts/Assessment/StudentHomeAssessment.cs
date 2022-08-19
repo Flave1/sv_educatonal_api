@@ -16,6 +16,12 @@ namespace SMP.Contracts.Assessment
         public List<IFormFile> Files { get; set; }
     }
 
+    public class ScoreHomeAssessmentFeedback
+    {
+        public string HomeAssessmentFeedBackId { get; set; }
+        public decimal Score { get; set; }
+    }
+
     public class StudentHomeAssessmentRequest
     {
         public string HomeAssessmentFeedBackId { get; set; }
