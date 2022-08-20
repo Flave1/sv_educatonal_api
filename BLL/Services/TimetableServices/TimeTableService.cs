@@ -168,12 +168,13 @@ namespace SMP.BLL.Services.TimetableServices
         {
             var res = new APIResponse<List<GetClassTimeActivityByDay>>();
             var actualDay = context.ClassTimeTableDay.Where(x => x.Day == day).FirstOrDefault();
+            var classList = context.ClassLookUp.Where(x => x.Deleted == false).ToList();
 
             var result = await context.ClassTimeTable
                 .Include(s => s.Days)
                  .Include(s => s.Times).ThenInclude(d => d.Activities)
                 .Where(d => d.Deleted == false && d.Days.Contains(actualDay))
-                .Select(f => new GetClassTimeActivityByDay(f, actualDay)).ToListAsync();
+                .Select(f => new GetClassTimeActivityByDay(f, actualDay, classList)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

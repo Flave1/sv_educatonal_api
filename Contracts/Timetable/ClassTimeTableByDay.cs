@@ -14,19 +14,25 @@ namespace SMP.Contracts.Timetable
         public string ClassTimeTableDayId { get; set; }
         public TimetableObj Timetable { get; set; }
 
-        public GetClassTimeActivityByDay(ClassTimeTable classTimeTable, ClassTimeTableDay day)
+        public GetClassTimeActivityByDay(ClassTimeTable classTimeTable, ClassTimeTableDay day, ICollection<ClassLookup> classLookup)
         {
             Day = day.Day;
             ClassTimeTableDayId = day.ClassTimeTableDayId.ToString();
-            Timetable = new TimetableObj(classTimeTable.Times);
+            Timetable = new TimetableObj(classTimeTable.Times, classLookup);
         }
     }
 
     public class TimetableObj
     {
+
+        public ClassObj[] classes { get; set; } = Array.Empty<ClassObj>();
         public TimeObj[] times { get; set; } = Array.Empty<TimeObj>();
-        public TimetableObj(ICollection<ClassTimeTableTime> timeList)
+        public TimetableObj(ICollection<ClassTimeTableTime> timeList, ICollection<ClassLookup> classLookup)
         {
+            if (classLookup.Any())
+            {
+                classes = classLookup.Select(s => new ClassObj(s)).ToArray();
+            }
             if (timeList.Any())
             {
                 times = timeList.OrderBy(d => d.Start).Select(s => new TimeObj(s)).ToArray();
@@ -58,6 +64,17 @@ namespace SMP.Contracts.Timetable
             classTimeTableId = time.ClassTimeTableId.ToString();
             period = time.Start + " - " + time.End;
             periodActivities = time.Activities.Select(d => new PeriodActivitiesObj(d)).ToArray();
+        }
+    }
+
+    public class ClassObj
+    {
+        public string classId { get; set; }
+        public string className { get; set; }
+        public ClassObj(ClassLookup classLookup)
+        {
+            classId = classLookup.ClassLookupId.ToString();
+            className = classLookup.Name.ToString();
         }
     }
 }
