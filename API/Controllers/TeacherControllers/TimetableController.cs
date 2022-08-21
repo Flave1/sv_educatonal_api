@@ -1,4 +1,5 @@
 ﻿using BLL.MiddleWares;
+using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.TimetableServices;
@@ -53,9 +54,9 @@ namespace SMP.API.Controllers.TeacherControllers
             return BadRequest(response);
         }
         [HttpPost("create/class-timetable-time-activity")]
-        public async Task<IActionResult> CreateClassTimeTableTimeActivity([FromBody] CreateClassTimeTableTimeActivity request)
+        public async Task<IActionResult> CreateClassTimeTableTimeActivity([FromBody] UpdateClassTimeTableTimeActivity request)
         {
-            var response = await service.CreateClassTimeTableTimeActivityAsync(request);
+            var response = await service.UpdateClassTimeTableTimeActivityAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -65,6 +66,32 @@ namespace SMP.API.Controllers.TeacherControllers
         {
             var response = await service.GetClassTimeActivityByDayAsync(day);
             return Ok(response);
+        }
+
+        [HttpPost("delete/class-timetable-time")]
+        public async Task<IActionResult> DeleteClassTimeTableTimeAsync([FromBody] SingleDelete request)
+        {
+            var response = await service.DeleteClassTimeTableTimeAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("delete/class-timetable-day")]
+        public async Task<IActionResult> DeleteClassTimeTableDayAsync([FromBody] SingleDelete request)
+        {
+            var response = await service.DeleteClassTimeTableDayAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("delete/class-timetable-activity")]
+        public async Task<IActionResult> UpdateClassTimeTableTimeActivityAsync([FromBody] UpdateClassTimeTableTimeActivity request)
+        {
+            var response = await service.UpdateClassTimeTableTimeActivityAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
     }
 }

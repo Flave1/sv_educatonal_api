@@ -1,45 +1,61 @@
-﻿using DAL.ClassEntities;
-using SMP.DAL.Models.Timetable;
+﻿using SMP.DAL.Models.Timetable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.Timetable
 {
+    public class GetClassDays
+    {
+        public string Day { get; set; }
+        public string ClassTimeTableDayId { get; set; }
+
+        public GetClassDays(ClassTimeTableDay day)
+        {
+            Day = day.Day;
+            ClassTimeTableDayId = day.ClassTimeTableDayId.ToString();
+        }
+    }
     public class GetClassTimeActivityByDay
     {
         public string Day { get; set; }
         public string ClassTimeTableDayId { get; set; }
-        public TimetableObj Timetable { get; set; }
-
-        public GetClassTimeActivityByDay(ClassTimeTable classTimeTable, ClassTimeTableDay day, ICollection<ClassLookup> classLookup)
-        {
-            Day = day.Day;
-            ClassTimeTableDayId = day.ClassTimeTableDayId.ToString();
-            Timetable = new TimetableObj(classTimeTable.Times, classLookup);
-        }
-    }
-
-    public class TimetableObj
-    {
-
         public ClassObj[] classes { get; set; } = Array.Empty<ClassObj>();
         public TimeObj[] times { get; set; } = Array.Empty<TimeObj>();
-        public TimetableObj(ICollection<ClassTimeTableTime> timeList, ICollection<ClassLookup> classLookup)
+
+        public GetClassTimeActivityByDay(ClassTimeTable classTimeTable, List<ClassTimeTable> tableList)
         {
-            if (classLookup.Any())
+            Day = classTimeTable.Days.FirstOrDefault().Day;
+            ClassTimeTableDayId = classTimeTable.Days.FirstOrDefault().ClassTimeTableDayId.ToString();
+            if (tableList.Any())
             {
-                classes = classLookup.Select(s => new ClassObj(s)).ToArray();
+                classes = tableList.Select(s => new ClassObj(s)).ToArray();
             }
-            if (timeList.Any())
+            if (classTimeTable.Times.Any())
             {
-                times = timeList.OrderBy(d => d.Start).Select(s => new TimeObj(s)).ToArray();
+                times = classTimeTable.Times.OrderBy(d => d.Start).Select(s => new TimeObj(s)).ToArray();
             }
         }
-
     }
+
+    //public class TimetableObj
+    //{
+
+    //    public ClassObj[] classes { get; set; } = Array.Empty<ClassObj>();
+    //    public TimeObj[] times { get; set; } = Array.Empty<TimeObj>();
+    //    public TimetableObj(ICollection<ClassTimeTableTime> timeList)
+    //    {
+    //        if (classLookup.Any())
+    //        {
+    //            classes = classLookup.Select(s => new ClassObj(s)).ToArray();
+    //        }
+    //        if (timeList.Any())
+    //        {
+    //            times = timeList.OrderBy(d => d.Start).Select(s => new TimeObj(s)).ToArray();
+    //        }
+    //    }
+
+    //}
 
     public class PeriodActivitiesObj
     {
@@ -71,10 +87,12 @@ namespace SMP.Contracts.Timetable
     {
         public string classId { get; set; }
         public string className { get; set; }
-        public ClassObj(ClassLookup classLookup)
+        public string ClassTimeTableId { get; set; }
+        public ClassObj(ClassTimeTable classs)
         {
-            classId = classLookup.ClassLookupId.ToString();
-            className = classLookup.Name.ToString();
+            classId = classs.ClassId.ToString();
+            className = classs.Class.Name.ToString();
+            ClassTimeTableId = classs.ClassTimeTableId.ToString();
         }
     }
 }

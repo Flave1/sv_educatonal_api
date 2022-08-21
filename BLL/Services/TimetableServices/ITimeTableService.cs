@@ -1,5 +1,6 @@
 ﻿using BLL;
 using Contracts.Class;
+using Contracts.Common;
 using SMP.Contracts.Timetable;
 using System;
 using System.Collections.Generic;
@@ -13,9 +14,11 @@ namespace SMP.BLL.Services.TimetableServices
     {
         Task<APIResponse<CreateClassTimeTableDay>> CreateClassTimeTableDayAsync(CreateClassTimeTableDay request);
         Task<APIResponse<CreateClassTimeTableTime>> CreateClassTimeTableTimeAsync(CreateClassTimeTableTime request);
-        Task<APIResponse<CreateClassTimeTableTimeActivity>> CreateClassTimeTableTimeActivityAsync(CreateClassTimeTableTimeActivity request);
+        Task<APIResponse<UpdateClassTimeTableTimeActivity>> UpdateClassTimeTableTimeActivityAsync(UpdateClassTimeTableTimeActivity request);
         Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassesAsync();
         Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId);
         Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day);
+        Task<APIResponse<SingleDelete>> DeleteClassTimeTableDayAsync(SingleDelete request);
+        Task<APIResponse<SingleDelete>> DeleteClassTimeTableTimeAsync(SingleDelete request);
     }
 }

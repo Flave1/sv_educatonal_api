@@ -14,5 +14,6 @@ namespace SMP.DAL.Models.Timetable
         public Guid ClassTimeTableId { get; set; }
         [ForeignKey("ClassTimeTableId")]
         public ClassTimeTable TimeTable { get; set; }
+        public List<ClassTimeTableTimeActivity> Activities { get; set; }
     }
 }
