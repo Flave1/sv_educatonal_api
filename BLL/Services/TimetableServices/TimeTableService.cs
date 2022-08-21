@@ -8,7 +8,6 @@ using SMP.DAL.Models.Timetable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.TimetableServices
