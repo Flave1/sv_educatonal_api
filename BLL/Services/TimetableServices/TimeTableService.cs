@@ -139,6 +139,7 @@ namespace SMP.BLL.Services.TimetableServices
                     }
                      await context.SaveChangesAsync();
                 }
+
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
