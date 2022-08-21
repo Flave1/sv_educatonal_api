@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220819045127_assementScoreOnClassAssessment")]
+    partial class assementScoreOnClassAssessment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -819,9 +821,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("ListOfStudentIds")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("Scorer")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
@@ -948,6 +947,7 @@ namespace SMP.DAL.Migrations
 
                     b.ToTable("HomeAssessmentFeedBack");
                 });
+
             modelBuilder.Entity("SMP.DAL.Models.Attendance.StudentAttendance", b =>
                 {
                     b.Property<Guid>("ClassAttendanceId")
@@ -2338,7 +2338,7 @@ namespace SMP.DAL.Migrations
                         .HasForeignKey("SessionClassId");
 
                     b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
-                        .WithMany("SessionClassGroups")
+                        .WithMany()
                         .HasForeignKey("SessionClassSubjectId");
 
                     b.Navigation("SessionClass");
@@ -2794,8 +2794,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ClassAssessments");
 
                     b.Navigation("HomeAssessments");
-
-                    b.Navigation("SessionClassGroups");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.GradeGroup", b =>

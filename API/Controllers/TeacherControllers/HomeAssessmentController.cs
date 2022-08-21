@@ -13,10 +13,10 @@ namespace SMP.API.Controllers
     [PortalAuthorize]
     [AllowAnonymous]
     [Route("homeassessment/api/v1")]
-    public class AssessmentController : Controller
+    public  class HomeAssessmentController : Controller
     {
         private readonly IHomeAssessmentService service;
-        public AssessmentController(IHomeAssessmentService service)
+        public HomeAssessmentController(IHomeAssessmentService service)
         {
             this.service = service;
         }
@@ -50,7 +50,7 @@ namespace SMP.API.Controllers
         [HttpGet("get/single/home-assessments")]
         public async Task<IActionResult> GetSingleHomeAssessmentsAsync(string homeassessmentId, string sessionClassid)
         {
-            var response = await service.GetSingleHomeAssessmentAsync(Guid.Parse(homeassessmentId), Guid.Parse(sessionClassid));
+            var response = await service.GetSingleHomeAssessmentAsync(Guid.Parse(homeassessmentId), sessionClassid);
             return Ok(response);
         }
 
@@ -67,6 +67,22 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> SendHomeAssessmentsAsync([FromBody] SendHomeAssessmentRequest request)
         {
             var response = await service.SendHomeAssessmentToStudentsAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/subject/assessment-score")]
+        public async Task<IActionResult> GetSubjectAssessmentScoreRecordAsync(string sessionClassSubjectId, string sessionClassid)
+        {
+            var response = await service.GetSubjectAssessmentScoreRecordAsync(Guid.Parse(sessionClassSubjectId), Guid.Parse(sessionClassid));
+            return Ok(response);
+        }
+
+        [HttpPost("score/assessment-feedback")]
+        public async Task<IActionResult> ScoreHomeAssessmentsAsync([FromBody] ScoreHomeAssessmentFeedback request)
+        {
+            var response = await service.ScoreHomeAssessmentByStudentAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

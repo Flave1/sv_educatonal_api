@@ -72,6 +72,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IClassGroupService, ClassGroupService>();
             services.AddScoped<IHomeAssessmentService, HomeAssessmentService>();
             services.AddScoped<ITimeTableService, TimeTableService>();
+            services.AddScoped<IClassAssessmentService, ClassAssessmentService>();
         }
     }
 }
