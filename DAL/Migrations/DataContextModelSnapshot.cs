@@ -948,7 +948,6 @@ namespace SMP.DAL.Migrations
 
                     b.ToTable("HomeAssessmentFeedBack");
                 });
-
             modelBuilder.Entity("SMP.DAL.Models.Attendance.StudentAttendance", b =>
                 {
                     b.Property<Guid>("ClassAttendanceId")

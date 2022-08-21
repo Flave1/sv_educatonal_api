@@ -1,5 +1,6 @@
 ﻿using BLL;
 using Contracts.Class;
+using Contracts.Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -65,7 +66,6 @@ namespace SMP.BLL.Services.TimetableServices
             return res;
         }
 
-
         public async Task<APIResponse<CreateClassTimeTableDay>> CreateClassTimeTableDayAsync(CreateClassTimeTableDay request)
         {
             var res = new APIResponse<CreateClassTimeTableDay>();
@@ -80,6 +80,22 @@ namespace SMP.BLL.Services.TimetableServices
 
                 await context.ClassTimeTableDay.AddAsync(req);
                 await context.SaveChangesAsync();
+
+                var classTimes = context.ClassTimeTableTime.Where(d => d.ClassTimeTableId == Guid.Parse(request.ClassTimeTableId)).AsEnumerable();
+                if (classTimes.Any())
+                {
+                    foreach (var time in classTimes)
+                    {
+                        var act = new ClassTimeTableTimeActivity
+                        {
+                            Activity = "",
+                            ClassTimeTableTimeId = time.ClassTimeTableTimeId,
+                            ClassTimeTableDayId = req.ClassTimeTableDayId
+                        };
+                        await context.ClassTimeTableTimeActivity.AddAsync(act);
+                    }
+                    await context.SaveChangesAsync();
+                }
 
                 res.Result = request;
                 res.IsSuccessful = true;
@@ -107,6 +123,22 @@ namespace SMP.BLL.Services.TimetableServices
                 await context.ClassTimeTableTime.AddAsync(req);
                 await context.SaveChangesAsync();
 
+                var classDays = context.ClassTimeTable.Where(d => d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
+                if (classDays.Any())
+                {
+                    foreach (var day in classDays)
+                    {
+                        var act = new ClassTimeTableTimeActivity
+                        {
+                            Activity = "",
+                            ClassTimeTableTimeId = req.ClassTimeTableTimeId,
+                            ClassTimeTableDayId = day.ClassTimeTableDayId
+                        };
+                        await context.ClassTimeTableTimeActivity.AddAsync(act);
+                    }
+                     await context.SaveChangesAsync();
+                }
+
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
@@ -118,34 +150,36 @@ namespace SMP.BLL.Services.TimetableServices
             }
         }
 
-        public async Task<APIResponse<CreateClassTimeTableTimeActivity>> CreateClassTimeTableTimeActivityAsync(CreateClassTimeTableTimeActivity request)
+        public async Task<APIResponse<UpdateClassTimeTableTimeActivity>> UpdateClassTimeTableTimeActivityAsync(UpdateClassTimeTableTimeActivity request)
         {
-            var res = new APIResponse<CreateClassTimeTableTimeActivity>();
+            var res = new APIResponse<UpdateClassTimeTableTimeActivity>();
 
             try
             {
-                var req = new ClassTimeTableTimeActivity
+                var req = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClassTimeTableTimeActivityId == Guid.Parse(request.ClassTimeTableTimeId));
+                if(req is not null)
                 {
-                    Activity = request.Activity,
-                    ClassTimeTableTimeId = Guid.Parse(request.ClassTimeTableTimeId),
-                    ClassTimeTableDayId = Guid.Parse(request.ClassTimeTableDayId)
-                };
+                    req.Activity = request.Activity;
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
 
-                await context.ClassTimeTableTimeActivity.AddAsync(req);
-                await context.SaveChangesAsync();
 
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
-      
         public async Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId)
         {
             var res = new APIResponse<List<GetClassTimeActivity>>();
@@ -162,5 +196,69 @@ namespace SMP.BLL.Services.TimetableServices
             res.IsSuccessful = true;
             return res;
         }
+
+        public async Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day)
+        {
+            var res = new APIResponse<List<GetClassTimeActivityByDay>>();
+            var classList = context.ClassTimeTable.Include(d => d.Class).Where(x => x.Deleted == false).ToList();
+
+            var result = await context.ClassTimeTable
+                .Include(s => s.Days)
+                 .Include(s => s.Times).ThenInclude(d => d.Activities)
+                .Where(d => d.Deleted == false && d.Days.Select(d => d.Day).Contains(day))
+                .Select(f => new GetClassTimeActivityByDay(f, classList)).ToListAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+        async Task<APIResponse<SingleDelete>> ITimeTableService.DeleteClassTimeTableTimeAsync(SingleDelete request)
+        {
+            var res = new APIResponse<SingleDelete>();
+            try
+            {
+                var classDays = context.ClassTimeTableTime.Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableTimeId == Guid.Parse(request.Item));
+                context.ClassTimeTableTime.Remove(classDays); 
+                await context.SaveChangesAsync();
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        async Task<APIResponse<SingleDelete>> ITimeTableService.DeleteClassTimeTableDayAsync(SingleDelete request)
+        {
+            var res = new APIResponse<SingleDelete>();
+            try
+            {
+                var day = context.ClassTimeTableDay.Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.Item));
+                context.ClassTimeTableDay.Remove(day);
+                await context.SaveChangesAsync();
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<APIResponse<List<GetClassDays>>> GetAllClassDaysAsync()
+        {
+            var res = new APIResponse<List<GetClassDays>>();
+            res.Result = await context.ClassTimeTableDay.Distinct().Select(d => new GetClassDays(d)).ToListAsync();
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+
     }
 }
