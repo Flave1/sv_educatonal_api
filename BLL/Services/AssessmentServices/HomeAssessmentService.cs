@@ -194,7 +194,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 sessionClasId = student.StudentContactId.ToString();
             }
 
-            var studentsInClass = context.SessionClass.Include(s => s.Students).Where(d => d.SessionClassId == Guid.Parse(sessionClasId)).SelectMany(s => s.Students).ToList();
+            var studentsInClass = context.SessionClass.Include(s => s.Students)
+                .Where(d => d.SessionClassId == Guid.Parse(sessionClasId)).SelectMany(s => s.Students)
+                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
             var result = await context.HomeAssessment
                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students).ThenInclude(s => s.User)
@@ -205,7 +207,7 @@ namespace SMP.BLL.Services.AssessmentServices
                  .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
                 .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
-                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass.Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList())).FirstOrDefaultAsync();
+                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

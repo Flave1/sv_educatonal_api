@@ -31,6 +31,7 @@ namespace BLL.EmailServices
 
                 TimeSpan.FromSeconds(times * 2));
             this.logger = logger;
+            emailConfiguration = options.Value;
         }
 
         List<EmailMessage> IEmailService.ReceiveEmail(int maxCount)
