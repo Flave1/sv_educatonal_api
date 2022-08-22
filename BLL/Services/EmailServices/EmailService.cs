@@ -10,6 +10,7 @@ using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -65,12 +66,6 @@ namespace BLL.EmailServices
         {
             try
             {
-                //if (emailMessage.FromAddresses.Count() == 0)
-                //{
-                //    emailMessage.SentBy = "FLAVETECH";
-                //    var caption = "FLAVETECH";
-                //    emailMessage.FromAddresses.Add(new EmailAddress { Name = caption, Address = emailConfiguration.SmtpUsername });
-                //}
                 var mimeMsg = new MimeMessage();
                 var frms = emailMessage.FromAddresses.Select(x => new MailboxAddress(x.Name, x.Address));
                 var tos = emailMessage.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Address));
@@ -86,6 +81,7 @@ namespace BLL.EmailServices
                 using (var client = new SmtpClient())
                 {
                     client.ServerCertificateValidationCallback += (o, c, ch, er) => true;
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                     client.Connect(emailConfiguration.SmtpServer, emailConfiguration.SmtpPort);
 
                     client.AuthenticationMechanisms.Remove("XOAUTH2");
@@ -97,6 +93,7 @@ namespace BLL.EmailServices
 
                     logger.Information($"Email Sent '{mimeMsg.Subject}'");
                     await client.DisconnectAsync(true);
+
                 }
 
             }

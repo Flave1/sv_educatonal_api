@@ -156,7 +156,7 @@ namespace SMP.BLL.Services.TimetableServices
 
             try
             {
-                var req = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClassTimeTableTimeActivityId == Guid.Parse(request.ClassTimeTableTimeId));
+                var req = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
                 if(req is not null)
                 {
                     req.Activity = request.Activity;

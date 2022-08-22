@@ -25,7 +25,7 @@ namespace SMP.Contracts.Timetable
     public class UpdateClassTimeTableTimeActivity
     {
         public string Activity { get; set; }
-        public string ClassTimeTableTimeId { get; set; }
+        public string ActivityId { get; set; }
     }
 
     public class GetClassTimeActivity

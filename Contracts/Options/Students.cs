@@ -20,6 +20,11 @@ namespace Contracts.Options
         public string ResetOptionValue { get; set; }
         public string UserType { get; set; }
     }
+    public class ChangePassword {
+        public string UserId { get; set; }
+        public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
+    }
     public class StudentContactCommand
     {
         /// <summary>

@@ -60,4 +60,10 @@ namespace SMP.Contracts.Assessment
         public string StudentContactId { get; set; }
         public decimal Score { get; set; }
     }
+
+    public class UpdatClassAssessmentScore
+    {
+        public string ClassAssessmentId { get; set; }
+        public int ClassAssessmentScore { get; set; }
+    }
 }

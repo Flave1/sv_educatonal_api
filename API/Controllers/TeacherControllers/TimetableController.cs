@@ -53,7 +53,7 @@ namespace SMP.API.Controllers.TeacherControllers
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpPost("create/class-timetable-time-activity")]
+        [HttpPost("update/class-timetable-time-activity")]
         public async Task<IActionResult> CreateClassTimeTableTimeActivity([FromBody] UpdateClassTimeTableTimeActivity request)
         {
             var response = await service.UpdateClassTimeTableTimeActivityAsync(request);

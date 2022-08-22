@@ -51,5 +51,14 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpPost("update/class-assessment/score")]
+        public async Task<IActionResult> UpdateClassAssessmentScoreAsync([FromBody] UpdatClassAssessmentScore request)
+        {
+            var response = await service.UpdateClassAssessmentScoreAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

@@ -18,5 +18,6 @@ namespace BLL.AuthenticationServices
         Task UpdateStudentUserAccountAsync(StudentContactCommand student);
         Task UpdateStudentUserProfileImageAsync(IFormFile file, string studentId);
         Task UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account);
+        Task<APIResponse<LoginSuccessResponse>> ChangePasswordAsync(ChangePassword request);
     }
 }

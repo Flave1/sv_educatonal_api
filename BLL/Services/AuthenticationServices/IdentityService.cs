@@ -279,6 +279,61 @@ namespace BLL.AuthenticationServices
             return currentUser; 
         }
 
+        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.LoginAfterPasswordIsChangedAsync(AppUser userAccount)
+        {
+            var res = new APIResponse<LoginSuccessResponse>();
+            res.Result = new LoginSuccessResponse();
+            try
+            {
+                var id = Guid.NewGuid();
+                var permisions = new List<string>();
+
+                if (userAccount.UserType == (int)UserTypes.Admin)
+                {
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Teacher)
+                {
+                    var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = techerAccount.TeacherId;
+
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Student)
+                {
+                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = studentAccount?.StudentContactId ?? new Guid();
+                }
+
+                var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
+
+                res.Result = new LoginSuccessResponse();
+                userAccount.EmailConfirmed = true;
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
 
     }
 }

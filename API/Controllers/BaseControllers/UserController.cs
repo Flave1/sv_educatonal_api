@@ -77,6 +77,22 @@ namespace API.Controllers
                 return BadRequest(new { result = ex.Message });
             }
         }
+        [AllowAnonymous]
+        [HttpPost("first-time/change-password")]
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePassword request)
+        {
+            try
+            {
+                var response = await userService.ChangePasswordAsync(request);
+                if (response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { result = ex.Message });
+            }
+        }
 
         #endregion
 
