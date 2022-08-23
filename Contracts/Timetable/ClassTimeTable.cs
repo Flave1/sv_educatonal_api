@@ -15,12 +15,26 @@ namespace SMP.Contracts.Timetable
         public string ClassTimeTableId { get; set; }
     }
 
+    public class UpdateClassTimeTableDay
+    {
+        public string Day { get; set; }
+        public string ClassTimeTableId { get; set; }
+        public string ClassTimeTableDayId { get; set; }
+    }
+
     public class CreateClassTimeTableTime
     {
         public string Start { get; set; }
         public string End { get; set; }
         public string ClassTimeTableId { get; set; }
         public string ClassId { get;set; }
+        public string ClassTimeTableTimeId { get; set; }
+    }
+    public class UpdateClassTimeTableTime
+    {
+        public string Start { get; set; }
+        public string End { get; set; }
+        public string ClassTimeTableTimeId { get; set; }
     }
     public class UpdateClassTimeTableTimeActivity
     {
@@ -68,7 +82,7 @@ namespace SMP.Contracts.Timetable
         public PeriodActivities(ClassTimeTableTimeActivity db)
         {
             activity = db.Activity;
-            classTimeTableDayId = db.Day.ClassTimeTableDayId.ToString();
+            classTimeTableDayId = db?.Day?.ClassTimeTableDayId.ToString();
             activityId = db.ClassTimeTableTimeActivityId.ToString();
         }
     }

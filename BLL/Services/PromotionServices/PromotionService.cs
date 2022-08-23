@@ -142,17 +142,17 @@ namespace SMP.BLL.Services.PromorionServices
         }
 
         
-        async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllPassedStudentsAsync(Guid SessionClassId)
+        async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllPassedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-
+            var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.User)
-                .Where(d => d.Deleted == false && d.SessionClassId == SessionClassId && d.SessionClass.PassMark > 0)
+                .Where(d => d.Deleted == false && ids.Contains(d.StudentContactId.ToString()))
                 .Select(f => new GetStudents(f, "passed", regNoFormat)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -161,17 +161,17 @@ namespace SMP.BLL.Services.PromorionServices
             return res;
         }
 
-        async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllFailedStudentsAsync(Guid SessionClassId)
+        async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllFailedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-
+            var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.User)
-                .Where(d => d.Deleted == false && d.SessionClassId == SessionClassId)
+                .Where(d => d.Deleted == false && ids.Contains(d.StudentContactId.ToString()))
                 .Select(f => new GetStudents(f, "failed", regNoFormat)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

@@ -53,7 +53,8 @@ namespace SMP.BLL.Services.PinManagementService
                 var studentResult = await resultService.GetStudentResultAsync(student.SessionClassId, Guid.Parse(request.TermId), student.StudentContactId);
                 if (studentResult.Result != null)
                 {
-                    studentResult.Result.isPublished = false;
+                    studentResult.Result.IsPrint = true;
+                    studentResult.Result.IsPreview = false;
                     if (!studentResult.Result.isPublished)
                     {
                         res.Message.FriendlyMessage = "Result not published";

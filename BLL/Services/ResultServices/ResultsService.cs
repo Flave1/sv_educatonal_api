@@ -607,6 +607,7 @@ namespace SMP.BLL.Services.ResultServices
                 var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
                 studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
                 res.Result = studentResult;
+                
             }
             res.IsSuccessful = true;
             return res;

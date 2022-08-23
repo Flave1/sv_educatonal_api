@@ -36,17 +36,17 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("get/passed-students{sessionClassId}")]
-        public async Task<IActionResult> GetPassedStudentsAsync(Guid sessioinClassId)
+        [HttpPost("get/passed-students")]
+        public async Task<IActionResult> GetPassedStudentsAsync([FromBody] FetchPassedOrFailedStudents request)
         {
-            var response = await service.GetAllPassedStudentsAsync(sessioinClassId);
+            var response = await service.GetAllPassedStudentsAsync(request);
             return Ok(response);
         }
 
-        [HttpGet("get/failed-students{sessionClassId}")]
-        public async Task<IActionResult> GetFailedStudentsAsync(Guid sessioinClassId)
+        [HttpPost("get/failed-students")]
+        public async Task<IActionResult> GetFailedStudentsAsync([FromBody]  FetchPassedOrFailedStudents request)
         {
-            var response = await service.GetAllFailedStudentsAsync(sessioinClassId);
+            var response = await service.GetAllFailedStudentsAsync(request);
             return Ok(response);
         }
 

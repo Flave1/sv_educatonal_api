@@ -13,10 +13,9 @@ namespace SMP.Contracts.ResultModels
         public List<StudentResultDetail> PublishResult { get; set; } = new List<StudentResultDetail>();
         public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId, Guid termId)
         {
-            
             if (s.Any())
             {
-                IsPublished = s.FirstOrDefault().SessionClass.PublishStatus.IsPublished;
+                IsPublished = s.FirstOrDefault()?.SessionClass?.PublishStatus?.IsPublished ?? false;
                 PublishResult = s.Select(x => new StudentResultDetail(x, regNoFormat, sessionClassId, termId)).ToList();
             }
         }
@@ -157,6 +156,7 @@ namespace SMP.Contracts.ResultModels
     public class PreviewResult
     {
         public bool IsPreview { get; set; } = true;
+        public bool IsPrint { get; set; } = true;
         public string studentName { get; set; }
         public Guid studentContactId { get; set; }
         public string registrationNumber { get; set; }
@@ -183,6 +183,7 @@ namespace SMP.Contracts.ResultModels
             totalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
             total = totalExamScore + totalAssessmentScore;
             studentContactId = student.StudentContactId;
+            IsPrint = false;
             average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
             if (StudentContactId == studentContactId)
             {
@@ -250,6 +251,7 @@ namespace SMP.Contracts.ResultModels
         public bool ShouldPromoteStudent { get; set; }
         public int PassedStudents { get; set; } = 0;
         public int FailedStudents { get; set; } = 0;
+        public string StudentContactId { get; set; }
         public StudentResultRecord() { }
         public StudentResultRecord(StudentContact st, Guid termId)
         {
@@ -260,7 +262,7 @@ namespace SMP.Contracts.ResultModels
             var totalSubjects = studentScoreEntries.Count();
             AverageScore = Math.Round(totalSubjects > 0 ? TotalScore / totalSubjects : 0, 2);
             ShouldPromoteStudent = AverageScore > st.SessionClass.PassMark;
-
+            StudentContactId = st.StudentContactId.ToString();
         }
 
         public StudentResultRecord(ICollection<StudentContact> sts, Guid termId)

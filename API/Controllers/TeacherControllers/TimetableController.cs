@@ -93,5 +93,22 @@ namespace SMP.API.Controllers.TeacherControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpPost("update/class-timetable-time")]
+        public async Task<IActionResult> UpdateClassTimeTableTimeAsync([FromBody] UpdateClassTimeTableTime request)
+        {
+            var response = await service.UpdateClassTimeTableTimeAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("update/class-timetable-day")]
+        public async Task<IActionResult> UpdateClassTimeTableDayAsync([FromBody] UpdateClassTimeTableDay request)
+        {
+            var response = await service.UpdateClassTimeTableDayAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

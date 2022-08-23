@@ -70,8 +70,10 @@ namespace SMP.BLL.Services.TimetableServices
         {
             var res = new APIResponse<CreateClassTimeTableDay>();
 
+            
             try
             {
+
                 var req = new ClassTimeTableDay
                 {
                     Day = request.Day,
@@ -97,6 +99,7 @@ namespace SMP.BLL.Services.TimetableServices
                     await context.SaveChangesAsync();
                 }
 
+
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
@@ -113,13 +116,13 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<CreateClassTimeTableTime>();
             try
             {
+
                 var req = new ClassTimeTableTime
                 {
                     Start = request.Start,
                     End = request.End,
                     ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
                 };
-
                 await context.ClassTimeTableTime.AddAsync(req);
                 await context.SaveChangesAsync();
 
@@ -136,7 +139,7 @@ namespace SMP.BLL.Services.TimetableServices
                         };
                         await context.ClassTimeTableTimeActivity.AddAsync(act);
                     }
-                     await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
                 }
 
                 res.Result = request;
@@ -147,6 +150,58 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        async Task<APIResponse<UpdateClassTimeTableTime>> ITimeTableService.UpdateClassTimeTableTimeAsync(UpdateClassTimeTableTime request)
+        {
+            var res = new APIResponse<UpdateClassTimeTableTime>();
+            try
+            {
+                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClassTimeTableId == Guid.Parse(request.ClassTimeTableTimeId));
+
+                time.Start = request.Start;
+                time.End = request.End;
+
+                await context.SaveChangesAsync();
+
+              
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        async Task<APIResponse<UpdateClassTimeTableDay>> ITimeTableService.UpdateClassTimeTableDayAsync(UpdateClassTimeTableDay request)
+        {
+            var res = new APIResponse<UpdateClassTimeTableDay>();
+            try
+            {
+                var day = context.ClassTimeTableDay.FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.ClassTimeTableDayId));
+                if(day == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+                day.Day = request.Day;
+
+                await context.SaveChangesAsync();
+
+                
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
 
@@ -171,7 +226,7 @@ namespace SMP.BLL.Services.TimetableServices
 
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = Messages.Updated;
                 return res;
             }
             catch (Exception)
@@ -186,8 +241,8 @@ namespace SMP.BLL.Services.TimetableServices
 
             var result = await context.ClassTimeTable
                 .Include(s => s.Class)
-                .Include(s => s.Days)
-                 .Include(s => s.Times).ThenInclude(d => d.Activities)
+                .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
+                 .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
                 .Where(d => d.Deleted == false && d.ClassId == classId)
                 .Select(f => new GetClassTimeActivity(f)).ToListAsync();
 
@@ -223,7 +278,7 @@ namespace SMP.BLL.Services.TimetableServices
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
             catch (Exception ex)
@@ -242,7 +297,7 @@ namespace SMP.BLL.Services.TimetableServices
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
             catch (Exception ex)
