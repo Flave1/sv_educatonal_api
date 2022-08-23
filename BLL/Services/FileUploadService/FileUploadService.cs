@@ -300,15 +300,7 @@ namespace SMP.BLL.Services.FileUploadService
                 {
                     return res;
                 }
-
-                int maxFileSize = 1024 * 1024 / 2;
-                var fileSize = file.Length;
-
-                if (fileSize > maxFileSize)
-                {
-                    throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
-                }
-                 
+ 
                     string extension = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString() + extension;
 
@@ -342,18 +334,10 @@ namespace SMP.BLL.Services.FileUploadService
                         res.Add(filePath);
                         return res;
                     }
-
-                    int maxFileSize = 1024 * 1024 / 2;
-                    var fileSize = file.Length;
-
-                    if (fileSize > maxFileSize)
-                    {
-                        throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
-
-                    }
+ 
                     string ext = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString() + ext;
-
+                     
                     bool fileExists = File.Exists(filePath);
                     if (fileExists)
                     {
