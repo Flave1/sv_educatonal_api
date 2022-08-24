@@ -22,5 +22,6 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<SingleDelete>> DeleteClassTimeTableTimeAsync(SingleDelete request);
         Task<APIResponse<UpdateClassTimeTableTime>> UpdateClassTimeTableTimeAsync(UpdateClassTimeTableTime request);
         Task<APIResponse<UpdateClassTimeTableDay>> UpdateClassTimeTableDayAsync(UpdateClassTimeTableDay request);
+        Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableByStudentAsync();
     }
 }
