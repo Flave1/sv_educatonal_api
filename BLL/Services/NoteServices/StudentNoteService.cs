@@ -309,5 +309,54 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
+
+        private static bool isInClass(string classes, Guid studentClass)
+        {
+            return classes is null ? false : classes.Split(',').Select(Guid.Parse).ToList().Contains(studentClass);
+        }
+        async Task<APIResponse<List<GetClassNotes>>> IStudentNoteService.filterClassNotesByStudentsAsync(string subjectId)
+        {
+            var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
+            var studentClass = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
+
+            var res = new APIResponse<List<GetClassNotes>>();
+            if(studentClass is null)
+            {
+                return new APIResponse<List<GetClassNotes>>();
+            }
+            if (!string.IsNullOrEmpty(studentContactId))
+            {
+                if (!string.IsNullOrEmpty(subjectId))
+                {
+                    res.Result = context.TeacherClassNote
+                            .Include(d => d.Teacher).ThenInclude(d => d.User)
+                            .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                            .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                            .OrderBy(d => d.CreatedBy)
+                         .Where(u => u.Deleted == false 
+                         && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved
+                         && u.ClassNote.SubjectId == Guid.Parse(subjectId)).AsEnumerable()
+                         .Where(d =>  isInClass(d.Classes, studentClass.SessionClassId) == true)
+                         .Select(x => new GetClassNotes(x, false)).ToList();
+                }
+                else
+                {
+                    res.Result = context.TeacherClassNote
+                             .Include(d => d.Teacher).ThenInclude(d => d.User)
+                             .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                             .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                             .OrderBy(d => d.CreatedBy)
+                          .Where(u => u.Deleted == false
+                          && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved).AsEnumerable()
+                          .Where(d => isInClass(d.Classes, studentClass.SessionClassId) == true)
+                          .Select(x => new GetClassNotes(x, false)).ToList();
+                }
+            }
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return await Task.Run(() => res);
+        }
+
     }
 }

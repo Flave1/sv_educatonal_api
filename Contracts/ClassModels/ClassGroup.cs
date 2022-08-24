@@ -79,8 +79,8 @@ namespace SMP.Contracts.ClassModels
         {
             var std = students.FirstOrDefault(d => d.StudentContactId == Guid.Parse(id));
             StudentContactId = id;
-            StudentName = std.User.FirstName + "  " +  std.User.FirstName;
-            StudentPhoto = std.User.Photo;
+            StudentName = std?.User?.FirstName + "  " +  std?.User?.FirstName;
+            StudentPhoto = std?.User?.Photo;
         }
     }
 

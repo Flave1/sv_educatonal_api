@@ -5,6 +5,7 @@ using DAL.ClassEntities;
 using DAL.StudentInformation;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.Constants;
 using SMP.BLL.Utilities;
 using SMP.Contracts.ClassModels;
 using SMP.DAL.Models.ClassEntities;
@@ -94,15 +95,15 @@ namespace BLL.ClassServices
             return res;
         }
 
-        async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetAllClassGroupsAsync(Guid sessionClassId)
+        async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetAllClassGroupsAsync(Guid sessionClassId, Guid sessionClassSubjectId)
         {
             var res = new APIResponse<List<GetClassGroupRequest>>();
-            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId).ToList();
+            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
             var result = await context.SessionClassGroup
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
-                .Where(d => d.Deleted == false && d.GroupName != "all-students").Select(a => 
+                .Where(d => d.Deleted == false && d.GroupName != "all-students" && d.SessionClassSubjectId == sessionClassSubjectId).Select(a => 
                 new GetClassGroupRequest(a, student.Count())).ToListAsync();
             res.IsSuccessful = true;
             res.Result = result;
@@ -124,7 +125,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<GetClassGroupRequest>> IClassGroupService.GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId)
         {
             var res = new APIResponse<GetClassGroupRequest>();
-            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId).ToList();
+            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
             var result = await context.SessionClassGroup
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [Route("studentnotes/api/v1")]
+    [Route("smp/studentnotes/api/v1")]
     public class StudentNoteController : Controller
     {
         private readonly IStudentNoteService service;
@@ -105,6 +105,8 @@ namespace SMP.API.Controllers
             var response = await service.GetStudentNoteCommentsAsync(studentNoteId);
             return Ok(response);
         }
+
+
 
     }
 }

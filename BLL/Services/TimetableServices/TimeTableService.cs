@@ -158,7 +158,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<UpdateClassTimeTableTime>();
             try
             {
-                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClassTimeTableId == Guid.Parse(request.ClassTimeTableTimeId));
+                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClassTimeTableTimeId == Guid.Parse(request.ClassTimeTableTimeId));
 
                 time.Start = request.Start;
                 time.End = request.End;
@@ -281,9 +281,9 @@ namespace SMP.BLL.Services.TimetableServices
                 res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -293,8 +293,15 @@ namespace SMP.BLL.Services.TimetableServices
             try
             {
                 var day = context.ClassTimeTableDay.Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.Item));
-                context.ClassTimeTableDay.Remove(day);
-                await context.SaveChangesAsync();
+                if(day is not null)
+                {
+                    if(day.Activities.Any())
+                    {
+                        context.ClassTimeTableTimeActivity.RemoveRange(day.Activities);
+                    }
+                    context.ClassTimeTableDay.Remove(day);
+                    await context.SaveChangesAsync();
+                }
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.DeletedSuccess;

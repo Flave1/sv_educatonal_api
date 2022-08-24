@@ -152,9 +152,9 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/class-group")]
-        public async Task<IActionResult> GetAllClassGroupsAsync(string sessionClassId)
+        public async Task<IActionResult> GetAllClassGroupsAsync(string sessionClassId, string sessionClassSubjectId)
         {
-            var response = await classGoupService.GetAllClassGroupsAsync(Guid.Parse(sessionClassId));
+            var response = await classGoupService.GetAllClassGroupsAsync(Guid.Parse(sessionClassId), Guid.Parse(sessionClassSubjectId));
             return Ok(response);
         }
 

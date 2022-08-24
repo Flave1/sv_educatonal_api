@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [Route("studentassessment/api/v1")]
+    [Route("smp/studentassessment/api/v1")]
     public class StudentAssessmentController : Controller
     {
         private readonly IHomeAssessmentService service;

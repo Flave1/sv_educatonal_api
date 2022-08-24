@@ -13,7 +13,7 @@ namespace SMP.API.Controllers.TeacherControllers
 {
     [PortalAuthorize]
     [AllowAnonymous]
-    [Route("api/v1/smp/timetable")]
+    [Route("smp/api/v1/timetable")]
     public class TimetableController : Controller
     {
         private readonly ITimeTableService service;

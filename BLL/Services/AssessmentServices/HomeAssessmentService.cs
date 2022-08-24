@@ -315,6 +315,12 @@ namespace SMP.BLL.Services.AssessmentServices
                         return res;
                     }
 
+                    if(reg.Status == (int)HomeAssessmentStatus.Submitted)
+                    {
+                        res.Message.FriendlyMessage = "Assignment has already been submited";
+                        return res;
+                    }
+
                     //do update 
                     //assigment cannot be edited when the status is submitted
 
@@ -340,7 +346,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = "Successfully submitted";
                 return res;
             }
             catch (Exception ex)

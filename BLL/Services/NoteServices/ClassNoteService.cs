@@ -341,7 +341,7 @@ namespace SMP.BLL.Services.NoteServices
             res.Result = await context.TeacherClassNote  
                 .Include(d => d.Teacher).ThenInclude(d => d.User)
                 .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
-                .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail).ThenInclude(x => x.Teacher)
                 .Where(u => u.Deleted == false 
                 && u.TeacherClassNoteId == Guid.Parse(TeacherClassNoteId)) 
                 .Select(x => new GetClassNotes(x, true)).FirstOrDefaultAsync();
