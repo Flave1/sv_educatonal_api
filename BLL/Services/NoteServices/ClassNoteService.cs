@@ -1,9 +1,14 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Helpers;
+using BLL.PaginationService.Services;
+using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.Contracts.Notes;
@@ -127,7 +132,7 @@ namespace SMP.BLL.Services.NoteServices
             if (!string.IsNullOrEmpty(teacherid))
             {
                 if (!string.IsNullOrEmpty(subjectId))
-                {
+                { 
                     res.Result = await context.TeacherClassNote
                     .Include(d => d.Teacher).ThenInclude(d => d.User)
                             .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
@@ -138,6 +143,7 @@ namespace SMP.BLL.Services.NoteServices
                          && u.TeacherId == Guid.Parse(teacherid)
                          && u.ClassNote.SubjectId == Guid.Parse(subjectId))
                          .Select(x => new GetClassNotes(x, false)).ToListAsync();
+
                 }
                 else
                 {
@@ -149,13 +155,9 @@ namespace SMP.BLL.Services.NoteServices
                              .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
                         .Where(u => u.Deleted == false
                         && u.TeacherId == Guid.Parse(teacherid))
-                        .Select(x => new GetClassNotes(x, false)).ToListAsync();
-                }
-                
-
-
+                    .Select(x => new GetClassNotes(x, false)).ToListAsync();
+                } 
             }
-
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;

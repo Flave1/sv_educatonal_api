@@ -1,5 +1,8 @@
 ﻿using BLL.AuthenticationServices;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Helpers;
+using BLL.PaginationService.Services;
 using BLL.Utilities;
 using Contracts.Common;
 using Contracts.Options;
@@ -8,7 +11,9 @@ using DAL.Authentication;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
@@ -32,14 +37,16 @@ namespace BLL.StudentServices
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
+        private readonly IUriService uriService;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IUriService uriService)
         {
             this.context = context;
             this.userService = userService;
             this.userManager = userManager;
             this.resultsService = resultsService; 
             this.upload = upload;
+            this.uriService = uriService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -210,18 +217,20 @@ namespace BLL.StudentServices
 
         }
 
-        async Task<APIResponse<List<GetStudentContacts>>> IStudentService.GetAllStudensAsync()
+        async Task<APIResponse<List<GetStudentContacts>>> IStudentService.GetAllStudensAsync(PaginationFilter filter)
         {
             var res = new APIResponse<List<GetStudentContacts>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-
+            //PaginationFilter filter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+             
             var result = await context.StudentContact
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.User)
+                .Include(q => q.User).Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student)
                 .Select(f => new GetStudentContacts(f, regNoFormat)).ToListAsync();
+            var totalRecords = await context.StudentContact.CountAsync(); 
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares; 
+﻿using BLL.Helpers;
+using BLL.MiddleWares; 
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc; 
@@ -51,6 +52,7 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetClassNotesByTeachersAsync(string subjectId)
         {
             var response = await service.GetClassNotesByTeachersAsync(subjectId);
+
             return Ok(response);
         }
 
