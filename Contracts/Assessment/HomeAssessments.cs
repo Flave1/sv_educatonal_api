@@ -23,9 +23,11 @@ namespace SMP.Contracts.Assessment
         public int NumberOfStudentsSubmitted { get; set; } = 0;
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
+        public string DeadLine { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
         {
+            DeadLine = db.DeadLine.ToString("dd-MM-yyy hh:mm");
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -87,6 +89,7 @@ namespace SMP.Contracts.Assessment
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
             Comment = db.Comment;
+            
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
             if (db.Status == 1)
@@ -139,6 +142,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
+        public DateTime DeadLine { get; set; }
     }
 
     public class UpdateHomeAssessmentRequest
@@ -151,6 +155,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
+        public DateTime DeadLine { get; set; }
     }
 
     public class SendHomeAssessmentRequest

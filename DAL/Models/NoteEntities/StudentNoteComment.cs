@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.Authentication;
 using DAL.ClassEntities;
 using DAL.StudentInformation;
 using DAL.TeachersInfor;
@@ -25,13 +26,9 @@ namespace SMP.DAL.Models.NoteEntities
         [ForeignKey("RepliedToId")]
         public StudentNoteComment RepliedTo { get; set; }
         public virtual ICollection<StudentNoteComment> Replies { get; set; }
-
-        public Guid? TeacherId { get; set; }
-        [ForeignKey("TeacherId")]
-        public Teacher Teacher { get; set; }
-        public Guid? StudentContactId { get; set; }
-        [ForeignKey("StudentContactId")]
-        public StudentContact StudentContact { get; set; }
+        public string UserId { get; set; }
+        [ForeignKey("UserId")]
+        public AppUser User { get; set; }
 
     }
 }

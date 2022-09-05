@@ -186,5 +186,12 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpGet("get-note/shared-class")]
+        public async Task<IActionResult> GetStaffClassesOnNoteShareAsync(string teacherClassNoteId)
+        {
+            var response = await service.GetStaffClassesOnNoteShareAsync(Guid.Parse(teacherClassNoteId));
+            return Ok(response);
+        }
+
     }
 }

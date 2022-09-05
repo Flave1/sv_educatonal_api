@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.Contracts.Notes;
+using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
@@ -245,7 +246,7 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<ShareNotes>> IClassNoteService.ShareClassNotesAsync(ShareNotes request)
         {
                 var res = new APIResponse<ShareNotes>();
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+                var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
 
             try
@@ -253,10 +254,17 @@ namespace SMP.BLL.Services.NoteServices
                 var noteToShare = await context.ClassNote.FindAsync(Guid.Parse(request.ClassNoteId));
                 if (noteToShare is not null)
                 {
-                    request.TeacherId.Add(Guid.Parse(teacherId));
+                    if(noteToShare.AprrovalStatus is not (int)NoteApprovalStatus.Approved){
+                        res.Message.FriendlyMessage = "Unapproved Note cannot be shared";
+                        return res;
+                    }
+                    //request.TeacherId.Add(Guid.Parse(teacherId));
                     var alreadySharedWith = context.TeacherClassNote.Where(x => x.ClassNoteId == Guid.Parse(request.ClassNoteId)).ToList();
                     if (alreadySharedWith.Any())
+                    {
                         context.TeacherClassNote.RemoveRange(alreadySharedWith);
+                        await context.SaveChangesAsync();
+                    }
                     foreach (var teacher in request.TeacherId)
                     {
                         var newClassNote = new TeacherClassNote()
@@ -265,6 +273,7 @@ namespace SMP.BLL.Services.NoteServices
                             TeacherId = teacher
                         };
                         await context.TeacherClassNote.AddAsync(newClassNote);
+
                     }
 
                     await context.SaveChangesAsync();
@@ -531,9 +540,14 @@ namespace SMP.BLL.Services.NoteServices
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             try
             {
-                var noteToSend = context.TeacherClassNote.FirstOrDefault(x => x.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId));
+                var noteToSend = context.TeacherClassNote.Include(d => d.ClassNote).FirstOrDefault(x => x.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId));
                 if (noteToSend is not null)
                 {
+                    if(noteToSend.ClassNote.AprrovalStatus is not (int)NoteApprovalStatus.Approved)
+                    {
+                        res.Message.FriendlyMessage = "Unapproved note cannot be sent to students";
+                        return res;
+                    }
                     noteToSend.Classes = string.Join(',', request.Classes);
 
                     await context.SaveChangesAsync();
@@ -556,5 +570,60 @@ namespace SMP.BLL.Services.NoteServices
                 return res;
             }
         }
+
+        
+
+        async Task<APIResponse<List<GetClasses2>>> IClassNoteService.GetStaffClassesOnNoteShareAsync(Guid teacherClassNoteId)
+        {
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var alreadyShared = context.TeacherClassNote.FirstOrDefault(d => d.TeacherClassNoteId == teacherClassNoteId)?.Classes?.Split(',').ToList();
+            var res = new APIResponse<List<GetClasses2>>();
+
+            if (!string.IsNullOrEmpty(userid))
+            {
+                //GET SUPER ADMIN CLASSES
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                {
+                    res.Result = await context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses2(s, alreadyShared.Contains(s.SessionClassId.ToString()))).ToListAsync();
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+                //GET TEACHER CLASSES
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                    var classesAsASujectTeacher = context.SessionClass
+                         .Include(s => s.Class)
+                         .Include(s => s.Session)
+                         .Include(s => s.SessionClassSubjects)
+                         .OrderBy(s => s.Class.Name)
+                         .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                         .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+
+                    var classesAsAFormTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+
+
+                    res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetClasses2(s, alreadyShared is null ? false : alreadyShared.Contains(s.SessionClassId.ToString()))).ToList();
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+
+            }
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
     }
 }

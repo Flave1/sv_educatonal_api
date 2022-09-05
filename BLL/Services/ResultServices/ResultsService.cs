@@ -320,32 +320,79 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<StudentResult>> IResultsService.GetListOfResultsAsync(Guid sessionClassId, Guid termId)
         {
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-        
-            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
             var res = new APIResponse<StudentResult>();
-            var result = await context.SessionClass
-                .Include(e => e.PublishStatus)
-                .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
-                .Include(d => d.Students).ThenInclude(d => d.User)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
-                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(s => s.PublishStatus)
-                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students).Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
-        
-            if (result != null)
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            try
             {
-                var averages = result.PublishResult.Select(d => d.AverageScore);
-                var studentPositions = UtilTools.GetStudentPositions(averages);
-                foreach (var item in result.PublishResult)
+
+                var clas = context.SessionClass.Include(x => x.Session).FirstOrDefault(d => d.SessionClassId == sessionClassId);
+                var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+                res.Result = new StudentResult();
+                if (clas.Session.IsActive)
                 {
-                    item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
+                    var result = await context.SessionClass
+                       .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
+                       .Include(d => d.Students).ThenInclude(d => d.User)
+                       .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
+                       .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry)
+                       .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students)
+                       .Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
+
+                    if (result != null)
+                    {
+                        var averages = result.PublishResult.Select(d => d.AverageScore);
+                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        foreach (var item in result.PublishResult)
+                        {
+                            item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
+                        }
+                        result.PublishResult = result.PublishResult.OrderBy(d => d.Position).ToList();
+                        result.IsPublished = IsResultPublished(sessionClassId, termId);
+                    }
+                    res.IsSuccessful = true;
+                    res.Result = result;
+                    return res;
+                }
+                else
+                {
+                    var classArchive = context.SessionClassArchive.FirstOrDefault(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId);
+                    if (classArchive is null)
+                    {
+                        res.Message.FriendlyMessage = "Result for this session and term was not published";
+                        return res;
+                    }
+
+                    var result = context.ScoreEntry
+                    .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass).ThenInclude(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
+                    .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId).AsEnumerable().GroupBy(s => s.StudentContactId)
+                    .Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefault();
+
+                    if (result != null)
+                    {
+                        var averages = result.PublishResult.Select(d => d.AverageScore);
+                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        foreach (var item in result.PublishResult)
+                        {
+                            item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
+                        }
+                        result.PublishResult = result.PublishResult.OrderBy(d => d.Position).ToList();
+                        result.IsPublished = IsResultPublished(sessionClassId, termId);
+                    }
+                    res.IsSuccessful = true;
+                    res.Result = result;
+                    return res;
                 }
 
-                result.PublishResult = result.PublishResult.OrderBy(d => d.Position).ToList();
+
             }
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+            catch (Exception ex)
+            {
+                throw;
+            }
+           
+            
         }
 
         async Task<APIResponse<PublishResultRequest>> IResultsService.PublishResultAsync(PublishResultRequest request)
@@ -353,24 +400,30 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<PublishResultRequest>();
             try
             {
-                var sessClass = await context.SessionClass.Include(e => e.PublishStatus).FirstOrDefaultAsync(d => d.SessionClassId == request.SessionClassId && d.PublishStatus.SessionTermId == request.SessionTermId);
-                if (sessClass != null)
+                var sessClass = await context.SessionClass.Include(x => x.Session).Include(x => x.Students)
+                    .FirstOrDefaultAsync(d => d.SessionClassId == request.SessionClassId);
+
+                if (sessClass.Session.IsActive)
                 {
-                    sessClass.PublishStatus.IsPublished = request.Publish;
-                    await context.SaveChangesAsync();
+                    var activeterm = context.SessionTerm.FirstOrDefault(x => x.IsActive == true);
+                    foreach (var student in sessClass.Students.Where(d => d.EnrollmentStatus == (int)Constants.EnrollmentStatus.Enrolled))
+                    {
+                        await SaveSessionClassArchiveAsync(sessClass.SessionClassId, activeterm.SessionTermId, student.StudentContactId, request.Publish);
+                    }
+                   
                 }
                 else
                 {
-                    sessClass = await context.SessionClass.FindAsync(request.SessionClassId);
-                    sessClass.PublishStatus = new PublishStatus();
-                    sessClass.PublishStatus.IsPublished = request.Publish;
-                    sessClass.PublishStatus.SessionClassId = request.SessionClassId;
-                    sessClass.PublishStatus.SessionTermId = request.SessionTermId;
-                    await context.SaveChangesAsync();
+                    foreach (var student in context.SessionClassArchive.Where(d => d.SessionClassId == request.SessionClassId).ToList())
+                    {
+                        await (this as IResultsService).UpdateSessionClassArchiveAsync(student.StudentContactId.Value, student.SessionTermId.Value, request.Publish);
+                    }
                 }
+                await context.SaveChangesAsync();
+
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Successful";
+                res.Message.FriendlyMessage = request.Publish ? $"You have Successfully published student results" : $"You have Successfully Unpublished student results";
                 return res;
             }
             catch (Exception ex)
@@ -564,55 +617,18 @@ namespace SMP.BLL.Services.ResultServices
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(x => x.SessionTerm)
                  .Include(r => r.Students).ThenInclude(d => d.User)
-                 .Include(r => r.Students).ThenInclude(d => d.SessionClass).ThenInclude(d => d.PublishStatus)
                  .Include(r => r.Students).ThenInclude(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
                  .Where(r => r.SessionClassId == sessionClassId)
                  .Select(g => new StudentCoreEntry(g.Students.FirstOrDefault(x => x.StudentContactId == studentContactId), regNoFormat, termId)).FirstOrDefaultAsync();
 
             if (result != null)
-                result.IsPublished = context.PublishStatus.FirstOrDefault(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId)?.IsPublished ?? false;
+                result.IsPublished = IsResultPublished(sessionClassId, termId, studentContactId);
             res.Result = result;
             res.IsSuccessful = true;
             return res;
         }
 
-        async Task<APIResponse<PreviewResult>> IResultsService.GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
-        {
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-
-            var res = new APIResponse<PreviewResult>();
-            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
-            if(term == null)
-            {
-                res.Message.FriendlyMessage = "Term not found";
-                return res;
-            }
-            var result = await context.SessionClass
-                .Include(e => e.PublishStatus)
-                .Include(e => e.Class).ThenInclude(d => d.GradeLevel)
-                .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
-                .Include(d => d.Students).ThenInclude(d => d.User)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f=>f.GradeLevel).ThenInclude(s=>s.Grades)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.PublishStatus)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(s => s.Subject)
-                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
-                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students.Where(d => d.EnrollmentStatus == 1)).SelectMany(s => s).Select(g => new PreviewResult(g, regNoFormat, sessionClassId, term.SessionTermId, studentContactId)).ToListAsync() ?? new List<PreviewResult>();
-
-            if (result.Any())
-            {
-                var averages = result.Select(d => d.average);
-                var studentPositions = UtilTools.GetStudentPositions(averages);
-                var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
-                studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
-                res.Result = studentResult;
-                
-            }
-            res.IsSuccessful = true;
-            return res;
-        }
-
+       
         async Task<StudentResultRecord> IResultsService.GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
             var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
@@ -636,5 +652,142 @@ namespace SMP.BLL.Services.ResultServices
 
             return result;
         }
+    
+        private async Task SaveSessionClassArchiveAsync(Guid classId, Guid termId, Guid studentId, bool publish)
+        {
+            var archive = await context.SessionClassArchive
+                .FirstOrDefaultAsync(x => x.SessionClassId == classId && termId == x.SessionTermId && x.StudentContactId == studentId);
+
+            if(archive is null)
+            {
+                archive = new SessionClassArchive
+                {
+                    HasPrintedResult = false,
+                    SessionClassId = classId,
+                    StudentContactId = studentId,
+                    SessionTermId = termId,
+                    IsPublished = publish
+                };
+                await context.SessionClassArchive.AddAsync(archive);
+            }
+            else
+                archive.IsPublished = publish;
+        }
+
+        async Task IResultsService.UpdateSessionClassArchiveAsync(Guid studentId, Guid termId, bool isPublished)
+        {
+            var archive = await context.SessionClassArchive
+                .FirstOrDefaultAsync(x => x.SessionTermId == termId && x.StudentContactId == studentId);
+            if (archive is not null)
+            {
+                archive.IsPublished = isPublished;
+            }
+            else
+            {
+                throw new ArgumentException("This sudent result has not been updated!! Helpful tip to fix this, republish this class result to capture this student");
+            }
+        }
+        async Task IResultsService.UpdateStudentPrintStatusAsync(Guid studentId, Guid termId, bool isResultPrinted)
+        {
+            var archive = await context.SessionClassArchive
+                .FirstOrDefaultAsync(x => x.SessionTermId == termId && x.StudentContactId == studentId);
+            if (archive is not null)
+            {
+                archive.HasPrintedResult = isResultPrinted;
+            }
+            else
+            {
+                throw new ArgumentException("This sudent result has not been updated!! Helpful tip to fix this, republish this class result to capture this student");
+            }
+        }
+
+        async Task<APIResponse<PrintResult>> IResultsService.GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
+        {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var res = new APIResponse<PrintResult>();
+            try
+            {
+                var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
+                if (term == null)
+                {
+                    res.Message.FriendlyMessage = "Term not found";
+                    return res;
+                }
+
+                var results =  context.ScoreEntry
+                   .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                   .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
+                    .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(s => s.GradeLevel).ThenInclude(x => x.Grades)
+                   .Include(r => r.ClassScoreEntry).ThenInclude(s => s.Subject)
+                   .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId).AsEnumerable()
+                   .GroupBy(d => d.StudentContactId, (Key, g) => new { studentId = Key, lst = g.ToList()})
+                   .Select(s => new PrintResult(s.lst, regNoFormat, term, studentContactId))
+                   .ToList() ?? new List<PrintResult>();
+
+
+                if (results.Any())
+                {
+                    var averages = results.Select(d => d.average);
+                    var studentPositions = UtilTools.GetStudentPositions(averages);
+                    var studentResult = results.FirstOrDefault(d => d.studentContactId == studentContactId);
+                    studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
+                    studentResult.noOfStudents = results.Count();
+                    studentResult.isPublished = IsResultPublished(sessionClassId, termId, studentContactId);
+                    res.Result = studentResult;
+                }
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
+
+        async Task<APIResponse<PreviewResult>> IResultsService.GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
+        {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var res = new APIResponse<PreviewResult>();
+            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+            if (term == null)
+            {
+                res.Message.FriendlyMessage = "Term not found";
+                return res;
+            }
+
+            var result = await context.SessionClass
+                .Include(e => e.Class).ThenInclude(d => d.GradeLevel)
+                .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
+                .Include(d => d.Students).ThenInclude(d => d.User)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
+                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(s => s.Subject)
+                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
+                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students)
+                .SelectMany(s => s).Select(g => new PreviewResult(g, regNoFormat, sessionClassId, term.SessionTermId, studentContactId)).ToListAsync() ?? new List<PreviewResult>();
+
+            if (result.Any())
+            {
+                var averages = result.Select(d => d.average);
+                var studentPositions = UtilTools.GetStudentPositions(averages);
+                var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
+                studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
+                res.Result = studentResult;
+
+            }
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        private bool IsResultPublished(Guid classId, Guid termId) =>
+            context.SessionClassArchive.Any(d => d.SessionClassId == classId && termId == d.SessionTermId && d.IsPublished == true);
+
+        private bool IsResultPublished(Guid classId, Guid termId, Guid studentId) =>
+           context.SessionClassArchive.FirstOrDefault(d => d.SessionClassId == classId && termId == d.SessionTermId && d.StudentContactId == studentId)?.IsPublished ?? false;
+
     }
 }

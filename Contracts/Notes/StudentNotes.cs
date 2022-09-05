@@ -10,7 +10,6 @@ namespace SMP.Contracts.Notes
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public bool SubmitForReview { get; set; }
-        public string SessionClassId { get; set; }
         public string SubjectId { get; set; }
         public string TeacherId { get; set; }
     }
@@ -35,12 +34,18 @@ namespace SMP.Contracts.Notes
         public string Comment { get; set; }
     }
 
+    public class SendStudentNote
+    {
+        public string StudentNoteId { get; set; }
+    }
+
 
 
     public class StudentNoteComments
     {
         public Guid CommentId { get; set; }
         public string Comment { get; set; }
+        public string Name { get; set; }
         public bool IsParent { get; set; }
         public Guid StudentNoteId { get; set; }
         public Guid StudentId { get; set; }
@@ -55,6 +60,7 @@ namespace SMP.Contracts.Notes
             StudentNoteId = db.StudentNoteId;
             RepliedToId = db.RepliedToId;
             StudentId = db.StudentNote.StudentContactId;
+            Name = db.User?.FirstName + "  " + db.User?.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
                 RepliedComments = db.Replies.Select(x => new StudentNoteComments(x)).ToList();
@@ -82,9 +88,11 @@ namespace SMP.Contracts.Notes
         public string SubjectName { get; set; }
         public int ApprovalStatus { get; set; }
         public string ApprovalStatusName { get; set; }
+        public Guid StudentNoteId { get; set; }
 
         public GetStudentNotes(StudentNote db)
         {
+            StudentNoteId = db.StudentNoteId;
             NoteTitle = db.NoteTitle;
             NoteContent = db.NoteContent;
             SubjectId = db.SubjectId.ToString();

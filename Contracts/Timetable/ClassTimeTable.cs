@@ -68,7 +68,7 @@ namespace SMP.Contracts.Timetable
             }
             if (timeList.Any())
             {
-                times = timeList.OrderBy(d => d.Start).Select(s => new Time(s)).ToArray();
+                times = timeList.OrderBy(d => d.CreatedOn).Select(s => new Time(s)).ToArray();
             }
         }
 

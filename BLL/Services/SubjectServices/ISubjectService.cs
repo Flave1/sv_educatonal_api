@@ -16,5 +16,6 @@ namespace BLL.Services.SubjectServices
         Task<APIResponse<Subject>> DeleteSubjectAsync(MultipleDelete request);
         Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveSubjectsAsync();
         APIResponse<List<DropdownSelect>> GetAllStudentSubjects(Guid studentId);
+        APIResponse<Guid> GetSubjectTeacher(Guid subjectId);
     }
 }

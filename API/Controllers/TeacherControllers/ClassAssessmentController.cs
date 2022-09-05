@@ -60,5 +60,22 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpGet("get-single/class-assessments")]
+        public async Task<IActionResult> GetSingleAssessmentAsync(string classAssessmentId)
+        {
+            var response = await service.GetSingleAssessmentAsync(Guid.Parse(classAssessmentId));
+            return Ok(response);
+        }
+
+
+        [HttpPost("delete/class-assessment")]
+        public async Task<IActionResult> DdeleteClassAssessmentsAsync([FromBody] SingleDelete request)
+        {
+            var response = await service.DeleteClassAssessmentAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

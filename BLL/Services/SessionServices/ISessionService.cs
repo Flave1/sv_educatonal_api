@@ -12,7 +12,7 @@ namespace BLL.SessionServices
         Task<APIResponse<CreateUpdateSession>> CreateSessionAsync(CreateUpdateSession session);
         Task<APIResponse<Session>> DeleteSessionAsync(Guid sessionId);
         Task<APIResponse<List<GetSession>>> GetSessionsAsync();
-        Task<APIResponse<Session>> SwitchSessionAsync(string sessionId, bool switchValue);
+        Task<APIResponse<Session>> SwitchSessionAsync(string sessionId);
         Task<APIResponse<bool>> ActivateTermAsync(Guid termId);
         Task<APIResponse<ActiveSession>> GetActiveSessionsAsync();
         Task<APIResponse<GetSession>> GetSingleSessionAsync(string sessionId);

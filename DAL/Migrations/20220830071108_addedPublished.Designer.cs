@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220830071108_addedPublished")]
+    partial class addedPublished
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -345,6 +347,9 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("PassMark")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("PublishStatusId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -359,6 +364,8 @@ namespace SMP.DAL.Migrations
                     b.HasIndex("ClassId");
 
                     b.HasIndex("FormTeacherId");
+
+                    b.HasIndex("PublishStatusId");
 
                     b.HasIndex("SessionId");
 
@@ -853,9 +860,6 @@ namespace SMP.DAL.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("DeadLine")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
@@ -1315,7 +1319,13 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("RepliedToId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("StudentContactId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("StudentNoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -1324,16 +1334,15 @@ namespace SMP.DAL.Migrations
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("StudentNoteCommentId");
 
                     b.HasIndex("RepliedToId");
 
+                    b.HasIndex("StudentContactId");
+
                     b.HasIndex("StudentNoteId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("StudentNoteComment");
                 });
@@ -1734,6 +1743,45 @@ namespace SMP.DAL.Migrations
                     b.ToTable("ClassScoreEntry");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.PublishStatus", b =>
+                {
+                    b.Property<Guid>("PublishStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionTermId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PublishStatusId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.HasIndex("SessionTermId");
+
+                    b.ToTable("PublishStatus");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ScoreEntry", b =>
                 {
                     b.Property<Guid>("ScoreEntryId")
@@ -2099,6 +2147,10 @@ namespace SMP.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("FormTeacherId");
 
+                    b.HasOne("SMP.DAL.Models.ResultModels.PublishStatus", "PublishStatus")
+                        .WithMany()
+                        .HasForeignKey("PublishStatusId");
+
                     b.HasOne("DAL.SessionEntities.Session", "Session")
                         .WithMany("SessionClass")
                         .HasForeignKey("SessionId")
@@ -2106,6 +2158,8 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
+
+                    b.Navigation("PublishStatus");
 
                     b.Navigation("Session");
 
@@ -2468,21 +2522,27 @@ namespace SMP.DAL.Migrations
                         .WithMany("Replies")
                         .HasForeignKey("RepliedToId");
 
+                    b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
+                        .WithMany()
+                        .HasForeignKey("StudentContactId");
+
                     b.HasOne("SMP.DAL.Models.NoteEntities.StudentNote", "StudentNote")
                         .WithMany()
                         .HasForeignKey("StudentNoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Authentication.AppUser", "User")
+                    b.HasOne("DAL.TeachersInfor.Teacher", "Teacher")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("TeacherId");
 
                     b.Navigation("RepliedTo");
 
+                    b.Navigation("StudentContact");
+
                     b.Navigation("StudentNote");
 
-                    b.Navigation("User");
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNote", b =>
@@ -2601,6 +2661,25 @@ namespace SMP.DAL.Migrations
                     b.Navigation("SessionClass");
 
                     b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.ResultModels.PublishStatus", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany()
+                        .HasForeignKey("SessionClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
+                        .WithMany()
+                        .HasForeignKey("SessionTermId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SessionClass");
+
+                    b.Navigation("SessionTerm");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ScoreEntry", b =>

@@ -12,7 +12,7 @@ namespace SMP.BLL.Services.PinManagementService
     public interface IPinManagementService
     {
 
-        Task<APIResponse<PreviewResult>> PrintResultAsync(PrintResultRequest request);
+        Task<APIResponse<PrintResult>> PrintResultAsync(PrintResultRequest request);
         Task<APIResponse<UploadPinRequest>> UploadPinAsync(UploadPinRequest request);
         Task<APIResponse<List<GetPins>>> GetAllUsedPinsAsync();
         Task<APIResponse<List<GetPins>>> GetAllUnusedPinsAsync(); 

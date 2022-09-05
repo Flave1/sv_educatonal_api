@@ -26,8 +26,11 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<PreviewClassScoreEntry>> PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
         Task<APIResponse<CumulativeMasterList>> GetCumulativeMasterListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<StudentCoreEntry>> GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
-        Task<APIResponse<PreviewResult>> GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
+        Task<APIResponse<PreviewResult>> GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId);
+        Task UpdateStudentPrintStatusAsync(Guid classId, Guid studentId, bool isResultPrinted);
+        Task<APIResponse<PrintResult>> GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
+        Task UpdateSessionClassArchiveAsync(Guid studentId, Guid termId, bool isPublished);
     }
 }

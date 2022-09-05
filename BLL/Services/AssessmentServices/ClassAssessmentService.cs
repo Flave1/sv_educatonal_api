@@ -1,4 +1,5 @@
 ﻿using BLL;
+using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -96,7 +97,8 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 var item = new ClassAssessmentStudents();
                 item.StudentName =  st.User.FirstName + " " + st.User.MiddleName + " " + st.User.LastName;
-                item.Score = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType == (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId)?.Score ?? 0;
+                item.Score = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType == 
+                (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId)?.Score ?? 0;
                 item.GroupIds = ass.SessionClass.SessionClassSubjects.SelectMany(d => d.SessionClassGroups).Select(d => d.SessionClassGroupId).Distinct().ToArray();
                 item.StudentContactId = st.StudentContactId.ToString();
                 res.Result.Add(item);
@@ -175,6 +177,48 @@ namespace SMP.BLL.Services.AssessmentServices
                 return res;
             }
             catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<APIResponse<GetClassAssessmentRequest>> GetSingleAssessmentAsync(Guid classAssessmentId)
+        {
+            var res = new APIResponse<GetClassAssessmentRequest>();
+
+            res.Result = await context.ClassAssessment
+                 .Include(s => s.SessionClassSubject)
+                 .Include(s => s.SessionClass).ThenInclude(c => c.Class)
+                 .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
+                 .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
+                 .Where(x =>  x.ClassAssessmentId == classAssessmentId).Select(s => new GetClassAssessmentRequest(s)).FirstOrDefaultAsync();
+
+            res.IsSuccessful = true;
+            return await Task.Run(() => res);
+        }
+
+        async Task<APIResponse<SingleDelete>> IClassAssessmentService.DeleteClassAssessmentAsync(SingleDelete request)
+        {
+            var res = new APIResponse<SingleDelete>();
+            try
+            {
+
+                var ass = await context.ClassAssessment.FirstOrDefaultAsync(s => s.ClassAssessmentId == Guid.Parse(request.Item));
+                if (ass is null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                context.ClassAssessment.Remove(ass);
+                await context.SaveChangesAsync();
+
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                return res;
+            }
+            catch (Exception ex)
             {
                 throw;
             }

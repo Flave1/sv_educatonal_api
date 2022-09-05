@@ -64,6 +64,8 @@ namespace SMP.Contracts.PinManagement
         public string Session { get; set; }
         public string Term { get; set; }
         public string PinStatus { get; set; }
+        public int NumberOfTimesRemaining { get; set; } = 0;
+        public string RegistrationNumber { get; set; }
         public GetPins(UploadedPin db)
         {
             Pin = db.Pin;
@@ -79,12 +81,14 @@ namespace SMP.Contracts.PinManagement
         {
             Pin = db.FirstOrDefault().UploadedPin.Pin;
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
-            NumberOfTimesUsed = 3 - db.Count();
+            NumberOfTimesUsed = db.Count();
             StudentName = db.FirstOrDefault().Student.User.FirstName + " " + db.FirstOrDefault().Student.User.LastName;
             Session = db.FirstOrDefault().SessionClass.Session.StartDate + " / " + db.FirstOrDefault().SessionClass.Session.EndDate;
             Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
             PinStatus = "used";
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+            NumberOfTimesRemaining = 3 - db.Count();
+        
         }
     }
 
@@ -97,6 +101,8 @@ namespace SMP.Contracts.PinManagement
         public string Session { get; set; }
         public string Term { get; set; }
         public string PinStatus { get; set; }
+        public int NumberOfTimesRemaining { get; set; } = 0;
+        public string RegistrationNumber { get; set; }
         public PinDetail(UploadedPin db)
         {
             Pin = db.Pin;
@@ -107,7 +113,7 @@ namespace SMP.Contracts.PinManagement
             Term = "unused";
             SerialNumber = db.Serial;
         }
-        public PinDetail(IGrouping<Guid, UsedPin> db)
+        public PinDetail(IGrouping<Guid, UsedPin> db, string regNoFormat)
         {
             Pin = db.FirstOrDefault().UploadedPin.Pin;
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
@@ -117,6 +123,8 @@ namespace SMP.Contracts.PinManagement
             Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
             PinStatus = "used";
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
+            NumberOfTimesRemaining = 3 - db.Count();
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", db.FirstOrDefault().Student.RegistrationNumber);
         }
     }
 

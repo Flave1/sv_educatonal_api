@@ -92,7 +92,9 @@ namespace API.Controllers
         public async Task<IActionResult> GetSingleStudentScoreEntryAsync(string sessionClassid, string termId, string studentContactId)
         {
             var response = await service.GetSingleStudentScoreEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpPost("update/publish-result")]
@@ -139,7 +141,7 @@ namespace API.Controllers
         [HttpGet("get/student-result")]
         public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string studentContactId)
         {
-            var response = await service.GetStudentResultAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
+            var response = await service.GetStudentResultForPreviewAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
             return Ok(response);
         }
 

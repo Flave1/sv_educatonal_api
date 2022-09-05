@@ -59,9 +59,9 @@ namespace API.Controllers
         }
 
         [HttpPost("switch-session")]
-        public async Task<IActionResult> SwitchSessionAsync([FromBody] SwitchRequest reguest)
+        public async Task<IActionResult> SwitchSessionAsync([FromBody] SwitchSession reguest)
         {
-            var response = await sessionService.SwitchSessionAsync(reguest.TargetId, reguest.SwitchValue);
+            var response = await sessionService.SwitchSessionAsync(reguest.SessionId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

@@ -1,4 +1,5 @@
 ﻿using BLL;
+using Contracts.Common;
 using SMP.Contracts.Assessment;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,7 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<UpdatetudentAssessmentScore>> UpdateStudentAssessmentScoreAsync(UpdatetudentAssessmentScore request);
         Task<APIResponse<List<GetClassAssessmentRequest>>> GetAssessmentByTeacherAsync();
         Task<APIResponse<UpdatClassAssessmentScore>> UpdateClassAssessmentScoreAsync(UpdatClassAssessmentScore request);
+        Task<APIResponse<GetClassAssessmentRequest>> GetSingleAssessmentAsync(Guid classAssessmentId);
+        Task<APIResponse<SingleDelete>> DeleteClassAssessmentAsync(SingleDelete request);
     }
 }

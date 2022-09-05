@@ -71,6 +71,13 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get/subject-teacher")]
+        public IActionResult GetSubjectTer(Guid subjectId)
+        {
+            var response = service.GetSubjectTeacher(subjectId);
+            return Ok(response);
+        }
+
         #endregion
 
 

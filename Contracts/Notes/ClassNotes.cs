@@ -1,4 +1,5 @@
-﻿using DAL.TeachersInfor;
+﻿using DAL.ClassEntities;
+using DAL.TeachersInfor;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
@@ -221,6 +222,19 @@ namespace SMP.Contracts.Notes
             {
                 RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();
             }
+        }
+    }
+
+    public class GetClasses2
+    {
+        public string SessionClass { get; set; }
+        public string SessionClassId { get; set; }
+        public bool IsSent { get; set; }
+        public GetClasses2(SessionClass db, bool isSent)
+        {
+            SessionClass = db.Class.Name;
+            SessionClassId = db.SessionClassId.ToString();
+            IsSent = isSent;
         }
     }
 }

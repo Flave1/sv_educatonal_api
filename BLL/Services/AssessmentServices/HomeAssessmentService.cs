@@ -49,6 +49,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
+                        DeadLine = request.DeadLine,
                     };
                     await context.HomeAssessment.AddAsync(reg);
                 }
@@ -66,6 +67,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
+                        DeadLine = request.DeadLine,
                     };
                     await context.HomeAssessment.AddAsync(reg);
                 }
@@ -96,6 +98,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 assessment.AssessmentScore = request.AssessmentScore;
                 assessment.Content = request.Content;
                 assessment.Comment = request.Comment;
+                assessment.DeadLine = request.DeadLine;
                 assessment.SessionClassGroupId = request.SessionClassGroupId == "all-students" ? Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767") :
                     Guid.Parse(request.SessionClassGroupId); //DO NOT CHANGE ID PLEASE....
                 assessment.SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId);

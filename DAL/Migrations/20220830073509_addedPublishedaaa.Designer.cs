@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220830073509_addedPublishedaaa")]
+    partial class addedPublishedaaa
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -853,9 +855,6 @@ namespace SMP.DAL.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("DeadLine")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
@@ -1315,7 +1314,13 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("RepliedToId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("StudentContactId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("StudentNoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -1324,16 +1329,15 @@ namespace SMP.DAL.Migrations
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("StudentNoteCommentId");
 
                     b.HasIndex("RepliedToId");
 
+                    b.HasIndex("StudentContactId");
+
                     b.HasIndex("StudentNoteId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("StudentNoteComment");
                 });
@@ -2468,21 +2472,27 @@ namespace SMP.DAL.Migrations
                         .WithMany("Replies")
                         .HasForeignKey("RepliedToId");
 
+                    b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
+                        .WithMany()
+                        .HasForeignKey("StudentContactId");
+
                     b.HasOne("SMP.DAL.Models.NoteEntities.StudentNote", "StudentNote")
                         .WithMany()
                         .HasForeignKey("StudentNoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Authentication.AppUser", "User")
+                    b.HasOne("DAL.TeachersInfor.Teacher", "Teacher")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("TeacherId");
 
                     b.Navigation("RepliedTo");
 
+                    b.Navigation("StudentContact");
+
                     b.Navigation("StudentNote");
 
-                    b.Navigation("User");
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.NoteEntities.TeacherClassNote", b =>
