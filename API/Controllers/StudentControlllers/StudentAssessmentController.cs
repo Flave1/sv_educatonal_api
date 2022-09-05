@@ -21,6 +21,7 @@ namespace SMP.API.Controllers
             this.service = service;
         }
 
+        [Obsolete]
         [HttpGet("get/open-assessments")]
         public async Task<IActionResult> GetHomeAssessmentsByStudentAsync()
         {
@@ -28,7 +29,7 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
-
+        [AllowAnonymous]
         [HttpGet("filter/home-assessments")]
         public async Task<IActionResult> FilterHomeAssessmentsByStudentAsync(int status)
         {

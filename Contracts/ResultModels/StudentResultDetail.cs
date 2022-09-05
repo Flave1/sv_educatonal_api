@@ -29,7 +29,7 @@ namespace SMP.Contracts.ResultModels
                     AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2),
                     Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark >
                     Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2) ? "FAILED" : "PASSED"
-            }).ToList();
+                }).ToList();
             }
         }
         public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId, Guid termId)
@@ -123,6 +123,14 @@ namespace SMP.Contracts.ResultModels
                 }
             }
             
+        }
+
+        public StudentCoreEntry(StudentContact student, string regNoFormat)
+        {
+            StudentName = student.User?.FirstName + " " + student.User?.LastName;
+            StudentContactId = student.StudentContactId.ToString();
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+            //SessionClassName = student.SessionClass.Class.Name;
         }
     }
 

@@ -146,7 +146,7 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-
+        [AllowAnonymous]
         [HttpGet("get-classnote/comments")]
         public async Task<IActionResult> GetClassNoteCommentsAsync(string classNoteId)
         {

@@ -105,6 +105,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 assessment.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive == true).SessionTermId;
                 assessment.Type = (int)AssessmentTypes.HomeAssessment;
                 assessment.Title = request.Title;
+                assessment.Status = request.ShouldSendToStudents ? assessment.Status : (int)HomeAssessmentStatus.Saved;
 
                 await context.SaveChangesAsync();
 
@@ -277,18 +278,36 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<List<StudentHomeAssessmentRequest>>();
             res.Result = new List<StudentHomeAssessmentRequest>();
             var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
-            var result = await context.HomeAssessment
-                .Include(d => d.HomeAssessmentFeedBacks)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Students)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                 .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
-                 .Include(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false
-                && d.Status == status
-                || d.SessionClassGroup.GroupName == "all-students" && d.SessionClassId == student.SessionClassId)
-                .Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToListAsync();
+            var result = new List<StudentHomeAssessmentRequest>();
+            if(status == -1)
+            {
+                 result = await context.HomeAssessment
+                    .Include(d => d.HomeAssessmentFeedBacks)
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                    .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                     .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+                     .Include(q => q.SessionTerm)
+                    .OrderByDescending(d => d.CreatedOn)
+                    .Where(d => d.Deleted == false  && d.SessionClassId == student.SessionClassId && d.Status == (int)HomeAssessmentStatus.Opened)
+                    .Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToListAsync();
+                //&& d.SessionClassGroup.GroupName == "all-students"  && d.Status == (int)HomeAssessmentStatus.Opened
+            }
+            else
+            {
+                 result = await context.HomeAssessment
+                  .Include(d => d.HomeAssessmentFeedBacks)
+                  .Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                  .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                  .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                   .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+                   .Include(q => q.SessionTerm)
+                  .OrderByDescending(d => d.CreatedOn)
+                  .Where(d => d.Deleted == false  && d.SessionClassId == student.SessionClassId && d.Status == (int)HomeAssessmentStatus.Opened
+                   && d.Status == status)
+                  .Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToListAsync();
+            }
+            
 
             result.ForEach(d =>
             {

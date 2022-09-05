@@ -1,8 +1,10 @@
-﻿using Contracts.Class;
+﻿using BLL.Constants;
+using Contracts.Class;
 using Contracts.Common;
 using DAL;
 using DAL.ClassEntities;
 using DAL.StudentInformation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
@@ -19,10 +21,11 @@ namespace BLL.ClassServices
     public class ClassGroupService : IClassGroupService
     {
         private readonly DataContext context;
-
-        public ClassGroupService(DataContext context)
+        private readonly IHttpContextAccessor accessor;
+        public ClassGroupService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            this.accessor = accessor;
         }
 
         async Task<APIResponse<CreateClassGroup>> IClassGroupService.CreateClassGroupAsync(CreateClassGroup request)
@@ -113,12 +116,40 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<SessionClassSubjects>>> IClassGroupService.GetSessionClassSubjectsAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<SessionClassSubjects>>();
-            var result = await context.SessionClassSubject
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+
+            //GET SUPER ADMIN CLASSES
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            {
+                res.Result = await context.SessionClassSubject
                 .Include(s => s.Subject)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId).Select(a =>
                 new SessionClassSubjects(a)).ToListAsync();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            {
+                var subjectTeacherSubjects = context.SessionClassSubject
+                    .Include(d => d.Subject)
+                    .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId).Select(s => new SessionClassSubjects(s));
+
+                var formTeacherSubjects = context.SessionClassSubject
+                    .Include(d => d.Subject)
+                    .Include(d => d.SessionClass)
+                    .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)).Select(s => new SessionClassSubjects(s));
+
+                res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+
             res.IsSuccessful = true;
-            res.Result = result;
             return res;
         }
 

@@ -82,9 +82,9 @@ namespace API.Controllers
             return Ok(response);
         }
         [HttpGet("get/result-list")]
-        public async Task<IActionResult> GetListOfResultsAsync(string sessionClassid, string termId)
+        public async Task<IActionResult> GetClassResultListAsync(string sessionClassid, string termId)
         {
-            var response = await service.GetListOfResultsAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
+            var response = await service.GetClassResultListAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
             return Ok(response);
         }
 

@@ -141,9 +141,9 @@ namespace BLL.Services.SubjectServices
         {
             var res = new APIResponse<List<DropdownSelect>>();
 
-            var student = context.StudentContact.Include(d => d.SessionClass)
+            var student = context.StudentContact.Include(x => x.User).Include(d => d.SessionClass)
                 .ThenInclude(s => s.SessionClassSubjects)
-                .ThenInclude(d => d.Subject).FirstOrDefault();
+                .ThenInclude(d => d.Subject).FirstOrDefault(d => d.StudentContactId == studentId);
 
             if(student is null)
             {

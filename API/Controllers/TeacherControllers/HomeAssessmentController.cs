@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("homeassessment/api/v1")]
     public  class HomeAssessmentController : Controller
     {

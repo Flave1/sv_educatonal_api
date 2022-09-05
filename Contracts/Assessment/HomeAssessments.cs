@@ -24,10 +24,12 @@ namespace SMP.Contracts.Assessment
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
         public string DeadLine { get; set; }
+        public string DeadLine2 { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
         {
-            DeadLine = db.DeadLine.ToString("dd-MM-yyy hh:mm");
+            DeadLine = db.DeadLine.ToString("dd/MM/yyy hh:mm");
+            DeadLine2 = db.DeadLine.ToString("yyy-dd-MM");
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -75,7 +77,8 @@ namespace SMP.Contracts.Assessment
                    studentIds.Add(ele.ToString());
                });
             }
-           
+            DeadLine = db.DeadLine.ToString("dd/MM/yyy hh:mm");
+            DeadLine2 = db.DeadLine.ToString("yyy-dd-MM");
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;

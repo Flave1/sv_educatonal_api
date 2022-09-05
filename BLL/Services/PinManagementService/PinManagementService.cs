@@ -118,7 +118,7 @@ namespace SMP.BLL.Services.PinManagementService
                             res.Message.FriendlyMessage = "Pin not uploaded";
                             return res;
                         }
-                        await resultService.UpdateStudentPrintStatusAsync(request.SessionClassid, studentInfo.StudentContactId, true);
+                        await resultService.UpdateStudentPrintStatusAsync(studentInfo.StudentContactId, Guid.Parse(request.TermId), true);
                         await AddPinAsUsedAsync(request, studentInfo.StudentContactId, uploadedPin.UploadedPinId);
 
                         res.Result = studentResult.Result;
