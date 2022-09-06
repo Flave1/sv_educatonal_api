@@ -23,6 +23,8 @@ using SMP.DAL.Models.PortalSettings;
 using SMP.DAL.Models.PinManagement;
 using SMP.DAL.Models.Annoucement;
 using SMP.DAL.Models.NoteEntities;
+using SMP.DAL.Models.Timetable;
+using SMP.DAL.Models.AssessmentEntities;
 
 namespace DAL
 {
@@ -57,7 +59,7 @@ namespace DAL
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
-        public DbSet<PublishStatus> PublishStatus { get; set; }
+        //public DbSet<PublishStatus> PublishStatus { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }
         public DbSet<NotificationSetting> NotificationSetting { get; set; }
@@ -67,6 +69,18 @@ namespace DAL
         public DbSet<ClassNote> ClassNote { get; set; }
         public DbSet<StudentNote> StudentNote { get; set; }
         public DbSet<TeacherClassNote> TeacherClassNote { get;set;}
+        public DbSet<TeacherClassNoteComment> TeacherClassNoteComment { get; set; }
+        public DbSet<StudentNoteComment> StudentNoteComment { get; set; }
+        public DbSet<ClassTimeTable> ClassTimeTable { get; set; }
+        public DbSet<ClassTimeTableDay> ClassTimeTableDay { get; set; }
+        public DbSet<ClassTimeTableTimeActivity> ClassTimeTableTimeActivity { get; set; }
+        public DbSet<ClassTimeTableTime> ClassTimeTableTime { get; set; }
+        public DbSet<SessionClassGroup> SessionClassGroup { get; set; }
+        public DbSet<ClassAssessment> ClassAssessment { get; set; }
+        public DbSet<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
+        public DbSet<HomeAssessment> HomeAssessment { get; set; }
+        public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
+        public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

@@ -1,7 +1,9 @@
 ﻿using DAL.Authentication;
 using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
-using System; 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Contracts.Authentication
 {
@@ -27,7 +29,11 @@ namespace Contracts.Authentication
         public string Phone { get; set; }
         public string dob { get; set; }
         public string Photo { get; set; }
-
+        public string[] Hobbies { get; set; }
+        public string ShortBiography { get; set; }
+        public string Address { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
         {
@@ -43,6 +49,11 @@ namespace Contracts.Authentication
             MiddleName = db.User.MiddleName;
             dob = db.User.DOB;
             Photo = db.User.Photo;
+            Hobbies = !string.IsNullOrEmpty(db.Hobbies) ? db.Hobbies.Split(',').ToArray() : Array.Empty<string>();
+            ShortBiography = db.ShortBiography;
+            Address = db.Address;
+            Gender = db.Gender;
+            MaritalStatus = db.MaritalStatus;
         }
     }
 
@@ -61,5 +72,40 @@ namespace Contracts.Authentication
         public string DOB { get; set; }
         public string Photo { get; set; }
         public string TeacherUserAccountId { get; set; }
+    }
+
+    public class UpdateProfileByTeacher
+    {
+        public string Email { get; set; }
+        public IFormFile ProfileImage { get; set; }
+        public List<string> Hobbies { get; set; }
+        public string ShortBiography { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string Phone { get; set; }
+        public string DOB { get; set; }
+        public string TeacherUserAccountId { get; set; }
+        public string Address { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
+    }
+
+    public class TeacherClassesAsFormTeacher
+    {
+        public string Class { get; set; }
+        public  List<string> SubjectsInClass { get; set; }
+    }
+    public class TeacherSubjectsAsSubjectTeacher
+    {
+        public string Subject { get; set; }
+        public List<string> Class { get; set; }
+    }
+
+    public class TeacheerClassAndSibjects
+    {
+        public List<TeacherClassesAsFormTeacher> ClassesAsFormTeacher { get; set; } = new List<TeacherClassesAsFormTeacher>();
+        public List<TeacherSubjectsAsSubjectTeacher> SubjectsAsSubjectTeacher { get; set; } = new List<TeacherSubjectsAsSubjectTeacher>();
+
     }
 }

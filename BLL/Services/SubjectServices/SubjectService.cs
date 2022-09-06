@@ -2,9 +2,11 @@
 using Contracts.Common;
 using DAL;
 using DAL.SubjectModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
+using SMP.Contracts.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +18,12 @@ namespace BLL.Services.SubjectServices
     public class SubjectService : ISubjectService
     {
         private readonly DataContext context;
+        private readonly IHttpContextAccessor accessor;
 
-        public SubjectService(DataContext context)
+        public SubjectService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            this.accessor = accessor;
         }
 
         async Task<APIResponse<Subject>> ISubjectService.CreateSubjectAsync(ApplicationLookupCommand subject)
@@ -130,6 +134,44 @@ namespace BLL.Services.SubjectServices
            
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "You have successfuly deleted a class lookp";
+            return res;
+        }
+
+        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects(Guid studentId)
+        {
+            var res = new APIResponse<List<DropdownSelect>>();
+
+            var student = context.StudentContact.Include(x => x.User).Include(d => d.SessionClass)
+                .ThenInclude(s => s.SessionClassSubjects)
+                .ThenInclude(d => d.Subject).FirstOrDefault(d => d.StudentContactId == studentId);
+
+            if(student is null)
+            {
+                res.Result = new List<DropdownSelect>();
+                res.IsSuccessful = true;
+                return res;
+            }
+
+            res.Result = student.SessionClass.SessionClassSubjects
+                .Select(a => new DropdownSelect { 
+                    Value = a.SubjectId.ToString().ToLower(), 
+                    Name = a.Subject.Name,
+                    SupplimentId = a.SubjectTeacherId.ToString()
+                }).ToList();
+
+            res.IsSuccessful = true;
+            return res;
+        }
+
+
+        APIResponse<Guid> ISubjectService.GetSubjectTeacher(Guid subjectId)
+        {
+            var stdId = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId")?.Value;
+            var student = context.StudentContact.FirstOrDefault(s => s.StudentContactId == Guid.Parse(stdId));
+            var res = new APIResponse<Guid>();
+            var result = context.SessionClassSubject.FirstOrDefault(d => d.SubjectId == subjectId && d.SessionClassId == student.SessionClassId).SubjectTeacherId;
+            res.Result = result;
+            res.IsSuccessful = true;
             return res;
         }
     }

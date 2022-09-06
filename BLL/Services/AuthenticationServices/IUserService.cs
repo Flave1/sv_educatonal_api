@@ -1,6 +1,7 @@
 ﻿using Contracts.Authentication;
 using Contracts.Options;
 using DAL.Authentication;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,5 +16,8 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<AuthenticationResult>> ResetAccountAsync(ResetAccount request);
         Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat);
         Task UpdateStudentUserAccountAsync(StudentContactCommand student);
+        Task UpdateStudentUserProfileImageAsync(IFormFile file, string studentId);
+        Task UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account);
+        Task<APIResponse<LoginSuccessResponse>> ChangePasswordAsync(ChangePassword request);
     }
 }

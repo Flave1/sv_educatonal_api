@@ -19,6 +19,8 @@ namespace SMP.Contracts.PromotionModels
         public bool? IsPromoted { get; set; }
         public int PassedStudents { get; set; } = 0;
         public int FailedStudents { get; set; } = 0;
+        public string PassedStudentIds { get; set; }
+        public string FailedStudentIds { get; set; }
         public PreviousSessionClasses(SessionClass cl, Guid termId)
         {
             SessionClassId = cl.SessionClassId.ToString();
@@ -28,6 +30,8 @@ namespace SMP.Contracts.PromotionModels
             var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
             if (studentRecords.Any())
             {
+                PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+                FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
                 TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
                 TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
             }
@@ -41,6 +45,11 @@ namespace SMP.Contracts.PromotionModels
         public string ClassToBePromoted { get; set; }
         public string ClassToPromoteTo { get; set; }
 
+    }
+
+    public class FetchPassedOrFailedStudents
+    {
+        public string StudentIds { get; set; }
     }
 
     public class GetStudents

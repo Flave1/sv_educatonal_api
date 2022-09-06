@@ -1,6 +1,8 @@
-﻿using DAL.ClassEntities;
+﻿using DAL;
+using DAL.ClassEntities;
 using DAL.SubjectModels;
 using DAL.TeachersInfor;
+using SMP.DAL.Models.AssessmentEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.ClassEntities
 {
-    public class SessionClassSubject
+    public class SessionClassSubject : CommonEntity
     {
         [Key]
         public Guid SessionClassSubjectId { get; set; }
@@ -26,5 +28,8 @@ namespace SMP.DAL.Models.ClassEntities
         public virtual Teacher SubjectTeacher { get; set; }
         public int ExamScore { get; set; }
         public int AssessmentScore { get; set; }
+        public virtual ICollection<ClassAssessment> ClassAssessments { get; set; }
+        public virtual ICollection<HomeAssessment> HomeAssessments { get; set; }
+        public virtual ICollection<SessionClassGroup> SessionClassGroups { get; set; }
     }
 }

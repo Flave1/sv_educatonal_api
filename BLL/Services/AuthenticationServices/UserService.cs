@@ -18,6 +18,7 @@ using System.Data;
 using SMP.Contracts.Options;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Constants;
+using Microsoft.AspNetCore.Http;
 
 namespace BLL.AuthenticationServices
 {
@@ -30,7 +31,9 @@ namespace BLL.AuthenticationServices
         private readonly IIdentityService identityService;
         private readonly SchoolSettings schoolSettings;
         private readonly IFileUploadService uploadService;
-        public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context, IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService)
+        private readonly EmailConfiguration emailConfiguration;
+        public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
+            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -39,6 +42,7 @@ namespace BLL.AuthenticationServices
             this.identityService = identityService;
             this.schoolSettings = options.Value;
             this.uploadService = uploadService;
+            emailConfiguration = emailOptions.Value;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -153,6 +157,50 @@ namespace BLL.AuthenticationServices
 
         }
 
+        async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
+        {
+            try
+            {
+                var account = await manager.FindByIdAsync(studentId);
+                if (account == null)
+                {
+                    throw new ArgumentException("Account not found");
+                }
+
+                var filePath = uploadService.UpdateProfileImage(file, account.Photo);
+              
+                account.Photo = filePath;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
+
+        async Task IUserService.UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account)
+        {
+            try
+            {
+                var filePath = await Task.Run(() => uploadService.UpdateProfileImage(file, account.Photo));
+                account.Photo = filePath;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")
@@ -207,6 +255,7 @@ namespace BLL.AuthenticationServices
             var to = new List<EmailAddress>();
             var frm = new List<EmailAddress>();
             to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
             var emMsg = new EmailMessage
             {
                 Content = $"Click  <a href='{link}'>here</a> to reset password",
@@ -246,15 +295,48 @@ namespace BLL.AuthenticationServices
             var to = new List<EmailAddress>();
             var frm = new List<EmailAddress>();
             to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
             var emMsg = new EmailMessage
             {
-                Content = $"Your password has been rest successfuly",
+                Content = $"Your password has been reset successfuly",
                 SentBy = "Flavetechs",
-                Subject = "Account Reset ",
+                Subject = "Account Reset",
                 ToAddresses = to,
                 FromAddresses = frm
             };
             await emailService.Send(emMsg);
+        }
+
+
+        async Task<APIResponse<LoginSuccessResponse>> IUserService.ChangePasswordAsync(ChangePassword request)
+        {
+            var res = new APIResponse<LoginSuccessResponse>();
+            var user = await manager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                return res;
+            }
+
+            var isUserPAssword = await manager.CheckPasswordAsync(user, request.OldPassword);
+            if (!isUserPAssword)
+            {
+                res.Message.FriendlyMessage = "Old Password incorrect";
+                return res;
+            }
+
+            var token = await manager.GeneratePasswordResetTokenAsync(user);
+            var changePassword = await manager.ResetPasswordAsync(user, token, request.NewPassword);
+            if (changePassword.Succeeded)
+            {
+                await SendResetSuccessEmailToUserAsync(user);
+                return await identityService.LoginAfterPasswordIsChangedAsync(user);
+            }
+            else
+            {
+                res.Message.FriendlyMessage = changePassword.Errors.FirstOrDefault().Description;
+                return res;
+            }
         }
 
 

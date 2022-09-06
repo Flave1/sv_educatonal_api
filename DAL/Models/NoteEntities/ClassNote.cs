@@ -21,7 +21,7 @@ namespace SMP.DAL.Models.NoteEntities
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public int AprrovalStatus { get; set; }
-        public string Classes { get; set; }
+        public DateTime? DateSentForApproval { get; set; }
         public string Author { get; set; }
         [ForeignKey("Author")]
         public AppUser AuthorDetail { get; set; }

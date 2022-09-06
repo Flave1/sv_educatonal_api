@@ -4,7 +4,6 @@ using DAL.SessionEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
-using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
@@ -21,29 +20,25 @@ namespace BLL.SessionServices
         {
             this.context = context;
         }
-        async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId, bool switchValue)
+        async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
         {
             var res = new APIResponse<Session>();
-            var savedSession = context.Session.FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
+            var savedSession = context.Session.Include(s => s.Terms).FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
             if (savedSession == null)
             {
                 res.Message.FriendlyMessage = $"Session Not Found";
                 return res;
             }
 
-            if(switchValue && context.Session.Any(e => e.IsActive && e.SessionId != Guid.Parse(sessionId)))
-            {
-                res.Message.FriendlyMessage = $"Running Session Detected";
-                return res;
-            }
-
             await SetOtherSessionsInactiveAsync(Guid.Parse(sessionId));
 
-            savedSession.IsActive = switchValue; 
+            savedSession.IsActive = true;
+            savedSession.Terms.FirstOrDefault().IsActive = true;
             await context.SaveChangesAsync();
-            var message = !switchValue ? "Successfuly switched off session" : "Successfuly switched on session";
+            var message = $"Successfuly switched to {savedSession.StartDate} / {savedSession.EndDate} session";
             res.Result = savedSession;
             res.Message.FriendlyMessage = message;
+            res.IsSuccessful = true;
             return res;
         }
         async Task<APIResponse<CreateUpdateSession>> ISessionService.CreateSessionAsync(CreateUpdateSession session)

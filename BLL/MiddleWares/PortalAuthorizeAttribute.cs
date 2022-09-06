@@ -29,7 +29,7 @@ namespace BLL.MiddleWares
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(authHeader))
             {
                 context.HttpContext.Response.StatusCode = 401;
-                context.Result = new UnauthorizedObjectResult(new { result = "Unauthorized Access"});
+                context.Result = new UnauthorizedObjectResult(new APIResponse<APIResponseMessage> { Message = new APIResponseMessage { FriendlyMessage = "Unauthorized access" } });
                 return;
             }
             string token = authHeader.ToString().Replace("Bearer ", "").Trim();
@@ -42,7 +42,7 @@ namespace BLL.MiddleWares
             if (currentDateTime > EndDate)
             {
                 context.HttpContext.Response.StatusCode = 401;
-                context.Result = new UnauthorizedObjectResult(new { result = "Session Expired" });
+                context.Result = new UnauthorizedObjectResult(new APIResponse<APIResponseMessage> { Message = new APIResponseMessage { FriendlyMessage = "Unauthorized access" } });
                 return;
             }
 

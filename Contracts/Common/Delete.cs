@@ -22,4 +22,9 @@ namespace Contracts.Common
         public string TargetId { get; set; }
         public bool SwitchValue { get; set; }
     }
+
+    public class SwitchSession
+    {
+        public string SessionId { get; set; }
+    }
 }
