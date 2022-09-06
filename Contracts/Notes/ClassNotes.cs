@@ -204,7 +204,7 @@ namespace SMP.Contracts.Notes
         public string Comment { get; set; }
         public bool IsParent { get; set; }
         public Guid ClassNoteId { get; set; }
-        public Guid TeacherId { get; set; }
+        public string TeacherId { get; set; }
         public Guid? RepliedToId { get; set; }
         public string Name { get; set; }
         public List<ClassNoteComment> RepliedComments { get; set; }
@@ -216,8 +216,8 @@ namespace SMP.Contracts.Notes
             IsParent = db.IsParent;
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
-            TeacherId = db.TeacherId;
-            Name = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
+            TeacherId = db.UserId;
+            Name = db.AppUser.FirstName + " " + db.AppUser.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
                 RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();

@@ -101,6 +101,8 @@ namespace SMP.BLL.Services.AssessmentServices
                 (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId)?.Score ?? 0;
                 item.GroupIds = ass.SessionClass.SessionClassSubjects.SelectMany(d => d.SessionClassGroups).Select(d => d.SessionClassGroupId).Distinct().ToArray();
                 item.StudentContactId = st.StudentContactId.ToString();
+                item.IsSaved = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType ==
+                (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId).IsOfferring;
                 res.Result.Add(item);
             }
             res.IsSuccessful = true;
@@ -108,9 +110,9 @@ namespace SMP.BLL.Services.AssessmentServices
         }
 
     
-        async Task<APIResponse<UpdatetudentAssessmentScore>> IClassAssessmentService.UpdateStudentAssessmentScoreAsync(UpdatetudentAssessmentScore request)
+        async Task<APIResponse<UpdateStudentAssessmentScore>> IClassAssessmentService.UpdateStudentAssessmentScoreAsync(UpdateStudentAssessmentScore request)
         {
-            var res = new APIResponse<UpdatetudentAssessmentScore>();
+            var res = new APIResponse<UpdateStudentAssessmentScore>();
             try
             {
                 var ass = context.ClassAssessment.FirstOrDefault(d => d.ClassAssessmentId == Guid.Parse(request.ClassAssessmentId));
@@ -122,7 +124,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 if (request.Score > ass.AssessmentScore)
                 {
-                    res.Message.FriendlyMessage = $"Student assessment can not be scored more than {ass.AssessmentScore}";
+                    res.Message.FriendlyMessage = $"Student assessment can not be scored more than {ass.AssessmentScore.ToString().Split('.')[0]}";
                     return res;
                 }
 
@@ -136,6 +138,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Score = request.Score,
                         StudentContactId = Guid.Parse(request.StudentContactId),
                         ClassAssessmentId = ass.ClassAssessmentId,
+                        IsOfferring = true
                     };
                     context.AssessmentScoreRecord.Add(score);
                 }
@@ -145,6 +148,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
 
                 await context.SaveChangesAsync();
+                request.IsSaved = true;
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Saved;

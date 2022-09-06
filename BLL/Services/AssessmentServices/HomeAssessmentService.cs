@@ -49,7 +49,8 @@ namespace SMP.BLL.Services.AssessmentServices
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
-                        DeadLine = request.DeadLine,
+                        DateDeadLine = request.DateDeadLine,
+                        TimeDeadLine = request.TimeDeadLine
                     };
                     await context.HomeAssessment.AddAsync(reg);
                 }
@@ -67,7 +68,8 @@ namespace SMP.BLL.Services.AssessmentServices
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
-                        DeadLine = request.DeadLine,
+                        DateDeadLine = request.DateDeadLine,
+                        TimeDeadLine = request.TimeDeadLine
                     };
                     await context.HomeAssessment.AddAsync(reg);
                 }
@@ -78,9 +80,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
         async Task<APIResponse<UpdateHomeAssessmentRequest>> IHomeAssessmentService.UpdateHomeAssessmentAsync(UpdateHomeAssessmentRequest request)
@@ -98,7 +100,8 @@ namespace SMP.BLL.Services.AssessmentServices
                 assessment.AssessmentScore = request.AssessmentScore;
                 assessment.Content = request.Content;
                 assessment.Comment = request.Comment;
-                assessment.DeadLine = request.DeadLine;
+                assessment.DateDeadLine = request.DateDeadLine;
+                assessment.TimeDeadLine = request.TimeDeadLine;
                 assessment.SessionClassGroupId = request.SessionClassGroupId == "all-students" ? Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767") :
                     Guid.Parse(request.SessionClassGroupId); //DO NOT CHANGE ID PLEASE....
                 assessment.SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId);

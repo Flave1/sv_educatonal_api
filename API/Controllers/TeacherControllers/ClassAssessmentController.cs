@@ -1,5 +1,4 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Annoucements;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +43,7 @@ namespace SMP.API.Controllers
         }
 
         [HttpPost("update-student/class-assessment")]
-        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdatetudentAssessmentScore request)
+        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdateStudentAssessmentScore request)
         {
             var response = await service.UpdateStudentAssessmentScoreAsync(request);
             if (response.IsSuccessful)

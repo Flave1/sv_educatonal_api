@@ -446,7 +446,7 @@ namespace SMP.BLL.Services.NoteServices
                 ClassNoteId = classNoteId,
                 Comment = comment,
                 IsParent = true,
-                TeacherId = Guid.Parse(teacherId),
+                UserId = teacherId,
             };
 
             context.TeacherClassNoteComment.Add(commented);
@@ -474,7 +474,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 ClassNoteId = note.ClassNoteId,
                 Comment = comment,
-                TeacherId = Guid.Parse(teacherId),
+                UserId = teacherId,
                 RepliedToId = commentId
             };
 
@@ -491,10 +491,10 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<ClassNoteComment>>();
             res.Result = await context.TeacherClassNoteComment
-                .Include(x => x.Teacher).ThenInclude(s => s.User)
+                .Include(x => x.AppUser)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.Teacher).ThenInclude(s => s.User)
+                .Include(d => d.Replies).ThenInclude(s => s.AppUser)
+                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.AppUser)
                 .Where(u => u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
                 .Select(x => new ClassNoteComment(x)).ToListAsync();
 

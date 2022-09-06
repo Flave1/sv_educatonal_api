@@ -11,7 +11,7 @@ namespace SMP.BLL.Services.AssessmentServices
     {
         Task<APIResponse<GetClassAssessmentRequest>> CreateClassAssessmentAsync(CreateClassAssessment request);
         Task<APIResponse<List<ClassAssessmentStudents>>> GetClassStudentByAssessmentAsync(Guid classAssessmentId);
-        Task<APIResponse<UpdatetudentAssessmentScore>> UpdateStudentAssessmentScoreAsync(UpdatetudentAssessmentScore request);
+        Task<APIResponse<UpdateStudentAssessmentScore>> UpdateStudentAssessmentScoreAsync(UpdateStudentAssessmentScore request);
         Task<APIResponse<List<GetClassAssessmentRequest>>> GetAssessmentByTeacherAsync();
         Task<APIResponse<UpdatClassAssessmentScore>> UpdateClassAssessmentScoreAsync(UpdatClassAssessmentScore request);
         Task<APIResponse<GetClassAssessmentRequest>> GetSingleAssessmentAsync(Guid classAssessmentId);
