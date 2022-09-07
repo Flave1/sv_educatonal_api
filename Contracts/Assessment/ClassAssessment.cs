@@ -20,6 +20,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassName { get; set; }
         public decimal AssessmentScore { get; set; }
         public string Title { get; set; }
+        public bool IsSaved { get; set; }
         public ClassAssessmentStudents[] Students;
         public GetClassAssessmentRequest() { }
         public GetClassAssessmentRequest(ClassAssessment db)

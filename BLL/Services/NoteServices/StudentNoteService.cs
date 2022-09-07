@@ -425,8 +425,45 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<string>();
 
-            var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
-            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
+            try
+            {
+
+                var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
+                if (note == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                var commented = new TeacherClassNoteComment
+                {
+                    ClassNoteId = classNoteId,
+                    Comment = comment,
+                    IsParent = true,
+                    UserId = userId
+                };
+
+                context.TeacherClassNoteComment.Add(commented);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            res.Message.FriendlyMessage = "Comment sent";
+            res.IsSuccessful = true;
+            res.Result = comment;
+            return res;
+        }
+
+        async Task<APIResponse<string>> IStudentNoteService.ReplyClassNoteCommentAsync(string comment, Guid commentId)
+        {
+            var res = new APIResponse<string>();
+
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId);
             if (note == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -435,10 +472,10 @@ namespace SMP.BLL.Services.NoteServices
 
             var commented = new TeacherClassNoteComment
             {
-                ClassNoteId = classNoteId,
+                ClassNoteId = note.ClassNoteId,
                 Comment = comment,
-                IsParent = true,
-                UserId = studentContactId
+                UserId = userId,
+                RepliedToId = commentId
             };
 
             context.TeacherClassNoteComment.Add(commented);
@@ -449,5 +486,6 @@ namespace SMP.BLL.Services.NoteServices
             res.Result = comment;
             return res;
         }
+
     }
 }

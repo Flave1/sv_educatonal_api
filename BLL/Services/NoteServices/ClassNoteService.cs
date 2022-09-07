@@ -433,7 +433,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<string>();
 
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
             if (note == null)
             {
@@ -446,7 +446,7 @@ namespace SMP.BLL.Services.NoteServices
                 ClassNoteId = classNoteId,
                 Comment = comment,
                 IsParent = true,
-                UserId = teacherId,
+                UserId = userId,
             };
 
             context.TeacherClassNoteComment.Add(commented);
@@ -462,7 +462,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<string>();
 
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId);
             if (note == null)
             {
@@ -474,7 +474,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 ClassNoteId = note.ClassNoteId,
                 Comment = comment,
-                UserId = teacherId,
+                UserId = userId,
                 RepliedToId = commentId
             };
 

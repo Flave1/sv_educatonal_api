@@ -217,7 +217,7 @@ namespace SMP.Contracts.Notes
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
             TeacherId = db.UserId;
-            Name = db.AppUser.FirstName + " " + db.AppUser.LastName;
+            Name = db?.AppUser?.FirstName + " " + db?.AppUser?.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
                 RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();

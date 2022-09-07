@@ -34,5 +34,14 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpPost("reply/classnote-comment")]
+        public async Task<IActionResult> ReplyClassNoteCommentAsync([FromBody] ReplyCommentToClassNote request)
+        {
+            var response = await service.ReplyClassNoteCommentAsync(request.Comment, Guid.Parse(request.CommentId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }
