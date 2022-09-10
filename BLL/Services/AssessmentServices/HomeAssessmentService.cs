@@ -124,18 +124,34 @@ namespace SMP.BLL.Services.AssessmentServices
             }
         }
 
-        async Task<APIResponse<List<GetHomeAssessmentRequest>>> IHomeAssessmentService.GetSubjectHomeAssessmentAsync(Guid SessionClassSubjectId)
+        async Task<APIResponse<List<GetHomeAssessmentRequest>>> IHomeAssessmentService.GetSubjectHomeAssessmentAsync(string classId, string sessionClassSubjectId, string groupId)
         {
             var res = new APIResponse<List<GetHomeAssessmentRequest>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var result = await context.HomeAssessment
+            var query =  context.HomeAssessment
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false && d.SessionClassSubjectId == SessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId)
+                .OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted == false);
+
+            if (!string.IsNullOrEmpty(classId))
+            {
+                query = query.Where(d => d.SessionClassId == Guid.Parse(classId));
+            }
+            if (!string.IsNullOrEmpty(sessionClassSubjectId))
+            {
+                query = query.Where(d => d.SessionClassSubjectId == Guid.Parse(sessionClassSubjectId));
+            }
+            if (!string.IsNullOrEmpty(groupId))
+            {
+                if(groupId == "all-students")
+                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767"));
+                else
+                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse(groupId));
+            }
+            var result = await query.Where(d => d.SessionTermId == activeTerm.SessionTermId)
                 .Select(f => new GetHomeAssessmentRequest(f, f.SessionClass.Students.Count())).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -322,12 +338,15 @@ namespace SMP.BLL.Services.AssessmentServices
 
             result.ForEach(d =>
             {
-                if (!string.IsNullOrEmpty(d.ListOfStudentContactIds) && d.ListOfStudentContactIds.Split(',').ToList().Contains(studentContactid))
-                    res.Result.Add(d);
+                if( !string.IsNullOrEmpty(d.SessionClassGroupName) && d.SessionClassGroupName != "all-students")
+                {
+                    if (!string.IsNullOrEmpty(d.ListOfStudentContactIds) && d.ListOfStudentContactIds.Split(',').ToList().Contains(studentContactid))
+                        res.Result.Add(d);
+                }
             });
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
+            //res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

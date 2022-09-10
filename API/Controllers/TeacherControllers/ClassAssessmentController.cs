@@ -21,9 +21,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-all/class-assessments")]
-        public async Task<IActionResult> GetStudentClassAssessmentsAsync()
+        public async Task<IActionResult> GetStudentClassAssessmentsAsync(string sessionClassId, string sessionClassSubjectId)
         {
-            var response = await service.GetAssessmentByTeacherAsync();
+            var response = await service.GetAssessmentByTeacherAsync(sessionClassId, sessionClassSubjectId);
             return Ok(response);
         }
 

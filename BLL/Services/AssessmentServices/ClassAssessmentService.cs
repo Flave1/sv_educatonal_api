@@ -23,17 +23,29 @@ namespace SMP.BLL.Services.AssessmentServices
             this.accessor = accessor;
         }
 
-        async Task<APIResponse<List<GetClassAssessmentRequest>>> IClassAssessmentService.GetAssessmentByTeacherAsync()
+        async Task<APIResponse<List<GetClassAssessmentRequest>>> IClassAssessmentService.GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var res = new APIResponse<List<GetClassAssessmentRequest>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            res.Result = await context.ClassAssessment
+            var query =  context.ClassAssessment
                  .Include(s => s.SessionClassSubject)
                  .Include(s => s.SessionClass).ThenInclude(c => c.Class)
                  .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
                  .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                 .Where(x => x.Scorer == Guid.Parse(teacherId) && x.SessionTermId == activeTerm.SessionTermId).Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
+                 .Where(x => x.Scorer == Guid.Parse(teacherId) && x.SessionTermId == activeTerm.SessionTermId);
+
+            if (!string.IsNullOrEmpty(sessionClassId))
+            {
+                query = query.Where(d => d.SessionClassId == Guid.Parse(sessionClassId));
+            }
+            if (!string.IsNullOrEmpty(sessionClassSubjectId))
+            {
+                query = query.Where(d => d.SessionClassSubjectId == Guid.Parse(sessionClassSubjectId));
+            }
+           
+        
+            res.Result = await query.Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
 
             res.IsSuccessful = true;
             return await Task.Run(() => res);

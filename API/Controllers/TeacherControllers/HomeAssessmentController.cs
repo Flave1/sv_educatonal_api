@@ -40,9 +40,9 @@ namespace SMP.API.Controllers
 
 
         [HttpGet("get/home-assessments")]
-        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassSubjectId)
+        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassId, string sessionClassSubjectId, string groupId)
         {
-            var response = await service.GetSubjectHomeAssessmentAsync(Guid.Parse(sessionClassSubjectId));
+            var response = await service.GetSubjectHomeAssessmentAsync(sessionClassId, sessionClassSubjectId, groupId);
             return Ok(response);
         }
 

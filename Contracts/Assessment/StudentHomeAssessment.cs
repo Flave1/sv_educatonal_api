@@ -36,9 +36,13 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public string SessionClassGroupName { get; set; }
         public string Status { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
         public string ListOfStudentContactIds { get; set; }
         public StudentHomeAssessmentRequest(HomeAssessment db, string studentContactId)
         {
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;

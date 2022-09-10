@@ -12,7 +12,7 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<GetClassAssessmentRequest>> CreateClassAssessmentAsync(CreateClassAssessment request);
         Task<APIResponse<List<ClassAssessmentStudents>>> GetClassStudentByAssessmentAsync(Guid classAssessmentId);
         Task<APIResponse<UpdateStudentAssessmentScore>> UpdateStudentAssessmentScoreAsync(UpdateStudentAssessmentScore request);
-        Task<APIResponse<List<GetClassAssessmentRequest>>> GetAssessmentByTeacherAsync();
+        Task<APIResponse<List<GetClassAssessmentRequest>>> GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId);
         Task<APIResponse<UpdatClassAssessmentScore>> UpdateClassAssessmentScoreAsync(UpdatClassAssessmentScore request);
         Task<APIResponse<GetClassAssessmentRequest>> GetSingleAssessmentAsync(Guid classAssessmentId);
         Task<APIResponse<SingleDelete>> DeleteClassAssessmentAsync(SingleDelete request);

@@ -136,15 +136,22 @@ namespace BLL.ClassServices
                         sessionClass.PassMark = sClass.PassMark;
                         await context.SaveChangesAsync();
 
-                        await DeleteExistingClassSubjectsAsync(sessionClass.SessionClassId);
+                        await DeleteDeselectedClassSubjectsOnAsync(sessionClass.SessionClassId, sClass.ClassSubjects);
 
-                        await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
+                        await CreateUpdateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
 
                         await resultsService.CreateClassScoreEntryAsync(sessionClass);
 
                         await transaction.CommitAsync();
                         res.IsSuccessful = true;
                         res.Message.FriendlyMessage = "Session class updated successfully";
+                        return res;
+                    }
+                    //DbUpdateException
+                    catch (ArgumentException ex)
+                    {
+                        await transaction.RollbackAsync();
+                        res.Message.FriendlyMessage = ex.Message;
                         return res;
                     }
                     catch (Exception ex)
@@ -166,6 +173,41 @@ namespace BLL.ClassServices
            
         }
 
+        private async Task CreateUpdateClassSubjectsAsync(ClassSubjects[] ClassSubjects, Guid SessionClassId)
+        {
+            try
+            {
+                foreach (var subject in ClassSubjects)
+                {
+                    var sub = context.SessionClassSubject.FirstOrDefault(x => x.SubjectId == Guid.Parse(subject.SubjectId));
+                    if(sub is null)
+                    {
+                        sub = new SessionClassSubject();
+                        sub.SessionClassId = SessionClassId;
+                        sub.SubjectId = Guid.Parse(subject.SubjectId);
+                        sub.SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId);
+                        sub.AssessmentScore = subject.Assessment;
+                        sub.ExamScore = subject.ExamSCore; 
+                        await context.SessionClassSubject.AddRangeAsync(sub);
+                    }
+                    else
+                    {
+                        sub.SessionClassId = SessionClassId;
+                        sub.SubjectId = Guid.Parse(subject.SubjectId);
+                        sub.SubjectTeacherId = Guid.Parse(subject.SubjectTeacherId);
+                        sub.AssessmentScore = subject.Assessment;
+                        sub.ExamScore = subject.ExamSCore;
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
+
         private async Task CreateClassSubjectsAsync(ClassSubjects[] ClassSubjects, Guid SessionClassId)
         {
             try
@@ -184,10 +226,9 @@ namespace BLL.ClassServices
                 await context.SessionClassSubject.AddRangeAsync(subs);
                 await context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
-                throw ex;
+                throw;
             }
         }
 
@@ -197,6 +238,23 @@ namespace BLL.ClassServices
             if (subs.Any())
                  context.SessionClassSubject.RemoveRange(subs);
             await context.SaveChangesAsync();
+        }
+        private async Task DeleteDeselectedClassSubjectsOnAsync(Guid SessionClassId, ClassSubjects[] subjects)
+        {
+            try
+            {
+                var subs = await context.SessionClassSubject.Include(x => x.SessionClassGroups)
+               .Where(sc => sc.SessionClassId == SessionClassId && !subjects.Select(x => x.SubjectId)
+               .AsEnumerable().Contains(sc.SubjectId.ToString())).ToListAsync();
+               
+                if (subs.Any())
+                    context.SessionClassSubject.RemoveRange(subs);
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ArgumentException("Please confirm home and class assessments are not in the deselected subjects");
+            }
         }
 
         async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesAsync(Guid sessionId)
