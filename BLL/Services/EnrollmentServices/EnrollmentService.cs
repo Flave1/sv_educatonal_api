@@ -27,12 +27,20 @@ namespace SMP.BLL.Services.EnrollmentServices
         {
             var res = new APIResponse<List<EnrolledStudents>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var status = (int)EnrollmentStatus.Enrolled;
+
+            var cls = context.SessionClass.Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
+            if (cls.Session.IsActive)
+                status = (int)EnrollmentStatus.Enrolled;
+            else
+                status = (int)EnrollmentStatus.UnEnrolled;
+
 
             var result = await (from a in context.StudentContact
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
                           join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                          where b.Status == (int)EnrollmentStatus.Enrolled && a.SessionClass.Session.IsActive == true && a.SessionClassId == sessionClassId
+                          where b.Status == status && a.SessionClassId == sessionClassId
                                 select new EnrolledStudents
                           {
                               Status = "enrrolled",
@@ -41,7 +49,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                               StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
                               Class = a.SessionClass.Class.Name,
                               SessionClassId = sessionClassId.ToString()
-                                }).ToListAsync();
+                          }).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

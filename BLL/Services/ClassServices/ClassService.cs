@@ -268,7 +268,7 @@ namespace BLL.ClassServices
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
-                   .Where(r => r.InSession && r.Deleted == false && r.SessionId == sessionId)
+                   .Where(r => r.Deleted == false && r.SessionId == sessionId)
                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
                 return res;
             }
@@ -279,14 +279,14 @@ namespace BLL.ClassServices
                      .Include(s => s.Class)
                      .Include(s => s.Session)
                      .OrderBy(s => s.Class.Name)
-                     .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                     .Where(e => e.Deleted == false && e.SessionId == sessionId && e.SessionClassSubjects 
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
                 var classesAsAFormTeacher = context.SessionClass
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .OrderBy(s => s.Class.Name)
-                    .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+                    .Where(e => e.Deleted == false && e.SessionId == sessionId && e.FormTeacherId == Guid.Parse(teacherId));
                 res.Result = classesAsASujectTeacher.AsEnumerable().Concat(classesAsAFormTeacher.AsEnumerable()).Distinct().Select(s => new GetSessionClass(s)).ToList();
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;

@@ -18,5 +18,7 @@ namespace SMP.BLL.Services.PinManagementService
         Task<APIResponse<List<GetPins>>> GetAllUnusedPinsAsync(); 
         Task<APIResponse<PinDetail>> GetUnusedPinDetailAsync(string pin);
         Task<APIResponse<PinDetail>> GetUsedPinDetailAsync(string pin);
+        string GetStudentRealRegNumber(string regNo);
+        Task<APIResponse<List<PrintResult>>> PrintBatchResultResultAsync(BatchPrintResultRequest2 request);
     }
 }

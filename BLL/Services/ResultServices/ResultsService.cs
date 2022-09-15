@@ -351,27 +351,25 @@ namespace SMP.BLL.Services.ResultServices
                 res.Result = new StudentResult();
                 if (clas.Session.IsActive)
                 {
-                    var result = await context.SessionClass
-                       .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
-                       .Include(d => d.Students).ThenInclude(d => d.User)
-                       .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
-                       .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry)
-                       .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students)
-                       .Select(g => new StudentResult(g, regNoFormat, sessionClassId, term.SessionTermId)).FirstOrDefaultAsync();
+                    var result = await context.StudentContact
+                       .Include(d => d.User)
+                       .Include(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry)
+                       .Where(rr => rr.SessionClassId == sessionClassId)
+                       .Select(g => new StudentResultDetail(g, regNoFormat, sessionClassId, term.SessionTermId)).ToListAsync();
 
                     if (result != null)
                     {
-                        var averages = result.PublishResult.Select(d => d.AverageScore);
+                        var averages = result.Select(d => d.AverageScore);
                         var studentPositions = UtilTools.GetStudentPositions(averages);
-                        foreach (var item in result.PublishResult)
+                        foreach (var item in result)
                         {
-                            item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
+                            item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
                         }
-                        result.PublishResult = result.PublishResult.OrderByDescending(d => d.AverageScore).ToList();
-                        result.IsPublished = IsResultPublished(sessionClassId, termId);
+                        result = result.OrderByDescending(d => d.AverageScore).ToList();
+                        res.Result.IsPublished  = IsResultPublished(sessionClassId, termId);
+                        res.Result.PublishResult = result;
                     }
                     res.IsSuccessful = true;
-                    res.Result = result;
                     return res;
                 }
                 else
@@ -384,22 +382,10 @@ namespace SMP.BLL.Services.ResultServices
                     }
 
                     var result = context.ScoreEntry
-                    .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass).ThenInclude(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
+                    .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
                     .Include(d => d.StudentContact).ThenInclude(d => d.User)
-                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId).AsEnumerable().GroupBy(s => s.StudentContactId)
-                    .Select(entries => new StudentResultDetail
-                    {
-                        StudentName = entries.FirstOrDefault()?.StudentContact.User?.FirstName + " " + entries.FirstOrDefault()?.StudentContact.User?.LastName,
-                        StudentContactId = entries.FirstOrDefault()?.StudentContact.StudentContactId.ToString(),
-                        RegistrationNumber = regNoFormat.Replace("%VALUE%", entries.FirstOrDefault()?.StudentContact?.RegistrationNumber),
-                        Position = "",
-                        TotalSubjects = entries.Count(),
-                        TotalExamScore = entries.Sum(d => d.ExamScore),
-                        TotalAssessmentScore = entries.Sum(d => d.AssessmentScore),
-                        AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2),
-                        Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark >
-                        Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2) ? "FAILED" : "PASSED"
-                    }).ToList();
+                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId).AsEnumerable().GroupBy(s => s.StudentContactId)
+                    .Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList();
 
                     if (result != null)
                     {
@@ -419,7 +405,7 @@ namespace SMP.BLL.Services.ResultServices
 
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -482,7 +468,6 @@ namespace SMP.BLL.Services.ResultServices
                    .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
                    .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
                    .Select(s => new GetClassScoreEntry(s, regNoFormat, term)).FirstOrDefaultAsync();
-
             }
             else
             {
@@ -491,7 +476,9 @@ namespace SMP.BLL.Services.ResultServices
                   .Include(d => d.SessionClass).ThenInclude(d => d.Class)
                   .Include(d => d.Subject)
                   .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                  .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new GetClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
+                  .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+                  .Select(s => new GetClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
+
             }
            
 
@@ -627,6 +614,7 @@ namespace SMP.BLL.Services.ResultServices
             var cMList = new CumulativeMasterList(clas);
 
             var result =  context.ScoreEntry
+                     .Include(s => s.SessionTerm)
                      .Include(r => r.StudentContact).ThenInclude(d => d.User)
                      .Include(d => d.ClassScoreEntry).ThenInclude(r => r.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(d => d.Subject)
                      .Where(r => r.ClassScoreEntry.SessionClassId == sessionClassId).AsEnumerable().GroupBy(s => s.StudentContactId)
@@ -766,11 +754,11 @@ namespace SMP.BLL.Services.ResultServices
             }
         }
 
-        async Task<APIResponse<PrintResult>> IResultsService.GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
+        async Task<APIResponse<List<PrintResult>>> IResultsService.GetStudentResultForBatchPrintingAsync(Guid sessionClassId, Guid termId)
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var res = new APIResponse<PrintResult>();
+            var res = new APIResponse<List<PrintResult>>();
             try
             {
                 var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
@@ -787,6 +775,51 @@ namespace SMP.BLL.Services.ResultServices
                    .Include(r => r.ClassScoreEntry).ThenInclude(s => s.Subject)
                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId).AsEnumerable()
                    .GroupBy(d => d.StudentContactId, (Key, g) => new { studentId = Key, lst = g.ToList()})
+                   .Select(s => new PrintResult(s.lst, regNoFormat, term))
+                   .ToList() ?? new List<PrintResult>();
+
+
+                if (results.Any())
+                {
+                    var averages = results.Select(d => d.average);
+                    var studentPositions = UtilTools.GetStudentPositions(averages);
+                    foreach(var std in results)
+                    {
+                        std.position = studentPositions.FirstOrDefault(d => d.Average == std.average)?.Position ?? "";
+                        std.noOfStudents = results.Count();
+                    } 
+                    res.Result = results;
+                }
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        async Task<APIResponse<PrintResult>> IResultsService.GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
+        {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var res = new APIResponse<PrintResult>();
+            try
+            {
+                var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
+                if (term == null)
+                {
+                    res.Message.FriendlyMessage = "Term not found";
+                    return res;
+                }
+
+                var results = context.ScoreEntry
+                   .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                   .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
+                    .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(s => s.GradeLevel).ThenInclude(x => x.Grades)
+                   .Include(r => r.ClassScoreEntry).ThenInclude(s => s.Subject)
+                   .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId).AsEnumerable()
+                   .GroupBy(d => d.StudentContactId, (Key, g) => new { studentId = Key, lst = g.ToList() })
                    .Select(s => new PrintResult(s.lst, regNoFormat, term, studentContactId))
                    .ToList() ?? new List<PrintResult>();
 
@@ -816,30 +849,27 @@ namespace SMP.BLL.Services.ResultServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var res = new APIResponse<PreviewResult>();
-            var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+            var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
             if (term == null)
             {
                 res.Message.FriendlyMessage = "Term not found";
                 return res;
             }
 
-            var result = await context.SessionClass
-                .Include(e => e.Class).ThenInclude(d => d.GradeLevel)
-                .Include(d => d.SessionClassSubjects).ThenInclude(d => d.Subject)
-                .Include(d => d.Students).ThenInclude(d => d.User)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(r => r.ScoreEntries)
-                .Include(d => d.Students).ThenInclude(d => d.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(s => s.Subject)
-                .Include(d => d.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass)
-                .Where(rr => rr.SessionClassId == sessionClassId).Select(s => s.Students)
-                .SelectMany(s => s).Select(g => new PreviewResult(g, regNoFormat, sessionClassId, term.SessionTermId, studentContactId)).ToListAsync() ?? new List<PreviewResult>();
+            var result = context.ScoreEntry
+                .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
+                .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
+                .Include(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
+                .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId).AsEnumerable().GroupBy(x => x.StudentContactId)
+                .Select(g => new PreviewResult(g, regNoFormat, sessionClassId)).ToList() ?? new List<PreviewResult>();
 
             if (result.Any())
             {
                 var averages = result.Select(d => d.average);
                 var studentPositions = UtilTools.GetStudentPositions(averages);
                 var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
+                studentResult.noOfStudents = result.Count();
                 studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
                 res.Result = studentResult;
 
@@ -854,5 +884,108 @@ namespace SMP.BLL.Services.ResultServices
         private bool IsResultPublished(Guid classId, Guid termId, Guid studentId) =>
            context.SessionClassArchive.FirstOrDefault(d => d.SessionClassId == classId && termId == d.SessionTermId && d.StudentContactId == studentId)?.IsPublished ?? false;
 
+        async Task<bool> IResultsService.AllResultPublishedAsync()
+        {
+            var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive);
+            var currentSessionClasses = await context.SessionClass.Where(d => d.Session.IsActive && d.Deleted == false).ToListAsync();
+            foreach(var currentSessionClass in currentSessionClasses)
+            {
+                if(!context.SessionClassArchive.Any(d => d.SessionClassId == currentSessionClass.SessionClassId))
+                    return false;
+            }
+            return true;
+        }
+
+        async Task<APIResponse<BatchPrintDetail>> IResultsService.GetStudentsForBachPrinting(Guid sessionClassId, Guid termId)
+        {
+            var res = new APIResponse<BatchPrintDetail>();
+            res.Result = new BatchPrintDetail();
+            res.Result.Students = new List<StudentResultDetail>();
+           
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            try
+            {
+                var clas = context.SessionClass.Include(x => x.Session).Include(x => x.Class).FirstOrDefault(d => d.SessionClassId == sessionClassId);
+                var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
+                var pins = context.UploadedPin.Where(d => d.Deleted == false).AsEnumerable();
+
+                if (clas.Session.IsActive)
+                {
+                    var result = await context.StudentContact
+                       .Include(d => d.User)
+                       .Include(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry)
+                       .Where(rr => rr.SessionClassId == sessionClassId)
+                       .Select(g => new StudentResultDetail(g, regNoFormat, sessionClassId, term.SessionTermId)).ToListAsync();
+
+                    if (result != null)
+                    {
+                        var averages = result.Select(d => d.AverageScore);
+                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        foreach (var item in result)
+                        {
+                            item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
+                        }
+                        result = result.OrderByDescending(d => d.AverageScore).ToList();
+                        res.Result.Students = result;
+                    } 
+                
+                }
+                else
+                {
+                    var classArchive = context.SessionClassArchive.Where(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId).ToList();
+                    if (!classArchive.Any())
+                    {
+                        res.Message.FriendlyMessage = "Result for this session and term was not published";
+                        return res;
+                    }
+
+                    var result = context.ScoreEntry
+                    .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
+                    .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId).AsEnumerable().GroupBy(s => s.StudentContactId)
+                    .Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList();
+
+                    if (result != null)
+                    {
+                        var averages = result.Select(x => x.AverageScore);
+                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        foreach (var item in result)
+                        {
+                            item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
+                        }
+                        res.Result.Students = result;
+                    }
+                }
+
+                var pinstatus = "";
+                var studentCount = res.Result.Students.Count();
+                var pinCount = pins.Count();
+                var numberOfPins = 0;
+                if (studentCount > pinCount)
+                {
+                    pinstatus = "insufficient";
+                    numberOfPins = pinCount;
+                }
+                else
+                {
+                    pinstatus = "sufficient";
+                    numberOfPins = studentCount;
+                } 
+                var rs = new BatchPrintDetail(clas, term, studentCount, pinstatus, studentCount);
+                rs.Students = res.Result.Students;
+                res.Result = rs;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+
+        }
+
+      
     }
 }

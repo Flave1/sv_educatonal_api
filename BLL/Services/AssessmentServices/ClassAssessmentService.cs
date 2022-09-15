@@ -239,7 +239,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
             catch (Exception ex)

@@ -17,5 +17,6 @@ namespace SMP.BLL.Constants
         public const string ClassTransitionException = "(Error: 5111 Occurred!!): Error thrown tryiing to transition student to a new class";
         public const string FriendlyNOTFOUND = "Item not found!! Unable to locate selected item";
         public const string FriendlyForbidden = "You do not have enough permission to perform operation";
+        public const string Unreachable = "Some technical errors has occured between this service and fws";
     }
 }

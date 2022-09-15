@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.PinManagement;
-using SMP.DAL.Models.PortalSettings;
-using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.PinManagement
 {
@@ -16,6 +12,19 @@ namespace SMP.Contracts.PinManagement
         public string RegistractionNumber { get; set; }
         public Guid SessionClassid;
         public string TermId { get; set; }
+    }
+
+    public class BatchPrintResultRequest1
+    {
+        public Guid SessionClassid { get; set; }
+        public Guid TermId { get; set; }
+    }
+
+    public class BatchPrintResultRequest2
+    {
+        public Guid SessionClassId { get; set; }
+        public Guid TermId { get; set; }
+        public int Students { get; set; }
     }
 
     public class UploadPinRequest
@@ -39,7 +48,7 @@ namespace SMP.Contracts.PinManagement
         public object technicalMessage { get; set; }
     }
 
-    public class FwsResponseResult
+    public class FwsPinValResponseResult
 {
         public string pin { get; set; }
         public string studentRegNo { get; set; }
@@ -47,13 +56,19 @@ namespace SMP.Contracts.PinManagement
         public string clientId { get; set; }
     }
 
-    public class FwsResponse
+    public class FwsPinValResponse
     {
-        public FwsResponseResult result { get; set; }
+        public FwsPinValResponseResult result { get; set; }
         public string status { get; set; }
         public Message message { get; set; }
     }
 
+    public class FwsMultiPinValResponse
+    {
+        public List<FwsPinValResponseResult> result { get; set; }
+        public string status { get; set; }
+        public Message message { get; set; }
+    }
 
     public class GetPins
     {
@@ -92,6 +107,7 @@ namespace SMP.Contracts.PinManagement
         }
     }
 
+
     public class PinDetail
     {
         public string Pin { get; set; }
@@ -128,5 +144,21 @@ namespace SMP.Contracts.PinManagement
         }
     }
 
+    public class FwsMultiPinOnUploadValResponse
+    {
+        public PinsValOnUplaodRequest Pins { get; set; }
+        public string status { get; set; }
+        public Message message { get; set; }
+    }
 
+    public class PinsValOnUplaodRequest
+    {
+        public string ClientId { get; set; }
+        public List<PinObject> Pins { get; set; }
+    }
+    public class PinObject
+    {
+        public string Pin { get; set; }
+        public int ExcelLine { get; set; }
+    }
 }

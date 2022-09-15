@@ -15,8 +15,8 @@ namespace SMP.BLL.Services.WebRequestServices
     public class WebRequestService: IWebRequestService
     {
         private readonly HttpClient client;
-        private readonly FwsConfigSeetings fwsOptions;
-        public WebRequestService(IHttpClientFactory clientFactory, IOptions<FwsConfigSeetings> options)
+        private readonly FwsConfigSettings fwsOptions;
+        public WebRequestService(IHttpClientFactory clientFactory, IOptions<FwsConfigSettings> options)
         {
             client = clientFactory.CreateClient();
             fwsOptions = options.Value;
@@ -35,7 +35,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    client.Timeout = TimeSpan.FromSeconds(1000);
+                    client.Timeout = TimeSpan.FromSeconds(1000000);
 
                     var serializeOptions = new JsonSerializerOptions
                     {

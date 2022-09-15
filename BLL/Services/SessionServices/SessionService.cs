@@ -3,6 +3,7 @@ using DAL;
 using DAL.SessionEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
 using SMP.DAL.Models.SessionEntities;
 using System;
@@ -15,15 +16,23 @@ namespace BLL.SessionServices
     public class SessionService : ISessionService
     {
         private readonly DataContext context;
+        private readonly IResultsService resultsService;
 
-        public SessionService(DataContext context)
+        public SessionService(DataContext context, IResultsService resultsService)
         {
             this.context = context;
+            this.resultsService = resultsService;
         }
         async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
         {
             var res = new APIResponse<Session>();
             var savedSession = context.Session.Include(s => s.Terms).FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
+
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
             if (savedSession == null)
             {
                 res.Message.FriendlyMessage = $"Session Not Found";
@@ -45,7 +54,13 @@ namespace BLL.SessionServices
         {
             var res = new APIResponse<CreateUpdateSession>();
 
-            if(context.Session.Any(s => s.StartDate.Trim().ToLower() == session.StartDate.ToLower() && s.EndDate.Trim().ToLower() == session.EndDate.ToLower()))
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
+
+            if (context.Session.Any(s => s.StartDate.Trim().ToLower() == session.StartDate.ToLower() && s.EndDate.Trim().ToLower() == session.EndDate.ToLower()))
             {
                 res.Message.FriendlyMessage = $"Session {session.StartDate} - {session.EndDate} is already created";
                 return res;
@@ -201,9 +216,9 @@ namespace BLL.SessionServices
                         SessionClass = d.Class.Name,
                         SessionClassId = d.SessionClassId
                     }).ToArray(),
-                    NoOfStudents = e.SessionClass.Select(s => s.Students).Count(),
+                    NoOfStudents = e.SessionClass.SelectMany(s => s.Students).Count(),
                     NoOfClasses = e.SessionClass.Count(),
-                    NoOfSubjects = e.SessionClass.Select(s => s.SessionClassSubjects).Count(),
+                    NoOfSubjects = e.SessionClass.SelectMany(s => s.SessionClassSubjects).Count(),
                 }
                 ).FirstOrDefaultAsync();
 
@@ -216,6 +231,11 @@ namespace BLL.SessionServices
         async Task<APIResponse<bool>> ISessionService.ActivateTermAsync(Guid termId)
         {
             var res = new APIResponse<bool>();
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
             var term = await context.SessionTerm.FirstOrDefaultAsync(st => st.SessionTermId == termId);
             if (term == null)
             {
