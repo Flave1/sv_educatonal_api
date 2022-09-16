@@ -19,6 +19,8 @@ using SMP.Contracts.Options;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Constants;
 using Microsoft.AspNetCore.Http;
+using SMP.BLL.Services.PinManagementService;
+using BLL.Utilities;
 
 namespace BLL.AuthenticationServices
 {
@@ -32,8 +34,10 @@ namespace BLL.AuthenticationServices
         private readonly SchoolSettings schoolSettings;
         private readonly IFileUploadService uploadService;
         private readonly EmailConfiguration emailConfiguration;
+        private readonly FwsConfigSettings fwsConfig;
+        private readonly IPinManagementService pinService;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
-            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions)
+            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, IPinManagementService pinService)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -43,6 +47,8 @@ namespace BLL.AuthenticationServices
             this.schoolSettings = options.Value;
             this.uploadService = uploadService;
             emailConfiguration = emailOptions.Value;
+            fwsConfig = fwsOptions.Value;
+            this.pinService = pinService;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -267,8 +273,6 @@ namespace BLL.AuthenticationServices
             await emailService.Send(emMsg);
         }
 
-
-
         async Task<APIResponse<AuthenticationResult>> IUserService.ResetAccountAsync(ResetAccount request)
         {
             var res = new APIResponse<AuthenticationResult>();
@@ -307,7 +311,6 @@ namespace BLL.AuthenticationServices
             await emailService.Send(emMsg);
         }
 
-
         async Task<APIResponse<LoginSuccessResponse>> IUserService.ChangePasswordAsync(ChangePassword request)
         {
             var res = new APIResponse<LoginSuccessResponse>();
@@ -339,6 +342,87 @@ namespace BLL.AuthenticationServices
             }
         }
 
+        async Task<APIResponse<SmpStudentValidationResponse>> IUserService.ValidateUserInformationFromMobileAsync(UserInformationFromMobileRequest request)
+        {
+            var res = new APIResponse<SmpStudentValidationResponse>();
+            res.IsSuccessful = true;
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            if (request.ClientId.ToLower() != fwsConfig.ClientId.ToLower())
+            {
+                res.Result.Status = "failed";
+                res.Message.FriendlyMessage = "Invalid credentials";
+                return res;
+            }
+
+            var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
+            if(request.UserType == (int)UserTypes.Student)
+            {
+                var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
+                if (student is null)
+                {
+                    res.Result.Status = "failed";
+                    res.Message.FriendlyMessage = "Student registration number not identified in selected school";
+                    return res;
+                }
+                else
+                {
+                    if(request.UsernameOrRegNumber != regNoFormat.Replace("%VALUE%", student.RegistrationNumber))
+                    {
+                        res.Result.Status = "failed";
+                        res.Message.FriendlyMessage = "Student registration number not identified in selected school";
+                        return res;
+                    }
+                    else
+                    {
+                        res.Result.Status = "success";
+                        res.Result.FullName = student.User.FirstName + " " + student.User.LastName;
+                        res.Result.RegistrationNumber = student.RegistrationNumber;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+                    }
+                }
+            }
+
+            else if (request.UserType == (int)UserTypes.Teacher)
+            {
+                var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
+                if(teacher is null)
+                {
+                    res.Message.FriendlyMessage = "Staff account not identified in selected school";
+                    return res;
+                }
+                else
+                {
+                    res.Result.Status = "success";
+                    res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                    res.Result.RegistrationNumber = "";
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+            }
+
+            else if (request.UserType == (int)UserTypes.Admin)
+            {
+                var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
+                if (teacher is null)
+                {
+                    res.Message.FriendlyMessage = "Staff account not identified in selected school";
+                    return res;
+                }
+                else
+                {
+                    res.Result.Status = "success";
+                    res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                    res.Result.RegistrationNumber = "";
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+            }
+            res.Result.Status = "failed";
+            res.Message.FriendlyMessage = "invalid request";
+            return res;
+        }
 
     }
 }

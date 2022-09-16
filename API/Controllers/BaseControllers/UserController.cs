@@ -94,6 +94,23 @@ namespace API.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("validate/user-information/from-mobile")]
+        public async Task<ActionResult<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync([FromBody] UserInformationFromMobileRequest request)
+        {
+            try
+            {
+                var response = await userService.ValidateUserInformationFromMobileAsync(request);
+                if (response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { result = ex.Message });
+            }
+        }
+
         #endregion
 
 

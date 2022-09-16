@@ -153,7 +153,25 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-            
-       
+
+        [HttpPost("get/students/for-batch-printing")]
+        public async Task<IActionResult> GetStudentsForBachPrinting([FromBody] BatchPrintResultRequest1 request)
+        {
+            var response = await service.GetStudentsForBachPrinting(request.SessionClassid, request.TermId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("batch-print/students-results")]
+        public async Task<IActionResult> BatchPrintResult([FromBody] BatchPrintResultRequest2 request)
+        {
+            var response = await pinService.PrintBatchResultResultAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+
     }
 } 

@@ -34,6 +34,7 @@ namespace SMP.Contracts.PortalSettings
         public bool ShowNewsletter { get; set; }
         public bool BatchPrinting { get; set; }
         public string Filepath { get; set; }
+        public string SelectedTemplate { get;set; }
         public ResultSettingContract()
         {
 
@@ -47,6 +48,7 @@ namespace SMP.Contracts.PortalSettings
             ShowNewsletter = db.ShowNewsletter;
             BatchPrinting = db.BatchPrinting;
             Filepath = db.PrincipalStample;
+            SelectedTemplate = db.SelectedTemplate;
         }
     }
 }

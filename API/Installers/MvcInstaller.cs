@@ -60,13 +60,13 @@ namespace API.Installers
          configuration.GetSection("JwtSettings"));
 
             services.Configure<RegNumber>(
-        configuration.GetSection("RegNumber"));
+                configuration.GetSection("RegNumber"));
 
-            services.Configure<SchoolSettings>(
-       configuration.GetSection("SchoolSettings"));
+                    services.Configure<SchoolSettings>(
+               configuration.GetSection("SchoolSettings"));
 
-            services.Configure<FwsConfigSeetings>(
-       configuration.GetSection("FwsConfigSeetings"));
+                    services.Configure<FwsConfigSettings>(
+               configuration.GetSection("FwsConfigSettings"));
 
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILoggerService, LoggerService>();

@@ -51,6 +51,20 @@ namespace SMP.BLL.Utilities
             return aves;
         }
 
+        public static bool IsInString(string commaDelimetedString, string value)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(commaDelimetedString))
+                    return false;
+                return commaDelimetedString.Split(',').AsEnumerable().Contains(value);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public static string OrdinalSuffixOf(int i)
         {
             var j = i % 10;

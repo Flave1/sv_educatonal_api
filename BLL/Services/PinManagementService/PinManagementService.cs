@@ -12,6 +12,7 @@ using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
+using SMP.Contracts.Routes;
 using SMP.DAL.Models.PinManagement;
 using System;
 using System.Collections.Generic;
@@ -26,10 +27,10 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly DataContext context;
         private readonly IResultsService resultService;
         private readonly IWebRequestService webRequestService;
-        private readonly FwsConfigSeetings fwsOptions;
+        private readonly FwsConfigSettings fwsOptions;
         private readonly RegNumber regNumberOptions;
         private readonly IHttpContextAccessor accessor;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSeetings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor)
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.resultService = resultService;
@@ -43,7 +44,7 @@ namespace SMP.BLL.Services.PinManagementService
             var res = new APIResponse<PrintResult>();
             try
             {
-                var regNo = GetStudentRealRegNumber(request.RegistractionNumber);
+                var regNo = (this as IPinManagementService).GetStudentRealRegNumber(request.RegistractionNumber);
                 var studentInfo = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower());
                 if (studentInfo == null)
                 {
@@ -105,7 +106,7 @@ namespace SMP.BLL.Services.PinManagementService
                             StudentRegNo = regNo,
                         };
 
-                        FwsResponse fwsResponse = await webRequestService.PostAsync<FwsResponse, FwsPinValidationRequest>($"{ fwsOptions.FwsBaseUrl}sms/validate-pin", fwsPayload);
+                        FwsPinValResponse fwsResponse = await webRequestService.PostAsync<FwsPinValResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validatePin}", fwsPayload);
 
                         if (fwsResponse.status != "success")
                         {
@@ -140,7 +141,6 @@ namespace SMP.BLL.Services.PinManagementService
             }
         }
 
-
         private async Task AddPinAsUsedAsync(PrintResultRequest request, Guid studentContactId, Guid UploadedPinId)
         {
             try
@@ -159,8 +159,26 @@ namespace SMP.BLL.Services.PinManagementService
                 throw;
             }
         }
+        private async Task AddPinAsUsedAsync(BatchPrintResultRequest2 request, Guid studentContactId, Guid UploadedPinId)
+        {
+            try
+            {
+                var newPin = new UsedPin();
+                newPin.SessionClassId = request.SessionClassId;
+                newPin.SessionTermId = request.TermId;
+                newPin.StudentContactId = studentContactId;
+                newPin.DateUsed = DateTime.UtcNow;
+                newPin.UploadedPinId = UploadedPinId;
+                await context.UsedPin.AddAsync(newPin);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
-        private string GetStudentRealRegNumber(string regNo)
+        string IPinManagementService.GetStudentRealRegNumber(string regNo)
         {
             try
             {
@@ -244,6 +262,18 @@ namespace SMP.BLL.Services.PinManagementService
 
                 if (uploadedRecord.Count > 0)
                 {
+                    var fwsResponse = await ValidatePinsOnUploadAsync(uploadedRecord);
+                    if (fwsResponse == null)
+                    { 
+                        res.Message.FriendlyMessage = Messages.Unreachable;
+                        return res;
+                    }
+                    if (fwsResponse.status != "success")
+                    { 
+                        res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;
+                        return res;
+                    }
+
                     foreach (var item in uploadedRecord)
                     {
                         if (string.IsNullOrEmpty(item.Pin))
@@ -335,6 +365,151 @@ namespace SMP.BLL.Services.PinManagementService
                 .Select(f => new PinDetail(f, regNoFormat)).FirstOrDefault();
             res.IsSuccessful = true;
             return await Task.Run(() => res);
+        }
+
+        async Task<APIResponse<List<PrintResult>>> IPinManagementService.PrintBatchResultResultAsync(BatchPrintResultRequest2 request)
+        {
+            var res = new APIResponse<List<PrintResult>>();
+            using (var trans = await context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var students = context.ScoreEntry.Include(x => x.ClassScoreEntry)
+                        .Where(x => x.ClassScoreEntry.SessionClassId == request.SessionClassId && x.SessionTermId == request.TermId && x.IsOffered).Select(x => x.StudentContact);
+               
+                    var isArchived = IsResultArchived(request.SessionClassId, request.TermId, students.Select(x => x.StudentContactId).Distinct().ToList());
+                    if (!isArchived)
+                    {
+                        await trans.DisposeAsync();
+                        res.Message.FriendlyMessage = "Republish Class result to capture all student results";
+                        return res;
+                    }
+
+                    var studentResults = await resultService.GetStudentResultForBatchPrintingAsync(request.SessionClassId, request.TermId);
+                    if (studentResults.Result.Any())
+                    {
+                        var unUsedPins = GetUnusedPins(request.Students);
+                        if (request.Students > unUsedPins.Count())
+                        {
+                            await trans.DisposeAsync();
+                            res.Message.FriendlyMessage = "Insufficient pin to print students results";
+                            return res;
+                        }
+
+                        var fwsResponse = await ValidatePinsAsync(unUsedPins, students.Select(x => x.RegistrationNumber).Distinct().ToList());
+                        if (fwsResponse == null)
+                        {
+                            await trans.DisposeAsync();
+                            res.Message.FriendlyMessage = Messages.Unreachable;
+                            return res;
+                        }
+                        if (fwsResponse.status != "success")
+                        {
+                            await trans.DisposeAsync();
+                            res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;
+                            return res;
+                        }
+
+                        foreach(var pinResult in fwsResponse.result)
+                        {
+
+                            var pin = await context.UsedPin.Include(d => d.UploadedPin)
+                                                       .Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == pinResult.pin).ToListAsync();
+
+                            var regNo = (this as IPinManagementService).GetStudentRealRegNumber(pinResult.studentRegNo);
+                            var studentInfor = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
+                            if (pin.Any())
+                            {
+                                if (pin.Count >= 3)
+                                {
+                                    await trans.DisposeAsync();
+                                    res.Message.FriendlyMessage = "Pin can not be used more than 3 times";
+                                    return res;
+                                }
+                                else
+                                {
+                                    if (pin.FirstOrDefault().SessionTermId != request.TermId)
+                                    {
+                                        await trans.DisposeAsync();
+                                        res.Message.FriendlyMessage = $"Pin can only be used for {pin.FirstOrDefault().Sessionterm.TermName} " +
+                                            $"term of {pin.FirstOrDefault().Sessionterm.Session.StartDate }/{pin.FirstOrDefault().Sessionterm.Session.EndDate } Session";
+                                        return res;
+                                    }
+                                   
+                                    if (pin.FirstOrDefault().StudentContactId != studentInfor.StudentContactId)
+                                    {
+                                        await trans.DisposeAsync();
+                                        res.Message.FriendlyMessage = $"Pin can only be used by one (1) student";
+                                        return res;
+                                    }
+                                    await AddPinAsUsedAsync(request, studentInfor.StudentContactId, pin.FirstOrDefault().UploadedPinId); 
+                                }
+                            }
+                            else
+                            {
+                                await resultService.UpdateStudentPrintStatusAsync(studentInfor.StudentContactId, request.TermId, true);
+                                await AddPinAsUsedAsync(request, studentInfor.StudentContactId, context.UploadedPin.FirstOrDefault(x => x.Pin == pinResult.pin).UploadedPinId);
+                            }
+                        }
+                        await trans.CommitAsync();
+                        res.Result = studentResults.Result;
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+
+                    }
+                    else
+                    {
+                        await trans.DisposeAsync();
+                        res.Message.FriendlyMessage = "Student Results does not exist";
+                        return res;
+                    }
+                }
+                catch (ArgumentException ex)
+                {
+                    await trans.DisposeAsync();
+                    res.Message.FriendlyMessage = ex.Message;
+                    return res;
+                }
+            }
+           
+        }
+
+
+        List<UploadedPin> GetUnusedPins(int number) 
+            => context.UploadedPin.Include(x => x.UsedPin).Where(d => d.Deleted == false && !d.UsedPin.Any()).Take(number).ToList(); 
+
+       
+        bool IsResultArchived(Guid classId, Guid termId, List<Guid> stdIds)
+        {
+            var stds = context.SessionClassArchive.Where(s => s.SessionTermId == termId && s.SessionClassId == classId && s.IsPublished).Select(x => x.StudentContactId).ToList();
+            return stdIds.All(x => stds.Contains(x));
+        }
+        
+        async Task<FwsMultiPinValResponse> ValidatePinsAsync(List<UploadedPin> pins, List<string> stds)
+        {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var stdsAndPins = stds.Zip(pins, (s, p) => new FwsPinValidationRequest
+            {
+               Pin = p.Pin,
+               StudentRegNo = regNoFormat.Replace("%VALUE%", s),
+               ClientId = fwsOptions.ClientId,
+           }).ToList();
+        
+            return await webRequestService.PostAsync<FwsMultiPinValResponse, List<FwsPinValidationRequest>>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validateMultiPins}", stdsAndPins);
+
+        }
+
+        async Task<FwsMultiPinOnUploadValResponse> ValidatePinsOnUploadAsync(List<UploadPinRequest> pins)
+        {
+            var request = new PinsValOnUplaodRequest
+            {
+                ClientId = fwsOptions.ClientId,
+                Pins = pins.Select(x => new PinObject { Pin = x.Pin, ExcelLine = x.ExcelLineNumber }).ToList()
+            };
+
+            return await webRequestService.PostAsync<FwsMultiPinOnUploadValResponse, PinsValOnUplaodRequest>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validateMultiPinsOnUpload}", request);
+
         }
     }
 }

@@ -25,6 +25,16 @@ namespace Contracts.Options
         public string OldPassword { get; set; }
         public string NewPassword { get; set; }
     }
+
+    public class UserInformationFromMobileRequest
+    {
+        [Required]
+        public string ClientId { get; set; }
+        [Required]
+        public string UsernameOrRegNumber { get; set; }
+  
+        public int UserType { get; set; }
+    }
     public class StudentContactCommand
     {
         /// <summary>
@@ -163,5 +173,13 @@ namespace Contracts.Options
         public string[] Hobbies { get; set; }
         public string[] BestSubjectIds { get; set; }
         public IFormFile File { get; set; }
+    }
+
+    public class SmpStudentValidationResponse
+    {
+        public string Status { get; set; }
+        public string FullName { get; set; }
+        public string UserName { get; set; }
+        public string RegistrationNumber { get; set; }
     }
 }

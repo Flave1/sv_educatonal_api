@@ -23,13 +23,13 @@ namespace SMP.Contracts.Assessment
         public int NumberOfStudentsSubmitted { get; set; } = 0;
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
-        public string DeadLine { get; set; }
-        public string DeadLine2 { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
         {
-            DeadLine = db.DeadLine.ToString("dd/MM/yyy hh:mm");
-            DeadLine2 = db.DeadLine.ToString("yyy-dd-MM");
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -77,8 +77,9 @@ namespace SMP.Contracts.Assessment
                    studentIds.Add(ele.ToString());
                });
             }
-            DeadLine = db.DeadLine.ToString("dd/MM/yyy hh:mm");
-            DeadLine2 = db.DeadLine.ToString("yyy-dd-MM");
+
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -145,7 +146,8 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
-        public DateTime DeadLine { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
     }
 
     public class UpdateHomeAssessmentRequest
@@ -158,7 +160,8 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
-        public DateTime DeadLine { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
     }
 
     public class SendHomeAssessmentRequest

@@ -235,7 +235,7 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId)
+        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId, int status)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var res = new APIResponse<List<GetStudentNotes>>();
@@ -250,6 +250,7 @@ namespace SMP.BLL.Services.NoteServices
                         .Include(d => d.Subject)
                          .Where(u => u.Deleted == false
                          && u.SessionClass.Session.IsActive == true
+                         && u.AprrovalStatus == status
                          && u.StudentContactId == Guid.Parse(studentContactId)
                          && u.SubjectId == Guid.Parse(subjectId))
                          .Select(x => new GetStudentNotes(x)).ToListAsync();
@@ -263,6 +264,7 @@ namespace SMP.BLL.Services.NoteServices
                          .Include(d => d.Subject)
                           .Where(u => u.Deleted == false
                           && u.SessionClass.Session.IsActive == true
+                          && u.AprrovalStatus == status
                           && u.StudentContactId == Guid.Parse(studentContactId))
                           .Select(x => new GetStudentNotes(x)).ToListAsync();
                 }
@@ -418,5 +420,72 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
+
+        async Task<APIResponse<string>> IStudentNoteService.AddCommentToClassNoteAsync(Guid classNoteId, string comment)
+        {
+            var res = new APIResponse<string>();
+
+            try
+            {
+
+                var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
+                if (note == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                var commented = new TeacherClassNoteComment
+                {
+                    ClassNoteId = classNoteId,
+                    Comment = comment,
+                    IsParent = true,
+                    UserId = userId
+                };
+
+                context.TeacherClassNoteComment.Add(commented);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            res.Message.FriendlyMessage = "Comment sent";
+            res.IsSuccessful = true;
+            res.Result = comment;
+            return res;
+        }
+
+        async Task<APIResponse<string>> IStudentNoteService.ReplyClassNoteCommentAsync(string comment, Guid commentId)
+        {
+            var res = new APIResponse<string>();
+
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId);
+            if (note == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            var commented = new TeacherClassNoteComment
+            {
+                ClassNoteId = note.ClassNoteId,
+                Comment = comment,
+                UserId = userId,
+                RepliedToId = commentId
+            };
+
+            context.TeacherClassNoteComment.Add(commented);
+            await context.SaveChangesAsync();
+
+            res.Message.FriendlyMessage = "Comment sent";
+            res.IsSuccessful = true;
+            res.Result = comment;
+            return res;
+        }
+
     }
 }

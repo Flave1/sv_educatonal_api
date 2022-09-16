@@ -48,9 +48,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/classnotes/by-teacher")]
-        public async Task<IActionResult> GetClassNotesByTeachersAsync(string subjectId)
+        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status)
         {
-            var response = await service.GetClassNotesByTeachersAsync(subjectId);
+            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status);
             return Ok(response);
         }
 

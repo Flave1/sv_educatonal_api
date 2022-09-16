@@ -31,7 +31,8 @@ namespace SMP.DAL.Models.AssessmentEntities
         public Guid SessionTermId { get; set; }
         [ForeignKey("SessionTermId")]
         public SessionTerm SessionTerm { get; set; }
-        public DateTime DeadLine { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
         public virtual ICollection<HomeAssessmentFeedBack> HomeAssessmentFeedBacks { get; set; }
         public virtual ICollection<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
     }

@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220906093151_gvcf")]
+    partial class gvcf
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -826,16 +828,11 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("SessionClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("ClassAssessmentId");
 
                     b.HasIndex("SessionClassId");
 
                     b.HasIndex("SessionClassSubjectId");
-
-                    b.HasIndex("SessionTermId");
 
                     b.ToTable("ClassAssessment");
                 });
@@ -2262,15 +2259,9 @@ namespace SMP.DAL.Migrations
                         .WithMany("ClassAssessments")
                         .HasForeignKey("SessionClassSubjectId");
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.Navigation("SessionClass");
 
                     b.Navigation("SessionClassSubject");
-
-                    b.Navigation("SessionTerm");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>

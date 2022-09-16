@@ -44,7 +44,7 @@ namespace SMP.Contracts.ClassModels
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassSubjectId = db.SessionClassSubjectId.ToString();
             SubjectName = db.SessionClassSubject.Subject.Name;
-            NumberOfStudentsInGroup = db.ListOfStudentContactIds.Split(',').Length;
+            NumberOfStudentsInGroup = !string.IsNullOrEmpty(db.ListOfStudentContactIds) ? db.ListOfStudentContactIds.Split(',').Length : 0;
             NumberOfStudentInClass = students.Count();
             NumberOfStudentNotInGroup = Convert.ToInt32((NumberOfStudentsInGroup - students.Count()).ToString().TrimStart('-'));
             if (!string.IsNullOrEmpty(db.ListOfStudentContactIds))
@@ -64,7 +64,7 @@ namespace SMP.Contracts.ClassModels
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassSubjectId = db.SessionClassSubjectId.ToString();
             SubjectName = db.SessionClassSubject.Subject.Name;
-            NumberOfStudentsInGroup = db.ListOfStudentContactIds.Split(',').Length;
+            NumberOfStudentsInGroup = !string.IsNullOrEmpty(db.ListOfStudentContactIds) ? db.ListOfStudentContactIds.Split(',').Length : 0;
             NumberOfStudentInClass = totalStudents;
             NumberOfStudentNotInGroup = Convert.ToInt32((NumberOfStudentsInGroup - totalStudents).ToString().TrimStart('-'));
         }

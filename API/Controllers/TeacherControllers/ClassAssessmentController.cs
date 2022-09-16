@@ -1,5 +1,4 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Annoucements;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +21,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-all/class-assessments")]
-        public async Task<IActionResult> GetStudentClassAssessmentsAsync()
+        public async Task<IActionResult> GetStudentClassAssessmentsAsync(string sessionClassId, string sessionClassSubjectId)
         {
-            var response = await service.GetAssessmentByTeacherAsync();
+            var response = await service.GetAssessmentByTeacherAsync(sessionClassId, sessionClassSubjectId);
             return Ok(response);
         }
 
@@ -44,7 +43,7 @@ namespace SMP.API.Controllers
         }
 
         [HttpPost("update-student/class-assessment")]
-        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdatetudentAssessmentScore request)
+        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdateStudentAssessmentScore request)
         {
             var response = await service.UpdateStudentAssessmentScoreAsync(request);
             if (response.IsSuccessful)

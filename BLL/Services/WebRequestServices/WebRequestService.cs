@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using SMP.Contracts.LookupModels;
 using SMP.Contracts.Options;
 using System;
 using System.Collections.Generic;
@@ -15,8 +16,8 @@ namespace SMP.BLL.Services.WebRequestServices
     public class WebRequestService: IWebRequestService
     {
         private readonly HttpClient client;
-        private readonly FwsConfigSeetings fwsOptions;
-        public WebRequestService(IHttpClientFactory clientFactory, IOptions<FwsConfigSeetings> options)
+        private readonly FwsConfigSettings fwsOptions;
+        public WebRequestService(IHttpClientFactory clientFactory, IOptions<FwsConfigSettings> options)
         {
             client = clientFactory.CreateClient();
             fwsOptions = options.Value;
@@ -35,7 +36,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    client.Timeout = TimeSpan.FromSeconds(1000);
+                    client.Timeout = TimeSpan.FromSeconds(1000000);
 
                     var serializeOptions = new JsonSerializerOptions
                     {
@@ -43,6 +44,54 @@ namespace SMP.BLL.Services.WebRequestServices
                     };
                     var content = new StringContent(JsonSerializer.Serialize(data, serializeOptions), Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(url, content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadFromJsonAsync<T>();
+                        return result;
+                    }
+                    else
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
+                    }
+                }
+                catch (HttpRequestException)
+                {
+                    if (retries >= (maxRetries - 1))
+                    {
+                        //log error
+
+                        throw;
+                    }
+                }
+
+                retries++;
+
+            } while (retries < maxRetries);
+
+            throw new HttpRequestException("Failed to post data.");
+        }
+
+        public async Task<T> GetAsync<T>(string url)
+        {
+            var retries = 0;
+            var maxRetries = 3;
+
+            do
+            {
+                try
+                {
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
+                    client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
+                    client.Timeout = TimeSpan.FromSeconds(1000000);
+
+                    var serializeOptions = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    };
+                    var response = await client.GetAsync(url);
                     if (response.IsSuccessStatusCode)
                     {
                         var result = await response.Content.ReadFromJsonAsync<T>();

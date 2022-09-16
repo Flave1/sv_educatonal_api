@@ -13,7 +13,7 @@ namespace SMP.BLL.Services.NoteServices
     public interface IClassNoteService
     {
         Task<APIResponse<ClassNotes>> CreateClassNotesAsync(ClassNotes request);
-        Task<APIResponse<List<GetClassNotes>>> GetClassNotesByTeachersAsync(string subjectId); 
+        Task<APIResponse<List<GetClassNotes>>> GetClassNotesByTeachersAsync(string classId, string subjectId, int status); 
         Task<APIResponse<GetClassNotes>> GetSingleTeacherClassNotesAsync(string TeacherClassNoteId); 
         Task<APIResponse<List<GetClassNotes>>> GetAllApprovalInProgressNoteAsync();
         Task<APIResponse<UpdateClassNote>> UpdateClassNotesAsync(UpdateClassNote request);

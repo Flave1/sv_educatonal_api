@@ -66,8 +66,9 @@ namespace SMP.Contracts.PromotionModels
             StudentContactId = student.StudentContactId.ToString();
             StudentName = student.User.FirstName +" "+ student.User.LastName;
             ClassName = student.SessionClass.Class.Name;
-            SessionClassId = student.SessionClass.SessionClassId.ToString();
+            SessionClassId = student.SessionClassId.ToString();
             Status = status;
         }
     }
+
 }

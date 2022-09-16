@@ -89,6 +89,7 @@ namespace SMP.Contracts.Notes
         public int ApprovalStatus { get; set; }
         public string ApprovalStatusName { get; set; }
         public Guid StudentNoteId { get; set; }
+        public string DateSubmitted { get; set; }
 
         public GetStudentNotes(StudentNote db)
         {
@@ -101,7 +102,7 @@ namespace SMP.Contracts.Notes
             SessionClassId = db.SessionClassId;
             SubjectName = db.Subject.Name.ToString();
             ApprovalStatus = db.AprrovalStatus;
-
+            DateSubmitted = db.CreatedOn.ToString("dd/MM/yyy hh:mm");
             if (ApprovalStatus == 1)
                 ApprovalStatusName = "Approved";
             else if (ApprovalStatus == 2)
