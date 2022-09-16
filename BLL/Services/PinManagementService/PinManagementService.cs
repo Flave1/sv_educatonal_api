@@ -376,8 +376,7 @@ namespace SMP.BLL.Services.PinManagementService
                 {
                     var students = context.ScoreEntry.Include(x => x.ClassScoreEntry)
                         .Where(x => x.ClassScoreEntry.SessionClassId == request.SessionClassId && x.SessionTermId == request.TermId && x.IsOffered).Select(x => x.StudentContact);
-                    //GetStudentId(request.SessionClassId, request.TermId);
-
+               
                     var isArchived = IsResultArchived(request.SessionClassId, request.TermId, students.Select(x => x.StudentContactId).Distinct().ToList());
                     if (!isArchived)
                     {

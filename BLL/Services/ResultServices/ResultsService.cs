@@ -3,7 +3,6 @@ using BLL.Constants;
 using BLL.Utilities;
 using DAL;
 using DAL.ClassEntities;
-using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -13,7 +12,6 @@ using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.ResultServices
@@ -908,7 +906,7 @@ namespace SMP.BLL.Services.ResultServices
             {
                 var clas = context.SessionClass.Include(x => x.Session).Include(x => x.Class).FirstOrDefault(d => d.SessionClassId == sessionClassId);
                 var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
-                var pins = context.UploadedPin.Where(d => d.Deleted == false).AsEnumerable();
+                var pins = context.UploadedPin.Include(x => x.UsedPin).Where(d => d.Deleted == false && !d.UsedPin.Any()).AsEnumerable();
 
                 if (clas.Session.IsActive)
                 {
@@ -972,7 +970,7 @@ namespace SMP.BLL.Services.ResultServices
                     pinstatus = "sufficient";
                     numberOfPins = studentCount;
                 } 
-                var rs = new BatchPrintDetail(clas, term, studentCount, pinstatus, studentCount);
+                var rs = new BatchPrintDetail(clas, term, numberOfPins, pinstatus, studentCount);
                 rs.Students = res.Result.Students;
                 res.Result = rs;
                 res.IsSuccessful = true;
