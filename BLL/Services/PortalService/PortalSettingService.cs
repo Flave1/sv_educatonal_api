@@ -149,14 +149,31 @@ namespace SMP.BLL.Services.PortalService
             {
                 setting = new NotificationSetting
                 {
-                    NotifyByEmail = request.NotifyByEmail,
-                    NotifyBySms = request.NotifyBySms,
+                    Announcement = request.Announcement,
+                    Assessment = request.Assessment,
+                    ClassManagement = request.ClassManagement,
+                    Enrollment = request.Enrollment,
+                    Permission = request.Permission,
+                    PublishResult = request.PublishResult,
+                    RecoverPassword = request.RecoverPassword,
+                    Session = request.Session,
+                    ShouldSendToParentsOnResultPublish = request.ShouldSendToParentsOnResultPublish,
+                    Staff = request.Staff,
                 };
                 await context.NotificationSetting.AddAsync(setting);
             }
             else
             {
-                setting.NotifyByEmail = request.NotifyByEmail;
+                setting.Announcement = request.Announcement;
+                setting.Assessment = request.Assessment;
+                setting.ClassManagement = request.ClassManagement;
+                setting.Enrollment = request.Enrollment;
+                setting.Permission = request.Permission;
+                setting.PublishResult = request.PublishResult;
+                setting.RecoverPassword = request.RecoverPassword;
+                setting.Session = request.Session;
+                setting.ShouldSendToParentsOnResultPublish = request.ShouldSendToParentsOnResultPublish;
+                setting.Staff = request.Staff;
             }
             await context.SaveChangesAsync();
 

@@ -25,6 +25,7 @@ using SMP.DAL.Models.Annoucement;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.Timetable;
 using SMP.DAL.Models.AssessmentEntities;
+using Microsoft.AspNetCore.Http;
 
 namespace DAL
 {
@@ -32,6 +33,13 @@ namespace DAL
     { 
         public DataContext(DbContextOptions<DataContext> options)
             : base(options) { }
+
+        private readonly IHttpContextAccessor accessor;
+
+        public DataContext(IHttpContextAccessor accessor)
+        {
+            this.accessor = accessor;
+        }
 
         public DataContext()
         {
@@ -98,7 +106,7 @@ namespace DAL
 
         public override int SaveChanges()
         {
-            var loggedInUserId = ""; // _accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "useradmin";
+            var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -118,12 +126,12 @@ namespace DAL
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            var loggedInUserId = ""; // _accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "useradmin";
+            var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
                 { 
-                    entry.Entity.Deleted = false; 
+                    entry.Entity.Deleted = false;   
                     entry.Entity.CreatedOn = DateTime.Now;
                     entry.Entity.CreatedBy = loggedInUserId;
                 }
