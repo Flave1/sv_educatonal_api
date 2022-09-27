@@ -87,5 +87,14 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("close/home-assessment")]
+        public async Task<IActionResult> CloseHomeAssessmentsAsync([FromBody] CloseHomeAssessment request)
+        {
+            var response = await service.CloseHomeAssessmentAsync(request.HomeAssessmentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
     }
 }

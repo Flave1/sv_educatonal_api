@@ -137,13 +137,15 @@ namespace BLL.Services.SubjectServices
             return res;
         }
 
-        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects(Guid studentId)
+        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects()
         {
             var res = new APIResponse<List<DropdownSelect>>();
 
+            var studentContactId = accessor.HttpContext.User.FindFirst(x => x.Type == "studentContactId")?.Value;
+
             var student = context.StudentContact.Include(x => x.User).Include(d => d.SessionClass)
                 .ThenInclude(s => s.SessionClassSubjects)
-                .ThenInclude(d => d.Subject).FirstOrDefault(d => d.StudentContactId == studentId);
+                .ThenInclude(d => d.Subject).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
 
             if(student is null)
             {

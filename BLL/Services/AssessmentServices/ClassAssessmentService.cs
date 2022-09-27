@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.Constants;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
@@ -33,7 +34,13 @@ namespace SMP.BLL.Services.AssessmentServices
                  .Include(s => s.SessionClass).ThenInclude(c => c.Class)
                  .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
                  .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                 .Where(x => x.Scorer == Guid.Parse(teacherId) && x.SessionTermId == activeTerm.SessionTermId);
+                 .Where(x => x.SessionTermId == activeTerm.SessionTermId);
+
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            {
+                query = query.Where(x => x.Scorer == Guid.Parse(teacherId));
+            }
+
 
             if (!string.IsNullOrEmpty(sessionClassId))
             {
@@ -248,5 +255,6 @@ namespace SMP.BLL.Services.AssessmentServices
             }
         }
 
+        
     }
 }

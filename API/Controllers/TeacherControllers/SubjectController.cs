@@ -65,9 +65,9 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/student-subjects")]
-        public IActionResult GetAllStudentSubjects(string studentId)
+        public IActionResult GetAllStudentSubjects()
         {
-            var response = service.GetAllStudentSubjects(Guid.Parse(studentId));
+            var response = service.GetAllStudentSubjects();
             return Ok(response);
         }
 

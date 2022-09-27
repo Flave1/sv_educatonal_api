@@ -30,17 +30,16 @@ using Microsoft.AspNetCore.Http;
 namespace DAL
 {
     public class DataContext : IdentityDbContext<AppUser>
-    { 
-        public DataContext(DbContextOptions<DataContext> options)
-            : base(options) { }
-
-        private readonly IHttpContextAccessor accessor;
-
-        public DataContext(IHttpContextAccessor accessor)
+    {
+        public DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor accessor = null)
+            : base(options)
         {
             this.accessor = accessor;
         }
 
+        private readonly IHttpContextAccessor accessor;
+
+     
         public DataContext()
         {
         }
@@ -66,7 +65,7 @@ namespace DAL
         public DbSet<ClassRegister> ClassRegister { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
-        public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
+        //public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
         //public DbSet<PublishStatus> PublishStatus { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }

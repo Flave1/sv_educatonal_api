@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220925215752_teacherIdOnAsessment")]
+    partial class teacherIdOnAsessment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1232,9 +1234,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("NoteTitle")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1247,8 +1246,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("ClassNoteId");
 
                     b.HasIndex("Author");
-
-                    b.HasIndex("SessionTermId");
 
                     b.HasIndex("SubjectId");
 
@@ -1704,9 +1701,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1716,8 +1710,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("ClassRegisterId");
 
                     b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionTermId");
 
                     b.ToTable("ClassRegister");
                 });
@@ -2434,10 +2426,6 @@ namespace SMP.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("Author");
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
@@ -2445,8 +2433,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("AuthorDetail");
-
-                    b.Navigation("SessionTerm");
 
                     b.Navigation("Subject");
                 });
@@ -2594,13 +2580,7 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.Navigation("SessionClass");
-
-                    b.Navigation("SessionTerm");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>

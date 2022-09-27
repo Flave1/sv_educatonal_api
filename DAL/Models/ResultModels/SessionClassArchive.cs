@@ -24,5 +24,6 @@ namespace SMP.DAL.Models.ResultModels
         public StudentContact StudentContact { get; set; }
         public bool HasPrintedResult { get; set; }
         public bool IsPublished { get; set; }
+        public bool IsPromoted { get; set; }
     }
 }

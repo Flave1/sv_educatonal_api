@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("classnotes/api/v1")]
     public class ClassNoteController : Controller
     {
@@ -48,9 +47,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/classnotes/by-teacher")]
-        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status)
+        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId)
         {
-            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status);
+            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status, termId);
             return Ok(response);
         }
 
@@ -146,7 +145,7 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-        [AllowAnonymous]
+
         [HttpGet("get-classnote/comments")]
         public async Task<IActionResult> GetClassNoteCommentsAsync(string classNoteId)
         {

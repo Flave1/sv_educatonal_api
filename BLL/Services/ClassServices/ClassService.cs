@@ -51,7 +51,7 @@ namespace BLL.ClassServices
                 res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
                 return res;
             }
-
+          
             using (var transaction = await context.Database.BeginTransactionAsync())
             {
                 try
@@ -179,7 +179,7 @@ namespace BLL.ClassServices
             {
                 foreach (var subject in ClassSubjects)
                 {
-                    var sub = context.SessionClassSubject.FirstOrDefault(x => x.SubjectId == Guid.Parse(subject.SubjectId));
+                    var sub = context.SessionClassSubject.FirstOrDefault(x => x.SubjectId == Guid.Parse(subject.SubjectId) && x.SessionClassId == SessionClassId);
                     if(sub is null)
                     {
                         sub = new SessionClassSubject();

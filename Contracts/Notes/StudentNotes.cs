@@ -26,6 +26,7 @@ namespace SMP.Contracts.Notes
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public string TeacherId { get; set; }
+        public bool SubmitForReview { get; set; }
     }
 
     public class AddCommentToStudentNote

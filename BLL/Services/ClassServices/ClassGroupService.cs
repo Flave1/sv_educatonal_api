@@ -33,7 +33,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<CreateClassGroup>();
             try
             {
-                if (context.SessionClassGroup.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(request.GroupName) == UtilTools.ReplaceWhitespace(r.GroupName)))
+                if (context.SessionClassGroup.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(request.GroupName) == UtilTools.ReplaceWhitespace(r.GroupName) && request.SessionClassId == r.SessionClassId.ToString()))
                 {
                     res.Message.FriendlyMessage = "Group Name Already exist";
                     return res;
@@ -66,7 +66,7 @@ namespace BLL.ClassServices
             try
             {
                 if (context.SessionClassGroup.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(request.GroupName) == UtilTools.ReplaceWhitespace(r.GroupName) 
-                && r.SessionClassGroupId != Guid.Parse(request.GroupId)))
+                && r.SessionClassGroupId != Guid.Parse(request.GroupId) && request.SessionClassId == r.SessionClassId.ToString()))
                 {
                     res.Message.FriendlyMessage = "Group Name Already exist";
                     return res;

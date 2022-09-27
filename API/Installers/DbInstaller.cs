@@ -18,6 +18,7 @@ using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.GradeServices;
 using SMP.BLL.Services.NoteServices;
+using SMP.BLL.Services.NotififcationServices;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
@@ -73,6 +74,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IHomeAssessmentService, HomeAssessmentService>();
             services.AddScoped<ITimeTableService, TimeTableService>();
             services.AddScoped<IClassAssessmentService, ClassAssessmentService>();
+            services.AddScoped<INotificationService, NotificationService>();
         }
     }
 }

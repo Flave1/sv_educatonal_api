@@ -19,16 +19,16 @@ namespace SMP.DAL.Initializer
                     new NotificationSetting
                     {
                         NotificationSettingId = Guid.Parse("6f30d20a-8383-42f7-a2a6-8cd0ecdd0086"),
-                        Announcement = "false/email",
-                        Assessment = "false/email",
-                        ClassManagement = "false/email",
-                        Enrollment = "false/email",
-                        Permission = "false/email",
-                        PublishResult = "false/email",
-                        RecoverPassword = "false/email",
-                        Session = "false/email",
+                        Announcement = "email/false",
+                        Assessment = "email/false",
+                        ClassManagement = "email/false",
+                        Enrollment = "email/false",
+                        Permission = "email/false",
+                        PublishResult = "email/false",
+                        RecoverPassword = "email/false",
+                        Session = "email/false",
                         ShouldSendToParentsOnResultPublish = false,
-                        Staff = "false/email",
+                        Staff = "email/false",
                     },
 
                 };

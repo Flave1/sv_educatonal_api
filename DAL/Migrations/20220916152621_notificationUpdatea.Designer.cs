@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220916152621_notificationUpdatea")]
+    partial class notificationUpdatea
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -882,9 +884,6 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("TeacherId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("TimeDeadLine")
                         .HasColumnType("nvarchar(max)");
 
@@ -1232,9 +1231,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("NoteTitle")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1247,8 +1243,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("ClassNoteId");
 
                     b.HasIndex("Author");
-
-                    b.HasIndex("SessionTermId");
 
                     b.HasIndex("SubjectId");
 
@@ -1683,6 +1677,45 @@ namespace SMP.DAL.Migrations
                     b.ToTable("SchoolSettings");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", b =>
+                {
+                    b.Property<Guid>("PromotedClassId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPromoted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PromotedClassId");
+
+                    b.HasIndex("SessionClassId")
+                        .IsUnique()
+                        .HasFilter("[SessionClassId] IS NOT NULL");
+
+                    b.ToTable("PromotedSessionClass");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.Property<Guid>("ClassRegisterId")
@@ -1704,9 +1737,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1716,8 +1746,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("ClassRegisterId");
 
                     b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionTermId");
 
                     b.ToTable("ClassRegister");
                 });
@@ -1812,9 +1840,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasPrintedResult")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPromoted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPublished")
@@ -2434,10 +2459,6 @@ namespace SMP.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("Author");
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
@@ -2445,8 +2466,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("AuthorDetail");
-
-                    b.Navigation("SessionTerm");
 
                     b.Navigation("Subject");
                 });
@@ -2586,6 +2605,15 @@ namespace SMP.DAL.Migrations
                     b.Navigation("UploadedPin");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithOne("PromotedSessionClass")
+                        .HasForeignKey("SMP.DAL.Models.PromotionEntities.PromotedSessionClass", "SessionClassId");
+
+                    b.Navigation("SessionClass");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.Register.ClassRegister", b =>
                 {
                     b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
@@ -2594,13 +2622,7 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.Navigation("SessionClass");
-
-                    b.Navigation("SessionTerm");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.ResultModels.ClassScoreEntry", b =>
@@ -2769,6 +2791,8 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ClassRegisters");
 
                     b.Navigation("ClassScoreEntries");
+
+                    b.Navigation("PromotedSessionClass");
 
                     b.Navigation("SessionClassArchive");
 

@@ -35,5 +35,6 @@ namespace SMP.BLL.Services.ResultServices
         Task<bool> AllResultPublishedAsync();
         Task<APIResponse<BatchPrintDetail>> GetStudentsForBachPrinting(Guid sessionClassId, Guid termId);
         Task<APIResponse<List<PrintResult>>> GetStudentResultForBatchPrintingAsync(Guid sessionClassId, Guid termId);
+        Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjects2Async(Guid classId, Guid sessionClassId);
     }
 }

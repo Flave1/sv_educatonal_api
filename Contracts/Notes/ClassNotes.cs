@@ -110,7 +110,7 @@ namespace SMP.Contracts.Notes
                 LastName = db.ClassNote.AuthorDetail.LastName,
                 MiddleName = db.ClassNote.AuthorDetail.MiddleName,
                 Photo = db.ClassNote.AuthorDetail.Photo,
-                ShortBio = db.ClassNote.AuthorDetail.Teacher.ShortBiography
+                ShortBio = db.ClassNote.AuthorDetail?.Teacher?.ShortBiography
             } : null;
         }
         public GetClassNotes(ClassNote db)
@@ -229,12 +229,14 @@ namespace SMP.Contracts.Notes
     {
         public string SessionClass { get; set; }
         public string SessionClassId { get; set; }
+        public string ClassId { get; set; }
         public bool IsSent { get; set; }
         public GetClasses2(SessionClass db, bool isSent)
         {
             SessionClass = db.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             IsSent = isSent;
+            ClassId = db.ClassId.ToString();
         }
     }
 }

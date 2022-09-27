@@ -15,7 +15,6 @@ using NLog;
 using BLL.Utilities;
 using Contracts.Options;
 using System.Linq;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using SMP.API.Hubs;
 
 namespace API
@@ -66,7 +65,7 @@ namespace API
 
             app.UseSwagger(option => { option.RouteTemplate = swaggerOptions.JsonRoute; });
 
-            app.UseCors(MyAllowSpecificOrigins); 
+            app.UseCors(); 
 
             app.UseSwaggerUI(option => {
                 option.SwaggerEndpoint(swaggerOptions.UIEndpoint, swaggerOptions.Description);
@@ -87,17 +86,11 @@ namespace API
             });
 
             app.UseMvc();
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "swagger";
-                if (env.IsDevelopment())
-                {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
-                }
-            });
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<NotificationHub>("/notifications");
+                endpoints.MapHub<CommentsHub>("/hubs/comments");
+                endpoints.MapHub<NotificationHub>("/hubs/notifications");
             });
             CreateRolesAndAdminUser(serviceProvider).Wait();
         }

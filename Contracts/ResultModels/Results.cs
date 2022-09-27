@@ -16,10 +16,12 @@ namespace SMP.Contracts.ResultModels
     {
         public string SessionClass { get; set; }
         public string SessionClassId { get; set; }
+        public string ClassId { get; set; }
         public GetClasses(SessionClass db)
         {
             SessionClass = db.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
+            ClassId = db.ClassId.ToString();
         }
     }
 
@@ -77,6 +79,7 @@ namespace SMP.Contracts.ResultModels
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, SessionTerm term)
         {
+            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
@@ -84,7 +87,7 @@ namespace SMP.Contracts.ResultModels
             ClassScoreEntryId = db.ClassScoreEntryId.ToString();
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
             if (db.SessionClass.Students != null && db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
             {
                 
@@ -106,6 +109,7 @@ namespace SMP.Contracts.ResultModels
         }
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid term)
         {
+            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
@@ -113,7 +117,7 @@ namespace SMP.Contracts.ResultModels
             ClassScoreEntryId = db.ClassScoreEntryId.ToString();
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
             if (db.ScoreEntries.Any())
             {
 

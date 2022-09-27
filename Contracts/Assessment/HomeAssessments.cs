@@ -23,6 +23,7 @@ namespace SMP.Contracts.Assessment
         public int NumberOfStudentsSubmitted { get; set; } = 0;
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
+        //public string SubmitionStatus { get; set; }
         public string DateDeadLine { get; set; }
         public string TimeDeadLine { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
@@ -104,6 +105,7 @@ namespace SMP.Contracts.Assessment
                 Status = "submitted";
             if (db.Status == 0)
                 Status = "saved";
+        
             if (studentIds.Any())
                 StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents, db.AssessmentScoreRecord)).ToList();
         }

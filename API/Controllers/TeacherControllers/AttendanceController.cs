@@ -61,9 +61,9 @@ namespace API.Controllers
         }
 
         [HttpGet("get/all/class-register/{sessionClassId}")]
-        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId)
+        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId, string termId)
         {
-            var response = await service.GetAllAttendanceRegisterAsync(Guid.Parse(sessionClassId));
+            var response = await service.GetAllAttendanceRegisterAsync(sessionClassId, termId);
             return Ok(response);
         }
 

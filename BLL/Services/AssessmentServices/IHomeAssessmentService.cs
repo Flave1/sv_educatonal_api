@@ -23,5 +23,6 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<GetHomeAssessmentFeedback>> GetSingleHomeAssessmentsByStudentAsync(Guid homeAssessmentFeedBackId);
         Task<APIResponse<ScoreHomeAssessmentFeedback>> ScoreHomeAssessmentByStudentAsync(ScoreHomeAssessmentFeedback request);
         Task<APIResponse<GetHomeAssessmentFeedback>> GetSingleHomeAssessmentsByTeacherAsync(Guid homeAssessmentFeedBackId);
+        Task<APIResponse<bool>> CloseHomeAssessmentAsync(string classAssessmentId);
     }
 }

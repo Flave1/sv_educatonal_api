@@ -35,9 +35,9 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
         [HttpGet("get/used-pins")]
-        public async Task<IActionResult> GetAllUsedPinsAsync()
+        public async Task<IActionResult> GetAllUsedPinsAsync(string sessionId, string termId)
         {
-            var response = await service.GetAllUsedPinsAsync();
+            var response = await service.GetAllUsedPinsAsync(sessionId, termId);
             return Ok(response); 
         }
         [HttpGet("get-unused/pin-details")]
