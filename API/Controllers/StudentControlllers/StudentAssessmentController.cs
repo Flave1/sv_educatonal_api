@@ -1,11 +1,7 @@
-﻿using BLL.MiddleWares; 
-using Contracts.Common;
-using Microsoft.AspNetCore.Authorization;
+﻿using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
-using SMP.BLL.Services.NoteServices;
 using SMP.Contracts.Assessment;
-using SMP.Contracts.Notes;
 using System;
 using System.Threading.Tasks;
 
@@ -29,7 +25,6 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
-        [AllowAnonymous]
         [HttpGet("filter/home-assessments")]
         public async Task<IActionResult> FilterHomeAssessmentsByStudentAsync(int status)
         {

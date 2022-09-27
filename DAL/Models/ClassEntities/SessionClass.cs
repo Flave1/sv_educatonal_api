@@ -38,7 +38,7 @@ namespace DAL.ClassEntities
         //public Guid? PublishStatusId { get; set; }
         //[ForeignKey("PublishStatusId")]
         //public PublishStatus PublishStatus { get; set; }
-        public PromotedSessionClass PromotedSessionClass { get; set; }
+        //public PromotedSessionClass PromotedSessionClass { get; set; }
         public virtual ICollection<StudentNote> StudentNotes { get; set; }
         public virtual ICollection<SessionClassArchive> SessionClassArchive { get; set; }
     }

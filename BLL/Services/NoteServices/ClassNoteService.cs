@@ -1,18 +1,15 @@
 ﻿using BLL;
 using BLL.Constants;
-using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.Contracts.Notes;
-using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.NoteServices
@@ -32,6 +29,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
             var res = new APIResponse<ClassNotes>();
 
             var newClassNote = new ClassNote()
@@ -41,6 +39,7 @@ namespace SMP.BLL.Services.NoteServices
                 AprrovalStatus = request.ShouldSendForApproval ? (int)NoteApprovalStatus.InProgress : (int)NoteApprovalStatus.Saved,
                 Author = userid,
                 SubjectId = Guid.Parse(request.SubjectId),
+                SessionTermId = termid
             };
             try
             {
@@ -119,37 +118,68 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetClassNotesByTeachersAsync(string classId, string subjectId, int status)
+        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var teacherid = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
             var res = new APIResponse<List<GetClassNotes>>();
-            if (!string.IsNullOrEmpty(teacherid))
-            {
-                var query = context.TeacherClassNote
-                    .Include(d => d.Teacher).ThenInclude(d => d.User)
-                            .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
-                            .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
-                            .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
-                             .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
-                         .Where(u => u.Deleted == false && u.TeacherId == Guid.Parse(teacherid));
 
-                if (!string.IsNullOrEmpty(classId))
+
+            IQueryable<TeacherClassNote> query = null;
+            if (status == -2)
+            {
+                query = context.TeacherClassNote
+               .Include(d => d.Teacher).ThenInclude(d => d.User)
+                       .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                       .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                       .OrderByDescending(x => x.CreatedOn)
+                    .Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
+
+                if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
                 {
-                    //query = query.Where(u => u.Classes.Split(',').ToList().Contains(classId));
+                    query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
                 }
+
+                if (!string.IsNullOrEmpty(termId))
+                {
+                    query = query.Where(d => d.ClassNote.SessionTermId == Guid.Parse(termId));
+                }
+
+                res.Result = await query.Select(x => new GetClassNotes(x, false)).ToListAsync();
+            }
+            else
+            {
+                query = context.TeacherClassNote
+               .Include(d => d.Teacher).ThenInclude(d => d.User)
+                       .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                       .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                       .OrderByDescending(x => x.CreatedOn)
+                    .Where(u => u.Deleted == false);
+
+                if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                {
+                    query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
+                }
+
                 if (!string.IsNullOrEmpty(subjectId))
                 {
                     query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
                 }
-                if (status > 0)
+                if (status >= 0)
                 {
                     query = query.Where(u => status == u.ClassNote.AprrovalStatus);
                 }
-                res.Result = await query.Select(x => new GetClassNotes(x, false)).ToListAsync();
+                if (!string.IsNullOrEmpty(classId))
+                {
+                    var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
+                    var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
+                    query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
+                }
 
+                res.Result = await query.Select(x => new GetClassNotes(x, false)).ToListAsync();
             }
+
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -583,7 +613,7 @@ namespace SMP.BLL.Services.NoteServices
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses2(s, alreadyShared.Contains(s.SessionClassId.ToString()))).ToListAsync();
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses2(s, alreadyShared.Contains(s.ClassId.ToString()))).ToListAsync();
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
                     return res;

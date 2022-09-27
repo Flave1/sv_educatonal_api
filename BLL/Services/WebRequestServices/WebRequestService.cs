@@ -63,6 +63,9 @@ namespace SMP.BLL.Services.WebRequestServices
 
                         throw;
                     }
+                }catch(Exception ex)
+                {
+                    throw new ArgumentException(ex.Message ?? ex.InnerException.Message);
                 }
 
                 retries++;

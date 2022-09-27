@@ -1,7 +1,5 @@
 ﻿using API.Controllers.BaseControllers;
 using BLL.MiddleWares;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
@@ -35,6 +33,12 @@ namespace API.Controllers
         public async Task<IActionResult> GetCurrentStaffClassSubjectsAsync(string sessionClassid)
         {
             var response = await service.GetCurrentStaffClassSubjectsAsync(Guid.Parse(sessionClassid));
+            return Ok(response);
+        }
+        [HttpGet("get/staff-class-subjects/by-classlookup/{classId}/{sessionClassId}")]
+        public async Task<IActionResult> GetCurrentStaffClassSubjects2Async(string classId, string sessionClassId)
+        {
+            var response = await service.GetCurrentStaffClassSubjects2Async(Guid.Parse(classId), Guid.Parse(sessionClassId));
             return Ok(response);
         }
 

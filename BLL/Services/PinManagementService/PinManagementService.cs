@@ -325,18 +325,28 @@ namespace SMP.BLL.Services.PinManagementService
             return res;
         }
 
-        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync()
+        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync(string sessionId, string termId)
         {
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var res = new APIResponse<List<GetPins>>();
-            res.Result =  context.UsedPin.Where(d => d.Deleted == false)
+            var query = context.UsedPin.Where(d => d.Deleted == false)
                 .Include(x => x.UploadedPin)
                 .Include(x => x.Student).ThenInclude(d => d.User)
                 .Include(x => x.Sessionterm)
                 .OrderByDescending(x => x.CreatedOn)
-                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
-                .AsEnumerable()
-                .GroupBy(d => d.UploadedPinId).Select(grp => grp)
-                .Select(f => new GetPins(f)).ToList();
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session).Where(x => x.Deleted == false);
+
+            if (!string.IsNullOrEmpty(sessionId))
+                query = query.Where(x => x.SessionClass.SessionId == Guid.Parse(sessionId));
+            else
+                query = query.Where(x => x.SessionClass.Session.IsActive);
+
+            if (!string.IsNullOrEmpty(termId))
+                query = query.Where(x => x.SessionTermId == Guid.Parse(termId));
+            else
+                query = query.Where(x => x.Sessionterm.IsActive);
+            
+            res.Result = query.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).ToList();
 
             res.IsSuccessful = true;
             return  await Task.Run(() => res);

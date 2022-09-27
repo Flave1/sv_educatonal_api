@@ -1,16 +1,11 @@
 ﻿using DAL;
 using DAL.Authentication;
-using DAL.ClassEntities;
-using DAL.StudentInformation;
 using DAL.SubjectModels;
-using DAL.TeachersInfor;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.NoteEntities
 {
@@ -29,5 +24,9 @@ namespace SMP.DAL.Models.NoteEntities
         [ForeignKey("SubjectId")]
         public Subject Subject { get; set; }
         public virtual ICollection<TeacherClassNote> TeacherClassNotes { get; set; }
+
+        public Guid? SessionTermId { get; set; }
+        [ForeignKey("SessionTermId")]
+        public SessionTerm SessionTerm { get; set; }
     }
 }

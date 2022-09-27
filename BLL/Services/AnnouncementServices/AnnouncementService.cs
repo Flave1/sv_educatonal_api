@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.AnnouncementsServices;
-using SMP.BLL.Utilities;
-using SMP.Contracts.GradeModels;
+using SMP.BLL.Services.NotififcationServices;
 using SMP.DAL.Models.Annoucement;
-using SMP.DAL.Models.GradeEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,11 +20,13 @@ namespace SMP.BLL.Services.AnnouncementServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        //private readonly INotificationService notificationService;
 
         public AnnouncementService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.accessor = accessor;
+            //this.notificationService = notificationService;, INotificationService notificationService
         }
 
         async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
@@ -64,7 +64,19 @@ namespace SMP.BLL.Services.AnnouncementServices
             
             if (!string.IsNullOrEmpty(userid))
             {
-             
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                {
+                    res.Result = await context.Announcement
+                          .Include(d => d.Sender)
+                        .OrderByDescending(d => d.CreatedOn)
+                        .Take(100).Where(d => d.Deleted == false)
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
                     res.Result = await context.Announcement
@@ -72,9 +84,13 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .OrderByDescending(d => d.CreatedOn)
                         .Take(100)
                         .Where(d => d.AssignedTo == "teacher" && d.Deleted == false)
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();   
+                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
                 {
                     res.Result = await context.Announcement
                           .Include(d => d.Sender)
@@ -82,16 +98,13 @@ namespace SMP.BLL.Services.AnnouncementServices
                         .Take(100)
                         .Where(d => d.AssignedTo == "student" && d.Deleted == false)
                         .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                   
+
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
-                {
-                    res.Result = await context.Announcement
-                          .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn)
-                        .Take(100).Where(d=>d.Deleted == false)
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                }
+             
             }
 
             res.IsSuccessful = true;
@@ -115,6 +128,7 @@ namespace SMP.BLL.Services.AnnouncementServices
             await context.Announcement.AddAsync(newAnnouncement);
             await context.SaveChangesAsync();
 
+            //notificationService.PushAnnouncementNotitfication(request);
             res.Message.FriendlyMessage = Messages.Created;
             res.IsSuccessful = true;
             res.Result = request;
@@ -163,5 +177,7 @@ namespace SMP.BLL.Services.AnnouncementServices
             return res;
             
         }
+
+       
     }
 }

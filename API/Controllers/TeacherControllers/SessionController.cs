@@ -100,7 +100,7 @@ namespace API.Controllers
         }
 
         [HttpGet("get/session-term/classes")]
-        public async Task<IActionResult> GetSessionTermClassesAsync(string sessionId, string termId)
+        public async Task<IActionResult> GetSessionTermClassesAsync(string sessionId)
         {
             var response = await sessionService.GetSessionClassesAsync(Guid.Parse(sessionId));
             return Ok(response);

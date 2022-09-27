@@ -29,10 +29,12 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
                 RegisterLabel = $"ATTENDANCE AS AT {DateTime.UtcNow}",
+                SessionTermId = termid
             };
 
             await context.ClassRegister.AddAsync(reg);
@@ -96,19 +98,27 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
           
-        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.GetAllAttendanceRegisterAsync(Guid sessionClassId)
+        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.GetAllAttendanceRegisterAsync(string sessionClassId, string termId)
         {
             var res = new APIResponse<List<GetAttendance>>();
- 
-            var result = await context.ClassRegister
+
+            var query = context.ClassRegister
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(q => q.StudentAttendances)
                 .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId)
-                .Select(f => new GetAttendance(f)).ToListAsync();
+                .Where(d => d.Deleted == false);
+            if (!string.IsNullOrEmpty(sessionClassId))
+            {
+                query = query.Where(d => d.SessionClassId == Guid.Parse(sessionClassId));
+            }
+
+            if (!string.IsNullOrEmpty(termId))
+            {
+                query = query.Where(d => d.SessionTermId == Guid.Parse(termId));
+            }
+            res.Result = await query.Select(f => new GetAttendance(f)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

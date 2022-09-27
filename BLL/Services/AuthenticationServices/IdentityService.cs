@@ -206,6 +206,7 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
+                    new Claim("name",user.FirstName + " " + user.LastName),
                     new Claim("permissions", string.Join(',', permissions)),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
                 };

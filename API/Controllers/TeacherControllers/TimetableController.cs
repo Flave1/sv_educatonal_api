@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers.TeacherControllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("smp/api/v1/timetable")]
     public class TimetableController : Controller
     {

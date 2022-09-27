@@ -92,7 +92,7 @@ namespace SMP.Contracts.PinManagement
             PinStatus = "unused";
             SerialNumber = db.Serial;
         }
-        public GetPins(IGrouping<Guid, UsedPin> db)
+        public GetPins(IGrouping<Guid, UsedPin> db, string regNoFormat)
         {
             Pin = db.FirstOrDefault().UploadedPin.Pin;
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
@@ -103,7 +103,7 @@ namespace SMP.Contracts.PinManagement
             PinStatus = "used";
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
             NumberOfTimesRemaining = 3 - db.Count();
-        
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", db.FirstOrDefault().Student.RegistrationNumber);
         }
     }
 

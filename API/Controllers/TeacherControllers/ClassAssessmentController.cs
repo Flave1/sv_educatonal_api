@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("classassessment/api/v1")]
     public class ClassAssessmentController : Controller
     {
@@ -76,5 +75,6 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
     }
 }

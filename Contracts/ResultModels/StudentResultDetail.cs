@@ -93,7 +93,7 @@ namespace SMP.Contracts.ResultModels
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             Position = "1";
-            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId && d.IsOffered);
             TotalSubjects = studentsSubjects.Count();
             TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
             TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
