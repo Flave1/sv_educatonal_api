@@ -83,7 +83,7 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
          
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByTeachersAsync(string subjectId, int status)
+        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByTeachersAsync(string classId, string subjectId, int status)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
@@ -93,13 +93,13 @@ namespace SMP.BLL.Services.NoteServices
                         .Include(s => s.Student).ThenInclude(s => s.User)
                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                         .Include(d => d.Teacher).ThenInclude(d => d.User)
-                        .Include(d => d.Subject).Where(u => u.Deleted == false && u.SessionClass.Session.IsActive == true);
+                        .Include(d => d.Subject).Where(u => u.Deleted == false && u.SessionClassId == Guid.Parse(classId) && u.SessionClass.Session.IsActive == true && u.AprrovalStatus != (int)NoteApprovalStatus.Saved);
 
             if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }
-
+           
             if (status >= 0)
             {
                 query = query.Where(u => u.AprrovalStatus == status);
@@ -251,13 +251,13 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(u => u.SubjectId == Guid.Parse(subjectId));
                 }
 
-                if (status  != 2)
+                if (status  == -2)
                 {
-                    query = query.Where(u => u.AprrovalStatus == status);
+                    query = query.Where(u => u.AprrovalStatus == (int)NoteApprovalStatus.Approved || u.AprrovalStatus == (int)NoteApprovalStatus.InProgress || u.AprrovalStatus == (int)NoteApprovalStatus.Saved).Take(50);
                 }
                 else 
                 {
-                    query = query.Where(u => u.AprrovalStatus == (int)NoteApprovalStatus.Approved || u.AprrovalStatus == (int)NoteApprovalStatus.InProgress).Take(50);
+                    query = query.Where(u => u.AprrovalStatus == status);
                 }
 
                 res.Result = await query.Select(x => new GetStudentNotes(x)).ToListAsync();

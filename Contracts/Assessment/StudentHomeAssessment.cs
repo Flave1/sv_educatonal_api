@@ -20,10 +20,16 @@ namespace SMP.Contracts.Assessment
     {
         public string HomeAssessmentFeedBackId { get; set; }
         public decimal Score { get; set; }
+        public string Comment { get; set; }
+        public bool Include { get; set; } = false;
     }
-    public class CloseHomeAssessment
+    public class SingleHomeAssessment
     {
         public string HomeAssessmentId { get; set; }
+    }
+    public class SingleFeedback
+    {
+        public string HomeAssessmentFeedBackId { get; set; }
     }
     public class StudentHomeAssessmentRequest
     {
@@ -67,7 +73,11 @@ namespace SMP.Contracts.Assessment
 
             if (!string.IsNullOrEmpty(HomeAssessmentFeedBackId))
             {
-                Status = "submitted";
+                Status = "unsubmitted";
+                if(stAss.Status == 3)
+                {
+                    Status = "submitted";
+                }
             }
 
         }

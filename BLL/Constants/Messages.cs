@@ -11,6 +11,7 @@ namespace SMP.BLL.Constants
         public const string Created = "Successfully created";
         public const string Saved = "Successfully Saved";
         public const string Updated = "Successfully updated";
+        public const string Uploaded = "Successfully uploaded";
         public const string GetSuccess = "Fetched successfully";
         public const string DeletedSuccess = "Deleted successfully";
         public const string FriendlyException = "(Error: 500 Occurred!!): Please contact administrator";

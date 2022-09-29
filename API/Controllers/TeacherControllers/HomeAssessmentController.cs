@@ -88,7 +88,7 @@ namespace SMP.API.Controllers
         }
 
         [HttpPost("close/home-assessment")]
-        public async Task<IActionResult> CloseHomeAssessmentsAsync([FromBody] CloseHomeAssessment request)
+        public async Task<IActionResult> CloseHomeAssessmentsAsync([FromBody] SingleHomeAssessment request)
         {
             var response = await service.CloseHomeAssessmentAsync(request.HomeAssessmentId);
             if (response.IsSuccessful)
@@ -96,5 +96,31 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("get/home-assessment/score-record")]
+        public async Task<IActionResult> GetHomeAssessmentRecord([FromBody] SingleHomeAssessment request)
+        {
+            var response = await service.GetHomeAssessmentRecord(request.HomeAssessmentId);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("include-class/home-assessment/to-scoreentry")]
+        public async Task<IActionResult> IncludeHomeAssessmentsAsync([FromBody] SingleHomeAssessment request)
+        {
+            var response = await service.IncludeClassAssessmentToScoreEntry(request.HomeAssessmentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("include-student/home-assessment/to-scoreentry")]
+        public async Task<IActionResult> IncludeStudentAssessmentToScoreEntry([FromBody] SingleFeedback request)
+        {
+            var response = await service.IncludeStudentAssessmentToScoreEntry(request.HomeAssessmentFeedBackId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

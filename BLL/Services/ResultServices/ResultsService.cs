@@ -466,10 +466,9 @@ namespace SMP.BLL.Services.ResultServices
 
                 if (sessClass.Session.IsActive)
                 {
-                    var activeterm = context.SessionTerm.FirstOrDefault(x => x.IsActive == true);
                     foreach (var student in sessClass.Students.Where(d => d.EnrollmentStatus == (int)Constants.EnrollmentStatus.Enrolled))
                     {
-                        await SaveSessionClassArchiveAsync(sessClass.SessionClassId, activeterm.SessionTermId, student.StudentContactId, request.Publish);
+                        await SaveSessionClassArchiveAsync(sessClass.SessionClassId, request.SessionTermId, student.StudentContactId, request.Publish);
                     }
                    
                 }
@@ -880,10 +879,9 @@ namespace SMP.BLL.Services.ResultServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
-                throw ex;
+                throw;
             }
         }
 
@@ -912,9 +910,13 @@ namespace SMP.BLL.Services.ResultServices
                 var averages = result.Select(d => d.average);
                 var studentPositions = UtilTools.GetStudentPositions(averages);
                 var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
-                studentResult.noOfStudents = result.Count();
-                studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
-                res.Result = studentResult;
+                if(studentResult != null)
+                {
+                    studentResult.noOfStudents = result.Count();
+                    studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
+                    res.Result = studentResult;
+                }
+               
 
             }
             res.IsSuccessful = true;

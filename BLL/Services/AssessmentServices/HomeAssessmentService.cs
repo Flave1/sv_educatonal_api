@@ -9,6 +9,7 @@ using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
+using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -171,7 +172,6 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<bool>();
             var result = await context.HomeAssessment
-                .Include(d => d.AssessmentScoreRecord)
                 .Include(d => d.HomeAssessmentFeedBacks)
                 .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(request.Item));
 
@@ -205,10 +205,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Result = true;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
-                throw ex;
+                throw;
             }
         }
 
@@ -232,7 +231,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
-                 .Include(q => q.AssessmentScoreRecord)
+                 //.Include(q => q.AssessmentScoreRecord)
                  .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
                 .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
@@ -338,15 +337,6 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             await Task.Run(() => res.Result = query.Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToList());
 
-            //result.ForEach(d =>
-            //{
-            //    if( !string.IsNullOrEmpty(d.SessionClassGroupName) && d.SessionClassGroupName != "all-students")
-            //    {
-            //        if (!string.IsNullOrEmpty(d.ListOfStudentContactIds) && d.ListOfStudentContactIds.Split(',').ToList().Contains(studentContactid))
-            //            res.Result.Add(d);
-            //    }
-            //});
-
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
             return res;
@@ -371,6 +361,12 @@ namespace SMP.BLL.Services.AssessmentServices
                     if(reg.Status == (int)HomeAssessmentStatus.Submitted)
                     {
                         res.Message.FriendlyMessage = "Assignment has already been submited";
+                        return res;
+                    }
+
+                    if (reg.Status == (int)HomeAssessmentStatus.Closed)
+                    {
+                        res.Message.FriendlyMessage = "Assignment has already been closed";
                         return res;
                     }
 
@@ -402,9 +398,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = "Successfully submitted";
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -459,11 +455,23 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<ScoreHomeAssessmentFeedback>();
             try
             {
-                var feedBack = context.HomeAssessmentFeedBack.Include(d => d.HomeAssessment)
-                    .FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
+                //var feedBack = context.HomeAssessmentFeedBack.Include(d => d.HomeAssessment)
+                //    .FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
+
+                var feedBack = context.HomeAssessmentFeedBack
+                    .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
+                    .Include(x => x.HomeAssessment)
+                    .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
+
                 if (feedBack is null)
                 {
                     res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                if (feedBack.HomeAssessment.Status != (int)HomeAssessmentStatus.Closed)
+                {
+                    res.Message.FriendlyMessage = "Marking can only be done when assessment is closed";
                     return res;
                 }
 
@@ -479,22 +487,18 @@ namespace SMP.BLL.Services.AssessmentServices
                     return res;
                 }
 
-                var score = await context.AssessmentScoreRecord.FirstOrDefaultAsync(d => d.HomeAssessmentId == feedBack.HomeAssessmentId && d.StudentContactId == feedBack.StudentContactId);
+                feedBack.Comment = request.Comment;
+                feedBack.Mark = request.Score;
+                feedBack.Included = false;
 
-                if(score is null)
+                if (request.Include)
                 {
-                    score = new AssessmentScoreRecord()
+                    var includeRes = IncludeStudentAssessmentToScoreEntry(feedBack);
+                    if (includeRes != "success")
                     {
-                        AssessmentType = (int)AssessmentTypes.HomeAssessment,
-                        Score = request.Score,
-                        StudentContactId = feedBack.StudentContactId,
-                        HomeAssessmentId = feedBack.HomeAssessmentId,
-                    };
-                    context.AssessmentScoreRecord.Add(score);
-                }
-                else
-                {
-                    score.Score = request.Score;
+                        res.Message.FriendlyMessage = includeRes;
+                        return res;
+                    }
                 }
 
                 await context.SaveChangesAsync();
@@ -503,28 +507,250 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Saved;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
-        async Task<APIResponse<bool>> IHomeAssessmentService.CloseHomeAssessmentAsync(string classAssessmentId)
+        async Task<APIResponse<bool>> IHomeAssessmentService.CloseHomeAssessmentAsync(string homeAssessmentId)
         {
             var res = new APIResponse<bool>();
             var result = await context.HomeAssessment
-                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(classAssessmentId));
+                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
 
             if (result != null)
             {
-                result.Status = (int)HomeAssessmentStatus.Closed;
+                result.Status = result.Status == (int)HomeAssessmentStatus.Closed ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Closed;
                 await context.SaveChangesAsync();
             }
 
-            res.Message.FriendlyMessage = Messages.DeletedSuccess;
+            res.Message.FriendlyMessage = "Successful";
             res.IsSuccessful = true;
             res.Result = true;
             return res;
+        }
+
+        async Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> IHomeAssessmentService.GetHomeAssessmentRecord(string homeAssessmentId)
+        {
+            var res = new APIResponse<List<SubmittedAndUnsubmittedStudents>>();
+            var result = await context.HomeAssessment
+                .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
+                .Include(x => x.HomeAssessmentFeedBacks)
+                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
+
+            var fbs = result.HomeAssessmentFeedBacks.ToList();
+            if (result is null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            res.Result = result.SessionClass.Students.Select(x => new SubmittedAndUnsubmittedStudents(x, fbs)).ToList();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+        async Task<APIResponse<bool>> IHomeAssessmentService.IncludeClassAssessmentToScoreEntry(string homeAssessmentId)
+        {
+            var res = new APIResponse<bool>();
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var assessment = await context.HomeAssessment
+                .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
+                .Include(x => x.SessionClassSubject)
+                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
+
+            if (assessment is null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            if (assessment.Status != (int)HomeAssessmentStatus.Closed)
+            {
+                res.Message.FriendlyMessage = "Assessment has not yet been closed";
+                return res;
+            }
+
+            var students = assessment.SessionClass.Students
+                .Where(en => en.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
+                .Select(x => new 
+                    { 
+                        Score = context.HomeAssessmentFeedBack.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.Mark??0, 
+                        StudentId = x.StudentContactId, 
+                        SubjectId = assessment.SessionClassSubject.SubjectId,
+                        Name = x.User.FirstName + " " + x.User.LastName,
+                        FeedBackId = context.HomeAssessmentFeedBack.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.HomeAssessmentFeedBackId
+                }
+                ).ToList();
+
+            foreach(var std in students)
+            {
+                var feedBack = context.HomeAssessmentFeedBack.FirstOrDefault(x => x.HomeAssessmentFeedBackId == std.FeedBackId);
+                if (feedBack is null)
+                {
+                    continue;
+                }
+                if (feedBack.Included)
+                {
+                    res.Message.FriendlyMessage = $"{std.Name}'s Feedback has already be included to score entry";
+                    return res;
+                }
+                var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == std.StudentId && s.ClassScoreEntry.SubjectId == std.SubjectId);
+                if(scoreEntry is null)
+                {
+                    scoreEntry = new ScoreEntry();
+                    scoreEntry.SessionTermId = termId;
+                    scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == std.SubjectId).ClassScoreEntryId;
+                    scoreEntry.AssessmentScore = Convert.ToInt16(std.Score);
+                    scoreEntry.IsOffered = true;
+                    scoreEntry.IsSaved = true;
+                    scoreEntry.StudentContactId = std.StudentId;
+                    context.ScoreEntry.Add(scoreEntry);
+                    feedBack.Included = true;
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    var score = scoreEntry.AssessmentScore + Convert.ToInt16(std.Score);
+                   
+                    if (std.Score > assessment.SessionClass.AssessmentScore)
+                    {
+                        res.Message.FriendlyMessage = $"{std.Name}'s Assessment score can not be more than class assessment ({assessment.SessionClass.AssessmentScore})";
+                        return res;
+                    }
+
+                    if (score > assessment.SessionClass.AssessmentScore)
+                    {
+                        res.Message.FriendlyMessage = $"{std.Name}'s Previously scored assessment + {Convert.ToInt16(feedBack.Mark)} can not be more than class assessment ({assessment.SessionClass.AssessmentScore})";
+                        return res;
+                    }
+                    scoreEntry.AssessmentScore = score;
+                    scoreEntry.IsOffered = true;
+                    scoreEntry.IsSaved = true;
+                    feedBack.Included = true;
+                    await context.SaveChangesAsync();
+                }
+            }
+            res.Message.FriendlyMessage = "Records included successfully";
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<bool>> IHomeAssessmentService.IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId)
+        {
+            var res = new APIResponse<bool>();
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            
+            var feedBack = context.HomeAssessmentFeedBack
+                .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
+                .Include(x => x.HomeAssessment)
+                .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(homeAssessmentFeedbackId));
+            if (feedBack is null)
+            {
+                res.Message.FriendlyMessage = $"Feedback not yet submitted";
+                return res;
+            }
+            if (feedBack.HomeAssessment.Status != (int)HomeAssessmentStatus.Closed)
+            {
+                res.Message.FriendlyMessage = "Assessment has not yet closed";
+                return res;
+            }
+            if (feedBack.Included)
+            {
+                res.Message.FriendlyMessage = $"Feedback has already be included to score entry";
+                return res;
+            }
+            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            if (scoreEntry is null)
+            {
+                scoreEntry = new ScoreEntry();
+                scoreEntry.SessionTermId = termId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId).ClassScoreEntryId;
+                scoreEntry.AssessmentScore = Convert.ToInt16(feedBack.Mark);
+                scoreEntry.IsOffered = true;
+                scoreEntry.IsSaved = true;
+                scoreEntry.StudentContactId = feedBack.StudentContactId;
+                context.ScoreEntry.Add(scoreEntry);
+                feedBack.Included = true;
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                var score = scoreEntry.AssessmentScore + Convert.ToInt16(feedBack.Mark);
+
+                if (feedBack.Mark > feedBack.StudentContact.SessionClass.AssessmentScore)
+                {
+                    res.Message.FriendlyMessage = $"Assessment score can not be more than class assessment ({feedBack.StudentContact.SessionClass.AssessmentScore})";
+                    return res;
+                }
+
+                if (score > feedBack.StudentContact.SessionClass.AssessmentScore)
+                {
+                    res.Message.FriendlyMessage = $"Previously scored assessment + {Convert.ToInt16(feedBack.Mark)} can not be more than class assessment ({feedBack.StudentContact.SessionClass.AssessmentScore})";
+                    return res;
+                }
+                scoreEntry.AssessmentScore = score;
+                scoreEntry.IsOffered = true;
+                scoreEntry.IsSaved = true;
+                feedBack.Included = true;
+                await context.SaveChangesAsync();
+            }
+            res.Message.FriendlyMessage = "Records included successfully";
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        private string IncludeStudentAssessmentToScoreEntry(HomeAssessmentFeedBack feedBack)
+        {
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+
+            if (feedBack is null)
+            {
+                return $"Feedback not yet submitted";
+            }
+            if (feedBack.HomeAssessment.Status != (int)HomeAssessmentStatus.Closed)
+            {
+                return "Assessment has not yet closed";
+            }
+            if (feedBack.Included)
+            {
+                return $"Feedback has already be included to score entry";
+            }
+            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            if (scoreEntry is null)
+            {
+                scoreEntry = new ScoreEntry();
+                scoreEntry.SessionTermId = termId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId).ClassScoreEntryId;
+                scoreEntry.AssessmentScore = Convert.ToInt16(feedBack.Mark);
+                scoreEntry.IsOffered = true;
+                scoreEntry.IsSaved = true;
+                scoreEntry.StudentContactId = feedBack.StudentContactId;
+                context.ScoreEntry.Add(scoreEntry);
+                feedBack.Included = true;
+            }
+            else
+            {
+                var score = scoreEntry.AssessmentScore + Convert.ToInt16(feedBack.Mark);
+
+                if (feedBack.Mark > feedBack.StudentContact.SessionClass.AssessmentScore)
+                {
+                    return $"Assessment score can not be more than class assessment ({feedBack.StudentContact.SessionClass.AssessmentScore})";
+                }
+
+                if (score > feedBack.StudentContact.SessionClass.AssessmentScore)
+                {
+                    return $"Previously scored assessment + {Convert.ToInt16(feedBack.Mark)} can not be more than class assessment ({feedBack.StudentContact.SessionClass.AssessmentScore})";
+                    
+                }
+                scoreEntry.AssessmentScore = score;
+                scoreEntry.IsOffered = true;
+                scoreEntry.IsSaved = true;
+                feedBack.Included = true;
+            }
+            return "success";
         }
 
     }

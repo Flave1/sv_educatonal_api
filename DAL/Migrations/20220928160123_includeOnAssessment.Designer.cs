@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220928160123_includeOnAssessment")]
+    partial class includeOnAssessment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -920,9 +922,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AttachmentUrls")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Content")
@@ -2241,7 +2240,7 @@ namespace SMP.DAL.Migrations
                         .HasForeignKey("ClassAssessmentId");
 
                     b.HasOne("SMP.DAL.Models.AssessmentEntities.HomeAssessment", "HomeAssessment")
-                        .WithMany()
+                        .WithMany("AssessmentScoreRecord")
                         .HasForeignKey("HomeAssessmentId");
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
@@ -2803,6 +2802,8 @@ namespace SMP.DAL.Migrations
 
             modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
                 {
+                    b.Navigation("AssessmentScoreRecord");
+
                     b.Navigation("HomeAssessmentFeedBacks");
                 });
 

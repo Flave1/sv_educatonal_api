@@ -58,6 +58,11 @@ namespace Contracts.Authentication
         public AuthenticationResult AuthResult { get; set; } = new AuthenticationResult();
         public UserDetail UserDetail { get; set; } = new UserDetail();
     }
+
+    public class MobileLoginSuccessResponse
+    {
+        public AuthenticationResult AuthResult { get; set; } = new AuthenticationResult(); 
+    }
 }
 
    

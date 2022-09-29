@@ -6,6 +6,7 @@ using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Options;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -70,6 +71,14 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteStudentAsync([FromBody] MultipleDelete reguest)
         {
             var response = await service.DeleteStudentAsync(reguest);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("upload/students")]
+        public async Task<IActionResult> UploadStudentsAsync([FromForm] UploadClass file)
+        {
+            var response = await service.UploadStudentsAsync();
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

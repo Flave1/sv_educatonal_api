@@ -36,6 +36,6 @@ namespace SMP.DAL.Models.AssessmentEntities
         public string TimeDeadLine { get; set; }
         public Guid? TeacherId { get; set; }
         public virtual ICollection<HomeAssessmentFeedBack> HomeAssessmentFeedBacks { get; set; }
-        public virtual ICollection<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
+        //public virtual ICollection<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
     }
 }

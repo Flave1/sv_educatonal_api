@@ -107,7 +107,7 @@ namespace SMP.Contracts.Assessment
                 Status = "saved";
         
             if (studentIds.Any())
-                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents, db.AssessmentScoreRecord)).ToList();
+                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
         }
     }
 
@@ -117,13 +117,14 @@ namespace SMP.Contracts.Assessment
         public string Status { get; set; }
         public string HomeAsessmentFeedbackId { get; set; }
         public decimal Score { get; set; }
-        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students, ICollection<AssessmentScoreRecord> fbs)
+        public bool Included { get; set; }
+        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students)
         {
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             var student = students.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
             StudentName = student?.User?.FirstName + " " + student?.User?.MiddleName + " " + student?.User?.LastName;
-            Score = fbs?.FirstOrDefault(d => d.StudentContactId == student.StudentContactId)?.Score ??0;
+            Score = feedBack?.Mark ??0;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)
@@ -135,6 +136,25 @@ namespace SMP.Contracts.Assessment
             {
                 Status = "not started";
             }
+        }
+        public SubmittedAndUnsubmittedStudents(StudentContact student, ICollection<HomeAssessmentFeedBack> feedbacks)
+        {
+            var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == student.StudentContactId);
+            HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
+            StudentName = student?.User?.FirstName + " " + student?.User?.MiddleName + " " + student?.User?.LastName;
+            Score = feedBack?.Mark??0;
+            if (feedBack is not null)
+            {
+                if (feedBack.Status == 3)
+                    Status = "submitted";
+                if (feedBack.Status == 0)
+                    Status = "uncompleted";
+            }
+            else
+            {
+                Status = "not started";
+            }
+            Included = feedBack?.Included?? false;
         }
     }
 
