@@ -126,7 +126,7 @@ namespace BLL.ClassServices
             {
                 res.Result = await context.SessionClassSubject
                 .Include(s => s.Subject)
-                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId).Select(a =>
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
                 new SessionClassSubjects(a)).ToListAsync();
 
                 res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -138,12 +138,12 @@ namespace BLL.ClassServices
             {
                 var subjectTeacherSubjects = context.SessionClassSubject
                     .Include(d => d.Subject)
-                    .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId).Select(s => new SessionClassSubjects(s));
+                    .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new SessionClassSubjects(s));
 
                 var formTeacherSubjects = context.SessionClassSubject
                     .Include(d => d.Subject)
                     .Include(d => d.SessionClass)
-                    .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)).Select(s => new SessionClassSubjects(s));
+                    .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId) && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new SessionClassSubjects(s));
 
                 res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
 

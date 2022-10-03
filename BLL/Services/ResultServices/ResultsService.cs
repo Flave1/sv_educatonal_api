@@ -91,7 +91,8 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     res.Result = await context.SessionClassSubject
                         .Include(d => d.Subject)
-                        .Where(e => e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
+                        .Where(e => e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s)).ToListAsync();
 
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
@@ -102,12 +103,16 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     var subjectTeacherSubjects = context.SessionClassSubject
                         .Include(d => d.Subject)
-                        .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s));
+                        .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) 
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
 
                     var formTeacherSubjects = context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Include(d => d.SessionClass)
-                        .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)).Select(s => new GetClassSubjects(s));
+                        .Where(e => e.SessionClassId == sessionClassId 
+                        && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
 
                     res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
 
@@ -135,7 +140,10 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = await context.SessionClassSubject
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Include(d => d.Subject)
-                        .Where(e => e.SessionClass.ClassId == classId && e.SessionClass.Session.IsActive == true && e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s)).ToListAsync();
+                        .Where(e => e.SessionClass.ClassId == classId 
+                        && e.SessionClass.Session.IsActive == true 
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s)).ToListAsync();
 
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
@@ -147,12 +155,20 @@ namespace SMP.BLL.Services.ResultServices
                     var subjectTeacherSubjects = context.SessionClassSubject
                          .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Include(d => d.Subject)
-                        .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClass.ClassId == classId && e.SessionClass.Session.IsActive == true && e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s));
+                        .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) 
+                        && e.SessionClass.ClassId == classId 
+                        && e.SessionClass.Session.IsActive == true 
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
 
                     var formTeacherSubjects = context.SessionClassSubject
                         .Include(d => d.Subject)
                         .Include(d => d.SessionClass).ThenInclude(x => x.Session)
-                        .Where(e => e.SessionClass.ClassId == classId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId) && e.SessionClass.Session.IsActive == true && e.SessionClassId == sessionClassId).Select(s => new GetClassSubjects(s));
+                        .Where(e => e.SessionClass.ClassId == classId 
+                        && e.SessionClass.FormTeacherId == Guid.Parse(teacherId) 
+                        && e.SessionClass.Session.IsActive == true 
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
 
                     res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
 
@@ -902,7 +918,9 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
-                .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId).AsEnumerable().GroupBy(x => x.StudentContactId)
+                .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && rr.SessionTermId == termId 
+                && rr.ClassScoreEntry.Subject.Deleted == false
+                 && rr.ClassScoreEntry.Subject.IsActive == true).AsEnumerable().GroupBy(x => x.StudentContactId)
                 .Select(g => new PreviewResult(g, regNoFormat, sessionClassId)).ToList() ?? new List<PreviewResult>();
 
             if (result.Any())
@@ -971,7 +989,7 @@ namespace SMP.BLL.Services.ResultServices
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
                         }
-                        result = result.OrderByDescending(d => d.AverageScore).ToList();
+                        result = result.Where(x => x.AverageScore > 0).OrderByDescending(d => d.AverageScore).ToList();
                         res.Result.Students = result;
                     } 
                 
@@ -999,7 +1017,7 @@ namespace SMP.BLL.Services.ResultServices
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
                         }
-                        res.Result.Students = result;
+                        res.Result.Students = result.Where(x => x.AverageScore > 0).ToList();
                     }
                 }
 
@@ -1031,6 +1049,24 @@ namespace SMP.BLL.Services.ResultServices
 
         }
 
-      
+        async Task<APIResponse<List<PublishList>>> IResultsService.GetPublishedList()
+        {
+            var res = new APIResponse<List<PublishList>>();
+            res.Result = new List<PublishList>();
+            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
+            var classes = await context.SessionClass.Include(x => x.Class).Include(x => x.Session).Where(x => x.Session.IsActive).Select(c => new { id = c.SessionClassId, name = c.Class.Name }).ToListAsync();
+            foreach(var clas in classes)
+            {
+                var pubItem = new PublishList();
+                pubItem.SessionClass = clas.name;
+                pubItem.Status = IsResultPublished(clas.id, currentTerm.SessionTermId) ? "published" : "unpublished";
+                res.Result.Add(pubItem);
+            }
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
+
+
     }
 }

@@ -236,6 +236,8 @@ namespace SMP.Contracts.ResultModels
             term = se?.FirstOrDefault()?.SessionTerm?.TermName ?? "";
             studentSubjectEntries = se.Select(e => new StudentSubjectEntry(e, sse.ClassScoreEntry.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
             gradeSetting = sse.ClassScoreEntry.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            totalScores = se.Count() * 100;
+            studentName = se.FirstOrDefault().StudentContact.User.FirstName + " " + se.FirstOrDefault().StudentContact.User.LastName;
             cognitiveBehaviour = new List<CognitiveBehaviour>
             {
                 new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
@@ -442,5 +444,11 @@ namespace SMP.Contracts.ResultModels
             Session = clas.Session.StartDate + " / " + clas.Session.EndDate;
             PinStatus = pinStatus;
         }
+    }
+
+    public class PublishList
+    {
+        public string SessionClass;
+        public string Status { get; set; }
     }
 }

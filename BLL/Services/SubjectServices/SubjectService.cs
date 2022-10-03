@@ -155,6 +155,7 @@ namespace BLL.Services.SubjectServices
             }
 
             res.Result = student.SessionClass.SessionClassSubjects
+                .Where(e => e.Subject.Deleted == false && e.Subject.IsActive == true)
                 .Select(a => new DropdownSelect { 
                     Value = a.SubjectId.ToString().ToLower(), 
                     Name = a.Subject.Name,

@@ -176,6 +176,11 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
-
+        [HttpGet("get/publish-list")]
+        public async Task<IActionResult> GetPublishedList()
+        {
+            var response = await service.GetPublishedList();
+            return Ok(response);
+        }
     }
 } 

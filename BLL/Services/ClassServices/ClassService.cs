@@ -355,11 +355,18 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<bool>();
 
-            var result = await context.SessionClass.FirstOrDefaultAsync(r => sessionClassId == r.SessionClassId && r.Deleted == false);
+            var result = await context.SessionClass.Include(x => x.Students).FirstOrDefaultAsync(r => sessionClassId == r.SessionClassId && r.Deleted == false);
             if(result == null)
             {
                 res.Result = false;
                 res.Message.FriendlyMessage = "Session class not found";
+                return res;
+            }
+
+            if (result.Students.Any())
+            {
+                res.Result = false;
+                res.Message.FriendlyMessage = "Class with students cannot be deleted";
                 return res;
             }
             result.Deleted = true;

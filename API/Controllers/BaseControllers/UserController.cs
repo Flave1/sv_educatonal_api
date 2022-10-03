@@ -128,13 +128,8 @@ namespace API.Controllers
             }
         }
 
-        #endregion
-
-
-
-
-        public string token { get; set; }
-        [HttpPost("/get/mobile-permissions")]
+        //public string token { get; set; }
+        [HttpPost("get/mobile-permissions")]
         public async Task<ActionResult> GetUserProfile()
         {
             string userId = HttpContext.User?.FindFirst(c => c.Type == "userId").Value;
@@ -143,5 +138,11 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+        #endregion
+
+
+
+
+
     }
 }

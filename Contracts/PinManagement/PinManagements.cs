@@ -161,4 +161,6 @@ namespace SMP.Contracts.PinManagement
         public string Pin { get; set; }
         public int ExcelLine { get; set; }
     }
+
+   
 }

@@ -142,13 +142,18 @@ namespace BLL.SessionServices
         async Task<APIResponse<Session>> ISessionService.DeleteSessionAsync(Guid sessionId)
         {
             var res = new APIResponse<Session>();
-            var savedSession = context.Session.FirstOrDefault(d => d.SessionId == sessionId);
+            var savedSession = context.Session.Include(x => x.SessionClass).FirstOrDefault(d => d.SessionId == sessionId);
             
             if (savedSession != null)
             {
                 if (savedSession.IsActive)
                 {
                     res.Message.FriendlyMessage = $"Active session can not be deleted";
+                    return res;
+                }
+                if (savedSession.SessionClass.Any(x => x.Deleted == false))
+                {
+                    res.Message.FriendlyMessage = $"Session with classes cannot be deleted";
                     return res;
                 }
 
@@ -231,11 +236,11 @@ namespace BLL.SessionServices
         async Task<APIResponse<bool>> ISessionService.ActivateTermAsync(Guid termId)
         {
             var res = new APIResponse<bool>();
-            if (!await resultsService.AllResultPublishedAsync())
-            {
-                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
-                return res;
-            }
+            //if (!await resultsService.AllResultPublishedAsync())
+            //{
+            //    res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+            //    return res;
+            //}
             var term = await context.SessionTerm.FirstOrDefaultAsync(st => st.SessionTermId == termId);
             if (term == null)
             {

@@ -511,8 +511,8 @@ namespace BLL.StudentServices
                                 return res;
                             }
                         }
-                       
-                       
+                        await transaction.CommitAsync();
+
                     }
                 }
             }
