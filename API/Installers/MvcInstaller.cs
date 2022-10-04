@@ -22,6 +22,8 @@ using SMP.Contracts.Options;
 using SMP.BLL.Services.WebRequestServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
+using BLL.PaginationService.Services;
+using SMP.BLL.Services.FilterService;
 
 namespace API.Installers
 {
@@ -73,6 +75,7 @@ namespace API.Installers
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<IWebRequestService, WebRequestService>();
+            services.AddSingleton<IPaginationService, PaginationService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
@@ -84,7 +87,13 @@ namespace API.Installers
                 .AddFluentValidation(mvcConfuguration => mvcConfuguration.RegisterValidatorsFromAssemblyContaining<Startup>())
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
-
+            services.AddSingleton<IUriService>(o =>
+            {
+                var accessor = o.GetRequiredService<IHttpContextAccessor>();
+                var request = accessor.HttpContext.Request;
+                var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+                return new UriService(uri);
+            });
 
             services.AddCors(options =>
             {

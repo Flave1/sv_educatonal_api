@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.Contracts.Enrollment;
@@ -38,17 +39,18 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/enrolled")]
-        public async Task<IActionResult> GetAllEnrrolledStudentsAsync(string sessionClassId)
+        public async Task<IActionResult> GetAllEnrrolledStudentsAsync(string sessionClassId, int pageSize)
         {
-            var response = await service.GetAllEnrrolledStudentsAsync(Guid.Parse(sessionClassId));
+            var filter = new PaginationFilter { PageSize = pageSize };
+            var response = await service.GetEnrolledStudentsAsync(Guid.Parse(sessionClassId), filter);
             return Ok(response);
         }
 
 
         [HttpGet("getall/unenrolled")]
-        public async Task<IActionResult> GetAllUnenrrolledStudentsAsync()
+        public async Task<IActionResult> GetAllUnenrrolledStudentsAsync(PaginationFilter filter)
         {
-            var response = await service.GetAllUnenrrolledStudentsAsync();
+            var response = await service.GetUnenrrolledStudentsAsync(filter);
             return Ok(response);
         }
 
