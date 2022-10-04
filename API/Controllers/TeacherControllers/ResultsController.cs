@@ -1,7 +1,5 @@
 ﻿using API.Controllers.BaseControllers;
 using BLL.MiddleWares;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
@@ -35,6 +33,12 @@ namespace API.Controllers
         public async Task<IActionResult> GetCurrentStaffClassSubjectsAsync(string sessionClassid)
         {
             var response = await service.GetCurrentStaffClassSubjectsAsync(Guid.Parse(sessionClassid));
+            return Ok(response);
+        }
+        [HttpGet("get/staff-class-subjects/by-classlookup/{classId}/{sessionClassId}")]
+        public async Task<IActionResult> GetCurrentStaffClassSubjects2Async(string classId, string sessionClassId)
+        {
+            var response = await service.GetCurrentStaffClassSubjects2Async(Guid.Parse(classId), Guid.Parse(sessionClassId));
             return Ok(response);
         }
 
@@ -82,9 +86,9 @@ namespace API.Controllers
             return Ok(response);
         }
         [HttpGet("get/result-list")]
-        public async Task<IActionResult> GetListOfResultsAsync(string sessionClassid, string termId)
+        public async Task<IActionResult> GetClassResultListAsync(string sessionClassid, string termId)
         {
-            var response = await service.GetListOfResultsAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
+            var response = await service.GetClassResultListAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
             return Ok(response);
         }
 
@@ -92,7 +96,9 @@ namespace API.Controllers
         public async Task<IActionResult> GetSingleStudentScoreEntryAsync(string sessionClassid, string termId, string studentContactId)
         {
             var response = await service.GetSingleStudentScoreEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
         [HttpPost("update/publish-result")]
@@ -139,7 +145,7 @@ namespace API.Controllers
         [HttpGet("get/student-result")]
         public async Task<IActionResult> GetStudentResultAsync(string sessionClassid, string termId, string studentContactId)
         {
-            var response = await service.GetStudentResultAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
+            var response = await service.GetStudentResultForPreviewAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), Guid.Parse(studentContactId));
             return Ok(response);
         }
 
@@ -151,7 +157,30 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-            
-       
+
+        [HttpPost("get/students/for-batch-printing")]
+        public async Task<IActionResult> GetStudentsForBachPrinting([FromBody] BatchPrintResultRequest1 request)
+        {
+            var response = await service.GetStudentsForBachPrinting(request.SessionClassid, request.TermId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("batch-print/students-results")]
+        public async Task<IActionResult> BatchPrintResult([FromBody] BatchPrintResultRequest2 request)
+        {
+            var response = await pinService.PrintBatchResultResultAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/publish-list")]
+        public async Task<IActionResult> GetPublishedList()
+        {
+            var response = await service.GetPublishedList();
+            return Ok(response);
+        }
     }
 } 

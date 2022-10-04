@@ -15,6 +15,7 @@ using NLog;
 using BLL.Utilities;
 using Contracts.Options;
 using System.Linq;
+using SMP.API.Hubs;
 
 namespace API
 {
@@ -64,12 +65,13 @@ namespace API
 
             app.UseSwagger(option => { option.RouteTemplate = swaggerOptions.JsonRoute; });
 
-            app.UseCors(MyAllowSpecificOrigins); 
+            app.UseCors(); 
 
             app.UseSwaggerUI(option => {
                 option.SwaggerEndpoint(swaggerOptions.UIEndpoint, swaggerOptions.Description);
                 option.InjectStylesheet("/css/site.css");
                 option.InjectJavascript("/js/site.js");
+                
             });
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -85,6 +87,11 @@ namespace API
 
             app.UseMvc();
 
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<CommentsHub>("/hubs/comments");
+                endpoints.MapHub<NotificationHub>("/hubs/notifications");
+            });
             CreateRolesAndAdminUser(serviceProvider).Wait();
         }
 

@@ -2,6 +2,7 @@
 using Contracts.Common;
 using DAL;
 using DAL.SubjectModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
@@ -17,10 +18,12 @@ namespace BLL.Services.SubjectServices
     public class SubjectService : ISubjectService
     {
         private readonly DataContext context;
+        private readonly IHttpContextAccessor accessor;
 
-        public SubjectService(DataContext context)
+        public SubjectService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            this.accessor = accessor;
         }
 
         async Task<APIResponse<Subject>> ISubjectService.CreateSubjectAsync(ApplicationLookupCommand subject)
@@ -134,13 +137,15 @@ namespace BLL.Services.SubjectServices
             return res;
         }
 
-        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects(Guid studentId)
+        APIResponse<List<DropdownSelect>> ISubjectService.GetAllStudentSubjects()
         {
             var res = new APIResponse<List<DropdownSelect>>();
 
-            var student = context.StudentContact.Include(d => d.SessionClass)
+            var studentContactId = accessor.HttpContext.User.FindFirst(x => x.Type == "studentContactId")?.Value;
+
+            var student = context.StudentContact.Include(x => x.User).Include(d => d.SessionClass)
                 .ThenInclude(s => s.SessionClassSubjects)
-                .ThenInclude(d => d.Subject).FirstOrDefault();
+                .ThenInclude(d => d.Subject).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
 
             if(student is null)
             {
@@ -150,12 +155,25 @@ namespace BLL.Services.SubjectServices
             }
 
             res.Result = student.SessionClass.SessionClassSubjects
+                .Where(e => e.Subject.Deleted == false && e.Subject.IsActive == true)
                 .Select(a => new DropdownSelect { 
                     Value = a.SubjectId.ToString().ToLower(), 
                     Name = a.Subject.Name,
                     SupplimentId = a.SubjectTeacherId.ToString()
                 }).ToList();
 
+            res.IsSuccessful = true;
+            return res;
+        }
+
+
+        APIResponse<Guid> ISubjectService.GetSubjectTeacher(Guid subjectId)
+        {
+            var stdId = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId")?.Value;
+            var student = context.StudentContact.FirstOrDefault(s => s.StudentContactId == Guid.Parse(stdId));
+            var res = new APIResponse<Guid>();
+            var result = context.SessionClassSubject.FirstOrDefault(d => d.SubjectId == subjectId && d.SessionClassId == student.SessionClassId).SubjectTeacherId;
+            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

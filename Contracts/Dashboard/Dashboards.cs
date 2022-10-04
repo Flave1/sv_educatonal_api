@@ -1,22 +1,23 @@
-﻿using DAL.ClassEntities;
-using DAL.StudentInformation;
-using DAL.SubjectModels;
-using DAL.TeachersInfor;
-using SMP.DAL.Models.PinManagement;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SMP.Contracts.Dashboard
+﻿namespace SMP.Contracts.Dashboard
 {
-    public class GetDashboard
+    public class GetDashboardCount
     { 
-        public long TotalEnrolledStudent { get; set; }
+        public long TotaldStudent { get; set; }
         public long TotalClass { get; set; }
         public long TotalStaff { get; set; }
-        public long TotalPins { get; set; }
         public long TotalSubjects { get; set; }
+        public long TotalUnusedPins { get; set; }
+        public long TotalAssessments { get; set; }
+    }
+
+    public class GetTEacherDashboardCount
+    {
+        public long TotaldStudent { get; set; }
+        public long TotalClass { get; set; }
+        public long TotalSubjects { get; set; }
+        public long TotalPins { get; set; }
+        public long TotalUsedPins { get; set; }
+        public long TotalUnusedPins { get; set; }
+        public long TotalAssessments { get; set; }
     }
 }

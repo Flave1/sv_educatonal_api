@@ -20,6 +20,8 @@ using Contracts.Options;
 using Microsoft.AspNetCore.Builder;
 using SMP.Contracts.Options;
 using SMP.BLL.Services.WebRequestServices;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using BLL.PaginationService.Services;
 
 namespace API.Installers
@@ -61,13 +63,13 @@ namespace API.Installers
          configuration.GetSection("JwtSettings"));
 
             services.Configure<RegNumber>(
-        configuration.GetSection("RegNumber"));
+                configuration.GetSection("RegNumber"));
 
-            services.Configure<SchoolSettings>(
-       configuration.GetSection("SchoolSettings"));
+                    services.Configure<SchoolSettings>(
+               configuration.GetSection("SchoolSettings"));
 
-            services.Configure<FwsConfigSeetings>(
-       configuration.GetSection("FwsConfigSeetings"));
+                    services.Configure<FwsConfigSettings>(
+               configuration.GetSection("FwsConfigSettings"));
 
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILoggerService, LoggerService>();
@@ -93,12 +95,12 @@ namespace API.Installers
 
             services.AddCors(options =>
             {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                builder =>
+                options.AddDefaultPolicy(builder =>
                 {
-                    builder.AllowAnyOrigin()
+                    builder.WithOrigins("http://localhost:3000")
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
                 });
             });
 
@@ -106,6 +108,7 @@ namespace API.Installers
             {
                 x.MultipartBodyLengthLimit = 209715200;
             });
+             
 
             services.AddAuthentication(x =>
             {
@@ -116,6 +119,24 @@ namespace API.Installers
             {
                 x.SaveToken = true;
                 x.TokenValidationParameters = tokenValidatorParameters;
+
+                x.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        StringValues authHeader = context.HttpContext.Request.Headers["Authorization"];
+                        string accessToken = authHeader.ToString().Replace("Bearer ", "").Trim();
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&  (path.StartsWithSegments("/hubs")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();

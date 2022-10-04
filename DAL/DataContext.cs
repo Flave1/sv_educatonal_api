@@ -25,14 +25,21 @@ using SMP.DAL.Models.Annoucement;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.Timetable;
 using SMP.DAL.Models.AssessmentEntities;
+using Microsoft.AspNetCore.Http;
 
 namespace DAL
 {
     public class DataContext : IdentityDbContext<AppUser>
-    { 
-        public DataContext(DbContextOptions<DataContext> options)
-            : base(options) { }
+    {
+        public DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor accessor = null)
+            : base(options)
+        {
+            this.accessor = accessor;
+        }
 
+        private readonly IHttpContextAccessor accessor;
+
+     
         public DataContext()
         {
         }
@@ -58,8 +65,8 @@ namespace DAL
         public DbSet<ClassRegister> ClassRegister { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
-        public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
-        public DbSet<PublishStatus> PublishStatus { get; set; }
+        //public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
+        //public DbSet<PublishStatus> PublishStatus { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }
         public DbSet<NotificationSetting> NotificationSetting { get; set; }
@@ -80,6 +87,7 @@ namespace DAL
         public DbSet<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
         public DbSet<HomeAssessment> HomeAssessment { get; set; }
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
+        public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
@@ -97,7 +105,7 @@ namespace DAL
 
         public override int SaveChanges()
         {
-            var loggedInUserId = ""; // _accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "useradmin";
+            var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -117,12 +125,12 @@ namespace DAL
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            var loggedInUserId = ""; // _accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "useradmin";
+            var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
                 { 
-                    entry.Entity.Deleted = false; 
+                    entry.Entity.Deleted = false;   
                     entry.Entity.CreatedOn = DateTime.Now;
                     entry.Entity.CreatedBy = loggedInUserId;
                 }

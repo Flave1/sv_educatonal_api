@@ -47,7 +47,7 @@ namespace BLL.AuthenticationServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
 
-        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.LoginAsync(LoginCommand loginRequest)
+        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
         {
             var res = new APIResponse<LoginSuccessResponse>();
             res.Result = new LoginSuccessResponse();
@@ -70,7 +70,7 @@ namespace BLL.AuthenticationServices
 
                 if(userAccount.UserType == (int)UserTypes.Admin)
                 {
-                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    //var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
                 }
 
@@ -110,6 +110,119 @@ namespace BLL.AuthenticationServices
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        async Task<APIResponse<MobileLoginSuccessResponse>> IIdentityService.MobileLoginAsync(LoginCommand loginRequest)
+        {
+            var res = new APIResponse<MobileLoginSuccessResponse>();
+            res.Result = new MobileLoginSuccessResponse();
+            try
+            {
+                var id = Guid.NewGuid();
+                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
+                if (userAccount == null)
+                {
+                    res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
+                    return res;
+                }
+
+                if (!await userManager.CheckPasswordAsync(userAccount, loginRequest.Password))
+                {
+                    res.Message.FriendlyMessage = $"Password seems to be incorrect";
+                    return res;
+                }
+
+                
+
+                if (userAccount.UserType == (int)UserTypes.Teacher)
+                {
+                    var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = techerAccount.TeacherId;
+
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Student)
+                {
+                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = studentAccount?.StudentContactId ?? new Guid();
+                }
+
+
+                res.Result = new MobileLoginSuccessResponse();
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id);
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        async Task<APIResponse<List<string>>> IIdentityService.GetMobilePermissionsAsync(string userId)
+        {
+            var res = new APIResponse<List<string>>();
+            res.Result = new List<string>();
+            try
+            {
+                var id = Guid.NewGuid();
+                var userAccount = await userManager.FindByIdAsync(userId);
+                var permisions = new List<string>();
+                if (userAccount == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Admin)
+                {
+                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Teacher)
+                {
+                    var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                    id = techerAccount.TeacherId;
+
+                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive 
+                    & d.Deleted == false
+                    & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+                }
+
+                if (userAccount.UserType == (int)UserTypes.Student)
+                {
+                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
+                    {
+                        res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
+                        return res;
+                    }
+                }
+
+                res.Result = permisions;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
 
@@ -206,7 +319,8 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
-                    new Claim("permissions", string.Join(',', permissions)),
+                    new Claim("name",user.FirstName + " " + user.LastName),
+                    permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
                 };
 
@@ -235,7 +349,7 @@ namespace BLL.AuthenticationServices
                 var tokenDecriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddYears(1), //Add(jwtSettings.TokenLifeSpan),
+                    Expires = DateTime.UtcNow.Add(jwtSettings.TokenLifeSpan),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
                  

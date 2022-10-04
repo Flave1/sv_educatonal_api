@@ -21,4 +21,9 @@ namespace Contracts.Class
         public bool IsActive { get; set; }
         public string GradeLevelId { get; set; }
     }
+
+    public class GetSubjectTeacher
+    {
+        public bool subjectTeacherId { get; set; }
+    }
 }

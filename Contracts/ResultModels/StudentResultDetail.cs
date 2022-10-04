@@ -1,6 +1,8 @@
-﻿using DAL.StudentInformation;
+﻿using DAL.ClassEntities;
+using DAL.StudentInformation;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.ResultModels;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +13,30 @@ namespace SMP.Contracts.ResultModels
     {
         public bool IsPublished { get; set; }
         public List<StudentResultDetail> PublishResult { get; set; } = new List<StudentResultDetail>();
+        public StudentResult() { }
+        public StudentResult(IGrouping<Guid, ScoreEntry> entries, string regNoFormat, Guid sessionClassId, Guid termId)
+        {
+            if (entries.Any())
+            {
+                //IsPublished = entries.FirstOrDefault().ClassScoreEntry?.SessionClass?.PublishStatus?.IsPublished ?? false;
+                PublishResult = entries.Select(x => new StudentResultDetail
+                {
+                    StudentName = entries.FirstOrDefault()?.StudentContact.User?.FirstName + " " + entries.FirstOrDefault()?.StudentContact.User?.LastName,
+                    RegistrationNumber = regNoFormat.Replace("%VALUE%", entries.FirstOrDefault()?.StudentContact?.RegistrationNumber),
+                    Position = "",
+                    TotalSubjects = entries.Count(),
+                    TotalExamScore = entries.Sum(d => d.ExamScore),
+                    TotalAssessmentScore = entries.Sum(d => d.AssessmentScore),
+                    AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2),
+                    Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark >
+                    Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2) ? "FAILED" : "PASSED"
+                }).ToList();
+            }
+        }
         public StudentResult(ICollection<StudentContact> s, string regNoFormat, Guid sessionClassId, Guid termId)
         {
             if (s.Any())
             {
-                IsPublished = s.FirstOrDefault()?.SessionClass?.PublishStatus?.IsPublished ?? false;
                 PublishResult = s.Select(x => new StudentResultDetail(x, regNoFormat, sessionClassId, termId)).ToList();
             }
         }
@@ -38,6 +59,7 @@ namespace SMP.Contracts.ResultModels
                 PublishResult.Add(s);
             }
         }
+        
     }
 
 
@@ -53,13 +75,25 @@ namespace SMP.Contracts.ResultModels
         public int TotalAssessmentScore { get; set; }
         public string Status { get; set; }
         public StudentResultDetail() { }
+        public StudentResultDetail(IGrouping<Guid, ScoreEntry> entries, string regNoFormat)
+        {
+            StudentName = entries.FirstOrDefault()?.StudentContact.User?.FirstName + " " + entries.FirstOrDefault()?.StudentContact.User?.LastName;
+            StudentContactId = entries.FirstOrDefault()?.StudentContact.StudentContactId.ToString();
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", entries.FirstOrDefault()?.StudentContact?.RegistrationNumber);
+            Position = "";
+            TotalSubjects = entries.Count();
+            TotalExamScore = entries.Sum(d => d.ExamScore);
+            TotalAssessmentScore = entries.Sum(d => d.AssessmentScore);
+            AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2);
+            Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > AverageScore ? "FAILED" : "PASSED";
+        }
         public StudentResultDetail(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {
             StudentName = student.User?.FirstName + " " + student.User?.LastName;
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             Position = "1";
-            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId && d.IsOffered);
             TotalSubjects = studentsSubjects.Count();
             TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
             TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
@@ -93,7 +127,7 @@ namespace SMP.Contracts.ResultModels
                 StudentName = student.User?.FirstName + " " + student.User?.LastName;
                 StudentContactId = student.StudentContactId.ToString();
                 RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
-                IsPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
+                //IsPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
                 SessionClassName = student.SessionClass.Class.Name;
                 if (student.ScoreEntries.Any())
                 {
@@ -101,6 +135,14 @@ namespace SMP.Contracts.ResultModels
                 }
             }
             
+        }
+
+        public StudentCoreEntry(StudentContact student, string regNoFormat)
+        {
+            StudentName = student.User?.FirstName + " " + student.User?.LastName;
+            StudentContactId = student.StudentContactId.ToString();
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+            //SessionClassName = student.SessionClass.Class.Name;
         }
     }
 
@@ -176,31 +218,26 @@ namespace SMP.Contracts.ResultModels
         public List<StudentSubjectEntry> studentSubjectEntries { get; set; }
         public List<GradeSetting> gradeSetting { get; set; }
         public List<CognitiveBehaviour> cognitiveBehaviour { get; set; }
-        public PreviewResult(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId, Guid StudentContactId)
+        public PreviewResult(IGrouping<Guid, ScoreEntry> se, string regNoFormat, Guid sessionClassId)
         {
-            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
-            totalExamScore = studentsSubjects.Sum(d => d.ExamScore);
-            totalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
+            var sse = se.FirstOrDefault();
+            totalExamScore = se.Sum(d => d.ExamScore);
+            totalAssessmentScore = se.Sum(d => d.AssessmentScore);
             total = totalExamScore + totalAssessmentScore;
-            studentContactId = student.StudentContactId;
+            studentContactId = sse.StudentContactId;
             IsPrint = false;
+            totalSubjects = se.Count();
             average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
-            if (StudentContactId == studentContactId)
-            {
-                totalSubjects = studentsSubjects.Count();
-                remark = student.SessionClass.PassMark > average ? "FAILED" : "PASSED";
-                position = "1";
-                registrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
-                session = student.SessionClass.Session.StartDate + " / " + student.SessionClass.Session.StartDate;
-                studentName = student.User?.FirstName + " " + student.User?.LastName;
-                studentContactId = student.StudentContactId;
-                sessionClassName = student.SessionClass.Class.Name;
-                term = studentsSubjects?.FirstOrDefault()?.SessionTerm?.TermName ??"";
-                noOfStudents = student.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Count();
-                isPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
-                studentSubjectEntries = studentsSubjects.Select(e => new StudentSubjectEntry(e, student.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
-                gradeSetting = student.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
-            }
+            remark = sse.ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+            position = "1";
+            registrationNumber = regNoFormat.Replace("%VALUE%", se.FirstOrDefault().StudentContact.RegistrationNumber);
+            session = sse.ClassScoreEntry.SessionClass.Session.StartDate + " / " + sse.ClassScoreEntry.SessionClass.Session.StartDate;
+            sessionClassName = sse.ClassScoreEntry.SessionClass.Class.Name;
+            term = se?.FirstOrDefault()?.SessionTerm?.TermName ?? "";
+            studentSubjectEntries = se.Select(e => new StudentSubjectEntry(e, sse.ClassScoreEntry.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
+            gradeSetting = sse.ClassScoreEntry.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            totalScores = se.Count() * 100;
+            studentName = se.FirstOrDefault().StudentContact.User.FirstName + " " + se.FirstOrDefault().StudentContact.User.LastName;
             cognitiveBehaviour = new List<CognitiveBehaviour>
             {
                 new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
@@ -282,5 +319,136 @@ namespace SMP.Contracts.ResultModels
             
 
         }
+    }
+
+    public class PrintResult
+    {
+        public bool IsPreview { get; set; } = true;
+        public bool IsPrint { get; set; } = true;
+        public string studentName { get; set; }
+        public Guid studentContactId { get; set; }
+        public string registrationNumber { get; set; }
+        public string sessionClassName { get; set; }
+        public string session { get; set; }
+        public string term { get; set; }
+        public string position { get; set; }
+        public string remark { get; set; }
+        public int noOfStudents { get; set; }
+        public decimal total { get; set; }
+        public int totalScores { get; set; }
+        public int totalSubjects { get; set; }
+        public int totalExamScore { get; set; }
+        public int totalAssessmentScore { get; set; }
+        public decimal average { get; set; }
+        public bool isPublished { get; set; }
+        public List<StudentSubjectEntry> studentSubjectEntries { get; set; }
+        public List<GradeSetting> gradeSetting { get; set; }
+        public List<CognitiveBehaviour> cognitiveBehaviour { get; set; }
+        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term, Guid studentId)
+        {
+            var clas = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass;
+            var std = ScoreEntries.FirstOrDefault().StudentContact;
+            totalExamScore = ScoreEntries.Sum(d => d.ExamScore);
+            totalSubjects = ScoreEntries.Count();
+            totalAssessmentScore = ScoreEntries.Sum(d => d.AssessmentScore);
+            total = totalExamScore + totalAssessmentScore;
+            studentContactId = ScoreEntries.FirstOrDefault().StudentContactId;
+            IsPrint = false;
+            average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
+            if (studentId == studentContactId)
+            {
+                term = Term.TermName;
+                remark = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+                position = "1";
+                registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
+                session = clas.Session.StartDate + " / " + clas.Session.EndDate;
+                studentName = std.User?.FirstName + " " + std.User?.LastName;
+                studentContactId = std.StudentContactId;
+                sessionClassName = clas.Class.Name;
+                studentSubjectEntries = ScoreEntries.Select(e => new StudentSubjectEntry(e, clas.Class.GradeLevel, clas.SessionClassId)).ToList();
+                gradeSetting = clas.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            }
+            cognitiveBehaviour = new List<CognitiveBehaviour>
+            {
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"}
+            };
+        }
+
+        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term)
+        {
+            var clas = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass;
+            var std = ScoreEntries.FirstOrDefault().StudentContact;
+            totalExamScore = ScoreEntries.Sum(d => d.ExamScore);
+            totalSubjects = ScoreEntries.Count();
+            totalAssessmentScore = ScoreEntries.Sum(d => d.AssessmentScore);
+            total = totalExamScore + totalAssessmentScore;
+            studentContactId = ScoreEntries.FirstOrDefault().StudentContactId;
+            IsPrint = false;
+            average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
+            term = Term.TermName;
+            remark = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+            position = "1";
+            registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
+            session = clas.Session.StartDate + " / " + clas.Session.EndDate;
+            studentName = std.User?.FirstName + " " + std.User?.LastName;
+            studentContactId = std.StudentContactId;
+            sessionClassName = clas.Class.Name;
+            studentSubjectEntries = ScoreEntries.Select(e => new StudentSubjectEntry(e, clas.Class.GradeLevel, clas.SessionClassId)).ToList();
+            gradeSetting = clas.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            cognitiveBehaviour = new List<CognitiveBehaviour>
+            {
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
+                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"}
+            };
+        }
+    }
+
+
+    public class BatchPrintStudents
+    {
+        public string StudentName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string Position { get; set; }
+        public string Remark { get; set; }
+        public BatchPrintStudents(StudentContact student, string status, string regNoFormat)
+        {
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+            StudentName = student.User.FirstName + " " + student.User.LastName;
+            Position = status;
+        }
+    }
+
+    public class BatchPrintDetail
+    {
+        public string Class { get; set; }
+        public string Term { get; set; }
+        public string Session { get; set; }
+        public int NumberOfPins { get; set; }
+        public int NumberOfStudents { get; set; }
+        public string PinStatus { get; set; }
+        public List<StudentResultDetail> Students { get; set; }
+        public BatchPrintDetail() { }
+        public BatchPrintDetail(SessionClass clas, SessionTerm term, int pins, string pinStatus, int students)
+        {
+            Class = clas.Class.Name;
+            Term = term.TermName;
+            NumberOfPins = pins;
+            NumberOfStudents = students;
+            Session = clas.Session.StartDate + " / " + clas.Session.EndDate;
+            PinStatus = pinStatus;
+        }
+    }
+
+    public class PublishList
+    {
+        public string SessionClass { get; set; }
+        public string Status { get; set; }
     }
 }

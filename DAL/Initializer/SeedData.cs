@@ -15,6 +15,7 @@ namespace SMP.DAL.Initializer
                 DALInitializers.SeedActivityParents(context);
                 DALInitializers.SeedActivities(context);
                 ClassInitilizer.SeedClassGroup(context);
+                NotificationInitializer.SeedNotificationSetting(context);
             }
             return host;
         }

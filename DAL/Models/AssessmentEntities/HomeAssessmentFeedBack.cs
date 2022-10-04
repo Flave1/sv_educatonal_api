@@ -20,6 +20,7 @@ namespace SMP.DAL.Models.AssessmentEntities
         [ForeignKey("StudentContactId")]
         public StudentContact StudentContact { get; set; }
         public int Status { get; set; }
-
+        public bool Included { get; set; }
+        public string Comment { get; set; }
     }
 }

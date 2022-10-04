@@ -18,7 +18,7 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<ScoreEntry>> UpdateAssessmentScore(UpdateScore request);
         Task<APIResponse<PreviewClassScoreEntry>> PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId);
         Task<APIResponse<MasterList>> GetMasterListAsync(Guid sessionClassId, Guid termId);
-        Task<APIResponse<StudentResult>> GetListOfResultsAsync(Guid sessionClassId, Guid termId);
+        Task<APIResponse<StudentResult>> GetClassResultListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<PublishResultRequest>> PublishResultAsync(PublishResultRequest request);
         Task<APIResponse<GetClassScoreEntry>> GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
         Task<APIResponse<ScoreEntry>> UpdatePreviousTermsExamScore(UpdateOtherSessionScore request);
@@ -26,8 +26,16 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<PreviewClassScoreEntry>> PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
         Task<APIResponse<CumulativeMasterList>> GetCumulativeMasterListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<StudentCoreEntry>> GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
-        Task<APIResponse<PreviewResult>> GetStudentResultAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
+        Task<APIResponse<PreviewResult>> GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId);
+        Task UpdateStudentPrintStatusAsync(Guid classId, Guid studentId, bool isResultPrinted);
+        Task<APIResponse<PrintResult>> GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
+        Task UpdateSessionClassArchiveAsync(Guid studentId, Guid termId, bool isPublished);
+        Task<bool> AllResultPublishedAsync();
+        Task<APIResponse<BatchPrintDetail>> GetStudentsForBachPrinting(Guid sessionClassId, Guid termId);
+        Task<APIResponse<List<PrintResult>>> GetStudentResultForBatchPrintingAsync(Guid sessionClassId, Guid termId);
+        Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjects2Async(Guid classId, Guid sessionClassId);
+        Task<APIResponse<List<PublishList>>> GetPublishedList();
     }
 }

@@ -8,16 +8,19 @@ using Contracts.Common;
 using Contracts.Options;
 using DAL;
 using DAL.Authentication;
+using DAL.ClassEntities;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
+using OfficeOpenXml;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.FileUploadService;
+using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.StudentImformation;
@@ -38,15 +41,20 @@ namespace BLL.StudentServices
         private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
         private readonly IUriService uriService;
+        public readonly IHttpContextAccessor accessor;
+        private readonly IPinManagementService pinService;
 
         public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IUriService uriService)
+        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService)
         {
             this.context = context;
             this.userService = userService;
             this.userManager = userManager;
-            this.resultsService = resultsService; 
+            this.resultsService = resultsService;
             this.upload = upload;
             this.uriService = uriService;
+            this.accessor = accessor;
+            this.pinService = pinService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -325,6 +333,210 @@ namespace BLL.StudentServices
 
           
         }
+
+
+
+        async Task<APIResponse<StudentContact>> IStudentService.UploadStudentsAsync()
+        {
+            var res = new APIResponse<StudentContact>();
+
+            try
+            {
+                List<UploadStudentExcel> uploadedRecord = new List<UploadStudentExcel>();
+                var files = accessor.HttpContext.Request.Form.Files;
+
+                if (files.Count() == 0)
+                {
+                    res.Message.FriendlyMessage = $"No File selected";
+                    return res;
+                }
+                var byteList = new List<byte[]>();
+                foreach (var fileBit in files)
+                {
+                    if (fileBit.Length > 0)
+                    {
+                        using (var ms = new MemoryStream())
+                        {
+                            await fileBit.CopyToAsync(ms);
+                            byteList.Add(ms.ToArray());
+                        }
+                    }
+                }
+
+                if (byteList.Count() > 0)
+                {
+                    foreach (var item in byteList)
+                    {
+                        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                        using (MemoryStream stream = new MemoryStream(item))
+                        using (ExcelPackage excelPackage = new ExcelPackage(stream))
+                        {
+                            ExcelWorksheet workSheet = excelPackage.Workbook.Worksheets[0];
+                            int totalRows = workSheet.Dimension.Rows;
+                            int totalColumns = workSheet.Dimension.Columns;
+                            if (totalColumns != 19)
+                            {
+                                res.Message.FriendlyMessage = $"Eighteen (19) Columns Expected";
+                                return res;
+                            }
+                            for (int i = 2; i <= totalRows; i++)
+                            {
+                                uploadedRecord.Add(new UploadStudentExcel
+                                {
+                                    ExcelLineNumber = i,
+                                    SessionClass = workSheet.Cells[i, 1].Value != null ? workSheet.Cells[i, 1].Value.ToString() : null,
+                                    RegistrationNumber = workSheet.Cells[i, 2].Value != null ? workSheet.Cells[i, 2].Value.ToString() : null,
+                                    FirstName = workSheet.Cells[i, 3].Value != null ? workSheet.Cells[i, 3].Value.ToString() : null,
+                                    LastName = workSheet.Cells[i, 4].Value != null ? workSheet.Cells[i, 4].Value.ToString() : null,
+                                    MiddleName = workSheet.Cells[i, 5].Value != null ? workSheet.Cells[i, 5].Value.ToString() : null,
+                                    Phone = workSheet.Cells[i, 6].Value != null ? workSheet.Cells[i, 6].Value.ToString() : null,
+                                    DOB = workSheet.Cells[i, 7].Value != null ? workSheet.Cells[i, 7].Value.ToString() : null,
+                                    Email = workSheet.Cells[i, 8].Value != null ? workSheet.Cells[i, 8].Value.ToString() : null,
+                                    HomePhone = workSheet.Cells[i, 9].Value != null ? workSheet.Cells[i, 9].Value.ToString() : null,
+                                    EmergencyPhone = workSheet.Cells[i, 10].Value != null ? workSheet.Cells[i, 10].Value.ToString() : null,
+                                    ParentOrGuardianName = workSheet.Cells[i, 11].Value != null ? workSheet.Cells[i, 11].Value.ToString() : null,
+                                    ParentOrGuardianRelationship = workSheet.Cells[i, 12].Value != null ? workSheet.Cells[i, 12].Value.ToString() : null,
+                                    ParentOrGuardianPhone = workSheet.Cells[i, 13].Value != null ? workSheet.Cells[i, 13].Value.ToString() : null,
+                                    ParentOrGuardianEmail = workSheet.Cells[i, 14].Value != null ? workSheet.Cells[i, 14].Value.ToString() : null,
+                                    HomeAddress = workSheet.Cells[i, 15].Value != null ? workSheet.Cells[i, 15].Value.ToString() : null,
+                                    CityId = workSheet.Cells[i, 16].Value != null ? workSheet.Cells[i, 16].Value.ToString() : null,
+                                    StateId = workSheet.Cells[i, 17].Value != null ? workSheet.Cells[i, 17].Value.ToString() : null,
+                                    CountryId = workSheet.Cells[i, 18].Value != null ? workSheet.Cells[i, 18].Value.ToString() : null,
+                                    ZipCode = workSheet.Cells[i, 19].Value != null ? workSheet.Cells[i, 19].Value.ToString() : null,
+
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (uploadedRecord.Count > 0)
+                {
+                    using (var transaction = await context.Database.BeginTransactionAsync())
+                    {
+                        foreach (var item in uploadedRecord)
+                        {
+                            StudentContact std = null;
+                            if (string.IsNullOrEmpty(item.SessionClass))
+                            {
+                                res.Message.FriendlyMessage = $"Class name cannot be empty detected on line {item.ExcelLineNumber}";
+                                return res;
+                            }
+                            else
+                            {
+                                var clas = context.SessionClass.Include(x => x.Class).Include(x => x.Session)
+                                    .FirstOrDefault(z => z.Class.Name.ToLower() == item.SessionClass.ToLower() && z.Deleted == false && z.Session.IsActive);
+                                if (clas == null)
+                                {
+                                    res.Message.FriendlyMessage = $"Class name {item.SessionClass} cannot be found detected on line {item.ExcelLineNumber}";
+                                    return res;
+                                }
+                                item.SessionClass = clas.SessionClassId.ToString();
+                            }
+                            if (string.IsNullOrEmpty(item.RegistrationNumber))
+                            {
+                                item.RegistrationNumber = RegistrationNumber.GenerateForStudents(context).FirstOrDefault().Key;
+                            }
+                            else
+                            {
+                                var regNo = pinService.GetStudentRealRegNumber(item.RegistrationNumber);
+                                std = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
+                                if (std == null)
+                                {
+                                    res.Message.FriendlyMessage = $"No Student found with registration number {item.RegistrationNumber} detected on line {item.ExcelLineNumber}";
+                                    return res;
+                                }
+                                else
+                                {
+                                    item.RegistrationNumber = regNo;
+                                }
+                            }
+
+                            if (string.IsNullOrEmpty(item.Email))
+                            {
+                                item.Email = item.RegistrationNumber + "@school.com";
+                            }
+                            try
+                            {
+                                if (std is null)
+                                {
+                                    var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                                    var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, regNoFormat.Replace("%VALUE%", item.RegistrationNumber));
+                                    std = new StudentContact();
+                                    std.CityId = std.CityId;
+                                    std.CountryId = item.CountryId;
+                                    std.EmergencyPhone = item.EmergencyPhone;
+                                    std.HomeAddress = item.HomeAddress;
+                                    std.ParentOrGuardianEmail = item.ParentOrGuardianEmail;
+                                    std.ParentOrGuardianName = item.ParentOrGuardianName;
+                                    std.ParentOrGuardianPhone = item.ParentOrGuardianPhone;
+                                    std.ParentOrGuardianRelationship = item.ParentOrGuardianRelationship;
+                                    std.HomePhone = item.HomePhone;
+                                    std.StateId = item.StateId;
+                                    std.UserId = userId;
+                                    std.ZipCode = item.ZipCode;
+                                    std.RegistrationNumber = item.RegistrationNumber;
+                                    std.StudentContactId = Guid.NewGuid();
+                                    std.Status = (int)StudentStatus.Active;
+                                    std.SessionClassId = Guid.Parse(item.SessionClass);
+                                    std.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
+
+                                    context.StudentContact.Add(std);
+                                    await context.SaveChangesAsync();
+                                    await CreateStudentSessionClassHistoryAsync(std);
+                                    await EnrollOnCreateStudentAsync(std);
+                                }
+                                else
+                                {
+                                    await userService.UpdateStudentUserAccountAsync(item, std.UserId);
+                                    std.CityId = item.CityId;
+                                    std.CountryId = item.CountryId;
+                                    std.EmergencyPhone = item.EmergencyPhone;
+                                    std.HomeAddress = item.HomeAddress;
+                                    std.ParentOrGuardianEmail = item.ParentOrGuardianEmail;
+                                    std.ParentOrGuardianName = item.ParentOrGuardianName;
+                                    std.ParentOrGuardianPhone = item.ParentOrGuardianPhone;
+                                    std.ParentOrGuardianRelationship = item.ParentOrGuardianRelationship;
+                                    std.HomePhone = item.HomePhone;
+                                    std.StateId = item.StateId;
+                                    std.ZipCode = item.ZipCode;
+                                    std.SessionClassId = Guid.Parse(item.SessionClass);
+                                    await context.SaveChangesAsync();
+                                }
+                                
+                            }
+                            catch (DuplicateNameException ex)
+                            {
+                                await transaction.RollbackAsync();
+                                res.Message.FriendlyMessage = ex.Message;
+                                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                                return res;
+                            }
+                            catch (Exception ex)
+                            {
+                                await transaction.RollbackAsync();
+                                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                                return res;
+                            }
+                        }
+                        await transaction.CommitAsync();
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = $" {ex?.Message}";
+                return res;
+            }
+
+            res.Message.FriendlyMessage = Messages.Uploaded;
+            res.Result = null;
+            res.IsSuccessful = true;
+            return res;
+        }
+
     }
 
 

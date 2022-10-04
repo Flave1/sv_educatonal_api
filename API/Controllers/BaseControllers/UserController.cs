@@ -34,7 +34,7 @@ namespace API.Controllers
         { 
             try
             {
-                var response  = await identityService.LoginAsync(request);
+                var response  = await identityService.WebLoginAsync(request);
                 if(response.IsSuccessful)
                     return Ok(response);
                 return BadRequest(response);
@@ -45,8 +45,25 @@ namespace API.Controllers
             }
         }
 
-    
-        
+        [AllowAnonymous]
+        [HttpPost("mobile-login")]
+        public async Task<IActionResult> MobileLogin([FromBody] LoginCommand request)
+        {
+            try
+            {
+                var response = await identityService.MobileLoginAsync(request);
+                if (response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { result = ex.Message });
+            }
+        }
+
+
+
         [AllowAnonymous]
         [HttpPost("generate/reset-link")]
         public async Task<IActionResult> GenerateResetLinkAndSendToUserEmail([FromBody] ResetPassword request)
@@ -94,26 +111,38 @@ namespace API.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("validate/user-information/from-mobile")]
+        public async Task<ActionResult<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync([FromBody] UserInformationFromMobileRequest request)
+        {
+            try
+            {
+                var response = await userService.ValidateUserInformationFromMobileAsync(request);
+                if (response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { result = ex.Message });
+            }
+        }
+
+        //public string token { get; set; }
+        [HttpPost("get/mobile-permissions")]
+        public async Task<ActionResult> GetUserProfile()
+        {
+            string userId = HttpContext.User?.FindFirst(c => c.Type == "userId").Value;
+            var response = await identityService.GetMobilePermissionsAsync(userId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
         #endregion
 
 
 
 
-        public string token { get; set; }
-        [HttpGet("/fetch/account")]
-        public ActionResult GetUserProfile()
-        {
-            string userId = HttpContext.User?.FindFirst(c => c.Type == "userId").Value;
-            string userType = HttpContext.User?.FindFirst(c => c.Type == "userType").Value;
-            if((int)UserTypes.Teacher == Convert.ToInt16(userType))
-            {
 
-            }
-            else
-            {
-
-            }
-            return Ok(userId);
-        }
     }
 }

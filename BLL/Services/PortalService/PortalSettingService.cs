@@ -145,20 +145,20 @@ namespace SMP.BLL.Services.PortalService
             var res = new APIResponse<PostNotificationSetting>();
             var setting = await context.NotificationSetting.FirstOrDefaultAsync();
 
-            if (setting == null)
+            if (setting is not null)
             {
-                setting = new NotificationSetting
-                {
-                    NotifyByEmail = request.NotifyByEmail,
-                    NotifyBySms = request.NotifyBySms,
-                };
-                await context.NotificationSetting.AddAsync(setting);
+                setting.Announcement = request.Announcement.media +"/"+ request.Announcement.send;
+                setting.Assessment = request.Assessment.media + "/" + request.Assessment.send;
+                setting.ClassManagement = request.ClassManagement.media + "/" + request.ClassManagement.send;
+                setting.Enrollment = request.Enrollment.media + "/" + request.Enrollment.send;
+                setting.Permission = request.Permission.media + "/" + request.Permission.send;
+                setting.PublishResult = request.PublishResult.media + "/" + request.PublishResult.send;
+                setting.RecoverPassword = request.RecoverPassword.media + "/" + request.RecoverPassword.send;
+                setting.Session = request.Session.media + "/" + request.Session.send;
+                setting.ShouldSendToParentsOnResultPublish = request.PublishResult.ShouldSendToParentsOnResultPublish;
+                setting.Staff = request.Staff.media + "/" + request.Staff.send;
+                await context.SaveChangesAsync();
             }
-            else
-            {
-                setting.NotifyByEmail = request.NotifyByEmail;
-            }
-            await context.SaveChangesAsync();
 
             res.Message.FriendlyMessage = Messages.Created;
             res.Result = request;
@@ -181,10 +181,10 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         } 
-        async Task<APIResponse<NotificationSettingContract>>IPortalSettingService.GetNotificationSettingsAsync()
+        async Task<APIResponse<PostNotificationSetting>>IPortalSettingService.GetNotificationSettingsAsync()
         {
-            var res = new APIResponse<NotificationSettingContract>();
-            res.Result =  await  context.NotificationSetting.Select(f=> new NotificationSettingContract(f)).FirstOrDefaultAsync() ?? new NotificationSettingContract();
+            var res = new APIResponse<PostNotificationSetting>();
+            res.Result = await context.NotificationSetting.Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }

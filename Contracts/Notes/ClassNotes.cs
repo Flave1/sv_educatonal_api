@@ -1,4 +1,5 @@
-﻿using DAL.TeachersInfor;
+﻿using DAL.ClassEntities;
+using DAL.TeachersInfor;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
@@ -109,7 +110,7 @@ namespace SMP.Contracts.Notes
                 LastName = db.ClassNote.AuthorDetail.LastName,
                 MiddleName = db.ClassNote.AuthorDetail.MiddleName,
                 Photo = db.ClassNote.AuthorDetail.Photo,
-                ShortBio = db.ClassNote.AuthorDetail.Teacher.ShortBiography
+                ShortBio = db.ClassNote.AuthorDetail?.Teacher?.ShortBiography
             } : null;
         }
         public GetClassNotes(ClassNote db)
@@ -203,7 +204,7 @@ namespace SMP.Contracts.Notes
         public string Comment { get; set; }
         public bool IsParent { get; set; }
         public Guid ClassNoteId { get; set; }
-        public Guid TeacherId { get; set; }
+        public string TeacherId { get; set; }
         public Guid? RepliedToId { get; set; }
         public string Name { get; set; }
         public List<ClassNoteComment> RepliedComments { get; set; }
@@ -215,12 +216,27 @@ namespace SMP.Contracts.Notes
             IsParent = db.IsParent;
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
-            TeacherId = db.TeacherId;
-            Name = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
+            TeacherId = db.UserId;
+            Name = db?.AppUser?.FirstName + " " + db?.AppUser?.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
                 RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();
             }
+        }
+    }
+
+    public class GetClasses2
+    {
+        public string SessionClass { get; set; }
+        public string SessionClassId { get; set; }
+        public string ClassId { get; set; }
+        public bool IsSent { get; set; }
+        public GetClasses2(SessionClass db, bool isSent)
+        {
+            SessionClass = db.Class.Name;
+            SessionClassId = db.SessionClassId.ToString();
+            IsSent = isSent;
+            ClassId = db.ClassId.ToString();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DAL;
+using DAL.Authentication;
 using DAL.TeachersInfor;
 using System;
 using System.Collections.Generic;
@@ -19,9 +20,9 @@ namespace SMP.DAL.Models.NoteEntities
         public Guid ClassNoteId { get; set; }
         [ForeignKey("ClassNoteId")]
         public ClassNote ClassNote { get; set; }
-        public Guid TeacherId { get; set; }
-        [ForeignKey("TeacherId")]
-        public Teacher Teacher { get; set; }
+        public string UserId { get; set; }
+        [ForeignKey("UserId")]
+        public AppUser AppUser { get; set; }
         public Guid? RepliedToId { get; set; }
         [ForeignKey("RepliedToId")]
         public TeacherClassNoteComment RepliedTo { get; set; }

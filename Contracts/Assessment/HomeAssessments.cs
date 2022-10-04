@@ -23,9 +23,14 @@ namespace SMP.Contracts.Assessment
         public int NumberOfStudentsSubmitted { get; set; } = 0;
         public int NumberOfStudentsNotSubmitted { get; set; }
         public string Status { get; set; }
+        //public string SubmitionStatus { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
         {
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -73,7 +78,9 @@ namespace SMP.Contracts.Assessment
                    studentIds.Add(ele.ToString());
                });
             }
-           
+
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
@@ -87,6 +94,7 @@ namespace SMP.Contracts.Assessment
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
             Comment = db.Comment;
+            
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
             if (db.Status == 1)
@@ -97,8 +105,9 @@ namespace SMP.Contracts.Assessment
                 Status = "submitted";
             if (db.Status == 0)
                 Status = "saved";
+        
             if (studentIds.Any())
-                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents, db.AssessmentScoreRecord)).ToList();
+                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
         }
     }
 
@@ -108,13 +117,14 @@ namespace SMP.Contracts.Assessment
         public string Status { get; set; }
         public string HomeAsessmentFeedbackId { get; set; }
         public decimal Score { get; set; }
-        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students, ICollection<AssessmentScoreRecord> fbs)
+        public bool Included { get; set; }
+        public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students)
         {
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             var student = students.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
             HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
             StudentName = student?.User?.FirstName + " " + student?.User?.MiddleName + " " + student?.User?.LastName;
-            Score = fbs?.FirstOrDefault(d => d.StudentContactId == student.StudentContactId)?.Score ??0;
+            Score = feedBack?.Mark ??0;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)
@@ -126,6 +136,25 @@ namespace SMP.Contracts.Assessment
             {
                 Status = "not started";
             }
+        }
+        public SubmittedAndUnsubmittedStudents(StudentContact student, ICollection<HomeAssessmentFeedBack> feedbacks)
+        {
+            var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == student.StudentContactId);
+            HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
+            StudentName = student?.User?.FirstName + " " + student?.User?.MiddleName + " " + student?.User?.LastName;
+            Score = feedBack?.Mark??0;
+            if (feedBack is not null)
+            {
+                if (feedBack.Status == 3)
+                    Status = "submitted";
+                if (feedBack.Status == 0)
+                    Status = "uncompleted";
+            }
+            else
+            {
+                Status = "not started";
+            }
+            Included = feedBack?.Included?? false;
         }
     }
 
@@ -139,6 +168,8 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
     }
 
     public class UpdateHomeAssessmentRequest
@@ -151,6 +182,8 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public bool ShouldSendToStudents { get; set; }
         public string Comment { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
     }
 
     public class SendHomeAssessmentRequest

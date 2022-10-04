@@ -20,8 +20,17 @@ namespace SMP.Contracts.Assessment
     {
         public string HomeAssessmentFeedBackId { get; set; }
         public decimal Score { get; set; }
+        public string Comment { get; set; }
+        public bool Include { get; set; } = false;
     }
-
+    public class SingleHomeAssessment
+    {
+        public string HomeAssessmentId { get; set; }
+    }
+    public class SingleFeedback
+    {
+        public string HomeAssessmentFeedBackId { get; set; }
+    }
     public class StudentHomeAssessmentRequest
     {
         public string HomeAssessmentFeedBackId { get; set; }
@@ -36,13 +45,18 @@ namespace SMP.Contracts.Assessment
         public string SessionClassGroupId { get; set; }
         public string SessionClassGroupName { get; set; }
         public string Status { get; set; }
+        public string DateDeadLine { get; set; }
+        public string TimeDeadLine { get; set; }
         public string ListOfStudentContactIds { get; set; }
         public StudentHomeAssessmentRequest(HomeAssessment db, string studentContactId)
         {
+            var stAss = db.HomeAssessmentFeedBacks.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
             Content = db.Content;
-            HomeAssessmentFeedBackId = db.HomeAssessmentFeedBacks.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId))?.HomeAssessmentFeedBackId.ToString();
+            HomeAssessmentFeedBackId = stAss?.HomeAssessmentFeedBackId.ToString();
             AssessmentScore = db.AssessmentScore;
             SessionClassId = db.SessionClassId.ToString();
             SessionClassSubjectId = db.SessionClassSubjectId.ToString();
@@ -50,11 +64,21 @@ namespace SMP.Contracts.Assessment
             SessionClassGroupId = db.SessionClassGroupId.ToString();
             SessionClassGroupName = db.SessionClassGroup.GroupName;
             ListOfStudentContactIds = db.SessionClassGroup.ListOfStudentContactIds;
+           
             Comment = db.Comment;
             if (db.Status == 1)
                 Status = "open";
             if (db.Status == 2)
                 Status = "closed";
+
+            if (!string.IsNullOrEmpty(HomeAssessmentFeedBackId))
+            {
+                Status = "unsubmitted";
+                if(stAss.Status == 3)
+                {
+                    Status = "submitted";
+                }
+            }
 
         }
 

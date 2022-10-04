@@ -12,6 +12,7 @@ using Contracts.Options;
 using DAL;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -90,6 +91,14 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteStudentAsync([FromBody] MultipleDelete reguest)
         {
             var response = await service.DeleteStudentAsync(reguest);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("upload/students")]
+        public async Task<IActionResult> UploadStudentsAsync([FromForm] UploadClass file)
+        {
+            var response = await service.UploadStudentsAsync();
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

@@ -20,16 +20,16 @@ namespace SMP.Contracts.ResultModels
         public string TermName { get; set; }
         public List<MasterListResult> ResultList { get;set; }
   
-        public MasterList(SessionClass db, SessionTerm term, string regNoFormat)
+        public MasterList(SessionClass db, SessionTerm term)
         {
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
             TermName = term.TermName;
-            if (db.Students.Any())
-            {
-                ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new MasterListResult(e, regNoFormat, term.SessionTermId)).ToList();
-            }
+            //if (db.Students.Any())
+            //{
+            //    ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new MasterListResult(e, regNoFormat, term.SessionTermId)).ToList();
+            //}
             
         }
 
@@ -47,23 +47,24 @@ namespace SMP.Contracts.ResultModels
         public int TotalAssessmentScore { get; set; }
         public string Status { get; set; }
         public List<MasterListResultSubjects> Subjects { get; set; }
-        public MasterListResult(StudentContact se, string regNoFormat, Guid sessionTermId)
+        public MasterListResult(IGrouping<Guid, ScoreEntry> se, string regNoFormat)
         {
-            StudentName = se?.User?.FirstName + " " + se?.User?.LastName + " " + se?.User?.MiddleName;
-            RegistrationNumber = regNoFormat?.Replace("%VALUE%", se?.RegistrationNumber);
+            var std = se.FirstOrDefault().StudentContact;
+            StudentName = std.User.FirstName + " " + std.User.LastName + " " + std.User.MiddleName;
+            RegistrationNumber = regNoFormat?.Replace("%VALUE%", std?.RegistrationNumber);
             Position = "1";
-            TotalSubjects = se?.ScoreEntries.Where(d => d.SessionTermId == sessionTermId && d.IsOffered == true)?.Count(d => d.IsOffered == true)??0;
+            TotalSubjects = se?.Where(d => d.IsOffered == true)?.Count(d => d.IsOffered == true)??0;
 
-            TotalExamScore = se?.ScoreEntries.Where(d => d.SessionTermId == sessionTermId && d.IsOffered == true)?.Sum(d => d.ExamScore)??0;
-            TotalAssessmentScore = se?.ScoreEntries.Where(d => d.SessionTermId == sessionTermId && d.IsOffered == true)?.Sum(d => d.AssessmentScore)??0;
+            TotalExamScore = se?.Where(d => d.IsOffered == true)?.Sum(d => d.ExamScore)??0;
+            TotalAssessmentScore = se?.Where(d => d.IsOffered == true)?.Sum(d => d.AssessmentScore)??0;
 
             TotalScore = TotalExamScore + TotalAssessmentScore;
 
             AverageScore = Math.Round(TotalSubjects > 0 ? TotalScore / TotalSubjects : 0, 2);
-            Status = se?.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
+            Status = se.FirstOrDefault().ClassScoreEntry.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
 
-            Subjects = se?.ScoreEntries.Where(d => d.SessionTermId == sessionTermId && d.IsOffered == true).Select(s => s.ClassScoreEntry)
-                .Select(d => new MasterListResultSubjects(d.Subject, se.ScoreEntries.Where(d => d.SessionTermId == sessionTermId && d.IsOffered == true).ToList())).ToList();
+            Subjects = se?.Where(d => d.IsOffered == true).Select(s => s.ClassScoreEntry)
+                .Select(d => new MasterListResultSubjects(d.Subject, se.Where(d => d.IsOffered == true).ToList())).ToList();
 
         }
     }
@@ -93,13 +94,13 @@ namespace SMP.Contracts.ResultModels
         public string FormTeacher { get; set; }
         public List<CumulativeMasterListResult> ResultList { get; set; }
 
-        public CumulativeMasterList(SessionClass db, string regNoFormat)
+        public CumulativeMasterList(SessionClass db)
         {
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
-            if (db.Students.Any())
-                ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
+            //if (db.Students.Any())
+            //    ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
 
         } 
     }
@@ -117,32 +118,32 @@ namespace SMP.Contracts.ResultModels
         public string Status { get; set; }
         public List<CumulativeTermAvgScore> CumulativeTermAvgScore { get; set; }
         public List<CumulativeMasterListResultSubjects> Subjects { get; set; }
-        public CumulativeMasterListResult(StudentContact se, string regNoFormat)
+        public CumulativeMasterListResult(IGrouping<Guid, ScoreEntry> se, string regNoFormat)
         {
-            StudentName = se?.User?.FirstName + " " + se?.User?.LastName + " " + se?.User?.MiddleName;
-            RegistrationNumber = regNoFormat?.Replace("%VALUE%", se?.RegistrationNumber);
+            var user = se.FirstOrDefault().StudentContact;
+            var entries = se.Where(d => d.IsOffered == true);
+            StudentName = user?.User?.FirstName + " " + user?.User?.LastName + " " + user?.User?.MiddleName;
+            RegistrationNumber = regNoFormat?.Replace("%VALUE%", user?.RegistrationNumber);
             Position = "1";
-            TotalSubjects = se?.ScoreEntries.Where(d => d.IsOffered == true)?.Count(d => d.IsOffered == true) ?? 0;
+            TotalSubjects = entries?.Count() ?? 0;
 
-            TotalExamScore = se?.ScoreEntries.Where(d => d.IsOffered == true)?.Sum(d => d.ExamScore) ?? 0;
-            TotalAssessmentScore = se?.ScoreEntries.Where(d => d.IsOffered == true)?.Sum(d => d.AssessmentScore) ?? 0;
+            TotalExamScore = entries?.Sum(d => d.ExamScore) ?? 0;
+            TotalAssessmentScore = entries?.Sum(d => d.AssessmentScore) ?? 0;
 
             TotalScore = TotalExamScore + TotalAssessmentScore;
 
             AverageScore = Math.Round(TotalSubjects > 0 ? TotalScore / TotalSubjects : 0, 2);
-            Status = se?.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
+            Status = entries.FirstOrDefault().ClassScoreEntry?.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
 
-            var scores = se.ScoreEntries.Where(d => d.IsOffered == true).ToList();
 
-            var grouped = se?.ScoreEntries.Where(d => d.IsOffered == true)
-                .GroupBy(u => u.SessionTermId)
+            var grouped = entries.GroupBy(u => u.SessionTermId)
                 .Select(grp => grp.ToList())
                 .ToList();
 
             CumulativeTermAvgScore = grouped.Select(d => new CumulativeTermAvgScore(d)).ToList();
 
 
-            Subjects = se?.ScoreEntries.Where(d => d.IsOffered == true).GroupBy(x => x.ClassScoreEntryId).Select(d => new CumulativeMasterListResultSubjects(d)).ToList();
+            Subjects = entries.GroupBy(x => x.ClassScoreEntryId).Select(d => new CumulativeMasterListResultSubjects(d)).ToList();
 
         }
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.Options
 {
-    public class FwsConfigSeetings
+    public class FwsConfigSettings
     {
         public string Apikey { get; set; }
         public string ClientId { get; set; }

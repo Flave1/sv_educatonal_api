@@ -38,17 +38,17 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/studentnotes/by-teacher")]
-        public async Task<IActionResult> GetStudentNotesByTeachersAsync(string subjectId)
+        public async Task<IActionResult> GetStudentNotesByTeachersAsync(string classId, string subjectId, int status)
         {
-            var response = await service.GetStudentNotesByTeachersAsync(subjectId);
+            var response = await service.GetStudentNotesByTeachersAsync(classId, subjectId, status);
             return Ok(response);
         }
         
 
-        [HttpGet("get/Studentnotes/by-student")]
-        public async Task<IActionResult> GetStudentNotesByStudentAsync(string subjectId)
+        [HttpGet("get/studentnotes/by-student")]
+        public async Task<IActionResult> GetStudentNotesByStudentAsync(string subjectId, int status)
         {
-            var response = await service.GetStudentNotesByStudentAsync(subjectId);
+            var response = await service.GetStudentNotesByStudentAsync(subjectId, status);
             return Ok(response);
         }
        
@@ -106,7 +106,21 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-single/studentnote")]
+        public async Task<IActionResult> GetSingleStudentNotesAsync(string studentNoteId)
+        {
+            var response = await service.GetSingleStudentNotesAsync(studentNoteId);
+            return Ok(response);
+        }
 
+        [HttpPost("send/studentnote-forreview")]
+        public async Task<IActionResult> SendStudentNoteForReviewAsync([FromBody] SendStudentNote request)
+        {
+            var response = await service.SendStudentNoteForReviewAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
     }
 }

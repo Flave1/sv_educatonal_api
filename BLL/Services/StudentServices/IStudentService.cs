@@ -17,5 +17,7 @@ namespace BLL.StudentServices
         Task<APIResponse<bool>> DeleteStudentAsync(MultipleDelete request);
         Task ChangeClassAsync(Guid studentId, Guid classId);
         Task<APIResponse<UpdateProfileByStudentRequest>> UpdateProfileByStudentAsync(UpdateProfileByStudentRequest student);
+        Task<APIResponse<StudentContact>> UploadStudentsAsync();
+        //Task<APIResponse<StudentContact>> UploadStudentsAsync(StudentContactCommand student);
     }
 }

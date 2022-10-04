@@ -1,6 +1,7 @@
 ﻿using DAL;
 using DAL.ClassEntities;
 using SMP.DAL.Models.Attendance;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,10 @@ namespace SMP.DAL.Models.Register
         public string RegisterLabel { get; set; }  
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
-        public SessionClass SessionClass { get; set; } 
+        public SessionClass SessionClass { get; set; }
+        public Guid? SessionTermId { get; set; }
+        [ForeignKey("SessionTermId")]
+        public SessionTerm SessionTerm { get; set; }
         public ICollection<StudentAttendance> StudentAttendances { get; set; }
     }
 }

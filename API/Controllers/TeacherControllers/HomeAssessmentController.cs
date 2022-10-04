@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("homeassessment/api/v1")]
     public  class HomeAssessmentController : Controller
     {
@@ -41,9 +40,9 @@ namespace SMP.API.Controllers
 
 
         [HttpGet("get/home-assessments")]
-        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassSubjectId)
+        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassId, string sessionClassSubjectId, string groupId)
         {
-            var response = await service.GetSubjectHomeAssessmentAsync(Guid.Parse(sessionClassSubjectId));
+            var response = await service.GetSubjectHomeAssessmentAsync(sessionClassId, sessionClassSubjectId, groupId);
             return Ok(response);
         }
 
@@ -88,5 +87,40 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("close/home-assessment")]
+        public async Task<IActionResult> CloseHomeAssessmentsAsync([FromBody] SingleHomeAssessment request)
+        {
+            var response = await service.CloseHomeAssessmentAsync(request.HomeAssessmentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("get/home-assessment/score-record")]
+        public async Task<IActionResult> GetHomeAssessmentRecord([FromBody] SingleHomeAssessment request)
+        {
+            var response = await service.GetHomeAssessmentRecord(request.HomeAssessmentId);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("include-class/home-assessment/to-scoreentry")]
+        public async Task<IActionResult> IncludeHomeAssessmentsAsync([FromBody] SingleHomeAssessment request)
+        {
+            var response = await service.IncludeClassAssessmentToScoreEntry(request.HomeAssessmentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("include-student/home-assessment/to-scoreentry")]
+        public async Task<IActionResult> IncludeStudentAssessmentToScoreEntry([FromBody] SingleFeedback request)
+        {
+            var response = await service.IncludeStudentAssessmentToScoreEntry(request.HomeAssessmentFeedBackId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

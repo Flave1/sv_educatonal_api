@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("classnotes/api/v1")]
     public class ClassNoteController : Controller
     {
@@ -49,10 +48,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/classnotes/by-teacher")]
-        public async Task<IActionResult> GetClassNotesByTeachersAsync(string subjectId)
+        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId)
         {
-            var response = await service.GetClassNotesByTeachersAsync(subjectId);
-
+            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status, termId);
             return Ok(response);
         }
 
@@ -186,6 +184,13 @@ namespace SMP.API.Controllers
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
+        }
+
+        [HttpGet("get-note/shared-class")]
+        public async Task<IActionResult> GetStaffClassesOnNoteShareAsync(string teacherClassNoteId)
+        {
+            var response = await service.GetStaffClassesOnNoteShareAsync(Guid.Parse(teacherClassNoteId));
+            return Ok(response);
         }
 
     }

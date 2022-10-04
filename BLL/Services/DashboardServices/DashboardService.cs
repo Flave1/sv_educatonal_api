@@ -9,8 +9,6 @@ using SMP.Contracts.Dashboard;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.DashboardServices
 {
@@ -25,45 +23,98 @@ namespace SMP.BLL.Services.DashboardServices
             this.accessor = accessor;
         }
 
-        async Task<APIResponse<GetDashboard>> IDashboardService.GetDashboardCountAsync()
+        APIResponse<GetDashboardCount> IDashboardService.GetDashboardCountAsync()
         {
-            var res = new APIResponse<GetDashboard>();
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var res = new APIResponse<GetDashboardCount>();
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
+            var rolesActivities = context.RoleActivity.Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
 
-            if (!string.IsNullOrEmpty(userid))
+            if (!string.IsNullOrEmpty(userId))
             { 
-
-
                 if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
-
-                    var totalEnrolledstudent = context.StudentContact.Where(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
-                    var totalClass = context.SessionClass.Where(x => x.Deleted == false && x.Session.IsActive == true).Count();
-                    var totalSubject = context.Subject.Where(x => x.Deleted == false && x.IsActive == true).Count();
-                    var totalPins = context.UploadedPin.Where(x => x.Deleted == false).Count();
-                    var totalStaff = context.Teacher.Where(x => x.Deleted == false).Count();
-
-                    res.Result = new GetDashboard { TotalClass = totalClass, TotalEnrolledStudent = totalEnrolledstudent, TotalPins = totalPins, TotalStaff = totalStaff, TotalSubjects = totalSubject };
+                    res.Result = GetDashboardCounts();
                 }
-                else
+                else if(accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
-                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
-                    { 
-                        var totalClass = context.SessionClass.Where(x => x.Deleted == false && x.Session.IsActive == true).Count();
-                        var totalSubject = context.Subject.Where(x => x.Deleted == false && x.IsActive == true).Count();
-                         
-                        res.Result = new GetDashboard { TotalClass = totalClass, TotalSubjects = totalSubject };
-                    }
-                    else
-                    {
-                        res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-                        return res;
-                    }
+                    res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
                 } 
             } 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
+        }
+
+        private GetDashboardCount GetDashboardCounts()
+        {
+            var enrolledStudents = context.SessionClass
+                        .Include(x => x.Session)
+                        .SelectMany(c => c.Students)
+                        .Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
+
+            var totalClass = context.SessionClass
+                .Include(x => x.Session)
+                .Count(x => x.Deleted == false && x.Session.IsActive == true);
+
+            var totalSubject = context.Subject
+                .Count(x => x.Deleted == false && x.IsActive == true);
+
+            var totalStaff = context.Teacher
+                .Include(x => x.User)
+                .Count(x => x.Deleted == false && x.User.Active == true);
+
+            var totalUnusedPins = context.UploadedPin
+                .Count(x => x.Deleted == false && !x.UsedPin.Any());
+
+            var totalHomeAssessments = context.HomeAssessment
+                .Count(x => x.Deleted == false);
+
+            var totalClassAssessments = context.ClassAssessment
+               .Count();
+
+            return new GetDashboardCount
+            {
+                TotalAssessments = (totalHomeAssessments + totalClassAssessments),
+                TotalClass = totalClass,
+                TotaldStudent = enrolledStudents,
+                TotalStaff = totalStaff,
+                TotalSubjects = totalSubject,
+                TotalUnusedPins = totalUnusedPins
+            };
+        }
+
+        private GetDashboardCount GetTeacherDashboardCounts(Guid teacherId, List<string> permissions)
+        {
+            var totalClass = context.SessionClass
+                .Include(x => x.Session)
+                .Count(x => x.Deleted == false && x.Session.IsActive == true && x.FormTeacherId == teacherId);
+
+            var totalSubject = context.SessionClassSubject
+                .Count(x => x.Deleted == false && x.SubjectTeacherId == teacherId);
+
+            var totalPins = context.UploadedPin
+                .Count(x => x.Deleted == false);
+
+            var totalUnusedPins = context.UploadedPin
+             .Count(x => x.Deleted == false && !x.UsedPin.Any());
+
+            var totalHomeAssessments = context.HomeAssessment
+               .Count(x => x.Deleted == false && x.TeacherId == teacherId);
+
+            var totalClassAssessments = context.ClassAssessment
+               .Count(x => x.Scorer == teacherId);
+
+            return new GetDashboardCount
+            {
+                TotalAssessments = (totalHomeAssessments + totalClassAssessments),
+                TotalClass = totalClass,
+                TotaldStudent = 0,
+                TotalStaff = 0,
+                TotalSubjects = totalSubject,
+                TotalUnusedPins = totalUnusedPins
+            };
         }
     }
 }

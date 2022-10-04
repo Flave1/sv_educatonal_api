@@ -26,7 +26,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<ClassLookup>();
             try
             {
-                if (context.ClassLookUp.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(className) == UtilTools.ReplaceWhitespace(r.Name)))
+                if (context.ClassLookUp.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(className) == UtilTools.ReplaceWhitespace(r.Name) && r.Deleted == false))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
                     return res;

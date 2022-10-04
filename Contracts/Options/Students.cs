@@ -25,6 +25,16 @@ namespace Contracts.Options
         public string OldPassword { get; set; }
         public string NewPassword { get; set; }
     }
+
+    public class UserInformationFromMobileRequest
+    {
+        [Required]
+        public string ClientId { get; set; }
+        [Required]
+        public string UsernameOrRegNumber { get; set; }
+  
+        public int UserType { get; set; }
+    }
     public class StudentContactCommand
     {
         /// <summary>
@@ -164,4 +174,45 @@ namespace Contracts.Options
         public string[] BestSubjectIds { get; set; }
         public IFormFile File { get; set; }
     }
+
+    public class SmpStudentValidationResponse
+    {
+        public string Status { get; set; }
+        public string FullName { get; set; }
+        public string UserName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string SchoolLogo { get; set; }
+    }
+
+    public class UploadClass
+    {
+        public IFormFile File { get; set; }
+    }
+    public class UploadStudentExcel
+    {
+        /// <summary>
+        /// CORE DETAILS
+        /// </summary>
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string Phone { get; set; }
+        public string DOB { get; set; }
+        public string Email { get; set; }
+        public string HomePhone { get; set; }
+        public string EmergencyPhone { get; set; }
+        public string ParentOrGuardianName { get; set; }
+        public string ParentOrGuardianRelationship { get; set; }
+        public string ParentOrGuardianPhone { get; set; }
+        public string ParentOrGuardianEmail { get; set; }
+        public string HomeAddress { get; set; }
+        public string CityId { get; set; }
+        public string StateId { get; set; }
+        public string CountryId { get; set; }
+        public string ZipCode { get; set; } 
+        public string SessionClass { get; set; }
+        public int ExcelLineNumber { get; set; }
+    }
+
 }

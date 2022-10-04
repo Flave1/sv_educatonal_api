@@ -16,11 +16,12 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<CreateClassTimeTableTime>> CreateClassTimeTableTimeAsync(CreateClassTimeTableTime request);
         Task<APIResponse<UpdateClassTimeTableTimeActivity>> UpdateClassTimeTableTimeActivityAsync(UpdateClassTimeTableTimeActivity request);
         Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassesAsync();
-        Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId);
+        Task<APIResponse<GetClassTimeActivity>> GetClassTimeTableAsync(Guid classId);
         Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day);
         Task<APIResponse<SingleDelete>> DeleteClassTimeTableDayAsync(SingleDelete request);
         Task<APIResponse<SingleDelete>> DeleteClassTimeTableTimeAsync(SingleDelete request);
         Task<APIResponse<UpdateClassTimeTableTime>> UpdateClassTimeTableTimeAsync(UpdateClassTimeTableTime request);
         Task<APIResponse<UpdateClassTimeTableDay>> UpdateClassTimeTableDayAsync(UpdateClassTimeTableDay request);
+        Task<APIResponse<GetClassTimeActivity>> GetClassTimeTableByStudentAsync();
     }
 }

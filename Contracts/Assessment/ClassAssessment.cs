@@ -20,6 +20,7 @@ namespace SMP.Contracts.Assessment
         public string SessionClassName { get; set; }
         public decimal AssessmentScore { get; set; }
         public string Title { get; set; }
+        public bool IsSaved { get; set; }
         public ClassAssessmentStudents[] Students;
         public GetClassAssessmentRequest() { }
         public GetClassAssessmentRequest(ClassAssessment db)
@@ -49,16 +50,18 @@ namespace SMP.Contracts.Assessment
         public string StudentName { get; set; }
         public string StudentContactId { get; set; }
         public decimal Score { get; set; }
+        public bool IsSaved { get; set; }
         public Guid[] GroupIds { get; set; }
         public ClassAssessmentStudents() { }
     }
 
-    public class UpdatetudentAssessmentScore
+    public class UpdateStudentAssessmentScore
     {
         public string SessionClassSubjectId { get; set; }
         public string ClassAssessmentId { get; set; }
         public string StudentContactId { get; set; }
         public decimal Score { get; set; }
+        public bool IsSaved { get; set; }
     }
 
     public class UpdatClassAssessmentScore

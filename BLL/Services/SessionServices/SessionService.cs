@@ -3,8 +3,8 @@ using DAL;
 using DAL.SessionEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
-using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
@@ -16,41 +16,51 @@ namespace BLL.SessionServices
     public class SessionService : ISessionService
     {
         private readonly DataContext context;
+        private readonly IResultsService resultsService;
 
-        public SessionService(DataContext context)
+        public SessionService(DataContext context, IResultsService resultsService)
         {
             this.context = context;
+            this.resultsService = resultsService;
         }
-        async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId, bool switchValue)
+        async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
         {
             var res = new APIResponse<Session>();
-            var savedSession = context.Session.FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
+            var savedSession = context.Session.Include(s => s.Terms).FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
+
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
             if (savedSession == null)
             {
                 res.Message.FriendlyMessage = $"Session Not Found";
                 return res;
             }
 
-            if(switchValue && context.Session.Any(e => e.IsActive && e.SessionId != Guid.Parse(sessionId)))
-            {
-                res.Message.FriendlyMessage = $"Running Session Detected";
-                return res;
-            }
-
             await SetOtherSessionsInactiveAsync(Guid.Parse(sessionId));
 
-            savedSession.IsActive = switchValue; 
+            savedSession.IsActive = true;
+            savedSession.Terms.FirstOrDefault().IsActive = true;
             await context.SaveChangesAsync();
-            var message = !switchValue ? "Successfuly switched off session" : "Successfuly switched on session";
+            var message = $"Successfuly switched to {savedSession.StartDate} / {savedSession.EndDate} session";
             res.Result = savedSession;
             res.Message.FriendlyMessage = message;
+            res.IsSuccessful = true;
             return res;
         }
         async Task<APIResponse<CreateUpdateSession>> ISessionService.CreateSessionAsync(CreateUpdateSession session)
         {
             var res = new APIResponse<CreateUpdateSession>();
 
-            if(context.Session.Any(s => s.StartDate.Trim().ToLower() == session.StartDate.ToLower() && s.EndDate.Trim().ToLower() == session.EndDate.ToLower()))
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
+
+            if (context.Session.Any(s => s.StartDate.Trim().ToLower() == session.StartDate.ToLower() && s.EndDate.Trim().ToLower() == session.EndDate.ToLower()))
             {
                 res.Message.FriendlyMessage = $"Session {session.StartDate} - {session.EndDate} is already created";
                 return res;
@@ -132,13 +142,18 @@ namespace BLL.SessionServices
         async Task<APIResponse<Session>> ISessionService.DeleteSessionAsync(Guid sessionId)
         {
             var res = new APIResponse<Session>();
-            var savedSession = context.Session.FirstOrDefault(d => d.SessionId == sessionId);
+            var savedSession = context.Session.Include(x => x.SessionClass).FirstOrDefault(d => d.SessionId == sessionId);
             
             if (savedSession != null)
             {
                 if (savedSession.IsActive)
                 {
                     res.Message.FriendlyMessage = $"Active session can not be deleted";
+                    return res;
+                }
+                if (savedSession.SessionClass.Any(x => x.Deleted == false))
+                {
+                    res.Message.FriendlyMessage = $"Session with classes cannot be deleted";
                     return res;
                 }
 
@@ -206,9 +221,9 @@ namespace BLL.SessionServices
                         SessionClass = d.Class.Name,
                         SessionClassId = d.SessionClassId
                     }).ToArray(),
-                    NoOfStudents = e.SessionClass.Select(s => s.Students).Count(),
+                    NoOfStudents = e.SessionClass.SelectMany(s => s.Students).Count(),
                     NoOfClasses = e.SessionClass.Count(),
-                    NoOfSubjects = e.SessionClass.Select(s => s.SessionClassSubjects).Count(),
+                    NoOfSubjects = e.SessionClass.SelectMany(s => s.SessionClassSubjects).Count(),
                 }
                 ).FirstOrDefaultAsync();
 
@@ -221,6 +236,11 @@ namespace BLL.SessionServices
         async Task<APIResponse<bool>> ISessionService.ActivateTermAsync(Guid termId)
         {
             var res = new APIResponse<bool>();
+            //if (!await resultsService.AllResultPublishedAsync())
+            //{
+            //    res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+            //    return res;
+            //}
             var term = await context.SessionTerm.FirstOrDefaultAsync(st => st.SessionTermId == termId);
             if (term == null)
             {

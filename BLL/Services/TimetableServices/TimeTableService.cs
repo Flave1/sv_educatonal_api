@@ -2,6 +2,7 @@
 using Contracts.Class;
 using Contracts.Common;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.Contracts.Timetable;
@@ -16,9 +17,11 @@ namespace SMP.BLL.Services.TimetableServices
     public class TimeTableService : ITimeTableService
     {
         private readonly DataContext context;
-        public TimeTableService(DataContext context)
+        private readonly IHttpContextAccessor accessor;
+        public TimeTableService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            this.accessor = accessor;
         }
 
         async Task<APIResponse<List<GetApplicationLookups>>> ITimeTableService.GetAllActiveClassesAsync()
@@ -235,16 +238,16 @@ namespace SMP.BLL.Services.TimetableServices
             }
         }
 
-        public async Task<APIResponse<List<GetClassTimeActivity>>> GetClassTimeTableAsync(Guid classId)
+        public async Task<APIResponse<GetClassTimeActivity>> GetClassTimeTableAsync(Guid classId)
         {
-            var res = new APIResponse<List<GetClassTimeActivity>>();
+            var res = new APIResponse<GetClassTimeActivity>();
 
             var result = await context.ClassTimeTable
                 .Include(s => s.Class)
                 .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                  .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
                 .Where(d => d.Deleted == false && d.ClassId == classId)
-                .Select(f => new GetClassTimeActivity(f)).ToListAsync();
+                .Select(f => new GetClassTimeActivity(f)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
@@ -321,6 +324,26 @@ namespace SMP.BLL.Services.TimetableServices
             return res;
         }
 
+        async Task<APIResponse<GetClassTimeActivity>> ITimeTableService.GetClassTimeTableByStudentAsync()
+        {
+            var res = new APIResponse<GetClassTimeActivity>();
+            var studentContactId = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId")?.Value;
+            if (!string.IsNullOrEmpty(studentContactId))
+            {
+                var studentAct = context.StudentContact.Include(s => s.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
+                var result = await context.ClassTimeTable
+                  .Include(s => s.Class)
+                  .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
+                   .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
+                  .Where(d => d.Deleted == false && d.ClassId == studentAct.SessionClass.ClassId)
+                  .Select(f => new GetClassTimeActivity(f)).FirstOrDefaultAsync();
+                res.Result = result;
+            }
+           
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
 
     }
 }

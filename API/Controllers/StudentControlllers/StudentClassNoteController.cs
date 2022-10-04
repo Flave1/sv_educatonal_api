@@ -25,5 +25,23 @@ namespace SMP.API.Controllers
             var response = await service.filterClassNotesByStudentsAsync(subjectId);
             return Ok(response);
         }
+
+        [HttpPost("add-comment/to-classnote")]
+        public async Task<IActionResult> AddCommentToClassNoteAsync([FromBody] AddCommentToClassNote request)
+        {
+            var response = await service.AddCommentToClassNoteAsync(Guid.Parse(request.ClassNoteId), request.Comment);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("reply/classnote-comment")]
+        public async Task<IActionResult> ReplyClassNoteCommentAsync([FromBody] ReplyCommentToClassNote request)
+        {
+            var response = await service.ReplyClassNoteCommentAsync(request.Comment, Guid.Parse(request.CommentId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

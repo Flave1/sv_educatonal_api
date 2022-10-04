@@ -11,7 +11,7 @@ namespace SMP.Contracts.PromotionModels
 {
     public class PreviousSessionClasses
     {
-        public string SessionClassId { get; set; }
+        public Guid SessionClassId { get; set; }
         public string SessionClassName { get; set; }
         public int TotalStudentsInClass { get; set; }
         public int TotalStudentsPassed { get; set; }
@@ -21,12 +21,13 @@ namespace SMP.Contracts.PromotionModels
         public int FailedStudents { get; set; } = 0;
         public string PassedStudentIds { get; set; }
         public string FailedStudentIds { get; set; }
+        public int StudentsToBePromoted { get; set; }
         public PreviousSessionClasses(SessionClass cl, Guid termId)
         {
-            SessionClassId = cl.SessionClassId.ToString();
+            SessionClassId = cl.SessionClassId;
             SessionClassName = cl.Class.Name;
             TotalStudentsInClass = cl.Students.Count();
-            IsPromoted = cl?.PromotedSessionClass?.IsPromoted ?? false;
+            IsPromoted = cl?.SessionClassArchive.Any(x => x.IsPromoted) ?? false;
             var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
             if (studentRecords.Any())
             {
@@ -66,8 +67,9 @@ namespace SMP.Contracts.PromotionModels
             StudentContactId = student.StudentContactId.ToString();
             StudentName = student.User.FirstName +" "+ student.User.LastName;
             ClassName = student.SessionClass.Class.Name;
-            SessionClassId = student.SessionClass.SessionClassId.ToString();
+            SessionClassId = student.SessionClassId.ToString();
             Status = status;
         }
     }
+
 }

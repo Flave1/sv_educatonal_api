@@ -1,5 +1,4 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Annoucements;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 namespace SMP.API.Controllers
 {
     [PortalAuthorize]
-    [AllowAnonymous]
     [Route("classassessment/api/v1")]
     public class ClassAssessmentController : Controller
     {
@@ -22,9 +20,9 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-all/class-assessments")]
-        public async Task<IActionResult> GetStudentClassAssessmentsAsync()
+        public async Task<IActionResult> GetStudentClassAssessmentsAsync(string sessionClassId, string sessionClassSubjectId)
         {
-            var response = await service.GetAssessmentByTeacherAsync();
+            var response = await service.GetAssessmentByTeacherAsync(sessionClassId, sessionClassSubjectId);
             return Ok(response);
         }
 
@@ -44,7 +42,7 @@ namespace SMP.API.Controllers
         }
 
         [HttpPost("update-student/class-assessment")]
-        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdatetudentAssessmentScore request)
+        public async Task<IActionResult> UpdateStudentAssessmentScoreAsync([FromBody] UpdateStudentAssessmentScore request)
         {
             var response = await service.UpdateStudentAssessmentScoreAsync(request);
             if (response.IsSuccessful)
@@ -60,5 +58,23 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpGet("get-single/class-assessments")]
+        public async Task<IActionResult> GetSingleAssessmentAsync(string classAssessmentId)
+        {
+            var response = await service.GetSingleAssessmentAsync(Guid.Parse(classAssessmentId));
+            return Ok(response);
+        }
+
+
+        [HttpPost("delete/class-assessment")]
+        public async Task<IActionResult> DdeleteClassAssessmentsAsync([FromBody] SingleDelete request)
+        {
+            var response = await service.DeleteClassAssessmentAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
     }
 }

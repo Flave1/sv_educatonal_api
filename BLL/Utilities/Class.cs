@@ -36,6 +36,26 @@ namespace BLL.Utilities
                 throw new ArgumentException("Unable to Generate Registration Number");
             }
         }
+        public static IDictionary<string, string> GenerateForStudents(DataContext context)
+        {
+            try
+            {
+                var dictionary = new Dictionary<string, string>();
+                var lastRegNumber = context.StudentContact.Max(d => d.RegistrationNumber) ?? "1";
+                var newRegNo = (lastRegNumber == "1" ? 1 : long.Parse(lastRegNumber) + 1).ToString();
+
+                var regNoFormat = config.GetSection("RegNumber:Student").Value;
+                newRegNo = number(newRegNo);
+
+                var regNo = regNoFormat.Replace("%VALUE%", newRegNo);
+                dictionary.Add(newRegNo, regNo);
+                return dictionary;
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException("Unable to Generate Registration Number");
+            }
+        }
 
         private static string number(string regNo)
         {

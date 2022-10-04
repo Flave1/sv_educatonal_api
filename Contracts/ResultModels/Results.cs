@@ -16,10 +16,12 @@ namespace SMP.Contracts.ResultModels
     {
         public string SessionClass { get; set; }
         public string SessionClassId { get; set; }
+        public string ClassId { get; set; }
         public GetClasses(SessionClass db)
         {
             SessionClass = db.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
+            ClassId = db.ClassId.ToString();
         }
     }
 
@@ -46,6 +48,8 @@ namespace SMP.Contracts.ResultModels
         public string SubjectId { get; set; }
         [Required]
         public string ClassScoreEntryId { get; set; }
+        [Required]
+        public string TermId { get; set; }
     }
 
     public class UpdateOtherSessionScore
@@ -75,6 +79,7 @@ namespace SMP.Contracts.ResultModels
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, SessionTerm term)
         {
+            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
@@ -82,7 +87,7 @@ namespace SMP.Contracts.ResultModels
             ClassScoreEntryId = db.ClassScoreEntryId.ToString();
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
             if (db.SessionClass.Students != null && db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
             {
                 
@@ -98,6 +103,36 @@ namespace SMP.Contracts.ResultModels
                     scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                     scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                     scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore??0 + scoreEntrySheet1?.AssessmentScore??0;
+                    ClassScoreEntries.Add(scoreEntrySheet);
+                }
+            }
+        }
+        public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid term)
+        {
+            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
+            SessionClassName = db.SessionClass.Class.Name;
+            SessionClassId = db.SessionClassId.ToString();
+            SubjectId = db.SubjectId.ToString();
+            SubjectName = db.Subject.Name;
+            ClassScoreEntryId = db.ClassScoreEntryId.ToString();
+            AssessmentScore = db.SessionClass.AssessmentScore;
+            ExamsScore = db.SessionClass.ExamScore;
+            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
+            if (db.ScoreEntries.Any())
+            {
+
+                foreach (var entry in db.ScoreEntries)
+                {
+                    var scoreEntrySheet = new ScoreEntrySheet();
+                    var scoreEntrySheet1 = db.ScoreEntries.FirstOrDefault(f => f.StudentContactId == entry.StudentContactId && f.SessionTermId == term);
+                    scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
+                    scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
+                    scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", entry.StudentContact.RegistrationNumber);
+                    scoreEntrySheet.StudentContactId = entry.StudentContactId.ToString();
+                    scoreEntrySheet.StudentName = entry.StudentContact.User.FirstName + " " + entry.StudentContact.User.LastName + " " + entry.StudentContact.User.MiddleName;
+                    scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
+                    scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
+                    scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
                     ClassScoreEntries.Add(scoreEntrySheet);
                 }
             }
