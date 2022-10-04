@@ -20,9 +20,9 @@ namespace SMP.API.Controllers
         }
          
         [HttpGet("get/dashboard-count")]
-        public async Task<IActionResult> GetDashboardCountAsync()
+        public IActionResult GetDashboardCountAsync()
         {
-            var response = await service.GetDashboardCountAsync();
+            var response = service.GetDashboardCountAsync();
             return Ok(response);
         }
     }

@@ -448,7 +448,7 @@ namespace SMP.Contracts.ResultModels
 
     public class PublishList
     {
-        public string SessionClass;
+        public string SessionClass { get; set; }
         public string Status { get; set; }
     }
 }

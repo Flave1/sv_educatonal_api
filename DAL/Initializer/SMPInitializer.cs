@@ -216,6 +216,18 @@ namespace SMP.DAL.Initializer
                         Permission = "delete-class-register",
                         DisplayName = "Can Delete Class Register",
                         IsActive = true, Deleted = false},
+                      new AppActivity {
+                        Id = Guid.Parse("1b7f2fa7-cb3f-4400-aafa-b43f68ddd854"),
+                        ActivityParentId = Guid.Parse("7f70b61e-4dac-465c-8ad5-909c8a822c24"),
+                        Permission = "create-time-table",
+                        DisplayName = "Can Create Time Table",
+                        IsActive = true, Deleted = false},
+                       new AppActivity {
+                        Id = Guid.Parse("13f6763e-e5ab-45a0-8da1-244dbe63d298"),
+                        ActivityParentId = Guid.Parse("7f70b61e-4dac-465c-8ad5-909c8a822c24"),
+                        Permission = "review-lesson-note",
+                        DisplayName = "Can Review Lesson Notes",
+                        IsActive = true, Deleted = false},
 
                      //staff-management
                     new AppActivity {

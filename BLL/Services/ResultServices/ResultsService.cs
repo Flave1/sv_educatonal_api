@@ -273,29 +273,29 @@ namespace SMP.BLL.Services.ResultServices
                         .Where(a => a.ClassScoreEntryId == Guid.Parse(request.ClassScoreEntryId)).Select(s => s.ScoreEntries).FirstOrDefaultAsync();
 
 
-                     var entry = classEntry.FirstOrDefault(a => a.SessionTermId == selectedTerm.SessionTermId && a.StudentContactId == Guid.Parse(request.StudentContactId));
+                     var studentEntry = classEntry.FirstOrDefault(a => a.SessionTermId == selectedTerm.SessionTermId && a.StudentContactId == Guid.Parse(request.StudentContactId));
 
-                    if (entry != null)
+                    if (studentEntry != null)
                     {
-                        entry.ExamScore = request.Score;
-                        entry.IsSaved = entry.ExamScore > 0 || entry.AssessmentScore > 0;
-                        entry.IsOffered = entry.ExamScore > 0 || entry.AssessmentScore > 0;
-                        context.Entry(entry).CurrentValues.SetValues(entry);
+                        studentEntry.ExamScore = request.Score;
+                        studentEntry.IsSaved = studentEntry.ExamScore > 0 || studentEntry.AssessmentScore > 0;
+                        studentEntry.IsOffered = studentEntry.ExamScore > 0 || studentEntry.AssessmentScore > 0;
+                        context.Entry(studentEntry).CurrentValues.SetValues(studentEntry);
                         await context.SaveChangesAsync();
                     }
                     else
                     {
-                        entry = new ScoreEntry();
-                        entry.ExamScore = request.Score;
-                        entry.IsSaved = entry.ExamScore > 0 || entry.AssessmentScore > 0;
-                        entry.IsOffered = entry.ExamScore > 0 || entry.AssessmentScore > 0;
-                        entry.SessionTermId = selectedTerm.SessionTermId;
-                        entry.StudentContactId = Guid.Parse(request.StudentContactId);
-                        entry.ClassScoreEntryId = Guid.Parse(request.ClassScoreEntryId);
-                        await context.AddAsync(entry);
+                        studentEntry = new ScoreEntry();
+                        studentEntry.ExamScore = request.Score;
+                        studentEntry.IsSaved = studentEntry.ExamScore > 0 || studentEntry.AssessmentScore > 0;
+                        studentEntry.IsOffered = studentEntry.ExamScore > 0 || studentEntry.AssessmentScore > 0;
+                        studentEntry.SessionTermId = selectedTerm.SessionTermId;
+                        studentEntry.StudentContactId = Guid.Parse(request.StudentContactId);
+                        studentEntry.ClassScoreEntryId = Guid.Parse(request.ClassScoreEntryId);
+                        await context.AddAsync(studentEntry);
                         await context.SaveChangesAsync();
                     }
-                    res.Result = entry;
+                    res.Result = studentEntry;
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = "Successful";
                 }
@@ -1054,7 +1054,12 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<List<PublishList>>();
             res.Result = new List<PublishList>();
             var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
-            var classes = await context.SessionClass.Include(x => x.Class).Include(x => x.Session).Where(x => x.Session.IsActive).Select(c => new { id = c.SessionClassId, name = c.Class.Name }).ToListAsync();
+            
+            var classes = await context.SessionClass
+                .Include(x => x.Class)
+                .Include(x => x.Session)
+                .Where(x => x.Session.IsActive && x.Class.IsActive && x.Deleted == false).Select(c => new { id = c.SessionClassId, name = c.Class.Name }).ToListAsync();
+
             foreach(var clas in classes)
             {
                 var pubItem = new PublishList();
@@ -1067,6 +1072,6 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-
+       
     }
 }

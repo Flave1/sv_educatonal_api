@@ -249,7 +249,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
             var selectedClass = context.SessionClass.FirstOrDefault(s => s.SessionClassId == sessionClasId);
             var homeAssessment = context.HomeAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId);
-            var classAssessment = context.ClassAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId);
+            var classAssessment = context.ClassAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId);
             var homeAScore = homeAssessment.Sum(d => d.AssessmentScore);
             var classAScore = classAssessment.Sum(d => d.AssessmentScore);
 
@@ -351,20 +351,20 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 if (!string.IsNullOrEmpty(request.HomeAssessmentFeedBackId))
                 {
-                    reg = context.HomeAssessmentFeedBack.FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
+                    reg = context.HomeAssessmentFeedBack.Include(x => x.HomeAssessment).FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
                     if(reg is null)
                     {
                         res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                         return res;
                     }
 
-                    if(reg.Status == (int)HomeAssessmentStatus.Submitted)
+                    if (reg.Included)
                     {
-                        res.Message.FriendlyMessage = "Assignment has already been submited";
+                        res.Message.FriendlyMessage = "Assignment has already been marked";
                         return res;
                     }
 
-                    if (reg.Status == (int)HomeAssessmentStatus.Closed)
+                    if (reg.HomeAssessment.Status == (int)HomeAssessmentStatus.Closed)
                     {
                         res.Message.FriendlyMessage = "Assignment has already been closed";
                         return res;
@@ -555,7 +555,7 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<bool>> IHomeAssessmentService.IncludeClassAssessmentToScoreEntry(string homeAssessmentId)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
             var assessment = await context.HomeAssessment
                 .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
                 .Include(x => x.SessionClassSubject)
@@ -594,8 +594,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 if (feedBack.Included)
                 {
-                    res.Message.FriendlyMessage = $"{std.Name}'s Feedback has already be included to score entry";
-                    return res;
+                    //res.Message.FriendlyMessage = $"{std.Name}'s Feedback has already be included to score entry";
+                    //return res;
+                    continue;
                 }
                 var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == std.StudentId && s.ClassScoreEntry.SubjectId == std.SubjectId);
                 if(scoreEntry is null)
