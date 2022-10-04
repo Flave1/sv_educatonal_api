@@ -1,10 +1,13 @@
 ﻿using BLL;
+using BLL.Filter;
 using BLL.StudentServices;
 using BLL.Utilities;
+using BLL.Wrappers;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Enrollment;
 using System;
 using System.Collections.Generic;
@@ -17,15 +20,17 @@ namespace SMP.BLL.Services.EnrollmentServices
     {
         private readonly DataContext context;
         private readonly IStudentService studentService;
-        public EnrollmentService(DataContext context, IStudentService studentService)
+        private readonly IPaginationService paginationService;
+        public EnrollmentService(DataContext context, IStudentService studentService, IPaginationService paginationService)
         {
             this.context = context;
             this.studentService = studentService;
+            this.paginationService = paginationService;
         }
 
-        async Task<APIResponse<List<EnrolledStudents>>> IEnrollmentService.GetAllEnrrolledStudentsAsync(Guid sessionClassId)
+        async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetEnrolledStudentsAsync(Guid sessionClassId, PaginationFilter filter)
         {
-            var res = new APIResponse<List<EnrolledStudents>>();
+            var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var status = (int)EnrollmentStatus.Enrolled;
 
@@ -36,12 +41,12 @@ namespace SMP.BLL.Services.EnrollmentServices
                 status = (int)EnrollmentStatus.UnEnrolled;
 
 
-            var result = await (from a in context.StudentContact
+            var query = (from a in context.StudentContact
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
                           join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
                           where b.Status == status && a.SessionClassId == sessionClassId
-                                select new EnrolledStudents
+                          select new EnrolledStudents
                           {
                               Status = "enrrolled",
                               StudentContactId = a.StudentContactId.ToString(),
@@ -49,20 +54,23 @@ namespace SMP.BLL.Services.EnrollmentServices
                               StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
                               Class = a.SessionClass.Class.Name,
                               SessionClassId = sessionClassId.ToString()
-                          }).ToListAsync();
+                          });
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }
 
-        async Task<APIResponse<List<EnrolledStudents>>> IEnrollmentService.GetAllUnenrrolledStudentsAsync()
+        async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetUnenrrolledStudentsAsync(PaginationFilter filter)
         {
-            var res = new APIResponse<List<EnrolledStudents>>();
+            var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var result = await (from a in context.StudentContact.Include(s => s.User)
+            var query =  (from a in context.StudentContact.Include(s => s.User)
                                 join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
                                 where b.Status == (int)EnrollmentStatus.UnEnrolled
                                 select new EnrolledStudents
@@ -72,10 +80,13 @@ namespace SMP.BLL.Services.EnrollmentServices
                                     StudentName = a.User.FirstName + " " + a.User.LastName,
                                     StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
                                     Class = a.SessionClass.Class.Name
-                                }).ToListAsync();
+                                });
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

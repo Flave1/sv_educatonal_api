@@ -23,6 +23,7 @@ using SMP.BLL.Services.WebRequestServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
 using BLL.PaginationService.Services;
+using SMP.BLL.Services.FilterService;
 
 namespace API.Installers
 {
@@ -74,6 +75,7 @@ namespace API.Installers
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<IWebRequestService, WebRequestService>();
+            services.AddSingleton<IPaginationService, PaginationService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 

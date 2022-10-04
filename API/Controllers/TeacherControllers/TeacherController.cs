@@ -1,5 +1,6 @@
 ﻿using BLL.AuthenticationServices;
 using BLL.Constants;
+using BLL.Filter;
 using BLL.MiddleWares;
 using BLL.StudentServices;
 using Contracts.Authentication;
@@ -46,9 +47,9 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/teachers")]
-        public async Task<IActionResult> GetAllTeachersAsync()
+        public async Task<IActionResult> GetAllTeachersAsync(PaginationFilter filter)
         {
-            var response = await service.GetAllTeachersAsync();
+            var response = await service.GetAllTeachersAsync(filter);
             return Ok(response);
         }
 

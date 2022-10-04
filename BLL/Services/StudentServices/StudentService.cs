@@ -1,25 +1,21 @@
 ﻿using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
-using BLL.Helpers;
-using BLL.PaginationService.Services;
 using BLL.Utilities;
+using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Options;
 using DAL;
 using DAL.Authentication;
-using DAL.ClassEntities;
 using DAL.StudentInformation;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
-using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.FileUploadService;
+using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.EnrollmentEntities;
@@ -40,21 +36,19 @@ namespace BLL.StudentServices
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
-        private readonly IUriService uriService;
         public readonly IHttpContextAccessor accessor;
         private readonly IPinManagementService pinService;
+        private readonly IPaginationService paginationService;
 
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IUriService uriService)
-        public StudentService(DataContext context, IUserService userService, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService)
+        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService)
         {
             this.context = context;
-            this.userService = userService;
             this.userManager = userManager;
             this.resultsService = resultsService;
             this.upload = upload;
-            this.uriService = uriService;
             this.accessor = accessor;
             this.pinService = pinService;
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -225,23 +219,24 @@ namespace BLL.StudentServices
 
         }
 
-        async Task<APIResponse<List<GetStudentContacts>>> IStudentService.GetAllStudensAsync(PaginationFilter filter)
+        async Task<APIResponse<PagedResponse<List<GetStudentContacts>>>> IStudentService.GetAllStudensAsync(PaginationFilter filter)
         {
-            var res = new APIResponse<List<GetStudentContacts>>();
+            var res = new APIResponse<PagedResponse<List<GetStudentContacts>>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            //PaginationFilter filter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-             
-            var result = await context.StudentContact
+
+           
+            var query = context.StudentContact
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.User).Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student)
-                .Select(f => new GetStudentContacts(f, regNoFormat)).ToListAsync();
-            var totalRecords = await context.StudentContact.CountAsync(); 
+                .Include(q => q.User)
+                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student);
+
+             var totaltRecord = query.Count();
+             var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetStudentContacts(f, regNoFormat)).ToListAsync();
+             res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

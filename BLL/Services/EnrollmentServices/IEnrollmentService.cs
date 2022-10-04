@@ -1,5 +1,6 @@
 ﻿using BLL;
-using DAL.StudentInformation;
+using BLL.Filter;
+using BLL.Wrappers;
 using SMP.Contracts.Enrollment;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,8 @@ namespace SMP.BLL.Services.EnrollmentServices
     {
         Task<APIResponse<Enroll>> EnrollStudentsAsyncAsync(Enroll req);
         Task<APIResponse<UnEnroll>> UnenrollStudentsAsyncAsync(UnEnroll req);
-        Task<APIResponse<List<EnrolledStudents>>> GetAllEnrrolledStudentsAsync(Guid sessionClassId);
-        Task<APIResponse<List<EnrolledStudents>>> GetAllUnenrrolledStudentsAsync();
+        Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> GetEnrolledStudentsAsync(Guid sessionClassId, PaginationFilter filter);
+        Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> GetUnenrrolledStudentsAsync(PaginationFilter filter);
         void UnenrollStudent(Guid studentId);
     }
 }

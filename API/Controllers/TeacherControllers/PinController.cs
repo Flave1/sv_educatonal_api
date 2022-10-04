@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
 using SMP.Contracts.PinManagement;
@@ -29,15 +30,16 @@ namespace SMP.API.Controllers
             return BadRequest(response);
         }
         [HttpGet("get/unused-pins")]
-        public async Task<IActionResult> GetAllUnusedPinsAsync()
+        public async Task<IActionResult> GetAllUnusedPinsAsync(PaginationFilter filter)
         {
-            var response = await service.GetAllUnusedPinsAsync();
+            var response = await service.GetAllUnusedPinsAsync(filter);
             return Ok(response);
         }
         [HttpGet("get/used-pins")]
-        public async Task<IActionResult> GetAllUsedPinsAsync(string sessionId, string termId)
+        public async Task<IActionResult> GetAllUsedPinsAsync(string sessionId, string termId, int pageSize)
         {
-            var response = await service.GetAllUsedPinsAsync(sessionId, termId);
+            var filter = new PaginationFilter { PageSize = pageSize };
+            var response = await service.GetAllUsedPinsAsync(sessionId, termId, filter);
             return Ok(response); 
         }
         [HttpGet("get-unused/pin-details")]

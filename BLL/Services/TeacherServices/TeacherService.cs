@@ -2,6 +2,8 @@
 using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.EmailServices;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Email;
@@ -13,12 +15,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
-using SMP.Contracts.Common;
+using SMP.BLL.Services.FilterService;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.TeacherServices
@@ -31,8 +31,8 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IWebHostEnvironment environment;
         private readonly IFileUploadService upload;
         private readonly IUserService userService;
-
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload, IUserService userService)
+        private readonly IPaginationService paginationService;
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload, IUserService userService, IPaginationService paginationService)
         {
             this.userManager = userManager;
             this.context = context;
@@ -40,6 +40,7 @@ namespace SMP.BLL.Services.TeacherServices
             this.environment = environment;
             this.upload = upload;
             this.userService = userService;
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -162,13 +163,17 @@ namespace SMP.BLL.Services.TeacherServices
             return res;
         }
 
-        async Task<APIResponse<List<ApplicationUser>>> ITeacherService.GetAllTeachersAsync()
+        async Task<APIResponse<PagedResponse<List<ApplicationUser>>>> ITeacherService.GetAllTeachersAsync(PaginationFilter filter)
         {
-            var res = new APIResponse<List<ApplicationUser>>();
-            var result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).Select(a => new ApplicationUser(a)).ToListAsync();
+            var res = new APIResponse<PagedResponse<List<ApplicationUser>>>();
+            var query = context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher);
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }

@@ -1,5 +1,7 @@
 ﻿using BLL;
+using BLL.Filter;
 using BLL.Utilities;
+using BLL.Wrappers;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Options;
@@ -30,7 +33,8 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly FwsConfigSettings fwsOptions;
         private readonly RegNumber regNumberOptions;
         private readonly IHttpContextAccessor accessor;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor)
+        private readonly IPaginationService paginationService;
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.resultService = resultService;
@@ -38,6 +42,7 @@ namespace SMP.BLL.Services.PinManagementService
             fwsOptions = options.Value;
             regNumberOptions = regNoOptions.Value;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
         async Task<APIResponse<PrintResult>> IPinManagementService.PrintResultAsync(PrintResultRequest request)
         {
@@ -313,28 +318,32 @@ namespace SMP.BLL.Services.PinManagementService
             }
         }
        
-        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUnusedPinsAsync()
+        async Task<APIResponse<PagedResponse<List<GetPins>>>> IPinManagementService.GetAllUnusedPinsAsync(PaginationFilter filter)
         {
-            var res = new APIResponse<List<GetPins>>();
-            var result = res.Result;
-            var allPins = context.UploadedPin.Where(d => d.Deleted == false);
+            var res = new APIResponse<PagedResponse<List<GetPins>>>();
+            var query = context.UploadedPin.Where(d => d.Deleted == false);
             var usedPinIds = context.UsedPin.Where(d => d.Deleted == false).Select(x => x.UploadedPinId);
 
-            res.Result = await allPins.OrderByDescending(x => x.CreatedOn).Where(d => !usedPinIds.Contains(d.UploadedPinId)).Select(f => new GetPins(f)).ToListAsync();
+            query = query.OrderByDescending(x => x.CreatedOn).Where(d => !usedPinIds.Contains(d.UploadedPinId));
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetPins(f)).ToListAsync();
+            res.Result =  paginationService.CreatePagedReponse(result, filter, totaltRecord);
             res.IsSuccessful = true;
             return res;
         }
 
-        async Task<APIResponse<List<GetPins>>> IPinManagementService.GetAllUsedPinsAsync(string sessionId, string termId)
+        async Task<APIResponse<PagedResponse<List<GetPins>>>> IPinManagementService.GetAllUsedPinsAsync(string sessionId, string termId, PaginationFilter filter)
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            var res = new APIResponse<List<GetPins>>();
+            var res = new APIResponse<PagedResponse<List<GetPins>>>();
             var query = context.UsedPin.Where(d => d.Deleted == false)
                 .Include(x => x.UploadedPin)
                 .Include(x => x.Student).ThenInclude(d => d.User)
                 .Include(x => x.Sessionterm)
                 .OrderByDescending(x => x.CreatedOn)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session).Where(x => x.Deleted == false);
+
 
             if (!string.IsNullOrEmpty(sessionId))
                 query = query.Where(x => x.SessionClass.SessionId == Guid.Parse(sessionId));
@@ -345,10 +354,15 @@ namespace SMP.BLL.Services.PinManagementService
                 query = query.Where(x => x.SessionTermId == Guid.Parse(termId));
             else
                 query = query.Where(x => x.Sessionterm.IsActive);
-            
-            res.Result = query.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).ToList();
+
+
+            var totaltRecord = query.Count();
+            var query2 = query.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).AsQueryable();
+            var result = await paginationService.GetPagedResult(query2, filter).ToListAsync();
+            res.Result =  paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.IsSuccessful = true;
+
             return  await Task.Run(() => res);
         }
 

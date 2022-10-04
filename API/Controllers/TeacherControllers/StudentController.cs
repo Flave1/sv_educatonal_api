@@ -71,12 +71,8 @@ namespace API.Controllers
         [HttpGet("getall/students")]
         public async Task<IActionResult> GetAllStudentsAsync(PaginationFilter filter)
         {
-            var route = Request.Path.Value;
-            PaginationFilter validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
             var response = await service.GetAllStudensAsync(filter);
-            var totalRecords = await context.StudentContact.CountAsync();
-            var pagedReponse = PaginationHelper.CreatePagedReponse<APIResponse<List<GetStudentContacts>>>(response, validFilter, totalRecords, uriService, route);
-            return Ok(pagedReponse);
+            return Ok(response);
         }
 
         [HttpGet("get-single/{StudentAccountId}")]
