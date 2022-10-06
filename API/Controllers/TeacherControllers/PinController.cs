@@ -36,9 +36,9 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
         [HttpGet("get/used-pins")]
-        public async Task<IActionResult> GetAllUsedPinsAsync(string sessionId, string termId, int pageSize)
+        public async Task<IActionResult> GetAllUsedPinsAsync(string sessionId, string termId, int pageNumber)
         {
-            var filter = new PaginationFilter { PageSize = pageSize };
+            var filter = new PaginationFilter { PageNumber = pageNumber };
             var response = await service.GetAllUsedPinsAsync(sessionId, termId, filter);
             return Ok(response); 
         }

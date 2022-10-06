@@ -1,4 +1,5 @@
-﻿using BLL.Helpers;
+﻿using BLL.Filter;
+using BLL.Helpers;
 using BLL.MiddleWares; 
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -48,9 +49,10 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/classnotes/by-teacher")]
-        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId)
+        public async Task<IActionResult> GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId, int pageNumber)
         {
-            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status, termId);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetClassNotesByTeachersAsync(classId, subjectId, status, termId, filter);
             return Ok(response);
         }
 

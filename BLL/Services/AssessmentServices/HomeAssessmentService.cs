@@ -1,12 +1,15 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
 using BLL.Utilities;
+using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
@@ -21,10 +24,12 @@ namespace SMP.BLL.Services.AssessmentServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor)
+        private readonly IPaginationService paginationService;
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -125,10 +130,10 @@ namespace SMP.BLL.Services.AssessmentServices
             }
         }
 
-        async Task<APIResponse<List<GetHomeAssessmentRequest>>> IHomeAssessmentService.GetSubjectHomeAssessmentAsync(string classId, string sessionClassSubjectId, string groupId)
+        async Task<APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>> IHomeAssessmentService.GetSubjectHomeAssessmentAsync(string classId, string sessionClassSubjectId, string groupId, PaginationFilter filter)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(x => x.Type == "teacherId").Value;
-            var res = new APIResponse<List<GetHomeAssessmentRequest>>();
+            var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
             var query =  context.HomeAssessment
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
@@ -136,7 +141,8 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted == false);
+                .OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted == false)
+                .Where(d => d.SessionTermId == activeTerm.SessionTermId);
 
             if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
             {
@@ -158,11 +164,12 @@ namespace SMP.BLL.Services.AssessmentServices
                 else
                     query = query.Where(d => d.SessionClassGroupId == Guid.Parse(groupId));
             }
-            var result = await query.Where(d => d.SessionTermId == activeTerm.SessionTermId)
-                .Select(f => new GetHomeAssessmentRequest(f, f.SessionClass.Students.Count())).ToListAsync();
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetHomeAssessmentRequest(f, f.SessionClass.Students.Count())).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }
@@ -300,10 +307,10 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
 
-        async Task<APIResponse<List<StudentHomeAssessmentRequest>>> IHomeAssessmentService.FilterHomeAssessmentsByStudentAsync(int status)
+        async Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> IHomeAssessmentService.FilterHomeAssessmentsByStudentAsync(int status, PaginationFilter filter)
         {
             var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
-            var res = new APIResponse<List<StudentHomeAssessmentRequest>>();
+            var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
             var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
@@ -335,7 +342,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 query = query.AsEnumerable().Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds) 
                 && d.SessionClassGroup.ListOfStudentContactIds.Split(',').Contains(studentContactid) || d.SessionClassGroup.GroupName == "all-students").AsQueryable();
             }
-            await Task.Run(() => res.Result = query.Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToList());
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;

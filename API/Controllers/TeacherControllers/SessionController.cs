@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using BLL.SessionServices;
 using Contracts.Common;
 using Contracts.Session;
@@ -24,7 +25,6 @@ namespace API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateSessionAsync([FromBody] CreateUpdateSession request)
         {
-            
             var response = await sessionService.CreateSessionAsync(request);
             if(response.IsSuccessful)
                 return Ok(response);
@@ -33,9 +33,10 @@ namespace API.Controllers
 
 
         [HttpGet("getall")]
-        public async Task<IActionResult> GetAllSessionsAsync()
+        public async Task<IActionResult> GetAllSessionsAsync(int pageNumber)
         {
-            var response = await sessionService.GetSessionsAsync();
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await sessionService.GetSessionsAsync(filter);
             return Ok(response);
         }
 

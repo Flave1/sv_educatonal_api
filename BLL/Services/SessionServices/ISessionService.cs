@@ -1,4 +1,6 @@
-﻿using Contracts.Session;
+﻿using BLL.Filter;
+using BLL.Wrappers;
+using Contracts.Session;
 using DAL.SessionEntities;
 using SMP.DAL.Models.SessionEntities;
 using System;
@@ -11,7 +13,7 @@ namespace BLL.SessionServices
     {
         Task<APIResponse<CreateUpdateSession>> CreateSessionAsync(CreateUpdateSession session);
         Task<APIResponse<Session>> DeleteSessionAsync(Guid sessionId);
-        Task<APIResponse<List<GetSession>>> GetSessionsAsync();
+        Task<APIResponse<PagedResponse<List<GetSession>>>> GetSessionsAsync(PaginationFilter filter);
         Task<APIResponse<Session>> SwitchSessionAsync(string sessionId);
         Task<APIResponse<bool>> ActivateTermAsync(Guid termId);
         Task<APIResponse<ActiveSession>> GetActiveSessionsAsync();

@@ -1,8 +1,11 @@
-﻿using Contracts.Session;
+﻿using BLL.Filter;
+using BLL.Wrappers;
+using Contracts.Session;
 using DAL;
 using DAL.SessionEntities;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
 using SMP.DAL.Models.SessionEntities;
@@ -17,11 +20,13 @@ namespace BLL.SessionServices
     {
         private readonly DataContext context;
         private readonly IResultsService resultsService;
+        private readonly IPaginationService paginationService;
 
-        public SessionService(DataContext context, IResultsService resultsService)
+        public SessionService(DataContext context, IResultsService resultsService, IPaginationService paginationService)
         {
             this.context = context;
             this.resultsService = resultsService;
+            this.paginationService = paginationService;
         }
         async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
         {
@@ -168,28 +173,34 @@ namespace BLL.SessionServices
             return res;
         }
 
-        async Task<APIResponse<List<GetSession>>> ISessionService.GetSessionsAsync()
+        async Task<APIResponse<PagedResponse<List<GetSession>>>> ISessionService.GetSessionsAsync(PaginationFilter filter)
         {
-            var res = new APIResponse<List<GetSession>>();
-            var result = await context.Session.Include(er => er.HeadTeacher).ThenInclude(er => er.User).OrderByDescending(d => d.StartDate).Where(d => d.Deleted == false)
-                .Select(e => new GetSession { 
-                    EndDate = e.EndDate, 
-                    SessionId = e.SessionId.ToString(), 
-                    StartDate = e.StartDate,
-                    IsActive = e.IsActive,
-                    HeadTeacherId = e.HeadTeacherId,
-                    HeadTeacherName = e.HeadTeacher.User.FirstName + " " + e.HeadTeacher.User.LastName,
-                    Terms = e.Terms.OrderBy(s => s.TermName).Select(t => new Terms
-                    {
-                        IsActive = t.IsActive,
-                        SessionTermId = t.SessionTermId,
-                        TermName = t.TermName,
-                    }).ToArray()
-                }
+            var res = new APIResponse<PagedResponse<List<GetSession>>>();
+            var query =  context.Session
+                .Include(er => er.HeadTeacher).ThenInclude(er => er.User)
+                .OrderByDescending(d => d.StartDate).Where(d => d.Deleted == false);
+
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(e => new GetSession
+            {
+                EndDate = e.EndDate,
+                SessionId = e.SessionId.ToString(),
+                StartDate = e.StartDate,
+                IsActive = e.IsActive,
+                HeadTeacherId = e.HeadTeacherId,
+                HeadTeacherName = e.HeadTeacher.User.FirstName + " " + e.HeadTeacher.User.LastName,
+                Terms = e.Terms.OrderBy(s => s.TermName).Select(t => new Terms
+                {
+                    IsActive = t.IsActive,
+                    SessionTermId = t.SessionTermId,
+                    TermName = t.TermName,
+                }).ToArray()
+            }
                 ).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.IsSuccessful = true;
-            res.Result = result;
             return res;
         }
 

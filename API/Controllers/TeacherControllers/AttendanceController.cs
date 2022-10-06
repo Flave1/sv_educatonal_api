@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using SMP.BLL.Services.AttendanceServices;
 using Contracts.AttendanceContract;
+using BLL.Filter;
 
 namespace API.Controllers
 {
@@ -61,9 +62,10 @@ namespace API.Controllers
         }
 
         [HttpGet("get/all/class-register/{sessionClassId}")]
-        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId, string termId)
+        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId, string termId, int pageNumber)
         {
-            var response = await service.GetAllAttendanceRegisterAsync(sessionClassId, termId);
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetAllAttendanceRegisterAsync(sessionClassId, termId, filter);
             return Ok(response);
         }
 

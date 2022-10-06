@@ -1,4 +1,6 @@
 ﻿using BLL;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using SMP.Contracts.Notes;
@@ -24,7 +26,7 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<string>> AddCommentToClassNoteAsync(Guid guid, string comment);
         Task<APIResponse<string>> ReplyStudentNoteCommentAsync(string comment, Guid commentId); 
         Task<APIResponse<List<StudentNoteComments>>> GetStudentNoteCommentsAsync(string studentNoteId);
-        Task<APIResponse<List<GetClassNotes>>> filterClassNotesByStudentsAsync(string subjectId);
+        Task<APIResponse<PagedResponse<List<GetClassNotes>>>> filterClassNotesByStudentsAsync(string subjectId, PaginationFilter filter);
         Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(string studentNoteId);
         Task<APIResponse<SendStudentNote>> SendStudentNoteForReviewAsync(SendStudentNote request);
         Task<APIResponse<string>> ReplyClassNoteCommentAsync(string comment, Guid commentId);

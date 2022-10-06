@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Contracts.Annoucements;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -40,9 +41,10 @@ namespace SMP.API.Controllers
 
 
         [HttpGet("get/home-assessments")]
-        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassId, string sessionClassSubjectId, string groupId)
+        public async Task<IActionResult> GetHomeAssessmentsAsync(string sessionClassId, string sessionClassSubjectId, string groupId, int pageNumber)
         {
-            var response = await service.GetSubjectHomeAssessmentAsync(sessionClassId, sessionClassSubjectId, groupId);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetSubjectHomeAssessmentAsync(sessionClassId, sessionClassSubjectId, groupId, filter);
             return Ok(response);
         }
 

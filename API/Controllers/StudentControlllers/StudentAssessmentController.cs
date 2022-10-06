@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.Contracts.Assessment;
@@ -26,9 +27,10 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("filter/home-assessments")]
-        public async Task<IActionResult> FilterHomeAssessmentsByStudentAsync(int status)
+        public async Task<IActionResult> FilterHomeAssessmentsByStudentAsync(int status, int pageNumber)
         {
-            var response = await service.FilterHomeAssessmentsByStudentAsync(status);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.FilterHomeAssessmentsByStudentAsync(status, filter);
             return Ok(response);
         }
 

@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares;
+﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,9 +21,10 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-all/class-assessments")]
-        public async Task<IActionResult> GetStudentClassAssessmentsAsync(string sessionClassId, string sessionClassSubjectId)
+        public async Task<IActionResult> GetStudentClassAssessmentsAsync(string sessionClassId, string sessionClassSubjectId, int pageNumber)
         {
-            var response = await service.GetAssessmentByTeacherAsync(sessionClassId, sessionClassSubjectId);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetAssessmentByTeacherAsync(sessionClassId, sessionClassSubjectId, filter);
             return Ok(response);
         }
 

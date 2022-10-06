@@ -1,11 +1,14 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Notes;
 using SMP.DAL.Models.NoteEntities;
 using System;
@@ -19,11 +22,13 @@ namespace SMP.BLL.Services.NoteServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly IPaginationService paginationService;
 
-        public ClassNoteService(DataContext context, IHttpContextAccessor accessor)
+        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<ClassNotes>> IClassNoteService.CreateClassNotesAsync(ClassNotes request)
@@ -119,12 +124,12 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-        async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId)
+        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IClassNoteService.GetClassNotesByTeachersAsync(string classId, string subjectId, int status, string termId, PaginationFilter filter)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
-            var res = new APIResponse<List<GetClassNotes>>();
+            var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
 
 
             IQueryable<TeacherClassNote> query = null;
@@ -147,7 +152,9 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(d => d.ClassNote.SessionTermId == Guid.Parse(termId));
                 }
 
-                res.Result = await query.Select(x => new GetClassNotes(x, false)).ToListAsync();
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
             }
             else
             {
@@ -178,7 +185,10 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
                 }
 
-                res.Result = await query.Select(x => new GetClassNotes(x, false)).ToListAsync();
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
             }
 
 

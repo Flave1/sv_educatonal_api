@@ -356,10 +356,10 @@ namespace SMP.BLL.Services.PinManagementService
                 query = query.Where(x => x.Sessionterm.IsActive);
 
 
-            var totaltRecord = query.Count();
-            var query2 = query.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).AsQueryable();
-            var result = await paginationService.GetPagedResult(query2, filter).ToListAsync();
-            res.Result =  paginationService.CreatePagedReponse(result, filter, totaltRecord);
+            var result = paginationService.GetPagedResult(query, filter);
+            var query2 = result.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).AsQueryable();
+            var totaltRecord = query2.Count();
+            res.Result =  paginationService.CreatePagedReponse(query2.ToList(), filter, totaltRecord);
 
             res.IsSuccessful = true;
 

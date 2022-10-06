@@ -1,10 +1,13 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
 using System;
@@ -18,16 +21,18 @@ namespace SMP.BLL.Services.AssessmentServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
-        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor)
+        private readonly IPaginationService paginationService;
+        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
 
-        async Task<APIResponse<List<GetClassAssessmentRequest>>> IClassAssessmentService.GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId)
+        async Task<APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>> IClassAssessmentService.GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId, PaginationFilter filter)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var res = new APIResponse<List<GetClassAssessmentRequest>>();
+            var res = new APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
             var query =  context.ClassAssessment
                  .Include(s => s.SessionClassSubject)
@@ -50,9 +55,10 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 query = query.Where(d => d.SessionClassSubjectId == Guid.Parse(sessionClassSubjectId));
             }
-           
-        
-            res.Result = await query.Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.IsSuccessful = true;
             return await Task.Run(() => res);

@@ -1,11 +1,14 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Common;
 using SMP.Contracts.Notes;
 using SMP.DAL.Models.NoteEntities;
@@ -21,11 +24,13 @@ namespace SMP.BLL.Services.NoteServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly IPaginationService paginationService;
 
-        public StudentNoteService(DataContext context, IHttpContextAccessor accessor)
+        public StudentNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<StudentNotes>> IStudentNoteService.CreateStudentNotesAsync(StudentNotes request)
@@ -350,19 +355,16 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-        private static bool isInClass(string classes, Guid studentClass)
-        {
-            return classes is null ? false : classes.Split(',').Select(Guid.Parse).ToList().Contains(studentClass);
-        }
-        async Task<APIResponse<List<GetClassNotes>>> IStudentNoteService.filterClassNotesByStudentsAsync(string subjectId)
+ 
+        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IStudentNoteService.filterClassNotesByStudentsAsync(string subjectId, PaginationFilter filter)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var studentClass = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
 
-            var res = new APIResponse<List<GetClassNotes>>();
+            var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
             if(studentClass is null)
             {
-                return new APIResponse<List<GetClassNotes>>();
+                return new APIResponse<PagedResponse<List<GetClassNotes>>>();
             }
             if (!string.IsNullOrEmpty(studentContactId))
             {
@@ -386,7 +388,10 @@ namespace SMP.BLL.Services.NoteServices
                         query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
                     }
 
-                    res.Result = query.Select(x => new GetClassNotes(x, false)).ToList();
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
                 }
                 else
                 {
@@ -404,7 +409,12 @@ namespace SMP.BLL.Services.NoteServices
                         var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
                         query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
                     }
-                    res.Result = query.Select(x => new GetClassNotes(x, false)).ToList();
+
+
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
                 }
             }
             res.IsSuccessful = true;

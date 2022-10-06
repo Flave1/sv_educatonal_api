@@ -429,9 +429,10 @@ namespace BLL.AuthenticationServices
                 return res;
             }
 
-            var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
             if(request.UserType == (int)UserTypes.Student)
             {
+
+                var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
                 var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
                 if (student is null)
                 {

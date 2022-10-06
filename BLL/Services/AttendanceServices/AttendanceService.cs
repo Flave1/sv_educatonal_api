@@ -1,5 +1,7 @@
 ﻿using BLL;
+using BLL.Filter;
 using BLL.Utilities;
+using BLL.Wrappers;
 using Contracts.AttendanceContract;
 using Contracts.Common;
 using DAL;
@@ -7,6 +9,7 @@ using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.Register;
 using System;
@@ -20,10 +23,12 @@ namespace SMP.BLL.Services.AttendanceServices
     public class AttendanceService: IAttendanceService
     {
         private readonly DataContext context;
+        private readonly IPaginationService paginationService;
 
-        public AttendanceService(DataContext context)
+        public AttendanceService(DataContext context, IPaginationService paginationService)
         {
             this.context = context;
+            this.paginationService = paginationService;
         }
         async Task<APIResponse<GetAttendance>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
@@ -98,9 +103,9 @@ namespace SMP.BLL.Services.AttendanceServices
             return res;
         }
           
-        async Task<APIResponse<List<GetAttendance>>> IAttendanceService.GetAllAttendanceRegisterAsync(string sessionClassId, string termId)
+        async Task<APIResponse<PagedResponse<List<GetAttendance>>>> IAttendanceService.GetAllAttendanceRegisterAsync(string sessionClassId, string termId, PaginationFilter filter)
         {
-            var res = new APIResponse<List<GetAttendance>>();
+            var res = new APIResponse<PagedResponse<List<GetAttendance>>>();
 
             var query = context.ClassRegister
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
@@ -116,7 +121,10 @@ namespace SMP.BLL.Services.AttendanceServices
             {
                 query = query.Where(d => d.SessionTermId == Guid.Parse(termId));
             }
-            res.Result = await query.Select(f => new GetAttendance(f)).ToListAsync();
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetAttendance(f)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
