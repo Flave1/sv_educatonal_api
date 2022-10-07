@@ -1,4 +1,6 @@
-﻿using BLL; 
+﻿using BLL;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Annoucements;
 using Contracts.Common;
 using System;
@@ -10,7 +12,7 @@ namespace SMP.BLL.Services.AnnouncementsServices
     public interface IAnnouncementsService
     {
         Task<APIResponse<CreateAnnouncement>> CreateAnnouncementsAsync(CreateAnnouncement request);
-        Task<APIResponse<List<GetAnnouncements>>> GetAnnouncementsAsync();
+        Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> GetAnnouncementsAsync(PaginationFilter filter);
         Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
         Task<APIResponse<UpdateAnnouncement>> UpdateAnnouncementsAsync(UpdateAnnouncement request);
         Task<APIResponse<bool>> DeleteAnnouncementsAsync(SingleDelete request);

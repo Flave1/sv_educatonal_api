@@ -1,5 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Annoucements;
 using Contracts.Common;
 using DAL;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.AnnouncementsServices;
+using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
 using SMP.DAL.Models.Annoucement;
 using System;
@@ -20,13 +23,14 @@ namespace SMP.BLL.Services.AnnouncementServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly IPaginationService paginationService;
         //private readonly INotificationService notificationService;
 
-        public AnnouncementService(DataContext context, IHttpContextAccessor accessor)
+        public AnnouncementService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
-            //this.notificationService = notificationService;, INotificationService notificationService
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
@@ -57,20 +61,23 @@ namespace SMP.BLL.Services.AnnouncementServices
             }
         }
 
-        async Task<APIResponse<List<GetAnnouncements>>> IAnnouncementsService.GetAnnouncementsAsync()
+        async Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> IAnnouncementsService.GetAnnouncementsAsync(PaginationFilter filter)
         { 
-            var res = new APIResponse<List<GetAnnouncements>>();
+            var res = new APIResponse<PagedResponse<List<GetAnnouncements>>>();
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             
             if (!string.IsNullOrEmpty(userid))
             {
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
-                    res.Result = await context.Announcement
+                    var query = context.Announcement
                           .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
-                        .Take(100).Where(d => d.Deleted == false)
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                        .Where(d => d.Deleted == false);
+
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -79,12 +86,14 @@ namespace SMP.BLL.Services.AnnouncementServices
 
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
-                    res.Result = await context.Announcement
-                        .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn)
-                        .Take(100)
-                        .Where(d => d.AssignedTo == "teacher" && d.Deleted == false)
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                    var query =  context.Announcement
+                         .Include(d => d.Sender)
+                         .OrderByDescending(d => d.CreatedOn)
+                         .Where(d => d.AssignedTo == "teacher" && d.Deleted == false);
+
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -92,12 +101,15 @@ namespace SMP.BLL.Services.AnnouncementServices
                 }
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
                 {
-                    res.Result = await context.Announcement
+                    var query = context.Announcement
                           .Include(d => d.Sender)
                         .OrderByDescending(d => d.CreatedOn)
-                        .Take(100)
-                        .Where(d => d.AssignedTo == "student" && d.Deleted == false)
-                        .Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                        .Where(d => d.AssignedTo == "student" && d.Deleted == false);
+
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
 
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = Messages.GetSuccess;

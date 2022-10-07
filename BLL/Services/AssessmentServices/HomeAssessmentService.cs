@@ -344,7 +344,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
 
             var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToListAsync();
+            var result = paginationService.GetPagedResult(query, filter).Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToList();
             res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
 
