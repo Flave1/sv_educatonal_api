@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAL.StudentInformation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,5 +25,15 @@ namespace SMP.Contracts.Enrollment
         public string Status { get; set; }
         public string Class { get; set; }
         public string SessionClassId { get; set; }
+        public EnrolledStudents() { }
+        public EnrolledStudents(StudentContact a, string regNoFormat)
+        {
+            Status = "enrrolled";
+            StudentContactId = a.StudentContactId.ToString();
+            StudentName = a.User.FirstName + " " + a.User.LastName;
+            StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber);
+            Class = a.SessionClass.Class.Name;
+            SessionClassId = a.SessionClassId.ToString();
+        }
     }
 }

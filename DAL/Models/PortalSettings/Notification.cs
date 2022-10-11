@@ -22,8 +22,5 @@ namespace SMP.DAL.Models.PortalSettings
         public bool IsRead { get; set; }
         public string Svg { get; set; }
         public string NotificationSourceId { get; set; }
-        public Guid? NotificationSettingId { get; set; }
-        [ForeignKey("NotificationSettingId")]
-        public virtual NotificationSetting NotificationSetting { get; set; }
     }
 }

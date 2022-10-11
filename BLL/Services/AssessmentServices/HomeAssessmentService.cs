@@ -313,7 +313,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid));
 
             var query = context.HomeAssessment
                 .Include(d => d.HomeAssessmentFeedBacks)
@@ -391,6 +391,14 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 else
                 {
+                    var assessment = context.HomeAssessment.FirstOrDefault(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId));
+
+                    if (assessment.Status == (int)HomeAssessmentStatus.Closed)
+                    {
+                        res.Message.FriendlyMessage = "Assignment has already been closed";
+                        return res;
+                    }
+
                     reg = new HomeAssessmentFeedBack();
 
                     reg.StudentContactId = Guid.Parse(studentContactid);
@@ -401,8 +409,6 @@ namespace SMP.BLL.Services.AssessmentServices
                     await context.HomeAssessmentFeedBack.AddAsync(reg);
                 }
                 
-                
-
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
@@ -568,6 +574,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<bool>();
             var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
             var assessment = await context.HomeAssessment
+                .Include(x => x.HomeAssessmentFeedBacks)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
                 .Include(x => x.SessionClassSubject)
                 .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
@@ -588,11 +595,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Where(en => en.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
                 .Select(x => new 
                     { 
-                        Score = context.HomeAssessmentFeedBack.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.Mark??0, 
+                        Score = assessment.HomeAssessmentFeedBacks.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.Mark??0, 
                         StudentId = x.StudentContactId, 
                         SubjectId = assessment.SessionClassSubject.SubjectId,
                         Name = x.User.FirstName + " " + x.User.LastName,
-                        FeedBackId = context.HomeAssessmentFeedBack.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.HomeAssessmentFeedBackId
+                        FeedBackId = assessment.HomeAssessmentFeedBacks.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.HomeAssessmentFeedBackId
                 }
                 ).ToList();
 
@@ -605,8 +612,6 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 if (feedBack.Included)
                 {
-                    //res.Message.FriendlyMessage = $"{std.Name}'s Feedback has already be included to score entry";
-                    //return res;
                     continue;
                 }
                 var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == std.StudentId && s.ClassScoreEntry.SubjectId == std.SubjectId);
@@ -614,7 +619,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 {
                     scoreEntry = new ScoreEntry();
                     scoreEntry.SessionTermId = termId;
-                    scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == std.SubjectId).ClassScoreEntryId;
+                    scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == std.SubjectId && x.SessionClassId == assessment.SessionClassId).ClassScoreEntryId;
                     scoreEntry.AssessmentScore = Convert.ToInt16(std.Score);
                     scoreEntry.IsOffered = true;
                     scoreEntry.IsSaved = true;
@@ -679,7 +684,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 scoreEntry = new ScoreEntry();
                 scoreEntry.SessionTermId = termId;
-                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId).ClassScoreEntryId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId && x.SessionClassId == feedBack.HomeAssessment.SessionClassId).ClassScoreEntryId;
                 scoreEntry.AssessmentScore = Convert.ToInt16(feedBack.Mark);
                 scoreEntry.IsOffered = true;
                 scoreEntry.IsSaved = true;
@@ -735,7 +740,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 scoreEntry = new ScoreEntry();
                 scoreEntry.SessionTermId = termId;
-                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId).ClassScoreEntryId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId && x.SessionClassId == feedBack.HomeAssessment.SessionClassId).ClassScoreEntryId;
                 scoreEntry.AssessmentScore = Convert.ToInt16(feedBack.Mark);
                 scoreEntry.IsOffered = true;
                 scoreEntry.IsSaved = true;

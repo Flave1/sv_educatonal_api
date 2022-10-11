@@ -257,7 +257,7 @@ namespace BLL.ClassServices
             }
         }
 
-        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesAsync(Guid sessionId)
+        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesAsync(string sessionId)
         {
             var res = new APIResponse<List<GetSessionClass>>();
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
@@ -268,7 +268,7 @@ namespace BLL.ClassServices
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
-                   .Where(r => r.Deleted == false && r.SessionId == sessionId)
+                   .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId))
                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
                 return res;
             }
@@ -279,20 +279,99 @@ namespace BLL.ClassServices
                      .Include(s => s.Class)
                      .Include(s => s.Session)
                      .OrderBy(s => s.Class.Name)
-                     .Where(e => e.Deleted == false && e.SessionId == sessionId && e.SessionClassSubjects 
+                     .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.SessionClassSubjects 
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
                 var classesAsAFormTeacher = context.SessionClass
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .OrderBy(s => s.Class.Name)
-                    .Where(e => e.Deleted == false && e.SessionId == sessionId && e.FormTeacherId == Guid.Parse(teacherId));
+                    .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.FormTeacherId == Guid.Parse(teacherId));
                 res.Result = classesAsASujectTeacher.AsEnumerable().Concat(classesAsAFormTeacher.AsEnumerable()).Distinct().Select(s => new GetSessionClass(s)).ToList();
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
             return res;
         }
+
+        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClasses1Async(string sessionId)
+        {
+            var res = new APIResponse<List<GetSessionClass>>();
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            //GET SUPER ADMIN CLASSES
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            {
+                res.Result = await context.SessionClass
+                   .Include(rr => rr.Session)
+                   .Include(rr => rr.Class)
+                   .OrderBy(d => d.Class.Name)
+                   .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId))
+                   .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
+                return res;
+            }
+            //GET TEACHER CLASSES
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            {
+                var classesAsAFormTeacher = context.SessionClass
+                    .Include(s => s.Class)
+                    .Include(s => s.Session)
+                    .OrderBy(s => s.Class.Name)
+                    .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.FormTeacherId == Guid.Parse(teacherId));
+
+                res.Result = classesAsAFormTeacher.AsEnumerable().Distinct().Select(s => new GetSessionClass(s)).ToList();
+            }
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+        async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClasses2Async()
+        {
+            var res = new APIResponse<List<GetSessionClass>>();
+            var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            //GET SUPER ADMIN CLASSES
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            {
+                res.Result = await context.SessionClass
+                   .Include(rr => rr.Session)
+                   .Include(rr => rr.Class)
+                   .OrderBy(d => d.Class.Name)
+                   .Where(r => r.Deleted == false && r.SessionId == sessionId)
+                   .Include(r => r.ClassRegisters)
+                   .Include(r => r.Students)
+                   .Include(r => r.SessionClassSubjects).ThenInclude(x => x.ClassAssessments)
+                    .Include(r => r.SessionClassSubjects).ThenInclude(x => x.HomeAssessments)
+                   .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User)
+                   .Select(g => new GetSessionClass(g, true)).ToListAsync();
+                return res;
+            }
+            //GET TEACHER CLASSES
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            {
+                var classesAsASujectTeacher = context.SessionClass
+                     .Include(s => s.Class)
+                     .Include(s => s.Session)
+                     .Include(r => r.ClassRegisters)
+                     .Include(r => r.Students)
+                     .Include(r => r.SessionClassSubjects).ThenInclude(x => x.ClassAssessments)
+                    .Include(r => r.SessionClassSubjects).ThenInclude(x => x.HomeAssessments)
+                     .OrderBy(s => s.Class.Name)
+                     .Where(e => e.Deleted == false && e.SessionId == sessionId && e.SessionClassSubjects 
+                     .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+
+                var classesAsAFormTeacher = context.SessionClass
+                    .Include(s => s.Class)
+                    .Include(s => s.Session)
+                    .Include(r => r.Students)
+                    .OrderBy(s => s.Class.Name)
+                    .Where(e => e.Deleted == false && e.SessionId == sessionId && e.FormTeacherId == Guid.Parse(teacherId));
+                res.Result = classesAsASujectTeacher.AsEnumerable().Concat(classesAsAFormTeacher.AsEnumerable()).Distinct().Select(s => new GetSessionClass(s, true)).ToList();
+            }
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
 
         async Task<APIResponse<GetSessionClass>> IClassService.GetSingleSessionClassesAsync(Guid sessionClassId)
         {
@@ -302,6 +381,7 @@ namespace BLL.ClassServices
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
                 .Include(rr => rr.Students)
+                .Include(r => r.ClassRegisters)
                 .Include(rr => rr.SessionClassSubjects).ThenInclude(sub => sub.Subject)
                 .Include(rr => rr.SessionClassSubjects).ThenInclude(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
                 .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();

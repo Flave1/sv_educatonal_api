@@ -82,7 +82,7 @@ namespace API.Controllers
         }
 
         [HttpPost("update/session-class")]
-        public async Task<IActionResult> UpdateClassAsync([FromBody] SessionClassCommand request)
+        public async Task<IActionResult> UpdateSessionClassAsync([FromBody] SessionClassCommand request)
         {
             var response = await service.UpdateSessionClassAsync(request);
             if (response.IsSuccessful)
@@ -91,13 +91,27 @@ namespace API.Controllers
         }
 
         [HttpGet("get-all/session-classes{sessionId}")]
-        public async Task<IActionResult> GetClassesAsync(Guid sessionId)
+        public async Task<IActionResult> GetSessionClassesAsync(string sessionId)
         {
             var response = await service.GetSessionClassesAsync(sessionId);
             return Ok(response);
         }
 
-       
+        [HttpGet("get-all/session-classes1/{sessionId}")]
+        public async Task<IActionResult> GetSessionClasses1Async(string sessionId)
+        {
+            var response = await service.GetSessionClasses1Async(sessionId);
+            return Ok(response);
+        }
+
+        [HttpGet("get-all/session-classes2")]
+        public async Task<IActionResult> GetSessionClasses2Async()
+        {
+            var response = await service.GetSessionClasses2Async();
+            return Ok(response);
+        }
+
+
         [HttpGet("search/classes/by-session")]
         public async Task<IActionResult> GetClassesBySessionAsync([FromBody] SessionQuery query)
         {

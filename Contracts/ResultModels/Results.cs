@@ -151,13 +151,14 @@ namespace SMP.Contracts.ResultModels
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
         public PreviewClassScoreEntry(ClassScoreEntry db, string regNoFormat)
         {
+            var subject = db.SessionClass.SessionClassSubjects.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
             if (db.ScoreEntries.Any())
             {
                 ClassScoreEntries = db.ScoreEntries.Where(d => (bool)d.SessionTerm?.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, db.SessionClass.Class.GradeLevel)).ToList();

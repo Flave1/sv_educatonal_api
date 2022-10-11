@@ -207,7 +207,6 @@ namespace SMP.BLL.Services.ResultServices
                    .Include(d => d.Subject)
                    .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
                    .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new GetClassScoreEntry(s, regNoFormat, clasArchive.SessionTermId.Value)).FirstOrDefaultAsync();
-           
             }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -223,6 +222,7 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
                 .Include(d => d.Subject)
+                .Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
                 .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
                 .Include(d => d.ScoreEntries).ThenInclude(s => s.SessionTerm)
                 .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();

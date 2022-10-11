@@ -39,9 +39,9 @@ namespace API.Controllers
         }
 
         [HttpGet("getall/enrolled")]
-        public async Task<IActionResult> GetAllEnrrolledStudentsAsync(string sessionClassId, int pageSize)
+        public async Task<IActionResult> GetAllEnrrolledStudentsAsync(string sessionClassId, int pageNumber)
         {
-            var filter = new PaginationFilter { PageSize = pageSize };
+            var filter = new PaginationFilter { PageNumber = pageNumber };
             var response = await service.GetEnrolledStudentsAsync(Guid.Parse(sessionClassId), filter);
             return Ok(response);
         }

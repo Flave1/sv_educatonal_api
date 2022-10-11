@@ -70,6 +70,7 @@ namespace DAL
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }
         public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        public DbSet<Notification> Notification { get; set; }
         public DbSet<UploadedPin> UploadedPin { get; set; }
         public DbSet<UsedPin> UsedPin { get; set; }
         public DbSet<Announcements> Announcement { get; set; }

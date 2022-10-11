@@ -45,24 +45,15 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
                           join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                          where b.Status == status && a.SessionClassId == sessionClassId
-                          select new EnrolledStudents
-                          {
-                              Status = "enrrolled",
-                              StudentContactId = a.StudentContactId.ToString(),
-                              StudentName = a.User.FirstName + " " + a.User.LastName,
-                              StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
-                              Class = a.SessionClass.Class.Name,
-                              SessionClassId = sessionClassId.ToString()
-                          });
+                          where b.Status == status && a.SessionClassId == sessionClassId select a);
 
             var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).ToListAsync();
+            var result = paginationService.GetPagedResult(query, filter).Select(a =>  new EnrolledStudents(a, regNoFormat)).ToList();
             res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
-            return res;
+            return await Task.Run(() =>  res);
         }
 
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetUnenrrolledStudentsAsync(PaginationFilter filter)
