@@ -15,9 +15,16 @@ namespace SMP.API.Hubs
         }
         public async Task JoinNotificationRoom(NotificationArea conn)
         {
-            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId");
-            await Groups.AddToGroupAsync(Context.ConnectionId, conn.Room);
-            await Clients.Groups(conn.Room).SendAsync("NotificationArea", _botUser, "successfully connected to notification room");
+            try
+            {
+                var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId");
+                await Groups.AddToGroupAsync(Context.ConnectionId, conn.Room);
+                await Clients.Groups(conn.Room).SendAsync("NotificationArea", _botUser, "successfully connected to notification room");
+            }
+            catch (HubException ex)
+            {
+                throw;
+            }
         }
 
         public async Task PushNotification(SendNotification msg)
