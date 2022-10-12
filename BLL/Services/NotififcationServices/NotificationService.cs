@@ -36,7 +36,7 @@ namespace SMP.BLL.Services.NotififcationServices
                     Clients.Groups(rooms).SendAsync("NotificationArea", "", request.Content);
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception)
             {
                 throw;
             }

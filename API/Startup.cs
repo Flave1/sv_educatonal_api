@@ -89,8 +89,7 @@ namespace API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<CommentsHub>("/hubs/comments");
-                endpoints.MapHub<NotificationHub>("/hubs/notifications");
+                endpoints.MapHub<NotificationHub>("/hubs/pushnotification");
             });
             CreateRolesAndAdminUser(serviceProvider).Wait();
         }
