@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
-namespace SMP.API.Hubs
+namespace SMP.BLL.Hubs
 {
     public class UserConnection
     {
@@ -13,13 +13,11 @@ namespace SMP.API.Hubs
     public class NotificationArea
     {
         public string UserId { get; set; }
-        public string User { get; set; }
         public string Room { get; set; } = "PushedNotification";
     }
 
     public class SendNotification
     {
-        public string User { get; set; }
         public string Room { get; set; } = "PushedNotification";
         public string Message { get; set; }
     }

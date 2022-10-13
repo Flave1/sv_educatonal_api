@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SMP.API.Hubs;
+using SMP.BLL.Hubs;
 
 namespace API.Installers
 {

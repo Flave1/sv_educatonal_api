@@ -6,11 +6,15 @@ using Contracts.Annoucements;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SMP.API.Hubs;
 using SMP.BLL.Constants;
+using SMP.BLL.Hubs;
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
+using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.Annoucement;
 using System;
 using System.Collections.Generic;
@@ -24,13 +28,16 @@ namespace SMP.BLL.Services.AnnouncementServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
-        //private readonly INotificationService notificationService;
+        private readonly INotificationService notificationService;
+        protected readonly IHubContext<NotificationHub> hub;
 
-        public AnnouncementService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        public AnnouncementService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.hub = hub;
+            this.notificationService = notificationService;
         }
 
         async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
@@ -137,10 +144,21 @@ namespace SMP.BLL.Services.AnnouncementServices
                 SentBy = userid,
                 Content = request.Content
             };
+            
             await context.Announcement.AddAsync(newAnnouncement);
             await context.SaveChangesAsync();
 
-            //notificationService.PushAnnouncementNotitfication(request);
+            await notificationService.CreateNotitficationAsync(new NotificationDTO
+            {
+                Content = newAnnouncement.Content,
+                NotificationPageLink = $"dashboard/smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
+                NotificationSourceId = newAnnouncement.AnnouncementsId.ToString(),
+                Subject = newAnnouncement.Header,
+                Receivers = "all",
+                Type = "announcement",
+            });
+            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
             res.Message.FriendlyMessage = Messages.Created;
             res.IsSuccessful = true;
             res.Result = request;
