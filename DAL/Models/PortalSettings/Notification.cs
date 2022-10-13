@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DAL;
+using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.DAL.Models.PortalSettings
 {
-    public class Notification
+    public class Notification: CommonEntity
     {
         [Key]
         public Guid NotificationId { get; set; }
@@ -18,9 +14,11 @@ namespace SMP.DAL.Models.PortalSettings
         public string Content { get; set; }
         public string Senders { get; set; }
         public string Receivers { get; set; }
+        public string ReadBy { get; set; }
         public bool IsSent { get; set; }
         public bool IsRead { get; set; }
         public string Svg { get; set; }
+        public string Type { get; set; }
         public string NotificationSourceId { get; set; }
     }
 }

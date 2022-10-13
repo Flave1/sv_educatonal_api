@@ -2,8 +2,12 @@
 using BLL.MiddleWares;
 using Contracts.Annoucements;
 using Contracts.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using SMP.API.Hubs;
 using SMP.BLL.Services.AnnouncementsServices;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
