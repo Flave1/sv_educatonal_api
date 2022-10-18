@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using SMP.BLL.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +17,7 @@ namespace SMP.BLL.Services.FileUploadService
         private static string ProfileImagePath = "ProfileImage";
         private static string SchoolLogoPath = "SchoolLogo";
         private static string PrincipalStampPath = "PrincipalStamp";
+        private static string LessonNotePath = "LessonNote";
         public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
         {
             this.environment = environment;
@@ -288,6 +290,51 @@ namespace SMP.BLL.Services.FileUploadService
                 return url;
             }
             throw new ArgumentException("Invalid School Logo");
+        }
+        string IFileUploadService.UploadLessonNote(IFormFile file, string filepath)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return filepath;
+            }
+            if (file.FileName.EndsWith(".pdf")
+                        || file != null && file.Length > 0 || file.FileName.EndsWith(".docx")
+                        || file.FileName.EndsWith(".txt"))
+            {
+                string extension = Path.GetExtension(file.FileName);
+                string fileName = Guid.NewGuid().ToString() + extension;
+
+                bool fileExists = File.Exists(filepath);
+                if (fileExists)
+                {
+                    File.Delete(filepath);
+                    using (var fileStream = new FileStream(filepath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                }
+                else
+                {
+                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
+                    var note = ReadFromFile.ReadFile(filePath, extension);
+                    return url;
+                }
+
+            }
+            throw new ArgumentException("Invalid file format");
+            return "";
         }
 
     }
