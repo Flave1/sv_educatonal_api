@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221013192757_auditOnNotificationjjs")]
+    partial class auditOnNotificationjjs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1576,9 +1578,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Svg")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ToGroup")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")

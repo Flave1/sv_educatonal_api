@@ -22,20 +22,20 @@ namespace SMP.Contracts.PromotionModels
         public string PassedStudentIds { get; set; }
         public string FailedStudentIds { get; set; }
         public int StudentsToBePromoted { get; set; }
-        public PreviousSessionClasses(SessionClass cl, Guid termId)
+
+        public PreviousSessionClasses(SessionClass cl)
         {
             SessionClassId = cl.SessionClassId;
             SessionClassName = cl.Class.Name;
-            TotalStudentsInClass = cl.Students.Count();
             IsPromoted = cl?.SessionClassArchive.Any(x => x.IsPromoted) ?? false;
-            var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
-            if (studentRecords.Any())
-            {
-                PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
-                FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
-                TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
-                TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
-            }
+            //var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
+            //if (studentRecords.Any())
+            //{
+            //    PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+            //    FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+            //    TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
+            //    TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
+            //}
             
         }
 

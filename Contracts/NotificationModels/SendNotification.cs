@@ -21,6 +21,7 @@ namespace SMP.Contracts.NotificationModels
         public string Svg { get; set; } = string.Empty;
         public string NotificationSourceId { get; set; } = string.Empty;
         public string Type { get; set; }
+        public string ToGroup { get; set; }
 
         public NotificationDTO()
         {

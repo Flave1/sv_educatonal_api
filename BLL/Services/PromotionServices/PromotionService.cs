@@ -10,6 +10,7 @@ using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.PromotionModels;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,30 +46,28 @@ namespace SMP.BLL.Services.PromorionServices
             {
                 Guid previousSessionId = lastTwoSessions.Last().SessionId;
                 var lastTermOfPreviousSession = sessionService.GetPreviousSessionLastTermAsync(previousSessionId);
-                var result = await context.SessionClass
-                    .Include(rr => rr.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
-                    .OrderBy(d => d.Class.Name)
+                var classes = await context.SessionClass
+                    .Include(rr => rr.Class)
                     .Include(d => d.SessionClassArchive)
-                    .Include(d => d.Students).ThenInclude(s => s.ScoreEntries)
+                    .OrderBy(d => d.Class.Name)
                     .Where(r => r.InSession && r.Deleted == false && r.SessionId == previousSessionId)
-                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new PreviousSessionClasses(g, lastTermOfPreviousSession.SessionTermId)).ToListAsync();
+                    .Select(g => new PreviousSessionClasses(g)).ToListAsync();
 
-                if (result.Any())
+                foreach(var cl in classes)
                 {
-                    //result.ForEach(x =>
-                    //{
-                    //    x.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll
-                    //        ? x.TotalStudentsInClass - x.TotalStudentsFailed : x.TotalStudentsInClass;
-                    //});
-
-                    foreach(var x in result)
+                    var studentRecords = context.StudentContact.Include(x => x.ScoreEntries).Where(x => x.SessionClassId == cl.SessionClassId).Select(d => new StudentResultRecord(d, lastTermOfPreviousSession.SessionTermId)).ToList();
+                    if (studentRecords != null)
                     {
-                        x.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll == false  ? x.TotalStudentsInClass - x.TotalStudentsFailed : x.TotalStudentsInClass;
+                        cl.PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+                        cl.FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+                        cl.TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
+                        cl.TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
+                        cl.TotalStudentsInClass = cl.TotalStudentsPassed + cl.TotalStudentsFailed;
+                        cl.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll == false ? cl.TotalStudentsInClass - cl.TotalStudentsFailed : cl.TotalStudentsInClass;
                     }
                 }
-                res.Result = result;
+                res.Result = classes.ToList();
             }
-           
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;

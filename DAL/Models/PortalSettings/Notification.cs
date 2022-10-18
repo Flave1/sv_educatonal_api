@@ -20,5 +20,6 @@ namespace SMP.DAL.Models.PortalSettings
         public string Svg { get; set; }
         public string Type { get; set; }
         public string NotificationSourceId { get; set; }
+        public string ToGroup { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
 using BLL.Wrappers;
@@ -52,7 +53,8 @@ namespace SMP.BLL.Services.NotififcationServices
                     NotificationEmailLink = request.NotificationEmailLink,
                     NotificationPageLink = request.NotificationPageLink,
                     Svg = request.Svg,
-                    Type = request.Type
+                    Type = request.Type,
+                    ToGroup = request.ToGroup
                 };
                 context.Notification.Add(item);
                 await context.SaveChangesAsync();
@@ -83,13 +85,38 @@ namespace SMP.BLL.Services.NotififcationServices
 
         public async Task<APIResponse<PagedResponse<List<GetNotificationDTO>>>> GetNotitficationAsync(PaginationFilter filter)
         {
+
+            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
             var res = new APIResponse<PagedResponse<List<GetNotificationDTO>>>();
             try
             {
-                var query =  context.Notification.Where(x => !x.Deleted);
+                var query =  context.Notification.OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
+
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Teachers);
+                }
+
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Students);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
+                }
+
+                query = paginationService.GetPagedResult(query, filter);
+
+                query = query.Where(x => x.Receivers == "all" || x.Receivers.Contains(userId));
+
 
                 var totaltRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetNotificationDTO(f)).ToListAsync();
+                var result = await query.Select(f => new GetNotificationDTO(f)).ToListAsync();
                 res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
                 res.IsSuccessful = true;

@@ -40,7 +40,7 @@ namespace BLL.StudentServices
         private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
 
-        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService)
+        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService)
         {
             this.context = context;
             this.userManager = userManager;
@@ -49,6 +49,7 @@ namespace BLL.StudentServices
             this.accessor = accessor;
             this.pinService = pinService;
             this.paginationService = paginationService;
+            this.userService = userService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -226,10 +227,9 @@ namespace BLL.StudentServices
 
            
             var query = context.StudentContact
-                .OrderByDescending(d => d.CreatedOn)
-                .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.User)
+                .Include(q => q.User) 
+                .OrderBy(s => s.User.FirstName)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student);
 
              var totaltRecord = query.Count();
@@ -456,7 +456,8 @@ namespace BLL.StudentServices
                                 if (std is null)
                                 {
                                     var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-                                    var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, regNoFormat.Replace("%VALUE%", item.RegistrationNumber));
+                                    var rgNo = regNoFormat.Replace("%VALUE%", item.RegistrationNumber);
+                                    var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, rgNo);
                                     std = new StudentContact();
                                     std.CityId = std.CityId;
                                     std.CountryId = item.CountryId;
