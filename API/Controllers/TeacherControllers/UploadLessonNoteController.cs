@@ -25,9 +25,9 @@ namespace SMP.API.Controllers.TeacherControllers
 
         
         [HttpPost("update/lessonnote")]
-        public async Task<IActionResult> UploadTeachersNote(IFormFile file, string filepath)
+        public async Task<IActionResult> UploadTeachersNote(IFormFile file)
         {
-            var response =  _service.UploadLessonNote(file, filepath);
+            var response = _service.UploadLessonNote(file);
             if (response != null)
                 return Ok(response);
             return BadRequest(response);

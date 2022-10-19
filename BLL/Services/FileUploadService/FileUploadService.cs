@@ -291,8 +291,11 @@ namespace SMP.BLL.Services.FileUploadService
             }
             throw new ArgumentException("Invalid School Logo");
         }
-        string IFileUploadService.UploadLessonNote(IFormFile file, string filepath)
+        string IFileUploadService.UploadLessonNote(IFormFile file)
         {
+            string extension = Path.GetExtension(file.FileName);
+            string fileName = Guid.NewGuid().ToString() + extension;
+            string filepath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
             if (file == null || file.Length == 0)
             {
                 return filepath;
@@ -301,9 +304,6 @@ namespace SMP.BLL.Services.FileUploadService
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".docx")
                         || file.FileName.EndsWith(".txt"))
             {
-                string extension = Path.GetExtension(file.FileName);
-                string fileName = Guid.NewGuid().ToString() + extension;
-
                 bool fileExists = File.Exists(filepath);
                 if (fileExists)
                 {
@@ -328,8 +328,9 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
-                    var note = ReadFromFile.ReadFile(filePath, extension);
-                    return url;
+                    var note = ReadFromFile.ReadFile(url, extension);
+                    File.Delete(filepath);
+                    return note;
                 }
 
             }

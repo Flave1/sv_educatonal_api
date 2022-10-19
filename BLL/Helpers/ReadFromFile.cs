@@ -1,9 +1,12 @@
-﻿using iTextSharp.text.pdf;
+﻿using iTextSharp.text;
+using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
+//using Code7248.word_reader;
 
 namespace SMP.BLL.Helpers
 {
@@ -27,25 +30,18 @@ namespace SMP.BLL.Helpers
             }
             else if (fileExtension == ".docx")
             {
-                StringBuilder text = new StringBuilder();
-                Microsoft.Office.Interop.Word.Application word = new Microsoft.Office.Interop.Word.Application();
-                object miss = System.Reflection.Missing.Value;
-                object path = filePath;
-                object readOnly = true;
-                Microsoft.Office.Interop.Word.Document docs = word.Documents.Open(ref path, ref miss, ref readOnly, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss, ref miss);
-
-                for (int i = 0; i < docs.Paragraphs.Count; i++)
-                {
-                    text.Append(" \r\n " + docs.Paragraphs[i + 1].Range.Text.ToString());
-                }
-
-                return text.ToString();
+               
             }
             else if (fileExtension == ".txt")
             {
-                string text = System.IO.File.ReadAllText(filePath);
+                string text;
+                var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                using (var streamReader = new StreamReader(fileStream, Encoding.UTF8))
+                {
+                    text = streamReader.ReadToEnd();
+                }
 
-                return text.ToString();
+                return text;
             }
             return "";
         }

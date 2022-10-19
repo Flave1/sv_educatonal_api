@@ -10,6 +10,6 @@ namespace SMP.BLL.Services.FileUploadService
         string UpdateSchoolLogo(IFormFile file, string filePath);
         string UploadPrincipalStamp(IFormFile file);
         string UpdatePrincipalStamp(IFormFile file, string filePath);
-        string UploadLessonNote(IFormFile file, string filepath);
+        string UploadLessonNote(IFormFile file);
     }
 }

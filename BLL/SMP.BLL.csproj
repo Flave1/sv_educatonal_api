@@ -13,7 +13,6 @@
 	  <PackageReference Include="iTextSharp" Version="5.5.13.3" />
 	  <PackageReference Include="MailKit" Version="2.6.0" />
 	  <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" />
-	  <PackageReference Include="Microsoft.Office.Interop.Word" Version="15.0.4797.1004" />
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
