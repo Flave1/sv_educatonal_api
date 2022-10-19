@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using iTextSharp.text.pdf;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using SMP.BLL.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -328,14 +330,81 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
-                    var note = ReadFromFile.ReadFile(url, extension);
+                    string textNote = string.Empty;
+                    if (extension.Equals(".pdf"))
+                        textNote = ReadTextForPdf(filePath);
+                    else if (extension.Equals(".txt"))
+                        textNote = ReadTextForTxt(filePath, fileName);
+                    else
+                        textNote = ReadTextForDocx(filePath);
                     File.Delete(filepath);
-                    return note;
+
+                    return textNote;
                 }
 
             }
             throw new ArgumentException("Invalid file format");
             return "";
+        } 
+        private string ReadTextForTxt(string filePath,string fileName)
+        {
+            string text;
+            if (filePath == null) { throw new ArgumentNullException("file does not exist"); }
+            var fileStream = new FileStream(Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName), FileMode.Open, FileAccess.Read);
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8))
+            {
+                text = streamReader.ReadToEnd();
+                return text;
+            }
+            return "";
+        }
+
+        private string ReadTextForPdf(string filePath)
+        {
+            if (filePath == null) { throw new ArgumentNullException("file does not exist"); }
+                StringBuilder text = new StringBuilder();
+            using (PdfReader reader = new PdfReader(filePath))
+            {
+                for (int i = 1; i <= reader.NumberOfPages; i++)
+                {
+                    text.Append(iTextSharp.text.pdf.parser.PdfTextExtractor.GetTextFromPage(reader, i));
+                }
+            }
+
+            return text.ToString();
+        }
+        private string ReadTextForDocx(string filePath)
+        {
+
+            var filePathAsString = filePath as string;
+            if (string.IsNullOrEmpty(filePathAsString))
+            {
+                throw new ArgumentNullException("filePath");
+            }
+
+            if (!File.Exists(filePathAsString))
+            {
+                throw new FileNotFoundException("Could not find file", filePathAsString);
+            }
+
+            var textFromWordDocument = string.Empty;
+            Microsoft.Office.Interop.Word.Application wordApp = new Microsoft.Office.Interop.Word.Application();
+            Microsoft.Office.Interop.Word.Document wordDocument = null;
+            Microsoft.Office.Interop.Word.Range wordContentRange = null;
+
+            try
+            {
+                wordDocument = wordApp.Documents.Open(filePath, Missing.Value, true);
+                wordContentRange = wordDocument.Content;
+                textFromWordDocument = wordContentRange.Text;
+            }
+            catch
+            {
+                // handle the COM exception
+            }
+
+            return textFromWordDocument;
+           // return "";
         }
 
     }

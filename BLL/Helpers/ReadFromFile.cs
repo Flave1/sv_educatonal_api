@@ -30,7 +30,7 @@ namespace SMP.BLL.Helpers
             }
             else if (fileExtension == ".docx")
             {
-               
+            
             }
             else if (fileExtension == ".txt")
             {
