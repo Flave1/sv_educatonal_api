@@ -42,6 +42,7 @@ namespace SMP.BLL.Services.FileUploadService
                 {
                     text.Append(iTextSharp.text.pdf.parser.PdfTextExtractor.GetTextFromPage(reader, i));
                 }
+                reader.Dispose();
             }
             return text.ToString();
         }

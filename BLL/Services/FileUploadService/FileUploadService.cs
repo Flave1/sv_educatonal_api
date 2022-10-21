@@ -321,29 +321,21 @@ namespace SMP.BLL.Services.FileUploadService
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
                     var content = await (this as IFileUploadService).ReadFileAsync(fileName, extension, url);
-                    (this as IFileUploadService).DeleteFile(filePath, file);
+                    (this as IFileUploadService).DeleteFile(filePath);
                     return content;
                 }
                 catch (Exception)
                 {
-                    (this as IFileUploadService).DeleteFile(filePath, file);
+                    (this as IFileUploadService).DeleteFile(filePath);
                 }
 
             }
             throw new ArgumentException("Invalid file format");
         } 
        
-        void IFileUploadService.DeleteFile(string filePath, IFormFile file)
+        void IFileUploadService.DeleteFile(string filePath)
         {
-           
             File.Delete(filePath);
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
-            {
-                fileStream.Position = 0;
-                file.CopyTo(fileStream);
-                fileStream.Flush();
-                fileStream.Close();
-            }
         }
 
         async Task<string> IFileUploadService.ReadFileAsync(string fileName, string extension, string filePath)
@@ -356,6 +348,9 @@ namespace SMP.BLL.Services.FileUploadService
                 noteContent = fileReader.ReadTextForTxt(fileStream);
             else
                 noteContent = fileReader.ReadTextForDocx(filePath);
+
+            fileStream.Flush();
+            fileStream.Close();
             return await Task.Run(() => noteContent);
         }
     }

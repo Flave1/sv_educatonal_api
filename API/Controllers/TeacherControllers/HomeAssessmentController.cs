@@ -125,7 +125,7 @@ namespace SMP.API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
-
+        [AllowAnonymous]
         [HttpPost("get/lessonnote-content")]
         public async Task<IActionResult> UploadTeachersNote(IFormFile file)
         {
