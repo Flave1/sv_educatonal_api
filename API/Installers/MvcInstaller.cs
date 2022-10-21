@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
 using BLL.PaginationService.Services;
 using SMP.BLL.Services.FilterService;
-using SMP.BLL.Services.FileUploadService;
 
 namespace API.Installers
 {
@@ -77,7 +76,6 @@ namespace API.Installers
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<IWebRequestService, WebRequestService>();
             services.AddSingleton<IPaginationService, PaginationService>();
-            services.AddScoped<IFileReaderService, FileReaderService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
