@@ -2,6 +2,7 @@
 using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Common;
+using Microsoft.AspNetCore.Http;
 using SMP.Contracts.Assessment;
 using System;
 using System.Collections.Generic;
@@ -29,5 +30,6 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> GetHomeAssessmentRecord(string homeAssessmentId);
         Task<APIResponse<bool>> IncludeClassAssessmentToScoreEntry(string homeAssessmentId);
         Task<APIResponse<bool>> IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId);
+        Task<APIResponse<string>> ReadFileContentAsync(IFormFile file);
     }
 }

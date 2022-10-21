@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
@@ -25,11 +26,13 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        private readonly IFileUploadService uploadservice;
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadservice)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.uploadservice = uploadservice;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -768,6 +771,15 @@ namespace SMP.BLL.Services.AssessmentServices
                 feedBack.Included = true;
             }
             return "success";
+        }
+
+        async Task<APIResponse<string>> IHomeAssessmentService.ReadFileContentAsync(IFormFile file)
+        {
+            var res = new APIResponse<string>();
+            res.Result = await uploadservice.RetunFileContent(file);
+            res.Message.FriendlyMessage = "Successfully read";
+            res.IsSuccessful = true;
+            return res;
         }
 
     }

@@ -16,14 +16,16 @@ namespace SMP.BLL.Services.FileUploadService
     {
         private readonly IWebHostEnvironment environment;
         private readonly IHttpContextAccessor accessor;
+        private readonly IFileReaderService fileReader;
         private static string ProfileImagePath = "ProfileImage";
         private static string SchoolLogoPath = "SchoolLogo";
         private static string PrincipalStampPath = "PrincipalStamp";
         private static string LessonNotePath = "LessonNote";
-        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
+        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext, IFileReaderService fileReader)
         {
             this.environment = environment;
             accessor = httpContext;
+            this.fileReader = fileReader;
         }
         string IFileUploadService.UploadProfileImage(IFormFile file)
         {
@@ -293,34 +295,22 @@ namespace SMP.BLL.Services.FileUploadService
             }
             throw new ArgumentException("Invalid School Logo");
         }
-        string IFileUploadService.UploadLessonNote(IFormFile file)
+        async Task<string> IFileUploadService.RetunFileContent(IFormFile file)
         {
             string extension = Path.GetExtension(file.FileName);
             string fileName = Guid.NewGuid().ToString() + extension;
-            string filepath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
+            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
             if (file == null || file.Length == 0)
             {
-                return filepath;
+                return "";
             }
             if (file.FileName.EndsWith(".pdf")
                         || file != null && file.Length > 0 || file.FileName.EndsWith(".docx")
                         || file.FileName.EndsWith(".txt"))
             {
-                bool fileExists = File.Exists(filepath);
-                if (fileExists)
+
+                try
                 {
-                    File.Delete(filepath);
-                    using (var fileStream = new FileStream(filepath, FileMode.Create, FileAccess.ReadWrite))
-                    {
-                        fileStream.Position = 0;
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-                        fileStream.Close();
-                    }
-                }
-                else
-                {
-                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         fileStream.Position = 0;
@@ -330,83 +320,36 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
-                    string textNote = string.Empty;
-                    if (extension.Equals(".pdf"))
-                        textNote = ReadTextForPdf(filePath);
-                    else if (extension.Equals(".txt"))
-                        textNote = ReadTextForTxt(filePath, fileName);
-                    else
-                        textNote = ReadTextForDocx(filePath);
-                    File.Delete(filepath);
-
-                    return textNote;
+                    var content = await (this as IFileUploadService).ReadFileAsync(fileName, extension, url);
+                    (this as IFileUploadService).DeleteFile(filePath);
+                    return content;
+                }
+                catch (Exception)
+                {
+                    (this as IFileUploadService).DeleteFile(filePath);
                 }
 
             }
             throw new ArgumentException("Invalid file format");
-            return "";
         } 
-        private string ReadTextForTxt(string filePath,string fileName)
+       
+        void IFileUploadService.DeleteFile(string filePath)
         {
-            string text;
-            if (filePath == null) { throw new ArgumentNullException("file does not exist"); }
+            File.Delete(filePath);
+        }
+
+        async Task<string> IFileUploadService.ReadFileAsync(string fileName, string extension, string filePath)
+        {
             var fileStream = new FileStream(Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName), FileMode.Open, FileAccess.Read);
-            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8))
-            {
-                text = streamReader.ReadToEnd();
-                return text;
-            }
-            return "";
+            string noteContent = string.Empty;
+            if (extension.Equals(".pdf"))
+                noteContent = fileReader.ReadTextForPdf(filePath);
+            else if (extension.Equals(".txt"))
+                noteContent = fileReader.ReadTextForTxt(fileStream);
+            else
+                noteContent = fileReader.ReadTextForDocx(filePath);
+            return await Task.Run(() => noteContent);
         }
-
-        private string ReadTextForPdf(string filePath)
-        {
-            if (filePath == null) { throw new ArgumentNullException("file does not exist"); }
-                StringBuilder text = new StringBuilder();
-            using (PdfReader reader = new PdfReader(filePath))
-            {
-                for (int i = 1; i <= reader.NumberOfPages; i++)
-                {
-                    text.Append(iTextSharp.text.pdf.parser.PdfTextExtractor.GetTextFromPage(reader, i));
-                }
-            }
-
-            return text.ToString();
-        }
-        private string ReadTextForDocx(string filePath)
-        {
-
-            var filePathAsString = filePath as string;
-            if (string.IsNullOrEmpty(filePathAsString))
-            {
-                throw new ArgumentNullException("filePath");
-            }
-
-            if (!File.Exists(filePathAsString))
-            {
-                throw new FileNotFoundException("Could not find file", filePathAsString);
-            }
-
-            var textFromWordDocument = string.Empty;
-            Microsoft.Office.Interop.Word.Application wordApp = new Microsoft.Office.Interop.Word.Application();
-            Microsoft.Office.Interop.Word.Document wordDocument = null;
-            Microsoft.Office.Interop.Word.Range wordContentRange = null;
-
-            try
-            {
-                wordDocument = wordApp.Documents.Open(filePath, Missing.Value, true);
-                wordContentRange = wordDocument.Content;
-                textFromWordDocument = wordContentRange.Text;
-            }
-            catch
-            {
-                // handle the COM exception
-            }
-
-            return textFromWordDocument;
-           // return "";
-        }
-
     }
 
 }
