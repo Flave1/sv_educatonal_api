@@ -11,7 +11,7 @@ namespace SMP.BLL.Services.FileUploadService
         string UpdateSchoolLogo(IFormFile file, string filePath);
         string UploadPrincipalStamp(IFormFile file);
         string UpdatePrincipalStamp(IFormFile file, string filePath);
-        void DeleteFile(string filePath);
+        void DeleteFile(string filePath, IFormFile file);
         Task<string> ReadFileAsync(string fileName, string extension, string filePath);
         Task<string> RetunFileContent(IFormFile file);
     }

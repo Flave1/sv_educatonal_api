@@ -321,21 +321,29 @@ namespace SMP.BLL.Services.FileUploadService
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
                     var content = await (this as IFileUploadService).ReadFileAsync(fileName, extension, url);
-                    (this as IFileUploadService).DeleteFile(filePath);
+                    (this as IFileUploadService).DeleteFile(filePath, file);
                     return content;
                 }
                 catch (Exception)
                 {
-                    (this as IFileUploadService).DeleteFile(filePath);
+                    (this as IFileUploadService).DeleteFile(filePath, file);
                 }
 
             }
             throw new ArgumentException("Invalid file format");
         } 
        
-        void IFileUploadService.DeleteFile(string filePath)
+        void IFileUploadService.DeleteFile(string filePath, IFormFile file)
         {
+           
             File.Delete(filePath);
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+            {
+                fileStream.Position = 0;
+                file.CopyTo(fileStream);
+                fileStream.Flush();
+                fileStream.Close();
+            }
         }
 
         async Task<string> IFileUploadService.ReadFileAsync(string fileName, string extension, string filePath)
