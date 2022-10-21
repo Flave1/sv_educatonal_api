@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\StudentFeedbackFilesPath\" />
-    <Folder Include="wwwroot\LessonNote\" />
     <Folder Include="wwwroot\PrincipalStamp\" />
     <Folder Include="wwwroot\SchoolLogo\" />
     <Folder Include="wwwroot\ProfileImage\" />

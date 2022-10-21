@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.FileUploadService
 {
@@ -13,8 +12,5 @@ namespace SMP.BLL.Services.FileUploadService
         string UpdatePrincipalStamp(IFormFile file, string filePath);
         string UploadFeedbackFiles();
         string UpdateFeedbackFiles(string filePath);
-        void DeleteFile(string filePath);
-        Task<string> ReadFileAsync(string fileName, string extension, string filePath);
-        Task<string> RetunFileContent(IFormFile file);
     }
 }
