@@ -42,10 +42,9 @@ namespace SMP.BLL.Services.EnrollmentServices
 
 
             var query = (from a in context.StudentContact
-                                .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                                .Include(s => s.SessionClass).ThenInclude(s => s.Class).Include(s => s.User)
-                          join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                          where b.Status == status && a.SessionClassId == sessionClassId select a);
+                                .Include(s => s.SessionClass)
+                                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                          where a.Status == status && a.SessionClassId == sessionClassId select a);
 
             var totaltRecord = query.Count();
             var result = paginationService.GetPagedResult(query, filter).Select(a =>  new EnrolledStudents(a, regNoFormat)).ToList();
@@ -62,8 +61,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var query =  (from a in context.StudentContact.Include(s => s.User)
-                                join b in context.Enrollment on a.StudentContactId equals b.StudentContactId
-                                where b.Status == (int)EnrollmentStatus.UnEnrolled
+                                where a.Status == (int)EnrollmentStatus.UnEnrolled
                                 select new EnrolledStudents
                                 {
                                     Status = "unenrrolled",
@@ -88,33 +86,24 @@ namespace SMP.BLL.Services.EnrollmentServices
 
             foreach(var studentId in req.StudentContactIds)
             {
-                using (var transaction = await context.Database.BeginTransactionAsync())
+                try
                 {
-                    try
+                    await studentService.ChangeClassAsync(Guid.Parse(studentId), Guid.Parse(req.SessionClassId));
+                    var student = await context.StudentContact.FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
+                    if (student != null)
                     {
-                        await studentService.ChangeClassAsync(Guid.Parse(studentId), Guid.Parse(req.SessionClassId));
-
-                        var enrollment = await context.Enrollment.Include(d => d.Student).FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
-                        if (enrollment != null)
-                        {
-                            enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
-                            enrollment.StudentContactId = Guid.Parse(studentId);
-                            enrollment.SessionClassId = Guid.Parse(req.SessionClassId);
-                            enrollment.Status = (int)EnrollmentStatus.Enrolled;
-                            await context.SaveChangesAsync();
-                        }
-                        await transaction.CommitAsync();
+                        student.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
+                        student.SessionClassId = Guid.Parse(req.SessionClassId);
+                        student.Status = (int)StudentStatus.Active;
+                        await context.SaveChangesAsync();
                     }
-                    catch (Exception ex)
-                    {
-                        await transaction.RollbackAsync();
-                        res.Message.FriendlyMessage = Messages.FriendlyException;
-                        res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
-                        return res;
-                    }
-                    finally { await transaction.DisposeAsync(); }
                 }
-
+                catch (Exception ex)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyException;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
+                    return res;
+                }
             }
 
             res.IsSuccessful = true;
@@ -129,30 +118,23 @@ namespace SMP.BLL.Services.EnrollmentServices
             var res = new APIResponse<UnEnroll>();
             foreach (var studentId in req.StudentContactIds)
             {
-                using (var transaction = await context.Database.BeginTransactionAsync())
+                try
                 {
-                    try
+                    var student = await context.StudentContact.FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
+                    if (student != null)
                     {
-                        var enrollment = await context.Enrollment.Include(d => d.Student).FirstOrDefaultAsync(e => e.StudentContactId == Guid.Parse(studentId));
-                        if (enrollment != null)
-                        {
-                            enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
-                            enrollment.Status = (int)EnrollmentStatus.UnEnrolled;
-                            await context.SaveChangesAsync();
-                        }
-                        await transaction.CommitAsync();
+                        student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
+                        student.Status = (int)EnrollmentStatus.UnEnrolled;
+                        await context.SaveChangesAsync();
                     }
-                    catch (Exception ex)
-                    {
-                        await transaction.RollbackAsync();
-                        res.Message.FriendlyMessage = Messages.FriendlyException;
-                        res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
-                        return res;
-                    }
-                    finally { await transaction.DisposeAsync(); }
+                }
+                catch (Exception ex)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyException;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
+                    return res;
                 }
             }
-
             res.IsSuccessful = true;
             res.Result = req;
             res.Message.FriendlyMessage = req.StudentContactIds.Count() == 1 ? $"Successfuly unenrolled student" : $"Successfuly unenrolled students";
@@ -162,23 +144,13 @@ namespace SMP.BLL.Services.EnrollmentServices
 
         void IEnrollmentService.UnenrollStudent(Guid studentId)
         {
-            var res = new APIResponse<UnEnroll>();
-            try
+            var enrollment = context.StudentContact.FirstOrDefault(e => e.StudentContactId == studentId);
+            if (enrollment != null)
             {
-                var enrollment =  context.Enrollment.Include(d => d.Student).FirstOrDefault(e => e.StudentContactId == studentId);
-                if (enrollment != null)
-                {
-                    enrollment.Student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
-                    enrollment.Status = (int)EnrollmentStatus.UnEnrolled;
-                    context.SaveChanges();
-                }
+                enrollment.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
+                enrollment.Status = (int)StudentStatus.Inactive;
+                context.SaveChanges();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
-
         }
     }
 }

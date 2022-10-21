@@ -60,10 +60,7 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetDashboardCounts()
         {
-            var enrolledStudents = context.SessionClass
-                        .Include(x => x.Session)
-                        .SelectMany(c => c.Students)
-                        .Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
+            var enrolledStudents = context.StudentContact.Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
 
             var totalClass = context.SessionClass
                 .Include(x => x.Session)

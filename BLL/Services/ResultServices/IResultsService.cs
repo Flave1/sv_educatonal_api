@@ -1,5 +1,6 @@
 ﻿using BLL;
 using DAL.ClassEntities;
+using DAL.StudentInformation;
 using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.ResultModels;
 using System;
@@ -28,7 +29,7 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<StudentCoreEntry>> GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<APIResponse<PreviewResult>> GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
-        Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId);
+        //Task<StudentResultRecord> GetStudentResultOnPromotionAsync(Guid sessionClassId, Guid termId);
         Task UpdateStudentPrintStatusAsync(Guid classId, Guid studentId, bool isResultPrinted);
         Task<APIResponse<PrintResult>> GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task UpdateSessionClassArchiveAsync(Guid studentId, Guid termId, bool isPublished);

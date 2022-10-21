@@ -16,6 +16,7 @@ namespace SMP.BLL.Services.FileUploadService
         private static string ProfileImagePath = "ProfileImage";
         private static string SchoolLogoPath = "SchoolLogo";
         private static string PrincipalStampPath = "PrincipalStamp";
+        private static string StudentFeedbackFilesPath = "StudeentFeedbackFilesPath";
         public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
         {
             this.environment = environment;
@@ -289,7 +290,89 @@ namespace SMP.BLL.Services.FileUploadService
             }
             throw new ArgumentException("Invalid School Logo");
         }
+        string IFileUploadService.UploadFeedbackFiles()
+        {
+            var files = accessor.HttpContext.Request.Form.Files;
+            var fileUrls = new List<string>();
+            if (files is not null)
+            {
+                foreach (var file in files)
+                {
+                    if (file == null || file.Length == 0)
+                    {
+                        continue;
+                    }
 
-    }
+                    string extension = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString() + extension;
 
+                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                    fileUrls.Add(url);
+
+                }
+            }
+            return fileUrls.Any() ? string.Join(',', fileUrls) : "";
+        }
+        string IFileUploadService.UpdateFeedbackFiles(string filePath)
+        {
+            var files = accessor.HttpContext.Request.Form.Files;
+            var fileUrls = new List<string>();
+            var prevFileUrls = new List<string>();
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                prevFileUrls.AddRange(filePath.Split(',').ToList());
+            }
+            if (prevFileUrls.Any())
+            {
+                foreach (var fileUrl in prevFileUrls)
+                {
+                    bool fileExists = File.Exists(fileUrl);
+                    if (fileExists)
+                    {
+                        File.Delete(fileUrl);
+                    }
+                }
+            }
+
+            if (files is not null)
+            {
+                foreach (var file in files)
+                {
+                    if (file == null || file.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    string ext = Path.GetExtension(file.FileName);
+                    string fileName = Guid.NewGuid().ToString() + ext;
+
+                    var newfilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+
+                    using (var fileStream = new FileStream(newfilePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                    fileUrls.Add(url);
+                }
+            }
+            return fileUrls.Any() ? string.Join(',', fileUrls) : "";
+        } 
+    } 
 }

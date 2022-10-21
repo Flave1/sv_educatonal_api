@@ -27,6 +27,10 @@ namespace SMP.Contracts.Assessment
         public string DateDeadLine { get; set; }
         public string TimeDeadLine { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
+        public GetHomeAssessmentRequest()
+        {
+
+        }
         public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
         {
             DateDeadLine = db.DateDeadLine;
@@ -107,7 +111,7 @@ namespace SMP.Contracts.Assessment
                 Status = "saved";
         
             if (studentIds.Any())
-                StudentList = studentIds.Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
+                StudentList = studentIds.OrderByDescending(x =>  db.HomeAssessmentFeedBacks.Select(s => s.StudentContactId.ToString()).Contains(x)).Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
         }
     }
 

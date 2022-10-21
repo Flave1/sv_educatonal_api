@@ -45,7 +45,8 @@ namespace SMP.Contracts.PromotionModels
     {
         public string ClassToBePromoted { get; set; }
         public string ClassToPromoteTo { get; set; }
-
+        public string PassedStudents { get; set; }
+        public string FailedStudents { get; set; }
     }
 
     public class FetchPassedOrFailedStudents

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
@@ -25,11 +26,13 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        public readonly IFileUploadService uploadService;
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.uploadService = uploadService;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -226,22 +229,24 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
                 var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
-                sessionClasId = student.StudentContactId.ToString();
+                sessionClasId = student.SessionClassId.ToString();
             }
 
-            var studentsInClass = context.SessionClass.Include(s => s.Students)
-                .Where(d => d.SessionClassId == Guid.Parse(sessionClasId)).SelectMany(s => s.Students)
-                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
+            var studentsInClass = context.StudentContact
+                .Include(s => s.User)
+                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId)).ToList();
+
             var result = await context.HomeAssessment
-                   .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Students).ThenInclude(s => s.User)
-                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                 .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
-                 .Include(q => q.SessionTerm)
-                 //.Include(q => q.AssessmentScoreRecord)
-                 .Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
-                .OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Include(q => q.SessionClassGroup)
+                .Include(q => q.SessionTerm)
+                .Include(q => q.HomeAssessmentFeedBacks)
+                //.Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+                //.Include(q => q.HomeAssessmentFeedBacks).ThenInclude(d => d.StudentContact)
+                //.Include(s => s.SessionClass).ThenInclude(s => s.Students).ThenInclude(s => s.User)
+                .OrderByDescending(d => d.CreatedOn)
                 .Select(f => new GetHomeAssessmentRequest(f, studentsInClass)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -316,14 +321,16 @@ namespace SMP.BLL.Services.AssessmentServices
             var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid));
 
             var query = context.HomeAssessment
-                .Include(d => d.HomeAssessmentFeedBacks)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Students)
-                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
-                .Include(q => q.SessionTerm)
+                .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId)
                 .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false && d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId);
+                .Include(d => d.HomeAssessmentFeedBacks)
+                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Include(q => q.SessionClassGroup)
+                //.Include(q => q.SessionTerm)
+                //.ThenInclude(s => s.SessionClass)
+                //.Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                //.Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                .Where(x => x.Deleted == false);
 
             if (status == -1)
             {
@@ -381,12 +388,10 @@ namespace SMP.BLL.Services.AssessmentServices
                         return res;
                     }
 
-                    //do update 
-                    //assigment cannot be edited when the status is submitted
-
+                    var files = uploadService.UpdateFeedbackFiles(reg.AttachmentUrls);
                     reg.Content = request.Content;
                     reg.Status = request.ShouldSubmit ? (int)HomeAssessmentStatus.Submitted : (int)HomeAssessmentStatus.Saved;
-                    reg.AttachmentUrls = "";
+                    reg.AttachmentUrls = files;
                     reg.HomeAssessmentId = Guid.Parse(request.HomeAssessmentId);
                 }
                 else
@@ -401,6 +406,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
                     reg = new HomeAssessmentFeedBack();
 
+                    var files = uploadService.UploadFeedbackFiles();
                     reg.StudentContactId = Guid.Parse(studentContactid);
                     reg.Content = request.Content;
                     reg.Status = request.ShouldSubmit ? (int)HomeAssessmentStatus.Submitted : (int)HomeAssessmentStatus.Saved;
@@ -415,7 +421,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = "Successfully submitted";
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 throw;
             }
@@ -425,16 +431,32 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<GetHomeAssessmentFeedback>();
 
+
             var result = await context.HomeAssessmentFeedBack
-                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Students)
-                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
-                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false
-                && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
-                .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
+              .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+              .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                var assessment = context.HomeAssessment
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                    .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                    .Include(q => q.SessionClassGroup)
+                    .Include(q => q.SessionTerm)
+                    .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
+                result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
+            }
+
+            //var result = await context.HomeAssessmentFeedBack
+            //    .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Students)
+            //    .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Class)
+            //    .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+            //     .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+            //     .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionTerm)
+            //    .OrderByDescending(d => d.CreatedOn)
+            //    .Where(d => d.Deleted == false
+            //    && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+            //    .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
           
 
@@ -449,17 +471,19 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<GetHomeAssessmentFeedback>();
 
             var result = await context.HomeAssessmentFeedBack
-                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Students)
-                .Include(s => s.HomeAssessment).ThenInclude(s => s.SessionClass).ThenInclude(s => s.Class)
-                .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
-                 .Include(s => s.HomeAssessment).ThenInclude(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted == false
-                && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+                .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
                 .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
-
+            if(result != null)
+            {
+                var assessment = context.HomeAssessment
+                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                    .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                    .Include(q => q.SessionClassGroup)
+                    .Include(q => q.SessionTerm)
+                    .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
+                result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
+            }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
