@@ -25,5 +25,12 @@ namespace SMP.API.Controllers
             var response = service.GetDashboardCountAsync();
             return Ok(response);
         }
+
+        [HttpGet("get-student/dashboard-count")]
+        public IActionResult GetStudentDashboardCountAsync()
+        {
+            var response = service.GetStudentDashboardCountAsync();
+            return Ok(response);
+        }
     }
 }

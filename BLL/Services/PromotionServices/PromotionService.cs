@@ -10,6 +10,7 @@ using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.PromotionModels;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,110 +46,85 @@ namespace SMP.BLL.Services.PromorionServices
             {
                 Guid previousSessionId = lastTwoSessions.Last().SessionId;
                 var lastTermOfPreviousSession = sessionService.GetPreviousSessionLastTermAsync(previousSessionId);
-                var result = await context.SessionClass
-                    .Include(rr => rr.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
-                    .OrderBy(d => d.Class.Name)
+                var classes = await context.SessionClass
+                    .Include(rr => rr.Class)
                     .Include(d => d.SessionClassArchive)
-                    .Include(d => d.Students).ThenInclude(s => s.ScoreEntries)
+                    .OrderBy(d => d.Class.Name)
                     .Where(r => r.InSession && r.Deleted == false && r.SessionId == previousSessionId)
-                    .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new PreviousSessionClasses(g, lastTermOfPreviousSession.SessionTermId)).ToListAsync();
+                    .Select(g => new PreviousSessionClasses(g)).ToListAsync();
 
-                if (result.Any())
+                foreach(var cl in classes)
                 {
-                    //result.ForEach(x =>
-                    //{
-                    //    x.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll
-                    //        ? x.TotalStudentsInClass - x.TotalStudentsFailed : x.TotalStudentsInClass;
-                    //});
-
-                    foreach(var x in result)
+                    var studentRecords = context.StudentContact.Include(x => x.ScoreEntries).Where(x => x.SessionClassId == cl.SessionClassId).Select(d => new StudentResultRecord(d, lastTermOfPreviousSession.SessionTermId)).ToList();
+                    if (studentRecords != null)
                     {
-                        x.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll == false  ? x.TotalStudentsInClass - x.TotalStudentsFailed : x.TotalStudentsInClass;
+                        cl.PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+                        cl.FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
+                        cl.TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
+                        cl.TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
+                        cl.TotalStudentsInClass = cl.TotalStudentsPassed + cl.TotalStudentsFailed;
+                        cl.StudentsToBePromoted = context.ResultSetting.FirstOrDefault().PromoteAll == false ? cl.TotalStudentsInClass - cl.TotalStudentsFailed : cl.TotalStudentsInClass;
                     }
                 }
-                res.Result = result;
+                res.Result = classes.ToList();
             }
-           
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
 
-        async Task<APIResponse<bool>> IPromotionService.PromoteClassAsync(Guid classToPromote, Guid classToPromoteTo)
+        async Task<APIResponse<bool>> IPromotionService.PromoteClassAsync(Promote request)
         {
             var res = new APIResponse<bool>();
+            var passedStudents = !string.IsNullOrEmpty(request.PassedStudents) ? request.PassedStudents.Split(',').Select(Guid.Parse).ToList() : Enumerable.Empty<Guid>();
+            var failedStudents = !string.IsNullOrEmpty(request.FailedStudents) ? request.FailedStudents.Split(',').Select(Guid.Parse).ToList() : Enumerable.Empty<Guid>();
 
-            using(var transaction = await context.Database.BeginTransactionAsync())
+            try
             {
-                try
+                var resultSettings = context.ResultSetting.FirstOrDefault();
+                if (resultSettings == null)
                 {
-                    var allStudentsInClassToPromote = context.SessionClass
-                        .Include(s => s.Students)
-                        .FirstOrDefault(w => w.SessionClassId == classToPromote).Students;
-
-                    if (allStudentsInClassToPromote.Any())
-                    {
-                        var resultSettings = context.ResultSetting.FirstOrDefault();
-                        if(resultSettings == null)
-                        {
-                            res.Message.FriendlyMessage = "Result settings not found";
-                            return res;
-                        }
-
-                        string session = Convert.ToString(allStudentsInClassToPromote.FirstOrDefault().SessionClass.SessionId);
-
-                        if (resultSettings.PromoteAll)
-                        {
-                            foreach (var student in allStudentsInClassToPromote)
-                            {
-                                var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
-                                if (enrollment != null)
-                                    enrollment.Status = (int)EnrollmentStatus.Enrolled;
-                                await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
-                            }
-                        }
-                        else
-                        {
-                            var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(Guid.Parse(session));
-                            foreach (var student in allStudentsInClassToPromote)
-                            {
-                                var studentPreviousExamRecord = await resultsService.GetStudentResultOnPromotionAsync(classToPromote, lastTermOfPreviousSessionTerm.SessionTermId, student.StudentContactId);
-                                if (studentPreviousExamRecord.ShouldPromoteStudent)
-                                {
-                                    var enrollment = await context.Enrollment.FirstOrDefaultAsync(e => e.StudentContactId == student.StudentContactId);
-                                    if (enrollment != null)
-                                        enrollment.Status = (int)EnrollmentStatus.Enrolled;
-                                    await studentService.ChangeClassAsync(student.StudentContactId, classToPromoteTo);
-                                }
-                                else
-                                {
-                                    enrollmentService.UnenrollStudent(student.StudentContactId);
-                                }
-                            }
-                        }
-                        
-                        await UpdatePromotedClassAsync(classToPromote);
-                        await transaction.CommitAsync();
-                        res.Message.FriendlyMessage = "Promotion Successful";
-                        res.Result = true;
-                        res.IsSuccessful = true;
-                    }
-                    else
-                    {
-                        await transaction.RollbackAsync();
-                        res.Message.FriendlyMessage = "No student found in this class to promote";
-                    }
+                    res.Message.FriendlyMessage = "Result settings not found";
                     return res;
                 }
-                catch (Exception ex)
+
+                Guid session = context.SessionClass.FirstOrDefault(x => x.SessionClassId == Guid.Parse(request.ClassToBePromoted)).SessionId;
+
+                if (resultSettings.PromoteAll)
                 {
-                    await transaction.RollbackAsync();
-                    res.Message.FriendlyMessage = Messages.ClassTransitionException;
-                    res.Message.TechnicalMessage = ex.ToString();
-                    return res;
+                    var allStudents = passedStudents.Concat(failedStudents).ToList();
+                    foreach (var studentId in allStudents)
+                    {
+                        await studentService.ChangeClassAsync(studentId, Guid.Parse(request.ClassToPromoteTo));
+                    }
                 }
+                else
+                {
+                    var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(session);
+                    foreach (var studentId in passedStudents)
+                    {
+                        await studentService.ChangeClassAsync(studentId, Guid.Parse(request.ClassToPromoteTo));
+                    }
+                    foreach (var studentId in failedStudents)
+                    {
+                        enrollmentService.UnenrollStudent(studentId);
+                    }
+
+                }
+                await UpdatePromotedClassAsync(Guid.Parse(request.ClassToBePromoted));
+
+                res.Message.FriendlyMessage = "Promotion Successful";
+                res.Result = true;
+                res.IsSuccessful = true;
+                return res;
             }
-           
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.ClassTransitionException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+
         }
 
         

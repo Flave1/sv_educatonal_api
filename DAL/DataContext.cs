@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.ClassEntities;
-using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.Register;
 using SMP.DAL.Models.PromotionEntities;
@@ -58,15 +57,12 @@ namespace DAL
         public DbSet<AppActivity> AppActivity { get; set; }
         public DbSet<RoleActivity> RoleActivity { get; set; }
         public DbSet<StudentSessionClassHistory> StudentSessionClassHistory { get; set; }
-        public DbSet<Enrollment> Enrollment { get; set; }
         public DbSet<GradeGroup> GradeGroup { get; set; }
         public DbSet<Grade> Grade { get; set; }
         public DbSet<StudentAttendance> StudentAttendance { get; set; }
         public DbSet<ClassRegister> ClassRegister { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
-        //public DbSet<PromotedSessionClass> PromotedSessionClass { get; set; }
-        //public DbSet<PublishStatus> PublishStatus { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         public DbSet<ResultSetting> ResultSetting { get; set; }
         public DbSet<NotificationSetting> NotificationSetting { get; set; }

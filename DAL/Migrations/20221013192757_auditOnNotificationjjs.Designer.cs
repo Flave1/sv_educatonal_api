@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221013192757_auditOnNotificationjjs")]
+    partial class auditOnNotificationjjs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1092,6 +1094,45 @@ namespace SMP.DAL.Migrations
                     b.ToTable("SessionClassSubject");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.EnrollmentEntities.Enrollment", b =>
+                {
+                    b.Property<Guid>("EnrollmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SessionClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentContactId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EnrollmentId");
+
+                    b.HasIndex("SessionClassId");
+
+                    b.HasIndex("StudentContactId");
+
+                    b.ToTable("Enrollment");
+                });
+
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.Grade", b =>
                 {
                     b.Property<Guid>("GradeId")
@@ -1537,9 +1578,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Svg")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ToGroup")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
@@ -2417,6 +2455,25 @@ namespace SMP.DAL.Migrations
                     b.Navigation("Subject");
 
                     b.Navigation("SubjectTeacher");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.EnrollmentEntities.Enrollment", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
+                        .WithMany()
+                        .HasForeignKey("SessionClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.StudentInformation.StudentContact", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SessionClass");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.GradeEntities.Grade", b =>

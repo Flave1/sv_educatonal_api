@@ -20,4 +20,12 @@
         public long TotalUnusedPins { get; set; }
         public long TotalAssessments { get; set; }
     }
+
+    public class GetStudentshDasboardCount
+    {
+        public long TotalSubjects { get; set; }
+        public long TotalAssessments { get; set; }
+        public long TotaldLessonNotes { get; set; }
+        public long StudentNotes { get; set; }
+    }
 }

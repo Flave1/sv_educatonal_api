@@ -302,22 +302,16 @@ namespace SMP.Contracts.ResultModels
             StudentContactId = st.StudentContactId.ToString();
         }
 
-        public StudentResultRecord(ICollection<StudentContact> sts, Guid termId)
+        public StudentResultRecord(List<ScoreEntry> studentScoreEntries)
         {
-            foreach(var st in sts)
-            {
-                var studentScoreEntries = st.ScoreEntries.Where(x => x.IsOffered && x.SessionTermId == termId);
-                AssessmentScore = studentScoreEntries.Sum(d => d.AssessmentScore);
-                ExamScore = studentScoreEntries.Sum(d => d.ExamScore);
-                TotalScore = AssessmentScore + ExamScore;
-                var totalSubjects = studentScoreEntries.Count();
-                AverageScore = Math.Round(totalSubjects > 0 ? TotalScore / totalSubjects : 0, 2);
-                ShouldPromoteStudent = AverageScore > st.SessionClass.PassMark;
-                PassedStudents = ShouldPromoteStudent ? PassedStudents + 1 : PassedStudents + 0;
-                FailedStudents = !ShouldPromoteStudent ? FailedStudents + 1 : FailedStudents + 0;
-            }
-            
-
+            //var studentScoreEntries = st.ScoreEntries.Where(x => x.IsOffered);
+            AssessmentScore = studentScoreEntries.Sum(d => d.AssessmentScore);
+            ExamScore = studentScoreEntries.Sum(d => d.ExamScore);
+            TotalScore = AssessmentScore + ExamScore;
+            var totalSubjects = studentScoreEntries.Count();
+            AverageScore = Math.Round(totalSubjects > 0 ? TotalScore / totalSubjects : 0, 2);
+            //ShouldPromoteStudent = AverageScore > st.SessionClass.PassMark;
+            //StudentContactId = st.StudentContactId.ToString();
         }
     }
 

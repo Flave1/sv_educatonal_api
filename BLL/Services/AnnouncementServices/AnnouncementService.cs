@@ -156,6 +156,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                 Subject = newAnnouncement.Header,
                 Receivers = "all",
                 Type = "announcement",
+                ToGroup = request.AssignedTo
             });
             await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
 

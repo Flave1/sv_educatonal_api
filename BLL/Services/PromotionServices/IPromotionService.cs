@@ -9,7 +9,7 @@ namespace SMP.BLL.Services.PromorionServices
     public interface IPromotionService
     {
         Task<APIResponse<List<PreviousSessionClasses>>> GetPreviousSessionClassesAsync();
-        Task<APIResponse<bool>> PromoteClassAsync(Guid classToPromote, Guid classToPromoteTo);
+        Task<APIResponse<bool>> PromoteClassAsync(Promote request);
         Task<APIResponse<List<GetStudents>>> GetAllPassedStudentsAsync(FetchPassedOrFailedStudents request);
         Task<APIResponse<List<GetStudents>>> GetAllFailedStudentsAsync(FetchPassedOrFailedStudents request);
     }

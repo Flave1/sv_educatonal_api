@@ -91,16 +91,17 @@ namespace SMP.Contracts.Assessment
         public string Content { get; set; }
         public int Status { get; set; }
         public decimal Score { get; set; }
-        public string HomeAssessmentId { get; set; }
+        public Guid HomeAssessmentId { get; set; }
         public string StatusName { get; set; }
         public List<string> Files { get; set; }
 
-        public GetHomeAssessmentRequest Assessment { get; set; }
+        public GetHomeAssessmentRequest Assessment { get; set; } = new GetHomeAssessmentRequest();
         public GetHomeAssessmentFeedback(HomeAssessmentFeedBack db)
         {
             Content = db.Content;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
-            HomeAssessmentId = db.HomeAssessmentId.ToString();
+            HomeAssessmentId = db.HomeAssessmentId;
+            Files = (!string.IsNullOrEmpty(db.AttachmentUrls) ? db.AttachmentUrls.Split(',').ToList() : new List<string>()); 
             Status = db.Status;
             if (db.Status == 1)
                 StatusName = "open";
@@ -111,10 +112,10 @@ namespace SMP.Contracts.Assessment
             if (db.Status == 0)
                 StatusName = "saved";
 
-            if (db.HomeAssessment is not null)
-            {
-                Assessment = new GetHomeAssessmentRequest(db.HomeAssessment, 0);
-            }
+            //if (db.HomeAssessment is not null)
+            //{
+            //    Assessment = new GetHomeAssessmentRequest(db.HomeAssessment, 0);
+            //}
         }
 
     }

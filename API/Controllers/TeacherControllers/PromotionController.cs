@@ -30,7 +30,7 @@ namespace SMP.API.Controllers
         [HttpPost("promote/class")]
         public async Task<IActionResult> PromoteClassAsync([FromBody] Promote request)
         {
-            var response = await service.PromoteClassAsync(Guid.Parse(request.ClassToBePromoted), Guid.Parse(request.ClassToPromoteTo));
+            var response = await service.PromoteClassAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

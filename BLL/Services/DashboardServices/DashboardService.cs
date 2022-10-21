@@ -47,12 +47,20 @@ namespace SMP.BLL.Services.DashboardServices
             return res;
         }
 
+        APIResponse<GetStudentshDasboardCount> IDashboardService.GetStudentDashboardCountAsync()
+        {
+            var res = new APIResponse<GetStudentshDasboardCount>();
+
+            var studentId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
+            res.Result = GetStudentDashboardCounts(Guid.Parse(studentId));
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
+
         private GetDashboardCount GetDashboardCounts()
         {
-            var enrolledStudents = context.SessionClass
-                        .Include(x => x.Session)
-                        .SelectMany(c => c.Students)
-                        .Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
+            var enrolledStudents = context.StudentContact.Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
 
             var totalClass = context.SessionClass
                 .Include(x => x.Session)
@@ -116,5 +124,36 @@ namespace SMP.BLL.Services.DashboardServices
                 TotalUnusedPins = totalUnusedPins
             };
         }
+
+        private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
+        {
+            var student = context.StudentContact.FirstOrDefault(x => x.StudentContactId == studentId);
+            if (student == null)
+                throw new ArgumentException("Not found");
+            var totalSubject = context.SessionClassSubject
+                .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId);
+
+
+            var totalHomeAssessments = context.HomeAssessmentFeedBack
+               .Count(x => x.Deleted == false && x.StudentContactId == studentId);
+
+            var totalClassAssessments = context.AssessmentScoreRecord
+               .Count(x => x.StudentContactId == studentId);
+
+            var notes = context.StudentNote
+               .Count(x => x.StudentContactId == studentId);
+
+            //var lessonNotes = context.TeacherClassNote
+            //   .AsEnumerable().Where(x => x.Classes.Split(',').ToList().Select(Guid.Parse).Contains(studentId)).Distinct().Count();
+
+            return new GetStudentshDasboardCount
+            {
+                TotalAssessments = (totalHomeAssessments + totalClassAssessments),
+                TotalSubjects = totalSubject,
+                StudentNotes = notes,
+                TotaldLessonNotes = 0,
+            };
+        }
     }
+
 }

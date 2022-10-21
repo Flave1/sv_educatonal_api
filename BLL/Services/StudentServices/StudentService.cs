@@ -18,7 +18,6 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
-using SMP.DAL.Models.EnrollmentEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -40,7 +39,7 @@ namespace BLL.StudentServices
         private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
 
-        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService)
+        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService)
         {
             this.context = context;
             this.userManager = userManager;
@@ -49,6 +48,7 @@ namespace BLL.StudentServices
             this.accessor = accessor;
             this.pinService = pinService;
             this.paginationService = paginationService;
+            this.userService = userService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -88,9 +88,6 @@ namespace BLL.StudentServices
                     await context.SaveChangesAsync();
 
                     await CreateStudentSessionClassHistoryAsync(item);
-                    
-                    await EnrollOnCreateStudentAsync(item);
-
 
                     await transaction.CommitAsync();
                     res.Message.FriendlyMessage = Messages.Created;
@@ -226,10 +223,9 @@ namespace BLL.StudentServices
 
            
             var query = context.StudentContact
-                .OrderByDescending(d => d.CreatedOn)
-                .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.User)
+                .Include(q => q.User) 
+                .OrderBy(s => s.User.FirstName)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student);
 
              var totaltRecord = query.Count();
@@ -301,40 +297,18 @@ namespace BLL.StudentServices
 
         async Task IStudentService.ChangeClassAsync(Guid studentId, Guid classId)
         {
-            try
+            var std = await context.StudentContact.FirstOrDefaultAsync(wh => wh.StudentContactId == studentId);
+            if (std != null)
             {
-                var std = await context.StudentContact.FirstOrDefaultAsync(wh => wh.StudentContactId == studentId);
-                if (std != null)
-                {
-                    std.SessionClassId = classId;
-                    std.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
-                    await CreateStudentSessionClassHistoryAsync(std);
-                }
-            }
-            catch (Exception)
-            { 
-                throw;
+                std.SessionClassId = classId;
+                std.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
+                await CreateStudentSessionClassHistoryAsync(std);
             }
         }
-
-        async Task EnrollOnCreateStudentAsync(StudentContact std)
-        {
-            var enrollment = new Enrollment();
-            enrollment.StudentContactId = std.StudentContactId;
-            enrollment.SessionClassId = std.SessionClassId;
-            enrollment.Status = (int)EnrollmentStatus.Enrolled;
-            await context.AddAsync(enrollment);
-            await context.SaveChangesAsync();
-
-          
-        }
-
-
 
         async Task<APIResponse<StudentContact>> IStudentService.UploadStudentsAsync()
         {
             var res = new APIResponse<StudentContact>();
-
             try
             {
                 List<UploadStudentExcel> uploadedRecord = new List<UploadStudentExcel>();
@@ -397,8 +371,7 @@ namespace BLL.StudentServices
                                     CityId = workSheet.Cells[i, 16].Value != null ? workSheet.Cells[i, 16].Value.ToString() : null,
                                     StateId = workSheet.Cells[i, 17].Value != null ? workSheet.Cells[i, 17].Value.ToString() : null,
                                     CountryId = workSheet.Cells[i, 18].Value != null ? workSheet.Cells[i, 18].Value.ToString() : null,
-                                    ZipCode = workSheet.Cells[i, 19].Value != null ? workSheet.Cells[i, 19].Value.ToString() : null,
-
+                                    ZipCode = workSheet.Cells[i, 19].Value != null ? workSheet.Cells[i, 19].Value.ToString() : null
                                 });
                             }
                         }
@@ -456,7 +429,8 @@ namespace BLL.StudentServices
                                 if (std is null)
                                 {
                                     var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-                                    var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, regNoFormat.Replace("%VALUE%", item.RegistrationNumber));
+                                    var rgNo = regNoFormat.Replace("%VALUE%", item.RegistrationNumber);
+                                    var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, rgNo);
                                     std = new StudentContact();
                                     std.CityId = std.CityId;
                                     std.CountryId = item.CountryId;
@@ -479,7 +453,7 @@ namespace BLL.StudentServices
                                     context.StudentContact.Add(std);
                                     await context.SaveChangesAsync();
                                     await CreateStudentSessionClassHistoryAsync(std);
-                                    await EnrollOnCreateStudentAsync(std);
+
                                 }
                                 else
                                 {
@@ -516,7 +490,6 @@ namespace BLL.StudentServices
                             }
                         }
                         await transaction.CommitAsync();
-
                     }
                 }
             }
