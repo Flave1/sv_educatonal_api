@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
+using SautinSoft.Document; // install the function from nuget package
+//using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.FileUploadService
 {
@@ -21,7 +22,15 @@ namespace SMP.BLL.Services.FileUploadService
             this.accessor = accessor;
         }
 
-        string IFileReaderService.ReadTextForTxt(FileStream fileStream)
+        public string ReadFile(string filepath)
+        {
+            DocumentCore documentContent = DocumentCore.Load(filepath);
+            return documentContent.Content.ToString();
+
+        }
+
+
+        /*string IFileReaderService.ReadTextForTxt(FileStream fileStream)
         {
             string text;
             
@@ -75,8 +84,8 @@ namespace SMP.BLL.Services.FileUploadService
             }
 
             return textFromWordDocument;
-            // return "";
-        }
+            // return "";*/
+        // }
 
     }
 }

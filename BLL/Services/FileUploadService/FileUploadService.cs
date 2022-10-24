@@ -269,13 +269,13 @@ namespace SMP.BLL.Services.FileUploadService
                 if (fileExists)
                 {
                     File.Delete(filePath);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
-                    {
-                        fileStream.Position = 0;
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-                        fileStream.Close();
-                    }
+                    //using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    //{
+                    //    fileStream.Position = 0;
+                    //    file.CopyTo(fileStream);
+                    //    fileStream.Flush();
+                    //    fileStream.Close();
+                    //}
                 }
                 else
                 {
@@ -337,26 +337,33 @@ namespace SMP.BLL.Services.FileUploadService
         {
            
             File.Delete(filePath);
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
-            {
-                fileStream.Position = 0;
-                file.CopyTo(fileStream);
-                fileStream.Flush();
-                fileStream.Close();
-            }
+            //using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+            //{
+            //    fileStream.Position = 0;
+            //    file.CopyTo(fileStream);
+            //    fileStream.Flush();
+            //    fileStream.Close();
+            //}
         }
 
         async Task<string> IFileUploadService.ReadFileAsync(string fileName, string extension, string filePath)
         {
             var fileStream = new FileStream(Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName), FileMode.Open, FileAccess.Read);
             string noteContent = string.Empty;
-            if (extension.Equals(".pdf"))
+            if(extension.Equals(".pdf") || extension.Equals(".docx") || extension.Equals(".txt"))
+            {
+                noteContent = fileReader.ReadFile(filePath);
+            }
+            fileStream.Close();
+            fileStream.Dispose();
+            return await Task.Run(() => noteContent);
+            /*if (extension.Equals(".pdf"))
                 noteContent = fileReader.ReadTextForPdf(filePath);
             else if (extension.Equals(".txt"))
                 noteContent = fileReader.ReadTextForTxt(fileStream);
             else
                 noteContent = fileReader.ReadTextForDocx(filePath);
-            return await Task.Run(() => noteContent);
+            return await Task.Run(() => noteContent);*/
         }
     }
 
