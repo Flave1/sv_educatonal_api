@@ -1,5 +1,6 @@
 ﻿using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Identity;
+using SMP.Contracts.Parents;
 using System;
 
 namespace DAL.Authentication
@@ -24,5 +25,6 @@ namespace DAL.Authentication
         public string UpdatedBy { get; set; }
 
         public Teacher Teacher { get; set; }
+        public Parents Parents { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.ClassEntities;
+using SMP.Contracts.Parents;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
@@ -15,6 +16,8 @@ namespace DAL.StudentInformation
         public Guid StudentContactId { get; set; }
         public string UserId { get; set; }
         public AppUser User { get; set; }
+        public Parents Parents { get; set; }
+        public Student_Parent student_parent { get; set; }
         public string HomePhone { get; set; }
         public string EmergencyPhone { get; set; }
         public string ParentOrGuardianName { get; set; }
