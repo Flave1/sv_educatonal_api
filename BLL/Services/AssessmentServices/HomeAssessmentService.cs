@@ -794,5 +794,13 @@ namespace SMP.BLL.Services.AssessmentServices
             return "success";
         }
 
+        APIResponse<string> IHomeAssessmentService.ReadFileContent(IFormFile file)
+        {
+            var res = new APIResponse<string>();
+            res.Result = uploadService.RetunFileContent(file);
+            res.Message.FriendlyMessage = "Successfully read";
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using SautinSoft.Document;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,6 @@ namespace SMP.BLL.Services.FileUploadService
     {
         private readonly IWebHostEnvironment environment;
         private readonly IHttpContextAccessor accessor;
-        private readonly IFileReaderService
         private static string ProfileImagePath = "ProfileImage";
         private static string SchoolLogoPath = "SchoolLogo";
         private static string PrincipalStampPath = "PrincipalStamp";
@@ -378,7 +378,7 @@ namespace SMP.BLL.Services.FileUploadService
             return fileUrls.Any() ? string.Join(',', fileUrls) : "";
         }
 
-        async Task<string> IFileUploadService.RetunFileContent(IFormFile file)
+        string IFileUploadService.RetunFileContent(IFormFile file)
         {
             string extension = Path.GetExtension(file.FileName);
             string fileName = Guid.NewGuid().ToString() + extension;
@@ -403,7 +403,7 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
                     var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
-                    var content = await (this as IFileUploadService).ReadFileAsync(fileName, extension, url);
+                    var content = (this as IFileUploadService).ReadFileAsync(url);
                     (this as IFileUploadService).DeleteFile(filePath);
                     return content;
                 }
@@ -421,20 +421,10 @@ namespace SMP.BLL.Services.FileUploadService
             File.Delete(filePath);
         }
 
-        async Task<string> IFileUploadService.ReadFileAsync(string fileName, string extension, string filePath)
+        string IFileUploadService.ReadFileAsync(string filePath)
         {
-            var fileStream = new FileStream(Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName), FileMode.Open, FileAccess.Read);
-            string noteContent = string.Empty;
-            if (extension.Equals(".pdf"))
-                noteContent = fileReader.ReadTextForPdf(filePath);
-            else if (extension.Equals(".txt"))
-                noteContent = fileReader.ReadTextForTxt(fileStream);
-            else
-                noteContent = fileReader.ReadTextForDocx(filePath);
-
-            fileStream.Flush();
-            fileStream.Close();
-            return await Task.Run(() => noteContent);
+            DocumentCore documentContent = DocumentCore.Load(filePath);
+            return documentContent.Content.ToString();
         }
     } 
 }

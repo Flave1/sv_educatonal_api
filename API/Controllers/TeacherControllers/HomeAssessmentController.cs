@@ -3,6 +3,7 @@ using BLL.MiddleWares;
 using Contracts.Annoucements;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.Contracts.Assessment;
@@ -120,6 +121,15 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> IncludeStudentAssessmentToScoreEntry([FromBody] SingleFeedback request)
         {
             var response = await service.IncludeStudentAssessmentToScoreEntry(request.HomeAssessmentFeedBackId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("get/lessonnote-content")]
+        public IActionResult UploadTeachersNote(IFormFile file)
+        {
+            var response = service.ReadFileContent(file);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
