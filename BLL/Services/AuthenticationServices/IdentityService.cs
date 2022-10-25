@@ -70,7 +70,6 @@ namespace BLL.AuthenticationServices
 
                 if(userAccount.UserType == (int)UserTypes.Admin)
                 {
-                    //var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
                 }
 
@@ -99,6 +98,10 @@ namespace BLL.AuthenticationServices
                     id = studentAccount?.StudentContactId ?? new Guid();
                 }
 
+                if (userAccount.UserType == (int)UserTypes.Parent)
+                {
+                }
+
                 var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
@@ -107,9 +110,9 @@ namespace BLL.AuthenticationServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 

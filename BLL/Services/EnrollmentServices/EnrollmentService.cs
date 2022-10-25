@@ -42,6 +42,7 @@ namespace SMP.BLL.Services.EnrollmentServices
 
 
             var query = (from a in context.StudentContact
+                                .Include(x => x.User)
                                 .Include(s => s.SessionClass)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                           where a.Status == status && a.SessionClassId == sessionClassId select a);
