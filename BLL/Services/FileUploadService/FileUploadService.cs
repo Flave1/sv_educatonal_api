@@ -382,7 +382,7 @@ namespace SMP.BLL.Services.FileUploadService
         {
             string extension = Path.GetExtension(file.FileName);
             string fileName = Guid.NewGuid().ToString() + extension;
-            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + LessonNotePath, fileName);
+            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + ProfileImagePath, fileName);
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -402,7 +402,7 @@ namespace SMP.BLL.Services.FileUploadService
                         fileStream.Close();
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{LessonNotePath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
                     var content = (this as IFileUploadService).ReadFileAsync(url);
                     (this as IFileUploadService).DeleteFile(filePath);
                     return content;
@@ -413,12 +413,13 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
             }
-            throw new ArgumentException("Invalid file format");
+            throw new ArgumentException("Unable to read file!!! Please try again");
         }
 
         void IFileUploadService.DeleteFile(string filePath)
         {
-            File.Delete(filePath);
+            if(File.Exists(filePath))
+                File.Delete(filePath);
         }
 
         string IFileUploadService.ReadFileAsync(string filePath)
