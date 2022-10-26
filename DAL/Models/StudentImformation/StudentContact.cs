@@ -1,5 +1,6 @@
 ﻿using DAL.Authentication;
 using DAL.ClassEntities;
+using SMP.Contracts.Parents;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
@@ -37,5 +38,11 @@ namespace DAL.StudentInformation
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
         public virtual ICollection<StudentNote> StudentNote { get; set; }
         public virtual ICollection<SessionClassArchive> SessionClassArchive { get; set; }
+    }
+    public class StudentDTO
+    {
+        public string RegistrationNumber { get; set; }
+        public string FullName { get; set; }    
+
     }
 }
