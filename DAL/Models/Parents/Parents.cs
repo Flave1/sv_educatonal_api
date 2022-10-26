@@ -28,7 +28,7 @@ namespace SMP.Contracts.Parents
         public string Phone { get; set; }
         public string DOB { get; set; }
         public IFormFile Photo { get; set; }
-        public string ImagePath { get; set }
+        public string ImagePath { get; set; }
         public string ParentId { get; set; }
         public string Email { get; set; }
     }

@@ -99,7 +99,7 @@ namespace API
         {
             var RoleManager = serviceProvider.GetRequiredService<RoleManager<UserRole>>();
             var UserManager = serviceProvider.GetRequiredService<UserManager<AppUser>>();
-            string[] roleNames = { DefaultRoles.FLAVETECH, DefaultRoles.SCHOOLADMIN, DefaultRoles.STUDENT, DefaultRoles.TEACHER };
+            string[] roleNames = { DefaultRoles.FLAVETECH, DefaultRoles.SCHOOLADMIN, DefaultRoles.STUDENT, DefaultRoles.TEACHER, DefaultRoles.PARENTS };
 
             IdentityResult roleResult;
 

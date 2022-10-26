@@ -7,6 +7,7 @@ using Contracts.Authentication;
 using Contracts.Email;
 using DAL;
 using DAL.Authentication;
+using DAL.StudentInformation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -130,15 +131,41 @@ namespace SMP.BLL.Services.ParentServices
         async Task<APIResponse<PagedResponse<List<Parents>>>> IParentService.GetAllParentsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<Parents>>>();
-            var query = context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher);
+            var query = context.Parents.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted == false && d.UserType == (int)UserTypes.Parent);
             var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).Select(a => new Parents()).ToListAsync();
+            var result = await paginationService.GetPagedResult(query, filter).Select(a => new Parents()
+                                                                                {
+                                                                                    FirstName = a.FirstName,
+                                                                                    Email = a.Email,
+                                                                                    PhoneNumber = a.PhoneNumber,
+                                                                                    Relationship = a.Relationship
+                                                                                }).ToListAsync();
             res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
             return res;
         }
+         async Task<APIResponse<List<StudentDTO>>> IParentService.GetAllStudentsByParentId(Parents parent)
+        {
+            var res = new APIResponse<List<StudentDTO>>();
+            res.Result = await context.StudentParent
+                                    .Include(d => d.Students)
+                                    .ThenInclude(d => d.User)
+                                    .Where(d => d.Parents.ParentId == parent.ParentId)
+                                    .Select(d=>new StudentDTO()
+                                    {
+                                        RegistrationNumber = d.Students.Select(d => d.RegistrationNumber).FirstOrDefault(),
+                                        FullName = d.Students.Select(d => d.User.FirstName +" " + d.User.LastName).FirstOrDefault(),
+                                        
+                                    }).ToListAsync();
+
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+
+        }
+
         private async Task SendEmailToParentOnCreateAsync(AppUser obj)
         {
             var to = new List<EmailAddress>();

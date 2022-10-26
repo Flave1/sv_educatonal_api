@@ -87,6 +87,7 @@ namespace DAL
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
         public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         public DbSet<Parents> Parents { get; set; } 
+        public DbSet<StudentParent> StudentParent { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
