@@ -26,10 +26,12 @@ namespace SMP.Contracts.Assessment
     public class SingleHomeAssessment
     {
         public string HomeAssessmentId { get; set; }
+        public bool Include { get; set; }
     }
     public class SingleFeedback
     {
         public string HomeAssessmentFeedBackId { get; set; }
+        public bool Include { get; set; }
     }
     public class StudentHomeAssessmentRequest
     {
@@ -94,10 +96,15 @@ namespace SMP.Contracts.Assessment
         public Guid HomeAssessmentId { get; set; }
         public string StatusName { get; set; }
         public List<string> Files { get; set; }
+        public string TeacherName { get; set; }
+        public Guid? TeacherId { get; set; }
+        public bool Included { get; set; }
 
         public GetHomeAssessmentRequest Assessment { get; set; } = new GetHomeAssessmentRequest();
         public GetHomeAssessmentFeedback(HomeAssessmentFeedBack db)
         {
+            Score = db.Mark;
+            Included = db.Included;
             Content = db.Content;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
             HomeAssessmentId = db.HomeAssessmentId;
@@ -111,11 +118,6 @@ namespace SMP.Contracts.Assessment
                 StatusName = "submitted";
             if (db.Status == 0)
                 StatusName = "saved";
-
-            //if (db.HomeAssessment is not null)
-            //{
-            //    Assessment = new GetHomeAssessmentRequest(db.HomeAssessment, 0);
-            //}
         }
 
     }

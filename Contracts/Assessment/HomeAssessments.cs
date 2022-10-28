@@ -26,6 +26,9 @@ namespace SMP.Contracts.Assessment
         //public string SubmitionStatus { get; set; }
         public string DateDeadLine { get; set; }
         public string TimeDeadLine { get; set; }
+        public string TeacherName { get; set; }
+        public Guid? TeacherId { get; set; }
+        public bool Included { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest()
         {
@@ -48,7 +51,9 @@ namespace SMP.Contracts.Assessment
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
             Comment = db.Comment;
-            if(db.HomeAssessmentFeedBacks is not null && db.HomeAssessmentFeedBacks.Any())
+            TeacherId = db.TeacherId;
+            
+            if (db.HomeAssessmentFeedBacks is not null && db.HomeAssessmentFeedBacks.Any())
             {
                 NumberOfStudentsSubmitted =  db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             }
@@ -98,7 +103,7 @@ namespace SMP.Contracts.Assessment
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
             Comment = db.Comment;
-            
+            TeacherId = db.TeacherId;
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
             if (db.Status == 1)

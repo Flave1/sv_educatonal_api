@@ -28,8 +28,8 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<GetHomeAssessmentFeedback>> GetSingleHomeAssessmentsByTeacherAsync(Guid homeAssessmentFeedBackId);
         Task<APIResponse<bool>> CloseHomeAssessmentAsync(string homeAssessmentId);
         Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> GetHomeAssessmentRecord(string homeAssessmentId);
-        Task<APIResponse<bool>> IncludeClassAssessmentToScoreEntry(string homeAssessmentId);
-        Task<APIResponse<bool>> IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId);
+        Task<APIResponse<bool>> IncludeClassAssessmentToScoreEntry(string homeAssessmentId, bool Include);
+        Task<APIResponse<bool>> IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId, bool include);
         APIResponse<string> ReadFileContent(IFormFile file);
     }
 }

@@ -111,7 +111,7 @@ namespace SMP.API.Controllers
         [HttpPost("include-class/home-assessment/to-scoreentry")]
         public async Task<IActionResult> IncludeHomeAssessmentsAsync([FromBody] SingleHomeAssessment request)
         {
-            var response = await service.IncludeClassAssessmentToScoreEntry(request.HomeAssessmentId);
+            var response = await service.IncludeClassAssessmentToScoreEntry(request.HomeAssessmentId, request.Include);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -120,7 +120,7 @@ namespace SMP.API.Controllers
         [HttpPost("include-student/home-assessment/to-scoreentry")]
         public async Task<IActionResult> IncludeStudentAssessmentToScoreEntry([FromBody] SingleFeedback request)
         {
-            var response = await service.IncludeStudentAssessmentToScoreEntry(request.HomeAssessmentFeedBackId);
+            var response = await service.IncludeStudentAssessmentToScoreEntry(request.HomeAssessmentFeedBackId, request.Include);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

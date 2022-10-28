@@ -35,10 +35,11 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var datTimeNote = DateTimeOffset.Now;
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
-                RegisterLabel = $"ATTENDANCE AS AT {DateTime.UtcNow}",
+                RegisterLabel = $"ATTENDANCE AS AT {datTimeNote}",
                 SessionTermId = termid
             };
 

@@ -22,5 +22,6 @@ namespace SMP.DAL.Models.AssessmentEntities
         public int Status { get; set; }
         public bool Included { get; set; }
         public string Comment { get; set; }
+        public decimal IncludedScore { get; set; }
     }
 }

@@ -56,7 +56,7 @@ namespace SMP.Contracts.NotificationModels
             NotificationEmailLink = x.NotificationEmailLink;
             NotificationPageLink = x.NotificationPageLink;
             NotificationSourceId = x.NotificationSourceId;
-            DateCreated = x.CreatedOn.ToShortDateString();
+            DateCreated = x.CreatedOn.ToString("f");
         }
     }
 
