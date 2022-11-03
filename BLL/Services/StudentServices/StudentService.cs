@@ -16,6 +16,7 @@ using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.DAL.Models.StudentImformation;
@@ -38,8 +39,9 @@ namespace BLL.StudentServices
         public readonly IHttpContextAccessor accessor;
         private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
+        private readonly IParentService parentService;
 
-        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService)
+        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentService)
         {
             this.context = context;
             this.userManager = userManager;
@@ -49,6 +51,7 @@ namespace BLL.StudentServices
             this.pinService = pinService;
             this.paginationService = paginationService;
             this.userService = userService;
+            this.parentService = parentService;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -62,17 +65,14 @@ namespace BLL.StudentServices
                     var result = RegistrationNumber.GenerateForStudents();
 
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
-                     
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
                         CountryId = student.CountryId,
                         EmergencyPhone = student.EmergencyPhone,
                         HomeAddress = student.HomeAddress,
-                        ParentOrGuardianEmail = student.ParentOrGuardianEmail,
-                        ParentOrGuardianName = student.ParentOrGuardianName,
-                        ParentOrGuardianPhone = student.ParentOrGuardianPhone,
-                        ParentOrGuardianRelationship = student.ParentOrGuardianRelationship,
+                        ParentId = parentId,
                         HomePhone = student.HomePhone,
                         StateId = student.StateId,
                         UserId = userId, 
@@ -81,13 +81,13 @@ namespace BLL.StudentServices
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
                         SessionClassId = Guid.Parse(student.SessionClassId),
-                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled
-                        
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled  
                     };
                     context.StudentContact.Add(item);
                     await context.SaveChangesAsync();
 
                     await CreateStudentSessionClassHistoryAsync(item);
+
 
                     await transaction.CommitAsync();
                     res.Message.FriendlyMessage = Messages.Created;
@@ -140,20 +140,17 @@ namespace BLL.StudentServices
                         res.Message.FriendlyMessage = "Student Account not found";
                         return res;
                     }
+                    var parentid = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, studentInfor?.ParentId?? Guid.Empty);
 
                     await userService.UpdateStudentUserAccountAsync(student);
 
                     studentInfor.CityId = student.CityId;
                     studentInfor.CountryId = student.CountryId;
                     studentInfor.EmergencyPhone = student.EmergencyPhone;
-                    studentInfor.HomeAddress = student.HomeAddress;
-                    studentInfor.ParentOrGuardianEmail = student.ParentOrGuardianEmail;
-                    studentInfor.ParentOrGuardianName = student.ParentOrGuardianName;
-                    studentInfor.ParentOrGuardianPhone = student.ParentOrGuardianPhone;
-                    studentInfor.ParentOrGuardianRelationship = student.ParentOrGuardianRelationship;
                     studentInfor.HomePhone = student.HomePhone;
                     studentInfor.StateId = student.StateId;
                     studentInfor.ZipCode = student.ZipCode;
+                    studentInfor.ParentId = parentid;
                     studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
                     await context.SaveChangesAsync();
 
@@ -244,12 +241,14 @@ namespace BLL.StudentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var result = await context.StudentContact
+                .Where(d => studentContactId == d.StudentContactId)
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.User)
                 .Include(x => x.SessionClass)
+                .Include(x => x.Parent)
                 .Include(q=> q.SessionClass).ThenInclude(s => s.Class)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student && studentContactId == d.StudentContactId)
+                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student)
                 .Select(f => new GetStudentContacts(f, regNoFormat, context.Subject.Where(d => d.IsActive && !d.Deleted).ToList())).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -384,6 +383,7 @@ namespace BLL.StudentServices
                     {
                         foreach (var item in uploadedRecord)
                         {
+                            Guid parentid = Guid.Empty;
                             StudentContact std = null;
                             if (string.IsNullOrEmpty(item.SessionClass))
                             {
@@ -424,6 +424,15 @@ namespace BLL.StudentServices
                             {
                                 item.Email = item.RegistrationNumber + "@school.com";
                             }
+                            if (string.IsNullOrEmpty(item.ParentOrGuardianEmail))
+                            {
+                                res.Message.FriendlyMessage = $"Parent or Guardian email must not be empty detected on line {item.ExcelLineNumber}";
+                                return res;
+                            }
+                            else
+                            {
+                                parentid = await parentService.SaveParentDetail(item.ParentOrGuardianEmail, item.ParentOrGuardianName, item.ParentOrGuardianRelationship, item.ParentOrGuardianPhone, Guid.Empty);
+                            }
                             try
                             {
                                 if (std is null)
@@ -436,10 +445,7 @@ namespace BLL.StudentServices
                                     std.CountryId = item.CountryId;
                                     std.EmergencyPhone = item.EmergencyPhone;
                                     std.HomeAddress = item.HomeAddress;
-                                    std.ParentOrGuardianEmail = item.ParentOrGuardianEmail;
-                                    std.ParentOrGuardianName = item.ParentOrGuardianName;
-                                    std.ParentOrGuardianPhone = item.ParentOrGuardianPhone;
-                                    std.ParentOrGuardianRelationship = item.ParentOrGuardianRelationship;
+                                    std.ParentId = parentid;
                                     std.HomePhone = item.HomePhone;
                                     std.StateId = item.StateId;
                                     std.UserId = userId;
@@ -462,10 +468,7 @@ namespace BLL.StudentServices
                                     std.CountryId = item.CountryId;
                                     std.EmergencyPhone = item.EmergencyPhone;
                                     std.HomeAddress = item.HomeAddress;
-                                    std.ParentOrGuardianEmail = item.ParentOrGuardianEmail;
-                                    std.ParentOrGuardianName = item.ParentOrGuardianName;
-                                    std.ParentOrGuardianPhone = item.ParentOrGuardianPhone;
-                                    std.ParentOrGuardianRelationship = item.ParentOrGuardianRelationship;
+                                    std.ParentId = parentid;
                                     std.HomePhone = item.HomePhone;
                                     std.StateId = item.StateId;
                                     std.ZipCode = item.ZipCode;

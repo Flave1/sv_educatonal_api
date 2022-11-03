@@ -1,4 +1,3 @@
-using API.Installers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -16,6 +15,7 @@ using BLL.Utilities;
 using Contracts.Options;
 using System.Linq;
 using SMP.API.Hubs;
+using SMP.API.Installers;
 
 namespace API
 {

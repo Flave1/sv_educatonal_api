@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using API;
+using API.Installers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 
-namespace API.Installers
+namespace SMP.API.Installers
 {
     public static class InstallerExtensions
     {

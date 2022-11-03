@@ -22,5 +22,7 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync(UserInformationFromMobileRequest request);
         Task<string> CreateStudentUserAccountAsync(UploadStudentExcel student, string regNo, string regNoFormat);
         Task UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId);
+        Task<string> CreateParentUserAccountAsync(string email, string phone);
+        Task UpdateParentUserAccountAsync(string email, string phone, string id);
     }
 }

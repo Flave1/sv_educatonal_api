@@ -235,6 +235,69 @@ namespace BLL.AuthenticationServices
             }
 
         }
+        async Task<string> IUserService.CreateParentUserAccountAsync(string email, string phone)
+        {
+            try
+            {
+                var user = new AppUser
+                {
+                    UserName = email,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    Email = email,
+                    UserType = (int)UserTypes.Parent,
+                    Phone = phone,
+
+                };
+                var result = await manager.CreateAsync(user, "000000");
+                if (!result.Succeeded)
+                {
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                    }
+                    else
+                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.PARENTS);
+                if (!addTorole.Succeeded)
+                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+
+                return user.Id;
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        async Task IUserService.UpdateParentUserAccountAsync(string email, string phone, string id)
+        {
+            try
+            {
+                var account = await manager.FindByIdAsync(id);
+                if (account == null)
+                {
+                    throw new ArgumentException("Parent account not found");
+                }
+
+                account.UserName = email;
+                account.Email = email;
+                account.UserType = (int)UserTypes.Parent;
+                var result = await manager.UpdateAsync(account);
+                if (!result.Succeeded)
+                {
+                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+
+        }
 
         async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
         {

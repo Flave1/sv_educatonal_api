@@ -25,6 +25,7 @@ using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.Timetable;
 using SMP.DAL.Models.AssessmentEntities;
 using Microsoft.AspNetCore.Http;
+using SMP.DAL.Models.Parents;
 
 namespace DAL
 {
@@ -85,6 +86,7 @@ namespace DAL
         public DbSet<HomeAssessment> HomeAssessment { get; set; }
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
         public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
+        public DbSet<Parents> Parents { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

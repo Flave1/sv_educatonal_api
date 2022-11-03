@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221101105137_parentas")]
+    partial class parentas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -444,8 +446,17 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("HomePhone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ParentOrGuardianEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentOrGuardianName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentOrGuardianPhone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentOrGuardianRelationship")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RegistrationNumber")
                         .HasColumnType("nvarchar(max)");
@@ -472,8 +483,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("StudentContactId");
-
-                    b.HasIndex("ParentId");
 
                     b.HasIndex("SessionClassId");
 
@@ -2189,10 +2198,6 @@ namespace SMP.DAL.Migrations
 
             modelBuilder.Entity("DAL.StudentInformation.StudentContact", b =>
                 {
-                    b.HasOne("SMP.DAL.Models.Parents.Parents", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId");
-
                     b.HasOne("DAL.ClassEntities.SessionClass", "SessionClass")
                         .WithMany("Students")
                         .HasForeignKey("SessionClassId")
@@ -2202,8 +2207,6 @@ namespace SMP.DAL.Migrations
                     b.HasOne("DAL.Authentication.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
-
-                    b.Navigation("Parent");
 
                     b.Navigation("SessionClass");
 

@@ -1,6 +1,7 @@
 ﻿using DAL.Authentication;
 using DAL.ClassEntities;
 using SMP.DAL.Models.NoteEntities;
+using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,6 @@ namespace DAL.StudentInformation
         public AppUser User { get; set; }
         public string HomePhone { get; set; }
         public string EmergencyPhone { get; set; }
-        public string ParentOrGuardianName { get; set; }
-        public string ParentOrGuardianRelationship { get; set; }
-        public string ParentOrGuardianPhone { get; set; }
-        public string ParentOrGuardianEmail { get; set; }
         public string HomeAddress { get; set; }
         public string CityId { get; set; }
         public string StateId { get; set; }
@@ -34,6 +31,9 @@ namespace DAL.StudentInformation
         public int EnrollmentStatus { get; set; }
         public string Hobbies { get; set; }
         public string BestSubjectIds { get; set; }
+        public Guid? ParentId { get; set; }
+        [ForeignKey("ParentId")]
+        public Parents Parent { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
         public virtual ICollection<StudentNote> StudentNote { get; set; }
         public virtual ICollection<SessionClassArchive> SessionClassArchive { get; set; }
