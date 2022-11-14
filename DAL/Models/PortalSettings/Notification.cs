@@ -14,6 +14,7 @@ namespace SMP.DAL.Models.PortalSettings
         public string Content { get; set; }
         public string Senders { get; set; }
         public string Receivers { get; set; }
+        public string ReceiversEmail { get; set; }
         public string ReadBy { get; set; }
         public bool IsSent { get; set; }
         public bool IsRead { get; set; }

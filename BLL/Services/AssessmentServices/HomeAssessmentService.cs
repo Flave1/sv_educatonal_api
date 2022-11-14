@@ -23,6 +23,7 @@ using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -73,18 +74,23 @@ namespace SMP.BLL.Services.AssessmentServices
                     };
                     await context.HomeAssessment.AddAsync(reg);
                     await context.SaveChangesAsync();
-
-                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    
+                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
+                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+                    if(request.ShouldSendToStudents)
                     {
-                        Content = $"{context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name} Home assessment created for {context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name} ",
-                        NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
-                        NotificationSourceId = reg.HomeAssessmentId.ToString(),
-                        Subject = "Home Assessment",
-                        Receivers = "all",
-                        Type = "home-assessment",
-                        ToGroup = "Students"
-                    });
-                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                        await notificationService.CreateNotitficationAsync(new NotificationDTO
+                        {
+                            Content = $"{subject} Home assessment created for {className} ",
+                            NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationSourceId = reg.HomeAssessmentId.ToString(),
+                            Subject = "Home Assessment",
+                            Receivers = "all",
+                            Type = "home-assessment",
+                            ToGroup = "Students"
+                        });
+                        await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                    }
                 }
                 else
                 {
@@ -106,6 +112,33 @@ namespace SMP.BLL.Services.AssessmentServices
                     };
                     await context.HomeAssessment.AddAsync(reg);
                     await context.SaveChangesAsync();
+
+                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
+                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+
+                    string[] students = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",");
+                    string studentEmails = "";
+
+                    foreach (string student in students)
+                    {
+                        string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
+                        studentEmails = $"{studentEmails},{context.Users.FirstOrDefault(x => x.Id == userId).Email}";
+                    }
+
+                    if (request.ShouldSendToStudents)
+                    {
+                        await notificationService.CreateNotitficationAsync(new NotificationDTO
+                        {
+                            Content = $"{subject} Home assessment created for {className} ",
+                            NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationSourceId = reg.HomeAssessmentId.ToString(),
+                            Subject = "Home Assessment",
+                            ReceiversEmail = studentEmails,
+                            Type = "home-assessment",
+                            ToGroup = "Students"
+                        });
+                        await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                    }
                 }
 
                 res.Result = request;
