@@ -2,13 +2,10 @@
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.ResultModels;
-using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.ResultModels
 {
@@ -70,42 +67,25 @@ namespace SMP.Contracts.ResultModels
     {
         public string SessionClassName { get; set; }
         public string SessionClassId { get; set; }
-        public string ClassScoreEntryId { get; set; }
+        public Guid ClassScoreEntryId { get; set; }
         public string SubjectId { get; set; }
         public string SubjectName { get; set; }
         public int AssessmentScore { get; set; }
         public int ExamsScore { get; set; }
         public string SubjectTeacher { get; set; }
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
-        public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, SessionTerm term)
+        public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat)
         {
             var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
-            SessionClassName = db.SessionClass.Class.Name;
+            SessionClassName = db.SessionClass?.Class?.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
-            ClassScoreEntryId = db.ClassScoreEntryId.ToString();
+            ClassScoreEntryId = db.ClassScoreEntryId;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
             SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
-            if (db.SessionClass.Students != null && db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
-            {
-                
-                foreach (var student in db.SessionClass.Students.Where(d => d.EnrollmentStatus == 1).ToList())
-                {
-                    var scoreEntrySheet = new ScoreEntrySheet();
-                    var scoreEntrySheet1 = db.ScoreEntries.FirstOrDefault(f => f.StudentContactId == student.StudentContactId && f.SessionTermId == term.SessionTermId);
-                    scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
-                    scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
-                    scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
-                    scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
-                    scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
-                    scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
-                    scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
-                    scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore??0 + scoreEntrySheet1?.AssessmentScore??0;
-                    ClassScoreEntries.Add(scoreEntrySheet);
-                }
-            }
+
         }
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid term)
         {
@@ -114,7 +94,7 @@ namespace SMP.Contracts.ResultModels
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
-            ClassScoreEntryId = db.ClassScoreEntryId.ToString();
+            ClassScoreEntryId = db.ClassScoreEntryId;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
             SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
@@ -144,6 +124,7 @@ namespace SMP.Contracts.ResultModels
         public string SessionClassName { get; set; }
         public string SessionClassId { get; set; }
         public string SubjectId { get; set; }
+        public Guid ClassLookupId { get; set; }
         public string SubjectName { get; set; }
         public int AssessmentScore { get; set; }
         public int ExamsScore { get; set; }
@@ -153,31 +134,13 @@ namespace SMP.Contracts.ResultModels
         {
             var subject = db.SessionClass.SessionClassSubjects.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
+            ClassLookupId = db.SessionClass.ClassId;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
             SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
-            if (db.ScoreEntries.Any())
-            {
-                ClassScoreEntries = db.ScoreEntries.Where(d => (bool)d.SessionTerm?.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, db.SessionClass.Class.GradeLevel)).ToList();
-            }
-        }
-
-        public PreviewClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid sessionTermId)
-        {
-            SessionClassName = db.SessionClass.Class.Name;
-            SessionClassId = db.SessionClassId.ToString();
-            SubjectId = db.SubjectId.ToString();
-            SubjectName = db.Subject.Name;
-            AssessmentScore = db.SessionClass.AssessmentScore;
-            ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = db.SessionClass.Teacher.User.FirstName + " " + db.SessionClass.Teacher.User.LastName;
-            if (db.ScoreEntries.Any())
-            {
-                ClassScoreEntries = db.ScoreEntries.Where(d => d.SessionTerm.SessionTermId == sessionTermId).Select(d => new ScoreEntrySheet(d, regNoFormat, db.SessionClass.Class.GradeLevel)).ToList();
-            }
         }
     }
 

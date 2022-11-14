@@ -15,11 +15,15 @@ namespace SMP.Contracts.ParentModels
         public string EnrollmentStatus { get; set; }
         public string Status { get; set; }
         public Guid ClassId { get; set; }
+        public string StudentId { get; set; }
+        public string ProfileUrl { get;set; }
         public MyWards(StudentContact x, string regNoFormat)
         {
             Class = x.SessionClass.Class.Name;
             ClassId = x.SessionClassId;
+            StudentId = x.StudentContactId.ToString();
             FullnaName = x.User.FirstName + " " + x.User.LastName;
+            ProfileUrl = x.User.Photo;
             RegistrationNumber = regNoFormat.Replace("%VALUE%", x.RegistrationNumber);
             if (x.Status == 1)
                 Status = "Active";

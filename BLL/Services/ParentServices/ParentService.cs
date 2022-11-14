@@ -35,9 +35,9 @@ namespace SMP.BLL.Services.ParentServices
         async Task<Guid> IParentService.SaveParentDetail(string email, string name, string relationship, string number, Guid id)
         {
             string userid = string.Empty;
-            var parent = context.Parents.FirstOrDefault(x => x.Parentid == id) ?? null;
+            var parent = context.Parents.FirstOrDefault(x => x.Email.ToLower() == email.Trim().ToLower()) ?? null;
             if (parent == null)
-                parent = context.Parents.FirstOrDefault(x => x.Email.ToLower() == email.Trim().ToLower()) ?? null;
+                parent = context.Parents.FirstOrDefault(x => x.Parentid == id) ?? null;
 
             if (parent == null)
             {

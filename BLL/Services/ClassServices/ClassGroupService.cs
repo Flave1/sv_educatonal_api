@@ -152,6 +152,18 @@ namespace BLL.ClassServices
                 return res;
             }
 
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
+            {
+                res.Result = await context.SessionClassSubject
+                .Include(s => s.Subject)
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
+                new SessionClassSubjects(a)).ToListAsync();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+
             res.IsSuccessful = true;
             return res;
         }

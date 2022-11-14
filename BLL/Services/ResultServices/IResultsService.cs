@@ -1,6 +1,7 @@
 ﻿using BLL;
+using BLL.Filter;
+using BLL.Wrappers;
 using DAL.ClassEntities;
-using DAL.StudentInformation;
 using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.ResultModels;
 using System;
@@ -13,18 +14,18 @@ namespace SMP.BLL.Services.ResultServices
     {
         Task<APIResponse<List<GetClasses>>> GetCurrentStaffClassesAsync();
         Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjectsAsync(Guid sessionClassId);
-        Task<APIResponse<GetClassScoreEntry>> GetClassEntryAsync(Guid sessionClassId, Guid subjectId);
+        Task<APIResponse<PagedResponse<GetClassScoreEntry>>> GetClassEntryAsync(Guid sessionClassId, Guid subjectId, PaginationFilter filter);
         Task CreateClassScoreEntryAsync(SessionClass sessionClass);
         Task<APIResponse<ScoreEntry>> UpdateExamScore(UpdateScore request);
         Task<APIResponse<ScoreEntry>> UpdateAssessmentScore(UpdateScore request);
-        Task<APIResponse<PreviewClassScoreEntry>> PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId);
+        Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId, PaginationFilter filter);
         Task<APIResponse<MasterList>> GetMasterListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<StudentResult>> GetClassResultListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<PublishResultRequest>> PublishResultAsync(PublishResultRequest request);
-        Task<APIResponse<GetClassScoreEntry>> GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
+        Task<APIResponse<PagedResponse<GetClassScoreEntry>>> GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter);
         Task<APIResponse<ScoreEntry>> UpdatePreviousTermsExamScore(UpdateOtherSessionScore request);
         Task<APIResponse<ScoreEntry>> UpdatePreviousTermsAssessmentScore(UpdateOtherSessionScore request);
-        Task<APIResponse<PreviewClassScoreEntry>> PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId);
+        Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter);
         Task<APIResponse<CumulativeMasterList>> GetCumulativeMasterListAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<StudentCoreEntry>> GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId);
         Task<APIResponse<PreviewResult>> GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId);

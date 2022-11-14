@@ -35,6 +35,7 @@ namespace SMP.Contracts.PortalSettings
         public bool BatchPrinting { get; set; }
         public string Filepath { get; set; }
         public string SelectedTemplate { get;set; }
+        public string Headteacher { get; set; }
         public ResultSettingContract()
         {
 

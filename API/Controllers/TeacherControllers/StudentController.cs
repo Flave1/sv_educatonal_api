@@ -1,25 +1,13 @@
-﻿using BLL;
-using BLL.AuthenticationServices;
-using BLL.Constants;
-using BLL.Filter;
-using BLL.Helpers;
+﻿using BLL.Filter;
 using BLL.MiddleWares;
 using BLL.PaginationService.Services;
 using BLL.StudentServices;
-using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Options;
 using DAL;
-using DAL.StudentInformation;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using NLog.Filters;
-using Polly;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace API.Controllers

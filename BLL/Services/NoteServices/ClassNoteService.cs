@@ -5,7 +5,6 @@ using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
@@ -133,31 +132,7 @@ namespace SMP.BLL.Services.NoteServices
 
 
             IQueryable<TeacherClassNote> query = null;
-            if (status == -2)
-            {
-                query = context.TeacherClassNote
-               .Include(d => d.Teacher).ThenInclude(d => d.User)
-                       .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
-                       .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
-                       .OrderByDescending(x => x.CreatedOn)
-                    .Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
-
-                if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
-                {
-                    query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
-                }
-
-                if (!string.IsNullOrEmpty(termId))
-                {
-                    query = query.Where(d => d.ClassNote.SessionTermId == Guid.Parse(termId));
-                }
-
-                var totaltRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
-                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
-            }
-            else
-            {
+            
                 query = context.TeacherClassNote
                .Include(d => d.Teacher).ThenInclude(d => d.User)
                        .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
@@ -174,7 +149,11 @@ namespace SMP.BLL.Services.NoteServices
                 {
                     query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
                 }
-                if (status >= 0)
+                if (status == -2)
+                {
+                    query = query.Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
+                }
+                else if (status >= 0)
                 {
                     query = query.Where(u => status == u.ClassNote.AprrovalStatus);
                 }
@@ -189,7 +168,7 @@ namespace SMP.BLL.Services.NoteServices
                 var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
                 res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
-            }
+            
 
 
             res.IsSuccessful = true;
@@ -538,8 +517,6 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
-
-
         async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetRelatedClassNoteAsync(Guid classNoteId)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
@@ -567,7 +544,6 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-
 
         async Task<APIResponse<SendNote>> IClassNoteService.SendClassNoteToClassesAsync(SendNote request)
         {
@@ -605,8 +581,6 @@ namespace SMP.BLL.Services.NoteServices
                 return res;
             }
         }
-
-        
 
         async Task<APIResponse<List<GetClasses2>>> IClassNoteService.GetStaffClassesOnNoteShareAsync(Guid teacherClassNoteId)
         {
@@ -657,6 +631,41 @@ namespace SMP.BLL.Services.NoteServices
             }
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IClassNoteService.GetMyWardsClassNotesByAsync(string subjectId, string classId, PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
+
+            var query = context.TeacherClassNote
+                .Where(x => x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved)
+               .Include(d => d.Teacher).ThenInclude(d => d.User)
+                       .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                       .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                       .OrderByDescending(x => x.CreatedOn)
+                    .Where(u => u.Deleted == false);
+
+           
+
+            if (!string.IsNullOrEmpty(subjectId))
+            {
+                query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
+            }
+           
+            if (!string.IsNullOrEmpty(classId))
+            {
+                var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
+                var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
+                query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
+            }
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, false)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
 

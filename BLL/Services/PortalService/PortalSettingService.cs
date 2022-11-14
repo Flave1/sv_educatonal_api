@@ -177,7 +177,18 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            res.Result = await context.ResultSetting.Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
+            var result = await context.ResultSetting.Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
+            if (result != null)
+            {
+                var session = context.Session.FirstOrDefault(x => x.IsActive);
+                if(session is not null)
+                {
+                    var user = context.Teacher.Include(c => c.User).Where(x => x.TeacherId == session.HeadTeacherId).Select(x => x.User).FirstOrDefault();
+                    result.Headteacher = user?.FirstName + " " + user?.LastName;
+                }
+               
+            }
+            res.Result = result;
             res.IsSuccessful = true;
             return res;
         } 

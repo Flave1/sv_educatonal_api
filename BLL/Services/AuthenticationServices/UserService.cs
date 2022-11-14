@@ -10,7 +10,6 @@ using BLL.Constants;
 using BLL.EmailServices;
 using Contracts.Email;
 using DAL;
-using DAL.TeachersInfor;
 using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;

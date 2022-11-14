@@ -30,5 +30,6 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(string studentNoteId);
         Task<APIResponse<SendStudentNote>> SendStudentNoteForReviewAsync(SendStudentNote request);
         Task<APIResponse<string>> ReplyClassNoteCommentAsync(string comment, Guid commentId);
+        Task<APIResponse<PagedResponse<List<GetStudentNotes>>>> GetWardNotesAsync(string subjectId, string studentContactId, string classId, PaginationFilter filter);
     }
 }

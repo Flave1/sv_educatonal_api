@@ -88,10 +88,12 @@ namespace SMP.Contracts.ClassModels
     {
         public string SessionClassSubjectId { get; set; }
         public string SubjectName { get; set; }
+        public string Subjectid { get; set; }
         public SessionClassSubjects(SessionClassSubject db)
         {
             SessionClassSubjectId = db.SessionClassSubjectId.ToString();
             SubjectName = db.Subject.Name;
+            Subjectid = db.SubjectId.ToString();
         }
     }
 }

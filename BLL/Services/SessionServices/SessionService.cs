@@ -290,6 +290,8 @@ namespace BLL.SessionServices
                     TermName = t.TermName,
                 }).ToArray(),
             }).FirstOrDefaultAsync();
+
+            
                  
             res.IsSuccessful = true;
             res.Result = result;

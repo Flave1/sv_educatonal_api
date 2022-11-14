@@ -145,5 +145,25 @@ namespace SMP.BLL.Services.NotififcationServices
             await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
         }
 
+
+        public async Task<APIResponse<GetNotificationDTO>> GetSingleNotitficationAsync(Guid notificationId)
+        {
+
+            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
+            var res = new APIResponse<GetNotificationDTO>();
+            try
+            {
+               res.Result = await context.Notification
+                    .Where(x => x.NotificationId == notificationId).Select(d => new GetNotificationDTO(d)).FirstOrDefaultAsync();
+                
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
     }
 }

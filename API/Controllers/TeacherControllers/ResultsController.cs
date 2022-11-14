@@ -1,4 +1,5 @@
 ﻿using API.Controllers.BaseControllers;
+using BLL.Filter;
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
@@ -43,9 +44,10 @@ namespace API.Controllers
         }
 
         [HttpGet("get/class-score-entries/{sessionClassid}")]
-        public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId)
+        public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId, int pageNumber)
         {
-            var response = await service.GetClassEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId));
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetClassEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId), filter);
             return Ok(response);
         }
 
@@ -67,9 +69,10 @@ namespace API.Controllers
         }
 
         [HttpGet("get/preview-class/score-entries")]
-        public async Task<IActionResult> PreviewClassScoreEntry(string sessionClassid, string subjectId)
+        public async Task<IActionResult> PreviewClassScoreEntry(string sessionClassid, string subjectId, int pageNumber)
         {
-            var response = await service.PreviewClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId));
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.PreviewClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId), filter);
             return Ok(response);
         }
 
@@ -112,9 +115,10 @@ namespace API.Controllers
 
 
         [HttpGet("get/previous-terms/class-score-entries/{sessionClassid}")]
-        public async Task<IActionResult> GetPreviousTermsClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId, string sessionTermId)
+        public async Task<IActionResult> GetPreviousTermsClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId, string sessionTermId, int pageNumber)
         {
-            var response = await service.GetPreviousTermsClassSubjectScoreEntriesAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId), Guid.Parse(sessionTermId));
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetPreviousTermsClassSubjectScoreEntriesAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId), Guid.Parse(sessionTermId), filter);
             return Ok(response);
         }
 
@@ -136,9 +140,10 @@ namespace API.Controllers
         }
 
         [HttpGet("get/previous-terms/preview-class/score-entries")]
-        public async Task<IActionResult> PreviewPreviousTermsClassScoreEntry(string sessionClassid, string subjectId, string sessionTermId)
+        public async Task<IActionResult> PreviewPreviousTermsClassScoreEntry(string sessionClassid, string subjectId, string sessionTermId, int pageNumber)
         {
-            var response = await service.PreviewPreviousTermsClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId), Guid.Parse(sessionTermId));
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.PreviewPreviousTermsClassScoreEntry(Guid.Parse(sessionClassid), Guid.Parse(subjectId), Guid.Parse(sessionTermId), filter);
             return Ok(response);
         }
 

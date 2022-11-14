@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using BLL.Services.SubjectServices;
 using Contracts.Class;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -46,7 +47,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
-
+        [AllowAnonymous]
         [HttpGet("getall/active-subject")]
         public async Task<IActionResult> GetAllActiveSubjectsAsync()
         {

@@ -3,6 +3,7 @@ using BLL.ClassServices;
 using BLL.MiddleWares;
 using Contracts.Class;
 using Contracts.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMP.Contracts.ClassModels;
 using System;
@@ -104,6 +105,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [AllowAnonymous]
         [HttpGet("get-all/session-classes2")]
         public async Task<IActionResult> GetSessionClasses2Async()
         {

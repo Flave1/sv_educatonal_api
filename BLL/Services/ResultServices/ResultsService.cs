@@ -1,12 +1,14 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.Filter;
 using BLL.Utilities;
+using BLL.Wrappers;
 using DAL;
 using DAL.ClassEntities;
-using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
 using SMP.BLL.Utilities;
 using SMP.Contracts.ResultModels;
 using SMP.DAL.Models.ResultModels;
@@ -21,11 +23,13 @@ namespace SMP.BLL.Services.ResultServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly IPaginationService paginationService;
 
-        public ResultsService(DataContext context, IHttpContextAccessor accessor)
+        public ResultsService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.paginationService = paginationService;
         }
 
         async Task<APIResponse<List<GetClasses>>> IResultsService.GetCurrentStaffClassesAsync()
@@ -183,31 +187,81 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-        async Task<APIResponse<GetClassScoreEntry>> IResultsService.GetClassEntryAsync(Guid sessionClassId, Guid subjectId)
+        async Task<APIResponse<PagedResponse<GetClassScoreEntry>>> IResultsService.GetClassEntryAsync(Guid sessionClassId, Guid subjectId, PaginationFilter filter)
         {
-            var res = new APIResponse<GetClassScoreEntry>();
+            filter.PageSize = 50;
+            var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
             var clas = context.SessionClass.Include(x => x.Session).FirstOrDefault(x => x.SessionClassId == sessionClassId);
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var result = await context.ClassScoreEntry
+                  .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+                 .Include(d => d.SessionClass).ThenInclude(d => d.Class)
+                 .Include(d => d.Subject)
+                 .AsQueryable().Select(s => new GetClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+
             if (clas.Session.IsActive)
             {
                 var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive);
-                res.Result = await context.ClassScoreEntry
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                   .Include(d => d.SessionClass).ThenInclude(d => d.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
-                   .Include(d => d.Subject)
-                   .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                   .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new GetClassScoreEntry(s, regNoFormat, currentTerm)).FirstOrDefaultAsync();
+              
+
+                if (result != null)
+                {
+                    var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
+                    var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    foreach (var student in sts)
+                    {
+                        var scoreEntrySheet = new ScoreEntrySheet();
+                        var scoreEntrySheet1 = context.ScoreEntry.FirstOrDefault(f => f.StudentContactId == student.StudentContactId 
+                        && f.SessionTermId == currentTerm.SessionTermId && f.ClassScoreEntryId == result.ClassScoreEntryId);
+
+                        scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
+                        scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
+                        scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+                        scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
+                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
+                        scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
+                        scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
+                        result.ClassScoreEntries.Add(scoreEntrySheet);
+                    }
+
+                    var totaltRecord = query.Count();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                }
             }
             else
             {
-                var clasArchive = context.SessionClassArchive.FirstOrDefault(x => x.SessionClassId == sessionClassId);
-                res.Result = await context.ClassScoreEntry
-                   .Include(d => d.SessionClass).ThenInclude(d => d.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-                   .Include(d => d.Subject)
-                   .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                   .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new GetClassScoreEntry(s, regNoFormat, clasArchive.SessionTermId.Value)).FirstOrDefaultAsync();
+
+                if (result != null)
+                {
+                    var sessiontermId = context.SessionClassArchive.Where(x => x.SessionClassId == sessionClassId).Select(c => c.SessionTermId).FirstOrDefault();
+                    var query = context.SessionClassArchive
+                        .Include(x => x.StudentContact).ThenInclude(x => x.User)
+                        .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
+
+                    var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    foreach (var student in sts)
+                    {
+                        var scoreEntrySheet = new ScoreEntrySheet();
+                        var scoreEntrySheet1 = context.ScoreEntry.FirstOrDefault(f => f.StudentContactId == student.StudentContactId
+                        && f.SessionTermId == sessiontermId && f.ClassScoreEntryId == result.ClassScoreEntryId);
+
+                        scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
+                        scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
+                        scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+                        scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
+                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
+                        scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
+                        scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
+                        result.ClassScoreEntries.Add(scoreEntrySheet);
+                    }
+
+                    var totaltRecord = query.Count();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                }
+
             }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -215,18 +269,33 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-        async Task<APIResponse<PreviewClassScoreEntry>> IResultsService.PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId)
+        async Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> IResultsService.PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId, PaginationFilter filter)
         {
-            var res = new APIResponse<PreviewClassScoreEntry>();
+            filter.PageSize = 50;
+            var res = new APIResponse<PagedResponse<PreviewClassScoreEntry>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            res.Result = await context.ClassScoreEntry
-                .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-                .Include(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
+
+            var result = await context.ClassScoreEntry
+                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+                .Include(d => d.SessionClass).ThenInclude(d => d.Class)
                 .Include(d => d.Subject)
                 .Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
-                .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                .Include(d => d.ScoreEntries).ThenInclude(s => s.SessionTerm)
-                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+                .AsQueryable().Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+
+            if(result is not null)
+            {
+                var classGrades = context.GradeGroup.Include(x => x.Grades).Where(x => x.Classes.Select(s => s.ClassLookupId).Contains(result.ClassLookupId)).FirstOrDefault();
+
+                var query = context.ScoreEntry
+                    .Include(s => s.StudentContact).ThenInclude(d => d.User)
+                    .Where(d => d.SessionTerm.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+
+                result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                var totaltRecord = query.Count();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+            }
+
+            
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -511,34 +580,116 @@ namespace SMP.BLL.Services.ResultServices
             }
         }
 
-        async Task<APIResponse<GetClassScoreEntry>> IResultsService.GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId)
+        async Task<APIResponse<PagedResponse<GetClassScoreEntry>>> IResultsService.GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter)
         {
-            var res = new APIResponse<GetClassScoreEntry>();
+            var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var clas = context.SessionClass.Include(s => s.Session).ThenInclude(x => x.Terms).FirstOrDefault(x => x.SessionClassId == sessionClassId);
+
+            var result = await context.ClassScoreEntry
+                 .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+                .Include(d => d.SessionClass).ThenInclude(d => d.Class)
+                .Include(d => d.Subject)
+                .AsQueryable().Select(s => new GetClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+
             if (clas.Session.IsActive)
             {
-                var term = clas.Session.Terms.FirstOrDefault(x => x.IsActive == true);
-                res.Result = await context.ClassScoreEntry
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-                   .Include(d => d.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                   .Include(d => d.Subject)
-                   .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                   .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
-                   .Select(s => new GetClassScoreEntry(s, regNoFormat, term)).FirstOrDefaultAsync();
+                var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive);
+                if (result != null)
+                {
+                    var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
+                    var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    foreach (var student in sts)
+                    {
+                        var scoreEntrySheet = new ScoreEntrySheet();
+                        var scoreEntrySheet1 = context.ScoreEntry.FirstOrDefault(f => f.StudentContactId == student.StudentContactId
+                        && f.SessionTermId == currentTerm.SessionTermId && f.ClassScoreEntryId == result.ClassScoreEntryId);
+
+                        scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
+                        scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
+                        scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+                        scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
+                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
+                        scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
+                        scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
+                        result.ClassScoreEntries.Add(scoreEntrySheet);
+                    }
+
+                    var totaltRecord = query.Count();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                }
             }
             else
             {
-                res.Result = await context.ClassScoreEntry
-                  .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-                  .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-                  .Include(d => d.Subject)
-                  .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                  .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
-                  .Select(s => new GetClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
+
+                if (result != null)
+                {
+                    var sessiontermId = context.SessionClassArchive.Where(x => x.SessionClassId == sessionClassId).Select(c => c.SessionTermId).FirstOrDefault();
+                    var query = context.SessionClassArchive
+                        .Include(x => x.StudentContact).ThenInclude(x => x.User)
+                        .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
+
+                    var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    foreach (var student in sts)
+                    {
+                        var scoreEntrySheet = new ScoreEntrySheet();
+                        var scoreEntrySheet1 = context.ScoreEntry.FirstOrDefault(f => f.StudentContactId == student.StudentContactId
+                        && f.SessionTermId == sessiontermId && f.ClassScoreEntryId == result.ClassScoreEntryId);
+
+                        scoreEntrySheet.AssessmentScore = scoreEntrySheet1?.AssessmentScore ?? 0;
+                        scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
+                        scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
+                        scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
+                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
+                        scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
+                        scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
+                        result.ClassScoreEntries.Add(scoreEntrySheet);
+                    }
+
+                    var totaltRecord = query.Count();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                }
 
             }
+
+
+
+
+
+
+
+
+
+
+
+
+            //if (clas.Session.IsActive)
+            //{
+            //    var term = clas.Session.Terms.FirstOrDefault(x => x.IsActive == true);
+            //    res.Result = await context.ClassScoreEntry
+            //       .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
+            //       .Include(d => d.SessionClass).ThenInclude(d => d.Class)
+            //       .Include(d => d.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
+            //       .Include(d => d.Subject)
+            //       .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
+            //       .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+            //       .Select(s => new GetClassScoreEntry(s, regNoFormat, term)).FirstOrDefaultAsync();
+            //}
+            //else
+            //{
+            //    res.Result = await context.ClassScoreEntry
+            //      .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
+            //      .Include(d => d.SessionClass).ThenInclude(d => d.Class)
+            //      .Include(d => d.Subject)
+            //      .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
+            //      .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+            //      .Select(s => new GetClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
+
+            //}
+
+
            
 
 
@@ -645,17 +796,31 @@ namespace SMP.BLL.Services.ResultServices
             }
         }
 
-        async Task<APIResponse<PreviewClassScoreEntry>> IResultsService.PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId)
+        async Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> IResultsService.PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter)
         {
-            var res = new APIResponse<PreviewClassScoreEntry>();
+            var res = new APIResponse<PagedResponse<PreviewClassScoreEntry>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            res.Result = await context.ClassScoreEntry
-                .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-                .Include(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
-                .Include(d => d.Subject)
-                .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-                .Include(d => d.ScoreEntries).ThenInclude(s => s.SessionTerm)
-                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId).Select(s => new PreviewClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
+
+
+            var result = await context.ClassScoreEntry
+               .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
+               .Include(d => d.SessionClass).ThenInclude(d => d.Class)
+               .Include(d => d.Subject)
+               .Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
+               .AsQueryable().Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
+
+            if (result is not null)
+            {
+                var classGrades = context.GradeGroup.Include(x => x.Grades).Where(x => x.Classes.Select(s => s.ClassLookupId).Contains(result.ClassLookupId)).FirstOrDefault();
+
+                var query = context.ScoreEntry
+                    .Include(s => s.StudentContact).ThenInclude(d => d.User)
+                    .Where(d => d.SessionTermId == sessionTermId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+
+                result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                var totaltRecord = query.Count();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+            }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;

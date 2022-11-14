@@ -48,6 +48,7 @@ namespace SMP.Contracts.NotificationModels
         public string Svg { get; set; } = string.Empty;
         public string NotificationSourceId { get; set; } = string.Empty;
         public string DateCreated { get; set; }
+        public Guid NotificationId { get; set; }
         public GetNotificationDTO(Notification x)
         {
             Type = x.Type;
@@ -57,6 +58,7 @@ namespace SMP.Contracts.NotificationModels
             NotificationPageLink = x.NotificationPageLink;
             NotificationSourceId = x.NotificationSourceId;
             DateCreated = x.CreatedOn.ToString("f");
+            NotificationId = x.NotificationId
         }
     }
 

@@ -506,5 +506,42 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
+        async Task<APIResponse<PagedResponse<List<GetStudentNotes>>>> IStudentNoteService.GetWardNotesAsync(string subjectId, string classId, string studentContactId, PaginationFilter filter)
+        {
+            var studentClass = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
+
+            var res = new APIResponse<PagedResponse<List<GetStudentNotes>>>();
+            if (studentClass is null)
+            {
+                return new APIResponse<PagedResponse<List<GetStudentNotes>>>();
+            }
+            if (!string.IsNullOrEmpty(studentContactId))
+            {
+                var query = context.StudentNote
+                        .Include(x => x.SessionClassId == Guid.Parse(classId))
+                         .Include(s => s.Student).ThenInclude(s => s.User)
+                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                         .Include(d => d.Teacher).ThenInclude(d => d.User)
+                         .Include(d => d.Subject)
+                         .OrderByDescending(x => x.CreatedOn)
+                          .Where(u => u.Deleted == false
+                          && u.SessionClass.Session.IsActive == true
+                          && u.StudentContactId == Guid.Parse(studentContactId));
+
+                if (!string.IsNullOrEmpty(subjectId))
+                {
+                    query = query.Where(u => u.SubjectId == Guid.Parse(subjectId));
+                }
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetStudentNotes(x)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+            }
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return await Task.Run(() => res);
+        }
+
     }
 }

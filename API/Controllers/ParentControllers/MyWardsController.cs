@@ -1,6 +1,7 @@
 ﻿using BLL.Filter;
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
+using SMP.BLL.Services.NoteServices;
 using SMP.BLL.Services.ParentServices;
 using System.Threading.Tasks;
 
@@ -11,9 +12,13 @@ namespace SMP.API.Controllers.ParentControllers
     public class MyWardsController : Controller
     {
         private readonly IParentService service;
-        public MyWardsController(IParentService service)
+        private readonly IStudentNoteService studentNoteService;
+        private readonly IClassNoteService classNoteService;
+        public MyWardsController(IParentService service, IStudentNoteService studentNoteService, IClassNoteService classNoteService)
         {
             this.service = service;
+            this.studentNoteService = studentNoteService;
+            this.classNoteService = classNoteService;
         }
 
         [HttpGet("get/maywards")]
@@ -25,6 +30,21 @@ namespace SMP.API.Controllers.ParentControllers
         }
 
 
-      
+        [HttpGet("get/maywards-notes")]
+        public async Task<IActionResult> GetMyWardsNoteAsync(int pageNumber, string classId, string subjectId, string studentContactId)
+        {
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await studentNoteService.GetWardNotesAsync(subjectId, classId, studentContactId, filter);
+            return Ok(response);
+        }
+
+        [HttpGet("get/maywards-class-notes")]
+        public async Task<IActionResult> GetMyWardsClassNoteAsync(int pageNumber, string classId, string subjectId)
+        {
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await classNoteService.GetMyWardsClassNotesByAsync(subjectId, classId, filter);
+            return Ok(response);
+        }
+
     }
 }

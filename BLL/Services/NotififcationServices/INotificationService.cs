@@ -14,5 +14,6 @@ namespace SMP.BLL.Services.NotififcationServices
         Task CreateNotitficationAsync(NotificationDTO request, bool byEmail = false, bool bySms = false);
         Task<APIResponse<PagedResponse<List<GetNotificationDTO>>>> GetNotitficationAsync(PaginationFilter filter);
         Task UpdateNotification(Guid NotififcationId);
+        Task<APIResponse<GetNotificationDTO>> GetSingleNotitficationAsync(Guid notificationId);
     }
 }
