@@ -53,7 +53,6 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<CreateHomeAssessmentRequest>();
             try
             {
-
                 if(request.SessionClassGroupId == "all-students")
                 {
                     var reg = new HomeAssessment
@@ -77,6 +76,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     
                     var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
                     var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+
                     if(request.ShouldSendToStudents)
                     {
                         await notificationService.CreateNotitficationAsync(new NotificationDTO
@@ -619,11 +619,13 @@ namespace SMP.BLL.Services.AssessmentServices
                 result.Status = result.Status == (int)HomeAssessmentStatus.Closed ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Closed;
                 await context.SaveChangesAsync();
             }
-            if(result.Status == (int)HomeAssessmentStatus.Closed)
+            var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Subject.Name;
+            var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).Class.Name;
+            if (result.Status == (int)HomeAssessmentStatus.Closed)
             {
                 await notificationService.CreateNotitficationAsync(new NotificationDTO
                 {
-                    Content = $"{context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Subject.Name} Home assessment for {context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).Class.Name} has been closed",
+                    Content = $"{subject} Home assessment for {className} has been closed",
                     NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                     NotificationSourceId = result.HomeAssessmentId.ToString(),
                     Subject = "Home Assessment",
@@ -637,7 +639,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 await notificationService.CreateNotitficationAsync(new NotificationDTO
                 {
-                    Content = $"{context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Subject.Name} Home assessment for {context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).Class.Name} has been opened",
+                    Content = $"{subject} Home assessment for {className} has been opened",
                     NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                     NotificationSourceId = result.HomeAssessmentId.ToString(),
                     Subject = "Home Assessment",
