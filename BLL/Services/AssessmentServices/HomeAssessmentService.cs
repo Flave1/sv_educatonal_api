@@ -3,19 +3,27 @@ using BLL.Constants;
 using BLL.Filter;
 using BLL.Utilities;
 using BLL.Wrappers;
+using Contracts.Class;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
+using SMP.API.Hubs;
 using SMP.BLL.Constants;
+using SMP.BLL.Hubs;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.NotififcationServices;
 using SMP.Contracts.Assessment;
+using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,12 +35,17 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         public readonly IFileUploadService uploadService;
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService)
+        private readonly IHubContext<NotificationHub> hub;
+        private readonly INotificationService notificationService;
+
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.uploadService = uploadService;
+            this.hub = hub;
+            this.notificationService = notificationService;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -40,7 +53,6 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<CreateHomeAssessmentRequest>();
             try
             {
-
                 if(request.SessionClassGroupId == "all-students")
                 {
                     var reg = new HomeAssessment
@@ -60,6 +72,25 @@ namespace SMP.BLL.Services.AssessmentServices
                         TeacherId = Guid.Parse(teacherId)
                     };
                     await context.HomeAssessment.AddAsync(reg);
+                    await context.SaveChangesAsync();
+                    
+                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
+                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+
+                    if(request.ShouldSendToStudents)
+                    {
+                        await notificationService.CreateNotitficationAsync(new NotificationDTO
+                        {
+                            Content = $"{subject} Home assessment created for {className} ",
+                            NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationSourceId = reg.HomeAssessmentId.ToString(),
+                            Subject = "Home Assessment",
+                            Receivers = "all",
+                            Type = "home-assessment",
+                            ToGroup = "Students"
+                        });
+                        await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                    }
                 }
                 else
                 {
@@ -80,9 +111,36 @@ namespace SMP.BLL.Services.AssessmentServices
                         TeacherId = Guid.Parse(teacherId)
                     };
                     await context.HomeAssessment.AddAsync(reg);
+                    await context.SaveChangesAsync();
+
+                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
+                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+
+                    string[] students = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",");
+                    string studentEmails = "";
+
+                    foreach (string student in students)
+                    {
+                        string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
+                        studentEmails = $"{studentEmails},{context.Users.FirstOrDefault(x => x.Id == userId).Email}";
+                    }
+
+                    if (request.ShouldSendToStudents)
+                    {
+                        await notificationService.CreateNotitficationAsync(new NotificationDTO
+                        {
+                            Content = $"{subject} Home assessment created for {className} ",
+                            NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationSourceId = reg.HomeAssessmentId.ToString(),
+                            Subject = "Home Assessment",
+                            ReceiversEmail = studentEmails,
+                            Type = "home-assessment",
+                            ToGroup = "Students"
+                        });
+                        await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                    }
                 }
 
-                await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
@@ -560,6 +618,36 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 result.Status = result.Status == (int)HomeAssessmentStatus.Closed ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Closed;
                 await context.SaveChangesAsync();
+            }
+            var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Subject.Name;
+            var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).Class.Name;
+            if (result.Status == (int)HomeAssessmentStatus.Closed)
+            {
+                await notificationService.CreateNotitficationAsync(new NotificationDTO
+                {
+                    Content = $"{subject} Home assessment for {className} has been closed",
+                    NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                    NotificationSourceId = result.HomeAssessmentId.ToString(),
+                    Subject = "Home Assessment",
+                    Receivers = "all",
+                    Type = "home-assessment",
+                    ToGroup = "Students"
+                });
+                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            }
+            else
+            {
+                await notificationService.CreateNotitficationAsync(new NotificationDTO
+                {
+                    Content = $"{subject} Home assessment for {className} has been opened",
+                    NotificationPageLink = $"dashboard/smp-notification/dashboard/smp-class/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                    NotificationSourceId = result.HomeAssessmentId.ToString(),
+                    Subject = "Home Assessment",
+                    Receivers = "all",
+                    Type = "home-assessment",
+                    ToGroup = "Students"
+                });
+                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
             }
 
             res.Message.FriendlyMessage = "Successful";

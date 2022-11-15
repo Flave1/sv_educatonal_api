@@ -16,6 +16,7 @@ namespace SMP.Contracts.NotificationModels
         public string Content { get; set; } = string.Empty;
         public string Senders { get; set; } = string.Empty;
         public string Receivers { get; set; } = string.Empty;
+        public string ReceiversEmail { get; set; } = string.Empty;
         public bool IsSent { get; set; } = false;
         public bool IsRead { get; set; } = false;
         public string Svg { get; set; } = string.Empty;

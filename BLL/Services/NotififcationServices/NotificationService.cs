@@ -48,6 +48,7 @@ namespace SMP.BLL.Services.NotififcationServices
                     Content = request.Content,
                     Senders = request.Senders,
                     Receivers = request.Receivers,
+                    ReceiversEmail = request.Receivers,
                     IsRead = false,
                     IsSent = false,
                     NotificationEmailLink = request.NotificationEmailLink,
@@ -77,7 +78,7 @@ namespace SMP.BLL.Services.NotififcationServices
             mail.Content = item.Content;
             mail.SentBy = item.Senders.Split(',').ToList().FirstOrDefault();
             var senders = item.Senders.Split(',').ToList().Select(x => new EmailAddress { Address = x, Name = x }).ToList();
-            var receivers = item.Receivers.Split(',').ToList().Select(x => new EmailAddress { Address = x, Name = x }).ToList();
+            var receivers = item.ReceiversEmail.Split(',').ToList().Select(x => new EmailAddress { Address = x, Name = x }).ToList();
             mail.FromAddresses.AddRange(senders);
             mail.ToAddresses.AddRange(receivers);
             emailService.Send(mail);
