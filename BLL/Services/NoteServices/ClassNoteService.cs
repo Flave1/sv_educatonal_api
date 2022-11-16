@@ -4,11 +4,17 @@ using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
+using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SMP.API.Hubs;
 using SMP.BLL.Constants;
+using SMP.BLL.Hubs;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.NotififcationServices;
 using SMP.Contracts.Notes;
+using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
@@ -22,12 +28,16 @@ namespace SMP.BLL.Services.NoteServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
+        private readonly IHubContext<NotificationHub> hub;
+        private readonly INotificationService notificationService;
 
-        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.hub = hub;
+            this.notificationService = notificationService;
         }
 
         async Task<APIResponse<ClassNotes>> IClassNoteService.CreateClassNotesAsync(ClassNotes request)
@@ -52,6 +62,7 @@ namespace SMP.BLL.Services.NoteServices
                 await context.ClassNote.AddAsync(newClassNote);
                 await context.SaveChangesAsync();
 
+                
                 var teacherClassNote = new TeacherClassNote
                 {
                     ClassNoteId = newClassNote.ClassNoteId,
@@ -61,6 +72,35 @@ namespace SMP.BLL.Services.NoteServices
 
                 await context.TeacherClassNote.AddAsync(teacherClassNote);
                 await context.SaveChangesAsync();
+
+                if (!request.ShouldSendForApproval)
+                {
+                    string studentEmails = "";
+
+                    foreach(string item in request.Classes)
+                    {
+                        studentEmails = string.Join(",",context.StudentContact.FirstOrDefault(x=>x.SessionClassId == Guid.Parse(item)).User.Email);
+
+                    }
+                    var subject = context.Subject.FirstOrDefault(m => m.SubjectId == Guid.Parse(request.SubjectId)).Name;
+
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"{subject} lesson note has been sent to you",
+                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={newClassNote.ClassNoteId}",
+                        NotificationSourceId = newClassNote.ClassNoteId.ToString(),
+                        Subject = "Student Note",
+                        ReceiversEmail = studentEmails,
+                        Type = "student-note",
+                        ToGroup = "Students"
+                    });
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
+                }
+                else
+                {
+
+                }
             }
             catch (Exception ex)
             {
@@ -279,6 +319,7 @@ namespace SMP.BLL.Services.NoteServices
                         context.TeacherClassNote.RemoveRange(alreadySharedWith);
                         await context.SaveChangesAsync();
                     }
+                    string teachersEmail = "";
                     foreach (var teacher in request.TeacherId)
                     {
                         var newClassNote = new TeacherClassNote()
@@ -288,7 +329,21 @@ namespace SMP.BLL.Services.NoteServices
                         };
                         await context.TeacherClassNote.AddAsync(newClassNote);
 
+                        teachersEmail = string.Join(",",context.Teacher.FirstOrDefault(x => x.TeacherId == teacher).User.Email);
                     }
+
+                    var teacherName = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).User.FirstName;
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"Teacher {teacherName} shared note with you",
+                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={noteToShare.ClassNoteId}",
+                        NotificationSourceId = noteToShare.ClassNoteId.ToString(),
+                        Subject = "Teachers Note",
+                        ReceiversEmail = teachersEmail,
+                        Type = "teacher-note",
+                        ToGroup = "Teachers"
+                    });
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
 
                     await context.SaveChangesAsync();
                 }

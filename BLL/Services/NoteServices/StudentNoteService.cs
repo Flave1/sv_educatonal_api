@@ -5,12 +5,19 @@ using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
+using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
+using SMP.API.Hubs;
 using SMP.BLL.Constants;
+using SMP.BLL.Hubs;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.NotififcationServices;
 using SMP.Contracts.Common;
 using SMP.Contracts.Notes;
+using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
@@ -25,12 +32,16 @@ namespace SMP.BLL.Services.NoteServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
+        private readonly IHubContext<NotificationHub> hub;
+        private readonly INotificationService notificationService;
 
-        public StudentNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        public StudentNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.hub = hub;
+            this.notificationService = notificationService;
         }
 
         async Task<APIResponse<StudentNotes>> IStudentNoteService.CreateStudentNotesAsync(StudentNotes request)
@@ -51,9 +62,29 @@ namespace SMP.BLL.Services.NoteServices
                     TeacherId = Guid.Parse(request.TeacherId),
                     SessionClassId = studentContact.SessionClassId,
                 };
-
                 await context.StudentNote.AddAsync(newStudentNote);
                 await context.SaveChangesAsync();
+
+                if(request.SubmitForReview)
+                {
+                    var studentName = studentContact.User.FirstName;
+                    var className = studentContact.SessionClass.Class.Name;
+                    var subject = context.Subject.FirstOrDefault(m => m.SubjectId == Guid.Parse(request.SubjectId)).Name;
+                    var receiverEmail = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(request.TeacherId)).User.Email;
+
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"{studentName} in {className} submitted {subject} note",
+                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={newStudentNote.StudentNoteId}",
+                        NotificationSourceId = newStudentNote.StudentNoteId.ToString(),
+                        Subject = "Student Note",
+                        ReceiversEmail = receiverEmail,
+                        Type = "student-note",
+                        ToGroup = "Teachers"
+                    });
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
+                }
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
