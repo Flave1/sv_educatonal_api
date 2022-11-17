@@ -85,7 +85,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         await notificationService.CreateNotitficationAsync(new NotificationDTO
                         {
                             Content = $"{subject} Home assessment created for {className} ",
-                            NotificationPageLink = $"dashboard/smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                             NotificationSourceId = reg.HomeAssessmentId.ToString(),
                             Subject = "Home Assessment",
                             Receivers = "all",
@@ -136,7 +136,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         await notificationService.CreateNotitficationAsync(new NotificationDTO
                         {
                             Content = $"{subject} Home assessment created for {className} ",
-                            NotificationPageLink = $"dashboard/smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                            NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                             NotificationSourceId = reg.HomeAssessmentId.ToString(),
                             Subject = "Home Assessment",
                             ReceiversEmail = studentEmails,
@@ -654,7 +654,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 await notificationService.CreateNotitficationAsync(new NotificationDTO
                 {
                     Content = $"{subject} Home assessment for {className} has been closed",
-                    NotificationPageLink = $"dashboard/smp-notification/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                    NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                     NotificationSourceId = result.HomeAssessmentId.ToString(),
                     Subject = "Home Assessment",
                     Receivers = studentEmails,
@@ -668,7 +668,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 await notificationService.CreateNotitficationAsync(new NotificationDTO
                 {
                     Content = $"{subject} Home assessment for {className} has been opened",
-                    NotificationPageLink = $"dashboard/smp-notification/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                    NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={result.HomeAssessmentId}&sessionClassId={result.SessionClassId}&sessionClassSubjectId={result.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
                     NotificationSourceId = result.HomeAssessmentId.ToString(),
                     Subject = "Home Assessment",
                     Receivers = studentEmails,
