@@ -74,10 +74,13 @@ namespace SMP.BLL.Services.AssessmentServices
                     await context.HomeAssessment.AddAsync(reg);
                     await context.SaveChangesAsync();
                     
-                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
-                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+                    var subjectId = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).SubjectId;
+                    var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == subjectId).Name;
+                    
+                    var classId= context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).ClassId;
+                    var className = context.ClassLookUp.FirstOrDefault(x => x.ClassLookupId == classId).Name;
 
-                    if(request.ShouldSendToStudents)
+                    if (request.ShouldSendToStudents)
                     {
                         await notificationService.CreateNotitficationAsync(new NotificationDTO
                         {
@@ -113,8 +116,11 @@ namespace SMP.BLL.Services.AssessmentServices
                     await context.HomeAssessment.AddAsync(reg);
                     await context.SaveChangesAsync();
 
-                    var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Subject.Name;
-                    var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).Class.Name;
+                    var subjectId = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).SubjectId;
+                    var subject = context.Subject.FirstOrDefault(x => x.SubjectId == subjectId).Name;
+
+                    var classId = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).ClassId;
+                    var className = context.ClassLookUp.FirstOrDefault(x => x.ClassLookupId == classId).Name;
 
                     string[] students = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",");
                     string studentEmails = "";
@@ -619,17 +625,30 @@ namespace SMP.BLL.Services.AssessmentServices
                 result.Status = result.Status == (int)HomeAssessmentStatus.Closed ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Closed;
                 await context.SaveChangesAsync();
             }
-            var subject = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Subject.Name;
-            var className = context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).Class.Name;
+            var subjectId = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).SubjectId;
+            var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == subjectId).Name;
 
-            string[] students = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == result.SessionClassGroupId).ListOfStudentContactIds.Split(",");
+            var classId = context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).ClassId;
+            var className = context.ClassLookUp.FirstOrDefault(x=>x.ClassLookupId == classId).Name;
+
+            var sessionClassGroup = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == result.SessionClassGroupId);
             string studentEmails = "";
-
-            foreach (string student in students)
+            if (sessionClassGroup.GroupName == "all-students")
             {
-                string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
-                studentEmails = string.Join(",",context.Users.FirstOrDefault(x => x.Id == userId).Email);
+                studentEmails = "all";
             }
+            else
+            {
+                string[] students = sessionClassGroup.ListOfStudentContactIds.Split(",");
+                foreach (string student in students)
+                {
+                    string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
+                    studentEmails = string.Join(",", context.Users.FirstOrDefault(x => x.Id == userId).Email);
+                }
+            }
+            
+
+            
             if (result.Status == (int)HomeAssessmentStatus.Closed)
             {
                 await notificationService.CreateNotitficationAsync(new NotificationDTO
