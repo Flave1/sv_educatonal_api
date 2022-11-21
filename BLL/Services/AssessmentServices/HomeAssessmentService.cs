@@ -20,6 +20,7 @@ using SMP.BLL.Services.NotififcationServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.AssessmentEntities;
+using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
@@ -74,11 +75,8 @@ namespace SMP.BLL.Services.AssessmentServices
                     await context.HomeAssessment.AddAsync(reg);
                     await context.SaveChangesAsync();
                     
-                    var subjectId = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).SubjectId;
-                    var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == subjectId).Name;
-                    
-                    var classId= context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).ClassId;
-                    var className = context.ClassLookUp.FirstOrDefault(x => x.ClassLookupId == classId).Name;
+                    var subject = context.SessionClassSubject.Where(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Select(x=>x.Subject.Name).FirstOrDefault();
+                    var className = context.SessionClass.Where(x => x.SessionClassId == reg.SessionClassId).Select(x=>x.Class.Name).FirstOrDefault();
 
                     if (request.ShouldSendToStudents)
                     {
@@ -122,29 +120,21 @@ namespace SMP.BLL.Services.AssessmentServices
                     var classId = context.SessionClass.FirstOrDefault(x => x.SessionClassId == reg.SessionClassId).ClassId;
                     var className = context.ClassLookUp.FirstOrDefault(x => x.ClassLookupId == classId).Name;
 
-                    string[] students = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",");
-                    string studentEmails = "";
+                    var studentIds = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",").ToList();
+                    var userIds = context.StudentContact.Where(x => studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
+                    string studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x => x.Email).ToList());
 
-                    foreach (string student in students)
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
                     {
-                        string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
-                        studentEmails = string.Join(",",context.Users.FirstOrDefault(x => x.Id == userId).Email);
-                    }
-
-                    if (request.ShouldSendToStudents)
-                    {
-                        await notificationService.CreateNotitficationAsync(new NotificationDTO
-                        {
-                            Content = $"{subject} Home assessment created for {className} ",
-                            NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
-                            NotificationSourceId = reg.HomeAssessmentId.ToString(),
-                            Subject = "Home Assessment",
-                            ReceiversEmail = studentEmails,
-                            Type = "home-assessment",
-                            ToGroup = "Students"
-                        });
-                        await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
-                    }
+                        Content = $"{subject} Home assessment created for {className} ",
+                        NotificationPageLink = $"smp-notification/home-assessment-details?homeAssessmentId={reg.HomeAssessmentId}&sessionClassId={reg.SessionClassId}&sessionClassSubjectId={reg.SessionClassSubjectId}&groupId=all-students&type=home-assessment",
+                        NotificationSourceId = reg.HomeAssessmentId.ToString(),
+                        Subject = "Home Assessment",
+                        ReceiversEmail = studentEmails,
+                        Type = "home-assessment",
+                        ToGroup = "Students"
+                    });
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
                 }
 
                 res.Result = request;
@@ -625,9 +615,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 result.Status = result.Status == (int)HomeAssessmentStatus.Closed ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Closed;
                 await context.SaveChangesAsync();
             }
-            var subjectId = context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == result.SessionClassSubjectId).SubjectId;
-            var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == subjectId).Name;
-
+            var subject = context.SessionClassSubject.Where(x => x.SessionClassSubjectId == result.SessionClassSubjectId).Select(x=>x.Subject.Name).FirstOrDefault();
             var classId = context.SessionClass.FirstOrDefault(x => x.SessionClassId == result.SessionClassId).ClassId;
             var className = context.ClassLookUp.FirstOrDefault(x=>x.ClassLookupId == classId).Name;
 
@@ -639,15 +627,10 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             else
             {
-                string[] students = sessionClassGroup.ListOfStudentContactIds.Split(",");
-                foreach (string student in students)
-                {
-                    string userId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(student)).UserId;
-                    studentEmails = string.Join(",", context.Users.FirstOrDefault(x => x.Id == userId).Email);
-                }
+                var studentIds = sessionClassGroup.ListOfStudentContactIds.Split(",").ToList();
+                var userIds = context.StudentContact.Where(x => studentIds.Contains(x.StudentContactId.ToString())).Select(x=>x.UserId).ToList();
+                studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x=>x.Email).ToList());
             }
-            
-
             
             if (result.Status == (int)HomeAssessmentStatus.Closed)
             {
