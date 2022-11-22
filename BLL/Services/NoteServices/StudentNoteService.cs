@@ -517,16 +517,15 @@ namespace SMP.BLL.Services.NoteServices
             }
             if (!string.IsNullOrEmpty(studentContactId))
             {
+                // 
                 var query = context.StudentNote
-                        .Include(x => x.SessionClassId == Guid.Parse(classId))
+                    .Where(u => u.StudentContactId == Guid.Parse(studentContactId) && u.SessionClassId == Guid.Parse(classId))
                          .Include(s => s.Student).ThenInclude(s => s.User)
                          .Include(s => s.SessionClass).ThenInclude(s => s.Session)
                          .Include(d => d.Teacher).ThenInclude(d => d.User)
                          .Include(d => d.Subject)
                          .OrderByDescending(x => x.CreatedOn)
-                          .Where(u => u.Deleted == false
-                          && u.SessionClass.Session.IsActive == true
-                          && u.StudentContactId == Guid.Parse(studentContactId));
+                         .Where(u => u.Deleted == false && u.SessionClass.Session.IsActive == true && u.AprrovalStatus == (int)NoteApprovalStatus.Approved);
 
                 if (!string.IsNullOrEmpty(subjectId))
                 {
@@ -538,6 +537,29 @@ namespace SMP.BLL.Services.NoteServices
                 res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             }
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return await Task.Run(() => res);
+        }
+
+
+        async Task<APIResponse<GetStudentNotes>> IStudentNoteService.GetSingleWardNotesAsync(Guid StudentNoteId)
+        {
+            var res = new APIResponse<GetStudentNotes>();
+
+            var query = context.StudentNote
+                   .Where(u => u.StudentNoteId == StudentNoteId)
+                        .Include(s => s.Student).ThenInclude(s => s.User)
+                        .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                        .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(d => d.Subject)
+                        .OrderByDescending(x => x.CreatedOn)
+                        .Where(u => u.Deleted == false && u.SessionClass.Session.IsActive == true && u.AprrovalStatus == (int)NoteApprovalStatus.Approved);
+
+
+
+            res.Result = await query.Select(x => new GetStudentNotes(x)).FirstOrDefaultAsync();
+
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return await Task.Run(() => res);

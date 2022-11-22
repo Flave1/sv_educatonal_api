@@ -9,7 +9,7 @@ namespace BLL
             Message = new APIResponseMessage();
         }
         public bool IsSuccessful;
-        public T Result { get; set; } 
+        public T Result { get; set; }
         public APIResponseMessage Message { get; set; } 
     } 
 

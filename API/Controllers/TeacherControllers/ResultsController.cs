@@ -89,9 +89,10 @@ namespace API.Controllers
             return Ok(response);
         }
         [HttpGet("get/result-list")]
-        public async Task<IActionResult> GetClassResultListAsync(string sessionClassid, string termId)
+        public async Task<IActionResult> GetClassResultListAsync(string sessionClassid, string termId, int pageNumber)
         {
-            var response = await service.GetClassResultListAsync(Guid.Parse(sessionClassid), Guid.Parse(termId));
+            var filter = new PaginationFilter { PageNumber = 1 };
+            var response = await service.GetClassResultListAsync(Guid.Parse(sessionClassid), Guid.Parse(termId), filter);
             return Ok(response);
         }
 

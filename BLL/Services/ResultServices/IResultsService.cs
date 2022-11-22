@@ -20,7 +20,7 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<ScoreEntry>> UpdateAssessmentScore(UpdateScore request);
         Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId, PaginationFilter filter);
         Task<APIResponse<MasterList>> GetMasterListAsync(Guid sessionClassId, Guid termId);
-        Task<APIResponse<StudentResult>> GetClassResultListAsync(Guid sessionClassId, Guid termId);
+        Task<APIResponse<PagedResponse<StudentResult>>> GetClassResultListAsync(Guid sessionClassId, Guid termId, PaginationFilter filter);
         Task<APIResponse<PublishResultRequest>> PublishResultAsync(PublishResultRequest request);
         Task<APIResponse<PagedResponse<GetClassScoreEntry>>> GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter);
         Task<APIResponse<ScoreEntry>> UpdatePreviousTermsExamScore(UpdateOtherSessionScore request);

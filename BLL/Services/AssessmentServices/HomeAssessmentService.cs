@@ -281,6 +281,7 @@ namespace SMP.BLL.Services.AssessmentServices
             return await Task.Run(() => res);
         }
 
+        [Obsolete]
         async Task<APIResponse<List<StudentHomeAssessmentRequest>>> IHomeAssessmentService.GetHomeAssessmentsByStudentAsync()
         {
             
@@ -331,10 +332,6 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(d => d.HomeAssessmentFeedBacks)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Include(q => q.SessionClassGroup)
-                //.Include(q => q.SessionTerm)
-                //.ThenInclude(s => s.SessionClass)
-                //.Include(s => s.SessionClass).ThenInclude(s => s.Students)
-                //.Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Where(x => x.Deleted == false);
 
             if (status == -1)
@@ -836,5 +833,38 @@ namespace SMP.BLL.Services.AssessmentServices
             res.IsSuccessful = true;
             return res;
         }
+
+        async Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> IHomeAssessmentService.FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, string studentContactid, PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
+
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
+            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid));
+
+            var query = context.HomeAssessment
+                .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId 
+                && d.SessionClassSubjectId == sessionClassSubjectId && d.Status == (int)HomeAssessmentStatus.Closed)
+                .OrderByDescending(d => d.CreatedOn)
+                .Include(d => d.HomeAssessmentFeedBacks)
+                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Include(q => q.SessionClassGroup)
+                .Where(x => x.Deleted == false);
+
+            if (query is not null)
+            {
+                query = query.AsEnumerable().Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds)
+                && d.SessionClassGroup.ListOfStudentContactIds.Split(',').Contains(studentContactid) || d.SessionClassGroup.GroupName == "all-students").AsQueryable();
+            }
+
+            var totaltRecord = query.Count();
+            var result = paginationService.GetPagedResult(query, filter).Select(f => new StudentHomeAssessmentRequest(f, studentContactid)).ToList();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+        
     }
 }

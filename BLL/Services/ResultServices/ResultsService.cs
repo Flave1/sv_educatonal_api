@@ -467,25 +467,26 @@ namespace SMP.BLL.Services.ResultServices
             return res;
         }
 
-        async Task<APIResponse<StudentResult>> IResultsService.GetClassResultListAsync(Guid sessionClassId, Guid termId)
+        async Task<APIResponse<PagedResponse<StudentResult>>> IResultsService.GetClassResultListAsync(Guid sessionClassId, Guid termId, PaginationFilter filter)//bb
         {
-            var res = new APIResponse<StudentResult>();
+            var res = new APIResponse<PagedResponse<StudentResult>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             try
             {
-
                 var clas = context.SessionClass.Include(x => x.Session).FirstOrDefault(d => d.SessionClassId == sessionClassId);
                 var term = context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefault();
-                res.Result = new StudentResult();
+                res.Result = new PagedResponse<StudentResult>();
+                res.Result.Data = new StudentResult();
                 if (clas.Session.IsActive)
                 {
-                    var result = await context.StudentContact
-                       .Include(d => d.User)
-                       .Include(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry)
+                    var query = context.StudentContact
                        .Where(rr => rr.SessionClassId == sessionClassId)
-                       .Select(g => new StudentResultDetail(g, regNoFormat, sessionClassId, term.SessionTermId)).ToListAsync();
+                       .Include(d => d.User)
+                       .Include(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).AsQueryable();
 
+                    var result = await paginationService.GetPagedResult(query, filter).Select(g => new StudentResultDetail(g, regNoFormat, sessionClassId, term.SessionTermId)).ToListAsync();
+                    
                     if (result != null)
                     {
                         var averages = result.Select(d => d.AverageScore);
@@ -495,8 +496,10 @@ namespace SMP.BLL.Services.ResultServices
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
                         }
                         result = result.OrderByDescending(d => d.AverageScore).ToList();
-                        res.Result.IsPublished  = IsResultPublished(sessionClassId, termId);
-                        res.Result.PublishResult = result;
+                        res.Result.Data.IsPublished  = IsResultPublished(sessionClassId, termId);
+                        res.Result.Data.PublishResult = result;
+                        var totaltRecord = query.Count();
+                        res.Result = paginationService.CreatePagedReponse(res.Result.Data, filter, totaltRecord);
                     }
                     res.IsSuccessful = true;
                     return res;
@@ -510,11 +513,13 @@ namespace SMP.BLL.Services.ResultServices
                         return res;
                     }
 
-                    var result = context.ScoreEntry
+                    var query = context.ScoreEntry
+                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId)
                     .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
-                    .Include(d => d.StudentContact).ThenInclude(d => d.User)
-                    .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId).AsEnumerable().GroupBy(s => s.StudentContactId)
-                    .Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList();
+                    .Include(d => d.StudentContact).ThenInclude(d => d.User).AsEnumerable().GroupBy(s => s.StudentContactId).AsQueryable();
+
+                    var result = await paginationService.GetPagedResult(query, filter).Select(entries => new StudentResultDetail(entries, regNoFormat)).ToListAsync();
+
 
                     if (result != null)
                     {
@@ -524,11 +529,13 @@ namespace SMP.BLL.Services.ResultServices
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
                         }
-                        res.Result.PublishResult = result.OrderByDescending(d => d.AverageScore).ToList();
-                        res.Result.IsPublished = IsResultPublished(sessionClassId, termId);
+                        res.Result.Data.PublishResult = result.OrderByDescending(d => d.AverageScore).ToList();
+                        res.Result.Data.IsPublished = IsResultPublished(sessionClassId, termId);
+
+                        var totaltRecord = query.Count();
+                        res.Result = paginationService.CreatePagedReponse(res.Result.Data, filter, totaltRecord);
                     }
                     res.IsSuccessful = true;
-                    //res.Result = result;
                     return res;
                 }
 
