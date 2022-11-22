@@ -850,6 +850,8 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(q => q.SessionClassGroup)
                 .Where(x => x.Deleted == false);
 
+            query = query.Where(x => x.HomeAssessmentFeedBacks.Any(e => e.StudentContactId == Guid.Parse(studentContactid)));
+
             if (query is not null)
             {
                 query = query.AsEnumerable().Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds)
