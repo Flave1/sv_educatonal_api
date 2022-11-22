@@ -5,9 +5,12 @@ using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using DAL.StudentInformation;
+using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using SMP.API.Hubs;
 using SMP.BLL.Constants;
 using SMP.BLL.Hubs;
@@ -73,33 +76,26 @@ namespace SMP.BLL.Services.NoteServices
                 await context.TeacherClassNote.AddAsync(teacherClassNote);
                 await context.SaveChangesAsync();
 
-                if (!request.ShouldSendForApproval)
+                if (request.ShouldSendForApproval)
                 {
-                    string studentEmails = "";
+                    var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id
+                    var roleId = context.RoleActivity.FirstOrDefault(r=>r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false).RoleId;
+                    var userIds = context.UserRoles.Where(r=>r.RoleId == roleId).Select(x=> x.UserId).ToList();
+                    string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
 
-                    foreach(string item in request.Classes)
-                    {
-                        studentEmails = string.Join(",",context.StudentContact.FirstOrDefault(x=>x.SessionClassId == Guid.Parse(item)).User.Email);
-
-                    }
                     var subject = context.Subject.FirstOrDefault(m => m.SubjectId == Guid.Parse(request.SubjectId)).Name;
-
+                    var author = context.Users.FirstOrDefault(m => m.Id == userid).FirstName;
                     await notificationService.CreateNotitficationAsync(new NotificationDTO
                     {
-                        Content = $"{subject} lesson note has been sent to you",
-                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={newClassNote.ClassNoteId}",
+                        Content = $"{author} submitted {subject} note for approval",
+                        NotificationPageLink = $"smp-notification/lesson-note-details?teacherClassNoteId={newClassNote.ClassNoteId}",
                         NotificationSourceId = newClassNote.ClassNoteId.ToString(),
-                        Subject = "Student Note",
-                        ReceiversEmail = studentEmails,
-                        Type = "student-note",
-                        ToGroup = "Students"
+                        Subject = "Class Note",
+                        ReceiversEmail = adminsEmail,
+                        Type = "class-note",
+                        ToGroup = "Admin"
                     });
                     await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
-
-                }
-                else
-                {
-
                 }
             }
             catch (Exception ex)
@@ -319,7 +315,7 @@ namespace SMP.BLL.Services.NoteServices
                         context.TeacherClassNote.RemoveRange(alreadySharedWith);
                         await context.SaveChangesAsync();
                     }
-                    string teachersEmail = "";
+
                     foreach (var teacher in request.TeacherId)
                     {
                         var newClassNote = new TeacherClassNote()
@@ -328,19 +324,19 @@ namespace SMP.BLL.Services.NoteServices
                             TeacherId = teacher
                         };
                         await context.TeacherClassNote.AddAsync(newClassNote);
-
-                        teachersEmail = string.Join(",",context.Teacher.FirstOrDefault(x => x.TeacherId == teacher).User.Email);
                     }
 
-                    var teacherName = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).User.FirstName;
+                    string teachersEmail = string.Join(",", context.Teacher.Where(x => request.TeacherId.Contains(x.TeacherId)).Select(x=> x.User.Email).ToList());
+                    var teacherName = context.Teacher.Where(x => x.TeacherId == Guid.Parse(teacherId)).Select(x=>x.User.FirstName).FirstOrDefault();
+
                     await notificationService.CreateNotitficationAsync(new NotificationDTO
                     {
                         Content = $"Teacher {teacherName} shared note with you",
-                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={noteToShare.ClassNoteId}",
+                        NotificationPageLink = $"smp-notification/lesson-note-details?teacherClassNoteId={noteToShare.ClassNoteId}",
                         NotificationSourceId = noteToShare.ClassNoteId.ToString(),
-                        Subject = "Teachers Note",
+                        Subject = "Class Note",
                         ReceiversEmail = teachersEmail,
-                        Type = "teacher-note",
+                        Type = "class-note",
                         ToGroup = "Teachers"
                     });
                     await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
@@ -374,6 +370,41 @@ namespace SMP.BLL.Services.NoteServices
             {
                 note.AprrovalStatus = request.ShouldApprove ? (int)NoteApprovalStatus.Approved : (int)NoteApprovalStatus.NotApproved;
                 await context.SaveChangesAsync();
+
+                if(request.ShouldApprove)
+                {
+                    string teacherEmail = context.Users.FirstOrDefault(x=>x.Id == note.Author).Email;
+                    var subject = context.Subject.FirstOrDefault(x => x.SubjectId == note.SubjectId).Name;
+
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"Admin has approved your {subject} note",
+                        NotificationPageLink = $"smp-notification/lesson-note-details?ClassNoteId={note.ClassNoteId}",
+                        NotificationSourceId = note.ClassNoteId.ToString(),
+                        Subject = "Class Note",
+                        ReceiversEmail = teacherEmail,
+                        Type = "class-note",
+                        ToGroup = "Teachers"
+                    });
+
+                    var classes = context.TeacherClassNote.FirstOrDefault(x => x.ClassNoteId == note.ClassNoteId).Classes.Split(",").ToList();
+                    var sessionIds = context.SessionClass.Where(x => classes.Contains(x.ClassId.ToString())).Select(x => x.SessionId).ToList();
+                    var userIds = context.StudentContact.Where(x => sessionIds.Contains(x.SessionClassId)).Select(x => x.UserId).ToList();
+                    var studentEmails = string.Join(",", context.Users.Where(x => userIds.Contains(x.Id)).Select(x => x.Email).ToList());
+
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"Your {subject} note has been approved",
+                        NotificationPageLink = $"smp-notification/lesson-note-details?ClassNoteId={note.ClassNoteId}",
+                        NotificationSourceId = note.ClassNoteId.ToString(),
+                        Subject = "Class Note",
+                        ReceiversEmail = studentEmails,
+                        Type = "class-note",
+                        ToGroup = "Students"
+                    });
+
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                }
             }
             else
             {
@@ -485,12 +516,28 @@ namespace SMP.BLL.Services.NoteServices
                 return res;
             }
 
-
-
             note.AprrovalStatus = (int)NoteApprovalStatus.InProgress;
             note.DateSentForApproval = DateTime.UtcNow;
-
             await context.SaveChangesAsync();
+
+            var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id
+            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false).RoleId;
+            var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
+            string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
+
+            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
+            var author = context.Users.FirstOrDefault(m => m.Id == note.Author).FirstName;
+            await notificationService.CreateNotitficationAsync(new NotificationDTO
+            {
+                Content = $"{author} submitted {subject} note for approval",
+                NotificationPageLink = $"smp-notification/lesson-note-details?teacherClassNoteId={note.ClassNoteId}",
+                NotificationSourceId = note.ClassNoteId.ToString(),
+                Subject = "Class Note",
+                ReceiversEmail = adminsEmail,
+                Type = "class-note",
+                ToGroup = "Admin"
+            });
+            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
 
             res.Message.FriendlyMessage = "Successfully sent for approval";
             res.IsSuccessful = true;
@@ -521,6 +568,40 @@ namespace SMP.BLL.Services.NoteServices
             context.TeacherClassNoteComment.Add(commented);
             await context.SaveChangesAsync();
 
+            var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id
+            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false).RoleId;
+            var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
+
+            string receiverEmail = "";
+            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
+            var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
+
+            string toGroup = "";
+            if (userIds.Contains(userId))
+            {
+                var teacherId = note.Author;
+                receiverEmail = context.Users.FirstOrDefault(x => x.Id == teacherId).Email;
+                toGroup = "Teachers";
+            }
+            else
+            {
+                receiverEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
+                toGroup = "Admin";
+            }
+
+
+            await notificationService.CreateNotitficationAsync(new NotificationDTO
+            {
+                Content = $"{commenter} commented on {subject} note",
+                NotificationPageLink = $"smp-notification/lesson-note-details?ClassNoteId={note.ClassNoteId}",
+                NotificationSourceId = note.ClassNoteId.ToString(),
+                Subject = "Class Note",
+                ReceiversEmail = receiverEmail,
+                Type = "class-note",
+                ToGroup = toGroup
+            });
+            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
             res.Message.FriendlyMessage = "Comment sent";
             res.IsSuccessful = true;
             res.Result = comment;
@@ -532,6 +613,8 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<string>();
 
             var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+
             var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId);
             if (note == null)
             {
@@ -549,6 +632,38 @@ namespace SMP.BLL.Services.NoteServices
 
             context.TeacherClassNoteComment.Add(commented);
             await context.SaveChangesAsync();
+
+            var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
+            var subjectId = context.ClassNote.FirstOrDefault(m => m.ClassNoteId == note.ClassNoteId).SubjectId;
+            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
+            string receiverEmail = context.Users.FirstOrDefault(x => x.Id == note.UserId).Email;
+
+            var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id
+            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false).RoleId;
+            var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
+
+            string toGroup = "";
+            if (userIds.Contains(userId))
+            {
+                toGroup = "Teachers";
+            }
+            else
+            {
+                toGroup = "Admin";
+            }
+
+            await notificationService.CreateNotitficationAsync(new NotificationDTO
+            {
+                Content = $"{commenter} commented on {subject} note",
+                NotificationPageLink = $"smp-class/lesson-note-details?ClassNoteId={note.ClassNoteId}",
+                NotificationSourceId = note.ClassNoteId.ToString(),
+                Subject = "Student Note",
+                Receivers = receiverEmail,
+                Type = "class-note",
+                ToGroup = toGroup
+            });
+            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
 
             res.Message.FriendlyMessage = "Comment sent";
             res.IsSuccessful = true;
@@ -617,6 +732,24 @@ namespace SMP.BLL.Services.NoteServices
                     noteToSend.Classes = string.Join(',', request.Classes);
 
                     await context.SaveChangesAsync();
+
+                    var subject = context.ClassNote.Where(x=>x.ClassNoteId.Equals(noteToSend.ClassNoteId)).Select(x=>x.Subject.Name).FirstOrDefault();
+                    var sessionIds = context.SessionClass.Where(x => noteToSend.Classes.Contains(x.ClassId.ToString())).Select(x=>x.SessionId).ToList();
+                    var userIds = context.StudentContact.Where(x=> sessionIds.Contains(x.SessionClassId)).Select(x=>x.UserId).ToList();
+                    var studentEmails = string.Join(",", context.Users.Where(x => userIds.Contains(x.Id)).Select(x => x.Email).ToList());
+
+                    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                    {
+                        Content = $"{subject} lesson note has been sent to you",
+                        NotificationPageLink = $"smp-class/lesson-note-details?teacherClassNoteId={noteToSend.TeacherClassNoteId}",
+                        NotificationSourceId = noteToSend.TeacherClassNoteId.ToString(),
+                        Subject = "Class Note",
+                        Receivers = studentEmails,
+                        Type = "class-note",
+                        ToGroup = "Students"
+                    });
+                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
                 }
                 else
                 {
