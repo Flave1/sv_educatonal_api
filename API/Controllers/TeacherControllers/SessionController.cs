@@ -3,8 +3,10 @@ using BLL.MiddleWares;
 using BLL.SessionServices;
 using Contracts.Common;
 using Contracts.Session;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -80,6 +82,13 @@ namespace API.Controllers
         public async Task<IActionResult> GetActiveSessionsAsync()
         {
             var response = await sessionService.GetActiveSessionsAsync();
+            return Ok(response);
+        }
+        [AllowAnonymous]
+        [HttpGet("get-active-cbt")]
+        public async Task<IActionResult> GetActiveSessionsCbtAsync([Required]int examScore, bool asExamScore, bool asAssessmentScore)
+        {
+            var response = await sessionService.GetActiveSessionsCbtAsync(examScore, asExamScore, asAssessmentScore);
             return Ok(response);
         }
 
