@@ -3,6 +3,7 @@ using BLL.Wrappers;
 using Contracts.Session;
 using DAL;
 using DAL.SessionEntities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
@@ -368,5 +369,52 @@ namespace BLL.SessionServices
                                 .OrderBy(d => d.TermName).LastOrDefault();
         }
 
+        public async Task<APIResponse<ActiveSessionCbt>> GetActiveSessionsCbtAsync(int examScore, bool asExamScore, bool asAssessmentScore)
+        {
+            var res = new APIResponse<ActiveSessionCbt>();
+            try
+            {
+                var result = await context.Session.Include(d => d.Terms).Where(d => d.Deleted == false && d.IsActive == true).Select(d => new ActiveSessionCbt
+                {
+                    SessionId = d.SessionId.ToString(),
+                    Session = d.StartDate + " / " + d.EndDate,
+                    SessionTermId = d.Terms.FirstOrDefault(er => er.IsActive == true).SessionTermId.ToString(),
+                    SessionTerm = d.Terms.FirstOrDefault(er => er.IsActive == true).TermName,
+                }).FirstOrDefaultAsync();
+
+                var sessionClass = await context.SessionClass.FirstOrDefaultAsync(x => x.SessionId == Guid.Parse(result.SessionId));
+
+                if(asExamScore)
+                {
+                    if (examScore > sessionClass.ExamScore)
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = "Exam Score cannot be greater than Session Class Exam Score";
+                        return res;
+                    }
+                }
+
+                if(asAssessmentScore)
+                {
+                    if (examScore > sessionClass.AssessmentScore)
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = "Exam Score cannot be greater than Session Class Assessment Score";
+                        return res;
+                    }
+                }
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                return res;
+            }
+        }
     }
 }
