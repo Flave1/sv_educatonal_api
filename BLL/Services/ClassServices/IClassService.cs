@@ -19,5 +19,6 @@ namespace BLL.ClassServices
         Task<APIResponse<List<GetStudentContacts>>> GetClassStudentsClassesAsync(Guid sessionClassId);
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses2Async();
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses1Async(string sessionId);
+        Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync();
     }
 }
