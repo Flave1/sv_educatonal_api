@@ -933,7 +933,7 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
 
-        async Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> IHomeAssessmentService.FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, string studentContactid, PaginationFilter filter)
+        async Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> IHomeAssessmentService.FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, int status, string studentContactid, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
@@ -942,19 +942,20 @@ namespace SMP.BLL.Services.AssessmentServices
 
             var query = context.HomeAssessment
                 .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId 
-                && d.SessionClassSubjectId == sessionClassSubjectId && d.Status == (int)HomeAssessmentStatus.Closed)
+                && d.SessionClassSubjectId == sessionClassSubjectId && d.Status == status)
                 .OrderByDescending(d => d.CreatedOn)
                 .Include(d => d.HomeAssessmentFeedBacks)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Include(q => q.SessionClassGroup)
                 .Where(x => x.Deleted == false);
 
-            query = query.Where(x => x.HomeAssessmentFeedBacks.Any(e => e.StudentContactId == Guid.Parse(studentContactid)));
+            //query = query.Where(x => x.HomeAssessmentFeedBacks.Any(e => e.StudentContactId == Guid.Parse(studentContactid)));
 
             if (query is not null)
             {
-                query = query.AsEnumerable().Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds)
-                && d.SessionClassGroup.ListOfStudentContactIds.Split(',').Contains(studentContactid) || d.SessionClassGroup.GroupName == "all-students").AsQueryable();
+                query = query.Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds) || d.SessionClassGroup.GroupName == "all-students");
+
+                query = query.AsEnumerable().Where(d => !string.IsNullOrEmpty(d.SessionClassGroup.ListOfStudentContactIds) ? d.SessionClassGroup.ListOfStudentContactIds.Split(',').ToArray().Contains(studentContactid) : true).AsQueryable();
             }
 
             var totaltRecord = query.Count();

@@ -65,10 +65,10 @@ namespace SMP.API.Controllers.ParentControllers
         }
 
         [HttpGet("get/maywards-home-assessments")]
-        public async Task<IActionResult> GetWardsWardHomeAssessmentAsync(int pageNumber, Guid sessionClassSubjectId, string studentContactId)
+        public async Task<IActionResult> GetWardsWardHomeAssessmentAsync(int pageNumber, Guid sessionClassSubjectId, string studentContactId, int status)
         {
             var filter = new PaginationFilter { PageNumber = pageNumber };
-            var response = await homeAssessmentService.FilterHomeAssessmentsByParentAsync(sessionClassSubjectId, studentContactId, filter);
+            var response = await homeAssessmentService.FilterHomeAssessmentsByParentAsync(sessionClassSubjectId, status, studentContactId, filter);
             return Ok(response);
         }
     }
