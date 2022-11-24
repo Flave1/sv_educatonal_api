@@ -59,5 +59,13 @@ namespace Contracts.Session
         public Guid SessionClassId { get; set; }
     }
 
-  
+    public class ActiveSessionCbt
+    {
+        public string SessionId { get; set; }
+        public string Session { get; set; }
+        public string SessionTermId { get; set; }
+        public string SessionTerm { get; set; }
+    }
+
+
 }
