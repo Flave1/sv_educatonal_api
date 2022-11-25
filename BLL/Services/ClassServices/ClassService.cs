@@ -456,5 +456,27 @@ namespace BLL.ClassServices
             res.Message.FriendlyMessage = Messages.DeletedSuccess;
             return res;
         }
+
+        public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync()
+        {
+            var res = new APIResponse<List<GetSessionClassCbt>>();
+            var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
+
+            res.Result = await context.SessionClass
+                .Include(rr => rr.Session)
+                .Include(rr => rr.Class)
+                .OrderBy(d => d.Class.Name)
+                .Where(r => r.Deleted == false && r.SessionId == sessionId)
+                //.Include(r => r.ClassRegisters)
+                //.Include(r => r.Students)
+                //.Include(r => r.SessionClassSubjects).ThenInclude(x => x.ClassAssessments)
+                //.Include(r => r.SessionClassSubjects).ThenInclude(x => x.HomeAssessments)
+                //.Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User)
+                .Select(g => new GetSessionClassCbt(g)).ToListAsync();
+            
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }
