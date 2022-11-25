@@ -113,6 +113,13 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [AllowAnonymous]
+        [HttpGet("get-all/session-classes-cbt")]
+        public async Task<IActionResult> GetSessionClassesCbtAsync()
+        {
+            var response = await service.GetSessionClassesCbtAsync();
+            return Ok(response);
+        }
 
         [HttpGet("search/classes/by-session")]
         public async Task<IActionResult> GetClassesBySessionAsync([FromBody] SessionQuery query)

@@ -110,4 +110,32 @@ namespace Contracts.Class
         public int ExamSCore { get; set; }
         public int Assessment { get; set; }
     }
+
+    public class GetSessionClassCbt
+    {
+        public string SessionClassId { get; set; }
+        public string SessionId { get; set; }
+        public string Session { get; set; }
+        public string ClassId { get; set; }
+        public string Class { get; set; }
+        public string FormTeacherId { get; set; }
+        public bool InSession { get; set; }
+        public int ExamScore { get; set; }
+        public int AssessmentScore { get; set; }
+        public int PassMark { get; set; }
+
+        public GetSessionClassCbt(SessionClass sClass)
+        {
+            InSession = sClass.InSession;
+            ClassId = sClass.ClassId.ToString();
+            SessionId = sClass.SessionId.ToString();
+            SessionClassId = sClass.SessionClassId.ToString();
+            FormTeacherId = sClass.FormTeacherId.ToString();
+            Class = sClass.Class.Name;
+            ExamScore = sClass.ExamScore;
+            AssessmentScore = sClass.AssessmentScore;
+            PassMark = sClass.PassMark;
+            Session = sClass.Session.StartDate + " / " + sClass.Session.EndDate;
+        }
+    }
 }
