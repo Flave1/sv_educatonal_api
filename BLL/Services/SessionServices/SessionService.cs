@@ -380,7 +380,7 @@ namespace BLL.SessionServices
                     Session = d.StartDate + " / " + d.EndDate,
                     SessionTermId = d.Terms.FirstOrDefault(er => er.IsActive == true).SessionTermId.ToString(),
                     SessionTerm = d.Terms.FirstOrDefault(er => er.IsActive == true).TermName,
-                }).FirstOrDefaultAsync();
+                }).FirstOrDefaultAsync() ?? null;
 
                 var sessionClass = await context.SessionClass.FirstOrDefaultAsync(x => x.SessionId == Guid.Parse(result.SessionId));
 

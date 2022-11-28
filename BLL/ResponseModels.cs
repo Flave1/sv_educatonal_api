@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace BLL
+﻿namespace BLL
 {
     public class APIResponse<T>
     {
