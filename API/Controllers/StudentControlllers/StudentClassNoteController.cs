@@ -1,8 +1,6 @@
 ﻿using BLL.Filter;
-using BLL.MiddleWares; 
-using Contracts.Common;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc; 
+using BLL.MiddleWares;
+using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.NoteServices;
 using SMP.Contracts.Notes;
 using System;
@@ -21,10 +19,10 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get-classnote/bystudents")]
-        public async Task<IActionResult> GetStudentNoteCommentsAsync(string subjectId, int pageNumber)
+        public async Task<IActionResult> GetStudentNoteCommentsAsync(string subjectId, int pageNumber, string termId)
         {
             PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
-            var response = await service.filterClassNotesByStudentsAsync(subjectId, filter);
+            var response = await service.filterClassNotesByStudentsAsync(subjectId, termId, filter);
             return Ok(response);
         }
 

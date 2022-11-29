@@ -79,7 +79,7 @@ namespace SMP.BLL.Services.GradeServices
         async Task<APIResponse<AddGradeGroupModel>> IGradeService.CreateGradeAsync(AddGradeGroupModel request)
         {
             var res = new APIResponse<AddGradeGroupModel>();
-            if (context.GradeGroup.AsEnumerable().Any(s => UtilTools.ReplaceWhitespace(s.GradeGroupName) == UtilTools.ReplaceWhitespace(request.GradeGroupName)))
+            if (context.GradeGroup.AsEnumerable().Any(s => Tools.ReplaceWhitespace(s.GradeGroupName) == Tools.ReplaceWhitespace(request.GradeGroupName)))
             {
                 res.Message.FriendlyMessage = "Group Name Already added";
                 return res;

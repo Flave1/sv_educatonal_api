@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.NoteServices;
 using SMP.BLL.Services.ParentServices;
+using SMP.BLL.Services.TimetableServices;
 using System;
 using System.Threading.Tasks;
 
@@ -17,12 +18,14 @@ namespace SMP.API.Controllers.ParentControllers
         private readonly IStudentNoteService studentNoteService;
         private readonly IClassNoteService classNoteService;
         private readonly IHomeAssessmentService homeAssessmentService;
-        public MyWardsController(IParentService service, IStudentNoteService studentNoteService, IClassNoteService classNoteService, IHomeAssessmentService homeAssessmentService)
+        private readonly ITimeTableService timeTableService;
+        public MyWardsController(IParentService service, IStudentNoteService studentNoteService, IClassNoteService classNoteService, IHomeAssessmentService homeAssessmentService, ITimeTableService timeTableService)
         {
             this.service = service;
             this.studentNoteService = studentNoteService;
             this.classNoteService = classNoteService;
             this.homeAssessmentService = homeAssessmentService;
+            this.timeTableService = timeTableService;
         }
 
         [HttpGet("get/maywards")]
@@ -71,5 +74,14 @@ namespace SMP.API.Controllers.ParentControllers
             var response = await homeAssessmentService.FilterHomeAssessmentsByParentAsync(sessionClassSubjectId, status, studentContactId, filter);
             return Ok(response);
         }
+
+
+        [HttpGet("get-maywards/class-timetable")]
+        public async Task<IActionResult> GetSingleMyWardsClassNoteAsync(Guid classlkpId)
+        {
+            var response = await timeTableService.GetClassTimeTableByParentsAsync(classlkpId);
+            return Ok(response);
+        }
+
     }
 }

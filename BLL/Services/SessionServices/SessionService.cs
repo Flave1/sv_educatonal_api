@@ -114,7 +114,7 @@ namespace BLL.SessionServices
             noOfTerms += 1;
             for (var i = 1; i < noOfTerms; i++)
             {
-                var termName = UtilTools.OrdinalSuffixOf(i);
+                var termName = Tools.OrdinalSuffixOf(i);
 
                 var term = new SessionTerm
                 {

@@ -203,12 +203,12 @@ namespace SMP.BLL.Services.ResultServices
             if (clas.Session.IsActive)
             {
                 var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive);
-              
-
                 if (result != null)
                 {
                     var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -239,8 +239,11 @@ namespace SMP.BLL.Services.ResultServices
                     var query = context.SessionClassArchive
                         .Include(x => x.StudentContact).ThenInclude(x => x.User)
                         .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
-
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -279,7 +282,7 @@ namespace SMP.BLL.Services.ResultServices
                 .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Class)
                 .Include(d => d.Subject)
-                .Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
+                //.Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
                 .AsQueryable().Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
 
             if(result is not null)
@@ -289,6 +292,9 @@ namespace SMP.BLL.Services.ResultServices
                 var query = context.ScoreEntry
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
                     .Where(d => d.SessionTerm.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+
+                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
                 var totaltRecord = query.Count();
@@ -453,7 +459,7 @@ namespace SMP.BLL.Services.ResultServices
             if (result.Any())
             {
                 var averages = result.Select(d => d.AverageScore);
-                var studentPositions = UtilTools.GetStudentPositions(averages);
+                var studentPositions = Tools.GetStudentPositions(averages);
                 foreach(var item in result)
                 {
                     item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position?? "";
@@ -490,7 +496,7 @@ namespace SMP.BLL.Services.ResultServices
                     if (result != null)
                     {
                         var averages = result.Select(d => d.AverageScore);
-                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        var studentPositions = Tools.GetStudentPositions(averages);
                         foreach (var item in result)
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
@@ -518,13 +524,13 @@ namespace SMP.BLL.Services.ResultServices
                     .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
                     .Include(d => d.StudentContact).ThenInclude(d => d.User).AsEnumerable().GroupBy(s => s.StudentContactId).AsQueryable();
 
-                    var result = await paginationService.GetPagedResult(query, filter).Select(entries => new StudentResultDetail(entries, regNoFormat)).ToListAsync();
+                    var result = paginationService.GetPagedResult(query, filter).Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList() ?? null;
 
 
                     if (result != null)
                     {
                         var averages = result.Select(x => x.AverageScore);
-                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        var studentPositions = Tools.GetStudentPositions(averages);
                         foreach (var item in result)
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
@@ -606,6 +612,8 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -636,8 +644,9 @@ namespace SMP.BLL.Services.ResultServices
                     var query = context.SessionClassArchive
                         .Include(x => x.StudentContact).ThenInclude(x => x.User)
                         .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
-
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -813,7 +822,7 @@ namespace SMP.BLL.Services.ResultServices
                .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
                .Include(d => d.SessionClass).ThenInclude(d => d.Class)
                .Include(d => d.Subject)
-               .Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
+               //.Include(d => d.SessionClass).ThenInclude(x => x.SessionClassSubjects).ThenInclude(e => e.SubjectTeacher).ThenInclude(x => x.User)
                .AsQueryable().Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
 
             if (result is not null)
@@ -823,6 +832,9 @@ namespace SMP.BLL.Services.ResultServices
                 var query = context.ScoreEntry
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
                     .Where(d => d.SessionTermId == sessionTermId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+
+                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
                 var totaltRecord = query.Count();
@@ -848,13 +860,13 @@ namespace SMP.BLL.Services.ResultServices
                      .Include(s => s.SessionTerm)
                      .Include(r => r.StudentContact).ThenInclude(d => d.User)
                      .Include(d => d.ClassScoreEntry).ThenInclude(r => r.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(d => d.Subject)
-                     .Where(r => r.ClassScoreEntry.SessionClassId == sessionClassId).AsEnumerable().GroupBy(s => s.StudentContactId)
+                     .Where(r => r.ClassScoreEntry.SessionClassId == sessionClassId && r.ClassScoreEntry.Subject.Deleted == false).AsEnumerable().GroupBy(s => s.StudentContactId)
                      .Select(g => new CumulativeMasterListResult(g, regNoFormat)).ToList();
 
             if (result.Any())
             {
                 var averages = result.Select(d => d.AverageScore);
-                var studentPositions = UtilTools.GetStudentPositions(averages);
+                var studentPositions = Tools.GetStudentPositions(averages);
 
                 foreach (var item in result)
                     item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
@@ -1010,7 +1022,7 @@ namespace SMP.BLL.Services.ResultServices
                 if (results.Any())
                 {
                     var averages = results.Select(d => d.average);
-                    var studentPositions = UtilTools.GetStudentPositions(averages);
+                    var studentPositions = Tools.GetStudentPositions(averages);
                     foreach(var std in results)
                     {
                         std.position = studentPositions.FirstOrDefault(d => d.Average == std.average)?.Position ?? "";
@@ -1055,7 +1067,7 @@ namespace SMP.BLL.Services.ResultServices
                 if (results.Any())
                 {
                     var averages = results.Select(d => d.average);
-                    var studentPositions = UtilTools.GetStudentPositions(averages);
+                    var studentPositions = Tools.GetStudentPositions(averages);
                     var studentResult = results.FirstOrDefault(d => d.studentContactId == studentContactId);
                     studentResult.position = studentPositions.FirstOrDefault(d => d.Average == studentResult.average)?.Position ?? "";
                     studentResult.noOfStudents = results.Count();
@@ -1096,7 +1108,7 @@ namespace SMP.BLL.Services.ResultServices
             if (result.Any())
             {
                 var averages = result.Select(d => d.average);
-                var studentPositions = UtilTools.GetStudentPositions(averages);
+                var studentPositions = Tools.GetStudentPositions(averages);
                 var studentResult = result.FirstOrDefault(d => d.studentContactId == studentContactId);
                 if(studentResult != null)
                 {
@@ -1154,7 +1166,7 @@ namespace SMP.BLL.Services.ResultServices
                     if (result != null)
                     {
                         var averages = result.Select(d => d.AverageScore);
-                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        var studentPositions = Tools.GetStudentPositions(averages);
                         foreach (var item in result)
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == item.AverageScore)?.Position ?? "";
@@ -1182,7 +1194,7 @@ namespace SMP.BLL.Services.ResultServices
                     if (result != null)
                     {
                         var averages = result.Select(x => x.AverageScore);
-                        var studentPositions = UtilTools.GetStudentPositions(averages);
+                        var studentPositions = Tools.GetStudentPositions(averages);
                         foreach (var item in result)
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";

@@ -26,7 +26,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<ClassLookup>();
             try
             {
-                if (context.ClassLookUp.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(className) == UtilTools.ReplaceWhitespace(r.Name) && r.Deleted == false))
+                if (context.ClassLookUp.AsEnumerable().Any(r => Tools.ReplaceWhitespace(className) == Tools.ReplaceWhitespace(r.Name) && r.Deleted == false))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
                     return res;
@@ -59,7 +59,7 @@ namespace BLL.ClassServices
 
             try
             {
-                if (context.ClassLookUp.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(lookupName) == UtilTools.ReplaceWhitespace(r.Name) 
+                if (context.ClassLookUp.AsEnumerable().Any(r => Tools.ReplaceWhitespace(lookupName) == Tools.ReplaceWhitespace(r.Name) 
                 && r.ClassLookupId != Guid.Parse(lookupId)))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
@@ -137,6 +137,13 @@ namespace BLL.ClassServices
                     res.Message.FriendlyMessage = "Class Lookup does not exist";
                     return res;
                 }
+
+                if(context.SessionClass.Any(x => x.ClassId == lookup.ClassLookupId && x.Deleted == false))
+                {
+                    res.Message.FriendlyMessage = "Class setup cannot be deleted";
+                    return res;
+                }
+
                 lookup.Deleted = true;
                 await context.SaveChangesAsync();
 

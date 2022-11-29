@@ -32,7 +32,7 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                if (context.Subject.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(subject.Name) == UtilTools.ReplaceWhitespace(r.Name)))
+                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(subject.Name) == Tools.ReplaceWhitespace(r.Name)))
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;
@@ -65,7 +65,7 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                if (context.Subject.AsEnumerable().Any(r => UtilTools.ReplaceWhitespace(Name) == UtilTools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id)))
+                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(Name) == Tools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id)))
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;

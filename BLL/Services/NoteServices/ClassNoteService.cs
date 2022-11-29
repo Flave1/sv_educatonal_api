@@ -181,7 +181,12 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
                 }
 
-                if (!string.IsNullOrEmpty(subjectId))
+            if (!string.IsNullOrEmpty(termId))
+            {
+                query = query.Where(u => Guid.Parse(termId) == u.ClassNote.SessionTermId);
+            }
+
+            if (!string.IsNullOrEmpty(subjectId))
                 {
                     query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
                 }

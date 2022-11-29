@@ -61,7 +61,6 @@ namespace SMP.BLL.Services.DashboardServices
         private GetDashboardCount GetDashboardCounts()
         {
             var enrolledStudents = context.StudentContact.Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
-
             var totalClass = context.SessionClass
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true);
@@ -99,7 +98,7 @@ namespace SMP.BLL.Services.DashboardServices
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true && x.FormTeacherId == teacherId);
 
-            var totalSubject = context.SessionClassSubject
+            var totalSubject = context.SessionClassSubject.GroupBy(x => x.SubjectId).Select(x => x.First())
                 .Count(x => x.Deleted == false && x.SubjectTeacherId == teacherId);
 
             var totalPins = context.UploadedPin
@@ -128,6 +127,7 @@ namespace SMP.BLL.Services.DashboardServices
         private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
         {
             var student = context.StudentContact.FirstOrDefault(x => x.StudentContactId == studentId);
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
             if (student == null)
                 throw new ArgumentException("Not found");
             var totalSubject = context.SessionClassSubject
@@ -135,13 +135,15 @@ namespace SMP.BLL.Services.DashboardServices
 
 
             var totalHomeAssessments = context.HomeAssessmentFeedBack
-               .Count(x => x.Deleted == false && x.StudentContactId == studentId);
+                .Include(t => t.HomeAssessment)
+               .Count(x => x.Deleted == false && x.StudentContactId == studentId && x.HomeAssessment.SessionTermId == termId);
 
             var totalClassAssessments = context.AssessmentScoreRecord
-               .Count(x => x.StudentContactId == studentId);
+                 .Include(t => t.ClassAssessment)
+               .Count(x => x.StudentContactId == studentId && x.ClassAssessment.SessionTermId == termId );
 
             var notes = context.StudentNote
-               .Count(x => x.StudentContactId == studentId);
+               .Count(x => x.StudentContactId == studentId &&x.Deleted == false);
 
             //var lessonNotes = context.TeacherClassNote
             //   .AsEnumerable().Where(x => x.Classes.Split(',').ToList().Select(Guid.Parse).Contains(studentId)).Distinct().Count();

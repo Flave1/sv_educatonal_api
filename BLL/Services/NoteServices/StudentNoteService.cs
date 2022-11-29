@@ -469,7 +469,7 @@ namespace SMP.BLL.Services.NoteServices
         }
 
  
-        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IStudentNoteService.filterClassNotesByStudentsAsync(string subjectId, PaginationFilter filter)
+        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IStudentNoteService.filterClassNotesByStudentsAsync(string subjectId, string termId, PaginationFilter filter)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var studentClass = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
@@ -493,7 +493,11 @@ namespace SMP.BLL.Services.NoteServices
                          && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved
                          && u.ClassNote.SubjectId == Guid.Parse(subjectId));
 
-                    
+                    if (!string.IsNullOrEmpty(classId))
+                    {
+                        query = query.Where(x => x.ClassNote.SessionTermId == Guid.Parse(termId));
+                    }
+
                     if (!string.IsNullOrEmpty(classId))
                     {
                         var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
@@ -515,6 +519,11 @@ namespace SMP.BLL.Services.NoteServices
                              .OrderBy(d => d.CreatedBy)
                           .Where(u => u.Deleted == false
                           && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved);
+
+                    if (!string.IsNullOrEmpty(classId))
+                    {
+                        query = query.Where(x => x.ClassNote.SessionTermId == Guid.Parse(termId));
+                    }
 
                     if (!string.IsNullOrEmpty(classId))
                     {

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SMP.BLL.Utilities
 {
-    public class UtilTools
+    public class Tools
     {
         public record ClassRecord { public decimal Average; public string Position; }
         private static readonly Regex sWhitespace = new Regex(@"\s+");
@@ -84,6 +84,10 @@ namespace SMP.BLL.Utilities
             return i + "th";
         }
 
+        public static DateTimeOffset GetServerDate()
+        {
+            return DateTimeOffset.Now.Subtract(TimeSpan.FromHours(3));
+        }
        
     }
 }

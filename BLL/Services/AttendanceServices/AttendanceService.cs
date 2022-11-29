@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Utilities;
 using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.Register;
 using System;
@@ -35,11 +36,11 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
-            var datTimeNote = DateTimeOffset.Now;
+            var datTimeNote = DateTimeOffset.Now.Subtract(TimeSpan.FromHours(3));
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
-                RegisterLabel = $"ATTENDANCE AS AT {datTimeNote}",
+                RegisterLabel = $"ATTENDANCE AS AT {Tools.GetServerDate().ToString("dd-MM-yyy hh:mm")}",
                 SessionTermId = termid
             };
 

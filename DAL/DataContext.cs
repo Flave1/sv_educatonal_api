@@ -110,12 +110,12 @@ namespace DAL
                 if (entry.State == EntityState.Added)
                 { 
                     entry.Entity.Deleted = false; 
-                    entry.Entity.CreatedOn = DateTimeOffset.Now;
+                    entry.Entity.CreatedOn = GetServerDate();
                     entry.Entity.CreatedBy = loggedInUserId;
                 }
                 else
                 {
-                    entry.Entity.UpdatedOn = DateTimeOffset.Now;
+                    entry.Entity.UpdatedOn = GetServerDate();
                     entry.Entity.UpdatedBy = loggedInUserId;
                 }
             }
@@ -130,16 +130,21 @@ namespace DAL
                 if (entry.State == EntityState.Added)
                 { 
                     entry.Entity.Deleted = false;   
-                    entry.Entity.CreatedOn = DateTimeOffset.Now;
+                    entry.Entity.CreatedOn = GetServerDate();
                     entry.Entity.CreatedBy = loggedInUserId;
                 }
                 else
                 {
-                    entry.Entity.UpdatedOn = DateTimeOffset.Now;
+                    entry.Entity.UpdatedOn = GetServerDate();
                     entry.Entity.UpdatedBy = loggedInUserId;
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private static DateTimeOffset GetServerDate()
+        {
+            return DateTimeOffset.Now.Subtract(TimeSpan.FromHours(3));
         }
     }
 }
