@@ -42,7 +42,12 @@ namespace API.Controllers
             var response = await service.GetCurrentStaffClassSubjects2Async(Guid.Parse(classId), Guid.Parse(sessionClassId));
             return Ok(response);
         }
-
+        [HttpGet("get/staff-class-subjects/by-formteacher/{classId}/{sessionClassId}")]
+        public async Task<IActionResult> GetCurrentStaffClassSubjectsForMasterListAsync(string classId, string sessionClassId)
+        {
+            var response = await service.GetCurrentStaffClassSubjectsForMasterListAsync(Guid.Parse(classId), Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
         [HttpGet("get/class-score-entries/{sessionClassid}")]
         public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId, int pageNumber)
         {

@@ -67,7 +67,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 {
                                     Status = "unenrrolled",
                                     StudentContactId = a.StudentContactId.ToString(),
-                                    StudentName = a.User.FirstName + " " + a.User.LastName,
+                                    StudentName = a.User.FirstName + " " + a.User.MiddleName + " " + a.User.LastName,
                                     StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
                                     Class = a.SessionClass.Class.Name
                                 });

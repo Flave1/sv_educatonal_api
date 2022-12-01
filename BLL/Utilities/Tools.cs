@@ -86,7 +86,7 @@ namespace SMP.BLL.Utilities
 
         public static DateTimeOffset GetServerDate()
         {
-            return DateTimeOffset.Now.Subtract(TimeSpan.FromHours(3));
+            return DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
         }
        
     }

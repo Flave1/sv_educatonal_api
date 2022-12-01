@@ -49,6 +49,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var studentContact = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
             var res = new APIResponse<StudentNotes>();
 
             try
@@ -62,32 +63,35 @@ namespace SMP.BLL.Services.NoteServices
                     SubjectId = Guid.Parse(request.SubjectId),
                     TeacherId = Guid.Parse(request.TeacherId),
                     SessionClassId = studentContact.SessionClassId,
+                    SessionTermId = termId,
                 };
                 await context.StudentNote.AddAsync(newStudentNote);
                 await context.SaveChangesAsync();
 
-                if(request.SubmitForReview)
-                {
-                    var studentName = context.Users.FirstOrDefault(x=>x.Id == studentContact.UserId).FirstName;
-                    var classId = context.SessionClass.FirstOrDefault(x=>x.SessionClassId == studentContact.SessionClassId).ClassId;
-                    var className  = context.ClassLookUp.FirstOrDefault(x=>x.ClassLookupId == classId).Name;
-                    var subject = context.Subject.FirstOrDefault(m => m.SubjectId == Guid.Parse(request.SubjectId)).Name;
-                    var userId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(request.TeacherId)).UserId;
-                    var teacherEmail = context.Users.FirstOrDefault(x=>x.Id == userId).FirstName;
+                #region notification
+                //if(request.SubmitForReview)
+                //{
+                //    var studentName = context.Users.FirstOrDefault(x=>x.Id == studentContact.UserId).FirstName;
+                //    var classId = context.SessionClass.FirstOrDefault(x=>x.SessionClassId == studentContact.SessionClassId).ClassId;
+                //    var className  = context.ClassLookUp.FirstOrDefault(x=>x.ClassLookupId == classId).Name;
+                //    var subject = context.Subject.FirstOrDefault(m => m.SubjectId == Guid.Parse(request.SubjectId)).Name;
+                //    var userId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(request.TeacherId)).UserId;
+                //    var teacherEmail = context.Users.FirstOrDefault(x=>x.Id == userId).FirstName;
 
-                    await notificationService.CreateNotitficationAsync(new NotificationDTO
-                    {
-                        Content = $"{studentName} in {className} submitted {subject} note",
-                        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={newStudentNote.StudentNoteId}",
-                        NotificationSourceId = newStudentNote.StudentNoteId.ToString(),
-                        Subject = "Student Note",
-                        ReceiversEmail = teacherEmail,
-                        Type = "student-note",
-                        ToGroup = "Teachers"
-                    });
-                    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                //    await notificationService.CreateNotitficationAsync(new NotificationDTO
+                //    {
+                //        Content = $"{studentName} in {className} submitted {subject} note",
+                //        NotificationPageLink = $"dashboard/smp-notification/lesson-note-details?teacherClassNoteId={newStudentNote.StudentNoteId}",
+                //        NotificationSourceId = newStudentNote.StudentNoteId.ToString(),
+                //        Subject = "Student Note",
+                //        ReceiversEmail = teacherEmail,
+                //        Type = "student-note",
+                //        ToGroup = "Teachers"
+                //    });
+                //    await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
 
-                }
+                //}
+                #endregion
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
@@ -248,24 +252,26 @@ namespace SMP.BLL.Services.NoteServices
                 studentNote.AprrovalStatus = (int)NoteApprovalStatus.InProgress;
                 await context.SaveChangesAsync();
 
-                var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-                var studentName = context.Users.FirstOrDefault(x => x.Id == userId).FirstName;
-                var studentClass = context.StudentContact.Where(x=>x.UserId.Equals(userId)).Select(x=>x.SessionClass.Class.Name).FirstOrDefault();
-                var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == studentNote.SubjectId).Name;
-                var teacherId = context.Teacher.FirstOrDefault(x => x.TeacherId == studentNote.TeacherId).UserId;
-                var teacherEmail = context.Users.Where(x=>x.Id == teacherId).FirstOrDefault().Email;
+                #region notification
+                //var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                //var studentName = context.Users.FirstOrDefault(x => x.Id == userId).FirstName;
+                //var studentClass = context.StudentContact.Where(x=>x.UserId.Equals(userId)).Select(x=>x.SessionClass.Class.Name).FirstOrDefault();
+                //var subject = context.Subject.FirstOrDefault(x=>x.SubjectId == studentNote.SubjectId).Name;
+                //var teacherId = context.Teacher.FirstOrDefault(x => x.TeacherId == studentNote.TeacherId).UserId;
+                //var teacherEmail = context.Users.Where(x=>x.Id == teacherId).FirstOrDefault().Email;
 
-                await notificationService.CreateNotitficationAsync(new NotificationDTO
-                {
-                    Content = $"{studentName} in {studentClass} submitted {subject} note",
-                    NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={studentNote.StudentNoteId}",
-                    NotificationSourceId = studentNote.StudentNoteId.ToString(),
-                    Subject = "Student Note",
-                    Receivers = teacherEmail,
-                    Type = "student-note",
-                    ToGroup = "Teachers"
-                });
-                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                //await notificationService.CreateNotitficationAsync(new NotificationDTO
+                //{
+                //    Content = $"{studentName} in {studentClass} submitted {subject} note",
+                //    NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={studentNote.StudentNoteId}",
+                //    NotificationSourceId = studentNote.StudentNoteId.ToString(),
+                //    Subject = "Student Note",
+                //    Receivers = teacherEmail,
+                //    Type = "student-note",
+                //    ToGroup = "Teachers"
+                //});
+                //await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                #endregion
             }
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "Successfully submited for review";
@@ -288,7 +294,7 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId, int status)
+        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId, int status, string termId)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var res = new APIResponse<List<GetStudentNotes>>();
@@ -303,6 +309,11 @@ namespace SMP.BLL.Services.NoteServices
                           .Where(u => u.Deleted == false
                           && u.SessionClass.Session.IsActive == true
                           && u.StudentContactId == Guid.Parse(studentContactId));
+
+                if (!string.IsNullOrEmpty(termId))
+                {
+                    query = query.Where(u => u.SessionTermId == Guid.Parse(termId));
+                }
 
                 if (!string.IsNullOrEmpty(subjectId))
                 {
@@ -355,34 +366,36 @@ namespace SMP.BLL.Services.NoteServices
             context.StudentNoteComment.Add(commented);
             await context.SaveChangesAsync();
 
-            var commenter = context.Users.FirstOrDefault(m => m.Id == userid).FirstName;
-            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
+            #region notification
+            //var commenter = context.Users.FirstOrDefault(m => m.Id == userid).FirstName;
+            //var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
 
-            string receiverEmail = "";
-            string toGroup = "";
-            if (teacherId != null)
-            {
-                receiverEmail = context.Users.FirstOrDefault(x => x.Id == userid).Email;
-                toGroup = "Students";
-            }
-            else
-            {
-                var teacherUserId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).UserId;
-                receiverEmail = context.Users.FirstOrDefault(x => x.Id == teacherUserId).Email;
-                toGroup = "Teachers";
-            }
+            //string receiverEmail = "";
+            //string toGroup = "";
+            //if (teacherId != null)
+            //{
+            //    receiverEmail = context.Users.FirstOrDefault(x => x.Id == userid).Email;
+            //    toGroup = "Students";
+            //}
+            //else
+            //{
+            //    var teacherUserId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).UserId;
+            //    receiverEmail = context.Users.FirstOrDefault(x => x.Id == teacherUserId).Email;
+            //    toGroup = "Teachers";
+            //}
 
-            await notificationService.CreateNotitficationAsync(new NotificationDTO
-            {
-                Content = $"{commenter} commented on {subject} note",
-                NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.StudentNoteId}",
-                NotificationSourceId = note.StudentNoteId.ToString(),
-                Subject = "Student Note",
-                Receivers = receiverEmail,
-                Type = "student-note",
-                ToGroup = toGroup
-            });
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            //await notificationService.CreateNotitficationAsync(new NotificationDTO
+            //{
+            //    Content = $"{commenter} commented on {subject} note",
+            //    NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.StudentNoteId}",
+            //    NotificationSourceId = note.StudentNoteId.ToString(),
+            //    Subject = "Student Note",
+            //    Receivers = receiverEmail,
+            //    Type = "student-note",
+            //    ToGroup = toGroup
+            //});
+            //await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            #endregion
 
             res.Message.FriendlyMessage = "Comment sent succesfully";
             res.IsSuccessful = true;
@@ -416,32 +429,34 @@ namespace SMP.BLL.Services.NoteServices
             context.StudentNoteComment.Add(commented);
             await context.SaveChangesAsync();
 
-            var commenter = context.Users.FirstOrDefault(m => m.Id == userid).FirstName;
-            var subjectId = context.StudentNote.FirstOrDefault(m => m.StudentNoteId == note.StudentNoteId).SubjectId;
-            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
-            string receiverEmail = context.Users.FirstOrDefault(x => x.Id == note.UserId).Email;
+            #region notification
+            //var commenter = context.Users.FirstOrDefault(m => m.Id == userid).FirstName;
+            //var subjectId = context.StudentNote.FirstOrDefault(m => m.StudentNoteId == note.StudentNoteId).SubjectId;
+            //var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
+            //string receiverEmail = context.Users.FirstOrDefault(x => x.Id == note.UserId).Email;
 
-            string toGroup = "";
-            if (teacherId != null)
-            {
-                toGroup = "Student";
-            }
-            else
-            {
-                toGroup = "Teachers";
-            }
+            //string toGroup = "";
+            //if (teacherId != null)
+            //{
+            //    toGroup = "Student";
+            //}
+            //else
+            //{
+            //    toGroup = "Teachers";
+            //}
 
-            await notificationService.CreateNotitficationAsync(new NotificationDTO
-            {
-                Content = $"{commenter} commented on {subject} note",
-                NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.StudentNoteId}",
-                NotificationSourceId = note.StudentNoteId.ToString(),
-                Subject = "Student Note",
-                Receivers = receiverEmail,
-                Type = "student-note",
-                ToGroup = toGroup
-            });
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            //await notificationService.CreateNotitficationAsync(new NotificationDTO
+            //{
+            //    Content = $"{commenter} commented on {subject} note",
+            //    NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.StudentNoteId}",
+            //    NotificationSourceId = note.StudentNoteId.ToString(),
+            //    Subject = "Student Note",
+            //    Receivers = receiverEmail,
+            //    Type = "student-note",
+            //    ToGroup = toGroup
+            //});
+            //await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            #endregion
 
             res.Message.FriendlyMessage = "Comment sent";
             res.IsSuccessful = true;
@@ -495,7 +510,7 @@ namespace SMP.BLL.Services.NoteServices
 
                     if (!string.IsNullOrEmpty(classId))
                     {
-                        query = query.Where(x => x.ClassNote.SessionTermId == Guid.Parse(termId));
+                        query = query.Where(x => x.SessionTermId == Guid.Parse(termId));
                     }
 
                     if (!string.IsNullOrEmpty(classId))
@@ -522,7 +537,7 @@ namespace SMP.BLL.Services.NoteServices
 
                     if (!string.IsNullOrEmpty(classId))
                     {
-                        query = query.Where(x => x.ClassNote.SessionTermId == Guid.Parse(termId));
+                        query = query.Where(x => x.SessionTermId == Guid.Parse(termId));
                     }
 
                     if (!string.IsNullOrEmpty(classId))
@@ -590,34 +605,36 @@ namespace SMP.BLL.Services.NoteServices
                 context.TeacherClassNoteComment.Add(commented);
                 await context.SaveChangesAsync();
 
-                var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
-                var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
+                #region notification
+                //var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
+                //var subject = context.Subject.FirstOrDefault(m => m.SubjectId == note.SubjectId).Name;
 
-                string receiverEmail = "";
-                string toGroup = "";
-                if(teacherId != null)
-                {
-                    receiverEmail = context.Users.FirstOrDefault(x => x.Id == userId).Email;
-                    toGroup = "Students";
-                }
-                else
-                {
-                    var teacherUserId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).UserId;
-                    receiverEmail = context.Users.FirstOrDefault(x => x.Id == teacherUserId).Email;
-                    toGroup = "Teachers";
-                }
+                //string receiverEmail = "";
+                //string toGroup = "";
+                //if(teacherId != null)
+                //{
+                //    receiverEmail = context.Users.FirstOrDefault(x => x.Id == userId).Email;
+                //    toGroup = "Students";
+                //}
+                //else
+                //{
+                //    var teacherUserId = context.Teacher.FirstOrDefault(x => x.TeacherId == Guid.Parse(teacherId)).UserId;
+                //    receiverEmail = context.Users.FirstOrDefault(x => x.Id == teacherUserId).Email;
+                //    toGroup = "Teachers";
+                //}
 
-                await notificationService.CreateNotitficationAsync(new NotificationDTO
-                {
-                    Content = $"{commenter} commented on {subject} note",
-                    NotificationPageLink = $"smp-class/lesson-note-details?ClassNoteId={note.ClassNoteId}",
-                    NotificationSourceId = note.ClassNoteId.ToString(),
-                    Subject = "Class Note",
-                    Receivers = receiverEmail,
-                    Type = "class-note",
-                    ToGroup = toGroup
-                });
-                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                //await notificationService.CreateNotitficationAsync(new NotificationDTO
+                //{
+                //    Content = $"{commenter} commented on {subject} note",
+                //    NotificationPageLink = $"smp-class/lesson-note-details?ClassNoteId={note.ClassNoteId}",
+                //    NotificationSourceId = note.ClassNoteId.ToString(),
+                //    Subject = "Class Note",
+                //    Receivers = receiverEmail,
+                //    Type = "class-note",
+                //    ToGroup = toGroup
+                //});
+                //await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                #endregion
             }
             catch (Exception ex)
             {
@@ -655,32 +672,34 @@ namespace SMP.BLL.Services.NoteServices
             context.TeacherClassNoteComment.Add(commented);
             await context.SaveChangesAsync();
 
-            var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
-            var subjectId = context.ClassNote.FirstOrDefault(m => m.ClassNoteId == note.ClassNoteId).SubjectId;
-            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
-            string receiverEmail = context.Users.FirstOrDefault(x => x.Id == note.UserId).Email;
+            #region notification
+            //var commenter = context.Users.FirstOrDefault(m => m.Id == userId).FirstName;
+            //var subjectId = context.ClassNote.FirstOrDefault(m => m.ClassNoteId == note.ClassNoteId).SubjectId;
+            //var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
+            //string receiverEmail = context.Users.FirstOrDefault(x => x.Id == note.UserId).Email;
 
-            string toGroup = "";
-            if (teacherId != null)
-            {
-                toGroup = "Student";
-            }
-            else
-            {
-                toGroup = "Teachers";
-            }
+            //string toGroup = "";
+            //if (teacherId != null)
+            //{
+            //    toGroup = "Student";
+            //}
+            //else
+            //{
+            //    toGroup = "Teachers";
+            //}
 
-            await notificationService.CreateNotitficationAsync(new NotificationDTO
-            {
-                Content = $"{commenter} commented on {subject} note",
-                NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.ClassNoteId}",
-                NotificationSourceId = note.ClassNoteId.ToString(),
-                Subject = "Class Note",
-                Receivers = receiverEmail,
-                Type = "class-note",
-                ToGroup = toGroup
-            });
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            //await notificationService.CreateNotitficationAsync(new NotificationDTO
+            //{
+            //    Content = $"{commenter} commented on {subject} note",
+            //    NotificationPageLink = $"smp-class/lesson-note-details?StudentNoteId={note.ClassNoteId}",
+            //    NotificationSourceId = note.ClassNoteId.ToString(),
+            //    Subject = "Class Note",
+            //    Receivers = receiverEmail,
+            //    Type = "class-note",
+            //    ToGroup = toGroup
+            //});
+            //await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            #endregion
 
             res.Message.FriendlyMessage = "Comment sent";
             res.IsSuccessful = true;

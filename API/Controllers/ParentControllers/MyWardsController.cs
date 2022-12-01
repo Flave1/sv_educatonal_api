@@ -1,5 +1,6 @@
 ﻿using BLL.Filter;
 using BLL.MiddleWares;
+using BLL.StudentServices;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.NoteServices;
@@ -18,14 +19,16 @@ namespace SMP.API.Controllers.ParentControllers
         private readonly IStudentNoteService studentNoteService;
         private readonly IClassNoteService classNoteService;
         private readonly IHomeAssessmentService homeAssessmentService;
+        private readonly IStudentService studentService;
         private readonly ITimeTableService timeTableService;
-        public MyWardsController(IParentService service, IStudentNoteService studentNoteService, IClassNoteService classNoteService, IHomeAssessmentService homeAssessmentService, ITimeTableService timeTableService)
+        public MyWardsController(IParentService service, IStudentNoteService studentNoteService, IClassNoteService classNoteService, IHomeAssessmentService homeAssessmentService, ITimeTableService timeTableService, IStudentService studentService)
         {
             this.service = service;
             this.studentNoteService = studentNoteService;
             this.classNoteService = classNoteService;
             this.homeAssessmentService = homeAssessmentService;
             this.timeTableService = timeTableService;
+            this.studentService = studentService;
         }
 
         [HttpGet("get/maywards")]
@@ -80,6 +83,13 @@ namespace SMP.API.Controllers.ParentControllers
         public async Task<IActionResult> GetSingleMyWardsClassNoteAsync(Guid classlkpId)
         {
             var response = await timeTableService.GetClassTimeTableByParentsAsync(classlkpId);
+            return Ok(response);
+        }
+
+        [HttpGet("get-single/{StudentAccountId}")]
+        public async Task<IActionResult> GetSingleStudentsAsync(string StudentAccountId)
+        {
+            var response = await studentService.GetSingleStudentAsync(Guid.Parse(StudentAccountId));
             return Ok(response);
         }
 

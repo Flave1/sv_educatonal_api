@@ -175,7 +175,7 @@ namespace SMP.BLL.Services.ResultServices
                         && e.SessionClassId == sessionClassId
                         && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
 
-                    res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
+                    res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().GroupBy(x => x.SubjectId).Select(x => x.First()).ToList();
 
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
@@ -186,6 +186,65 @@ namespace SMP.BLL.Services.ResultServices
             res.IsSuccessful = true;
             return res;
         }
+
+        async Task<APIResponse<List<GetClassSubjects>>> IResultsService.GetCurrentStaffClassSubjectsForMasterListAsync(Guid classId, Guid sessionClassId)
+        {
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var res = new APIResponse<List<GetClassSubjects>>();
+
+            if (!string.IsNullOrEmpty(userid))
+            {
+                //GET SUPER ADMIN CLASSES
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                {
+                    res.Result = await context.SessionClassSubject
+                        .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                        .Include(d => d.Subject)
+                        .Where(e => e.SessionClass.ClassId == classId
+                        && e.SessionClass.Session.IsActive == true
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s)).ToListAsync();
+
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                {
+                    //var subjectTeacherSubjects = context.SessionClassSubject
+                    //     .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                    //    .Include(d => d.Subject)
+                    //    .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId)
+                    //    && e.SessionClass.ClassId == classId
+                    //    && e.SessionClass.Session.IsActive == true
+                    //    && e.SessionClassId == sessionClassId
+                    //    && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
+
+                    var formTeacherSubjects = context.SessionClassSubject
+                        .Include(d => d.Subject)
+                        .Include(d => d.SessionClass).ThenInclude(x => x.Session)
+                        .Where(e => e.SessionClass.ClassId == classId
+                        && e.SessionClass.FormTeacherId == Guid.Parse(teacherId)
+                        && e.SessionClass.Session.IsActive == true
+                        && e.SessionClassId == sessionClassId
+                        && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new GetClassSubjects(s));
+
+                    //res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().GroupBy(x => x.SubjectId).Select(x => x.First()).ToList();
+
+                    res.Result = formTeacherSubjects.ToList();
+
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+            }
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
 
         async Task<APIResponse<PagedResponse<GetClassScoreEntry>>> IResultsService.GetClassEntryAsync(Guid sessionClassId, Guid subjectId, PaginationFilter filter)
         {
@@ -291,7 +350,7 @@ namespace SMP.BLL.Services.ResultServices
 
                 var query = context.ScoreEntry
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
-                    .Where(d => d.SessionTerm.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+                    .Where(d => d.SessionTerm.IsActive == true && d.ClassScoreEntryId == result.ClassScoreEntryId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
                 var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                 result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
@@ -640,7 +699,7 @@ namespace SMP.BLL.Services.ResultServices
 
                 if (result != null)
                 {
-                    var sessiontermId = context.SessionClassArchive.Where(x => x.SessionClassId == sessionClassId).Select(c => c.SessionTermId).FirstOrDefault();
+                    var sessiontermId = context.SessionClassArchive.Where(x => x.SessionClassId == sessionClassId && x.SessionTermId == sessionTermId).Select(c => c.SessionTermId).FirstOrDefault();
                     var query = context.SessionClassArchive
                         .Include(x => x.StudentContact).ThenInclude(x => x.User)
                         .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
@@ -831,7 +890,7 @@ namespace SMP.BLL.Services.ResultServices
 
                 var query = context.ScoreEntry
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
-                    .Where(d => d.SessionTermId == sessionTermId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
+                    .Where(d => d.SessionTermId == sessionTermId && d.ClassScoreEntryId == result.ClassScoreEntryId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
                 var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                 result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;

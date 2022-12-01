@@ -20,7 +20,7 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<List<GetStudentNotes>>> GetAllUnreviewedAsync();
         Task<APIResponse<bool>> DeleteStudentNotesAsync(SingleDelete request);
         Task<APIResponse<bool>> ReviewStudentNoteAsync(ReviewStudentNoteRequest request);
-        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync(string subjectId, int status);
+        Task<APIResponse<List<GetStudentNotes>>> GetStudentNotesByStudentAsync(string subjectId, int status, string termId);
         Task<APIResponse<GetStudentNotes>> GetSingleStudentNotesAsync(Guid studentNoteId);
         Task<APIResponse<string>> AddCommentToStudentNoteAsync(Guid studentNoteId, string comment);
         Task<APIResponse<string>> AddCommentToClassNoteAsync(Guid guid, string comment);

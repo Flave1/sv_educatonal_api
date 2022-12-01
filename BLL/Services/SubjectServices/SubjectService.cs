@@ -125,6 +125,11 @@ namespace BLL.Services.SubjectServices
                     res.Message.FriendlyMessage = "Subject  does not exist";
                     return res;
                 }
+                if(context.SessionClassSubject.Any(x => x.SubjectId == lookup.SubjectId))
+                {
+                    res.Message.FriendlyMessage = "Subject  cannot be deleted";
+                    return res;
+                }
                 lookup.Deleted = true;
                 lookup.Name = lookup.Name + "_DELETE" + DateTime.Now.ToString();
                 await context.SaveChangesAsync();

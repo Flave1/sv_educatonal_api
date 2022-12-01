@@ -94,24 +94,31 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetTeacherDashboardCounts(Guid teacherId, List<string> permissions)
         {
+            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
             var totalClass = context.SessionClass
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true && x.FormTeacherId == teacherId);
 
-            var totalSubject = context.SessionClassSubject.GroupBy(x => x.SubjectId).Select(x => x.First())
-                .Count(x => x.Deleted == false && x.SubjectTeacherId == teacherId);
 
-            var totalPins = context.UploadedPin
-                .Count(x => x.Deleted == false);
+            var totalSubject = context.SessionClassSubject
+                .Include(x => x.Subject)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                .Where(x => x.SessionClass.Session.IsActive && x.SubjectTeacherId == teacherId)
+                .AsEnumerable()
+                .GroupBy(x => x.SubjectId).Select(x => x.First())
+                .Count(x => x.Deleted == false && x.Subject.IsActive == true);
 
-            var totalUnusedPins = context.UploadedPin
-             .Count(x => x.Deleted == false && !x.UsedPin.Any());
+
 
             var totalHomeAssessments = context.HomeAssessment
-               .Count(x => x.Deleted == false && x.TeacherId == teacherId);
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+                .Count(x => x.Deleted == false && x.TeacherId == teacherId);
 
             var totalClassAssessments = context.ClassAssessment
-               .Count(x => x.Scorer == teacherId);
+                .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+               .Count( x => x.Scorer == teacherId);
 
             return new GetDashboardCount
             {
@@ -120,7 +127,7 @@ namespace SMP.BLL.Services.DashboardServices
                 TotaldStudent = 0,
                 TotalStaff = 0,
                 TotalSubjects = totalSubject,
-                TotalUnusedPins = totalUnusedPins
+                TotalUnusedPins = 0
             };
         }
 
@@ -133,20 +140,14 @@ namespace SMP.BLL.Services.DashboardServices
             var totalSubject = context.SessionClassSubject
                 .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId);
 
+            var totalHomeAssessments = context.HomeAssessment
+               .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
 
-            var totalHomeAssessments = context.HomeAssessmentFeedBack
-                .Include(t => t.HomeAssessment)
-               .Count(x => x.Deleted == false && x.StudentContactId == studentId && x.HomeAssessment.SessionTermId == termId);
-
-            var totalClassAssessments = context.AssessmentScoreRecord
-                 .Include(t => t.ClassAssessment)
-               .Count(x => x.StudentContactId == studentId && x.ClassAssessment.SessionTermId == termId );
+            var totalClassAssessments = context.ClassAssessment
+               .Count(x =>  x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
 
             var notes = context.StudentNote
-               .Count(x => x.StudentContactId == studentId &&x.Deleted == false);
-
-            //var lessonNotes = context.TeacherClassNote
-            //   .AsEnumerable().Where(x => x.Classes.Split(',').ToList().Select(Guid.Parse).Contains(studentId)).Distinct().Count();
+               .Count(x => x.StudentContactId == studentId && x.Deleted == false  && x.SessionTermId == termId);
 
             return new GetStudentshDasboardCount
             {

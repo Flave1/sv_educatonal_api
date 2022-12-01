@@ -31,7 +31,7 @@ namespace SMP.Contracts.ResultModels
         {
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
-            SubjectName = db.Subject.Name;
+            SubjectName = db?.Subject?.Name;
         }
     }
 
@@ -129,10 +129,10 @@ namespace SMP.Contracts.ResultModels
         public int AssessmentScore { get; set; }
         public int ExamsScore { get; set; }
         public string SubjectTeacher { get; set; }
+        public Guid ClassScoreEntryId { get; set; }
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
         public PreviewClassScoreEntry(ClassScoreEntry db, string regNoFormat)
         {
-            var subject = db.SessionClass.SessionClassSubjects.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             ClassLookupId = db.SessionClass.ClassId;
             SessionClassId = db.SessionClassId.ToString();
@@ -140,7 +140,7 @@ namespace SMP.Contracts.ResultModels
             SubjectName = db.Subject.Name;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
+            ClassScoreEntryId = db.ClassScoreEntryId;
         }
     }
 

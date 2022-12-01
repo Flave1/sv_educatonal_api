@@ -36,7 +36,7 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
-            var datTimeNote = DateTimeOffset.Now.Subtract(TimeSpan.FromHours(3));
+            var datTimeNote = DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
