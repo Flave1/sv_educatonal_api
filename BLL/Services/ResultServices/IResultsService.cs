@@ -15,7 +15,7 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<List<GetClasses>>> GetCurrentStaffClassesAsync();
         Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjectsAsync(Guid sessionClassId);
         Task<APIResponse<PagedResponse<GetClassScoreEntry>>> GetClassEntryAsync(Guid sessionClassId, Guid subjectId, PaginationFilter filter);
-        Task CreateClassScoreEntryAsync(SessionClass sessionClass);
+        Task CreateClassScoreEntryAsync(SessionClass sessionClass, Guid[] subjectIds);
         Task<APIResponse<ScoreEntry>> UpdateExamScore(UpdateScore request);
         Task<APIResponse<ScoreEntry>> UpdateAssessmentScore(UpdateScore request);
         Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> PreviewClassScoreEntry(Guid sessionClassId, Guid subjectId, PaginationFilter filter);
@@ -39,6 +39,6 @@ namespace SMP.BLL.Services.ResultServices
         Task<APIResponse<List<PrintResult>>> GetStudentResultForBatchPrintingAsync(Guid sessionClassId, Guid termId);
         Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjects2Async(Guid classId, Guid sessionClassId);
         Task<APIResponse<List<PublishList>>> GetPublishedList();
-        Task<APIResponse<List<GetClassSubjects>>> GetCurrentStaffClassSubjectsForMasterListAsync(Guid classId, Guid sessionClassId);
+        Task<APIResponse<List<GetClasses>>> GetFormTeacherClassesAsync();
     }
 }

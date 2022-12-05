@@ -634,10 +634,11 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<bool>();
             var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
             var assessment = await context.HomeAssessment
+                .Where(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId))
                 .Include(x => x.HomeAssessmentFeedBacks)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
                 .Include(x => x.SessionClassSubject)
-                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
+                .FirstOrDefaultAsync();
 
             if (assessment is null)
             {

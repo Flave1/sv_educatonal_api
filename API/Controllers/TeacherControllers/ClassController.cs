@@ -74,18 +74,26 @@ namespace API.Controllers
         #region CLASS
 
         [HttpPost("create/session-class")]
-        public async Task<IActionResult> CreateClassAsync([FromBody] SessionClassCommand request)
+        public async Task<IActionResult> CreateClassAsync([FromBody] SessionClassCommand2 request)
         {
-            var response = await service.CreateSessionClassAsync(request);
+            var response = await service.CreateSessionClass2Async(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
 
         [HttpPost("update/session-class")]
-        public async Task<IActionResult> UpdateSessionClassAsync([FromBody] SessionClassCommand request)
+        public async Task<IActionResult> UpdateSessionClassAsync([FromBody] SessionClassCommand2 request)
         {
-            var response = await service.UpdateSessionClassAsync(request);
+            var response = await service.UpdateSessionClass2Async(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("add-update/session-class-subjects")]
+        public async Task<IActionResult> AddUpdateSessionClassSubjectsAsync([FromBody] ClassSubjectcommand request)
+        {
+            var response = await service.CreateSessionClassSubjectsAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

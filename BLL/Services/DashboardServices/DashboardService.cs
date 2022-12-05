@@ -133,7 +133,7 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
         {
-            var student = context.StudentContact.FirstOrDefault(x => x.StudentContactId == studentId);
+            var student = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(x => x.StudentContactId == studentId);
             var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
             if (student == null)
                 throw new ArgumentException("Not found");
@@ -141,7 +141,7 @@ namespace SMP.BLL.Services.DashboardServices
                 .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId);
 
             var totalHomeAssessments = context.HomeAssessment
-               .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
+               .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId && x.Status != (int)HomeAssessmentStatus.Saved);
 
             var totalClassAssessments = context.ClassAssessment
                .Count(x =>  x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
@@ -149,12 +149,16 @@ namespace SMP.BLL.Services.DashboardServices
             var notes = context.StudentNote
                .Count(x => x.StudentContactId == studentId && x.Deleted == false  && x.SessionTermId == termId);
 
+
+            var classNotes = context.TeacherClassNote.Where(x => x.Deleted == false && x.SessionTermId == termId).AsEnumerable()
+               .Count(x => !string.IsNullOrEmpty(x.Classes) ? x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(student.SessionClass.ClassId.ToString()) : false);
+
             return new GetStudentshDasboardCount
             {
                 TotalAssessments = (totalHomeAssessments + totalClassAssessments),
                 TotalSubjects = totalSubject,
                 StudentNotes = notes,
-                TotaldLessonNotes = 0,
+                TotaldLessonNotes = classNotes,
             };
         }
     }

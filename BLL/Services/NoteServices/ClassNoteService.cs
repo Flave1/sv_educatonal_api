@@ -742,7 +742,8 @@ namespace SMP.BLL.Services.NoteServices
                         .OrderBy(s => s.Class.Name)
                         .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
 
-                    res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetClasses2(s, alreadyShared is null ? false : alreadyShared.Contains(s.SessionClassId.ToString()))).ToList();
+                    res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct()
+                        .Select(s => new GetClasses2(s, alreadyShared is null ? false : alreadyShared.Contains(s.ClassId.ToString()))).GroupBy(x => x.ClassId).Select(x => x.First()).ToList();
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
                     return res;
