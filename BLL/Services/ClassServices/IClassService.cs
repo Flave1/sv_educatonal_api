@@ -20,5 +20,6 @@ namespace BLL.ClassServices
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses2Async();
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses1Async(string sessionId);
         Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync();
+        Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo);
     }
 }
