@@ -34,13 +34,13 @@ namespace SMP.Contracts.Assessment
         {
 
         }
-        public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents)
+        public GetHomeAssessmentRequest(HomeAssessment db, int totalNumberOfStudents, bool isSingle = true)
         {
             DateDeadLine = db.DateDeadLine;
             TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
-            Content = db.Content;
+            Content = isSingle ? db.Content : "";
             AssessmentScore = db.AssessmentScore;
             SessionClassId = db.SessionClassId.ToString();
             SessionClassName = db.SessionClass.Class.Name;
@@ -92,7 +92,6 @@ namespace SMP.Contracts.Assessment
             TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
-            Content = db.Content;
             AssessmentScore = db.AssessmentScore;
             SessionClassId = db.SessionClassId.ToString();
             SessionClassName = db.SessionClass.Class.Name;

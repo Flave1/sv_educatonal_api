@@ -18,6 +18,18 @@ namespace Contracts.Class
         public ClassSubjects[] ClassSubjects { get; set; }
     }
 
+    public class SessionClassCommand2
+    {
+        public string SessionClassId { get; set; }
+        public string SessionId { get; set; }
+        public string ClassId { get; set; }
+        public string FormTeacherId { get; set; }
+        public bool InSession { get; set; }
+        public int ExamScore { get; set; }
+        public int AssessmentScore { get; set; }
+        public int PassMark { get; set; }
+    }
+
     public class GetSessionClass
     {
         public string SessionClassId { get; set; }
@@ -102,6 +114,22 @@ namespace Contracts.Class
     }
 
     public class ClassSubjects
+    {
+        public string SubjectId { get; set; }
+        public string SubjectName { get; set; }
+        public string SubjectTeacherId { get; set; }
+        public string SubjectTeacherName { get; set; }
+        public int ExamSCore { get; set; }
+        public int Assessment { get; set; }
+    }
+
+    public class ClassSubjectcommand
+    {
+        public Guid SessionClassId { get; set; }
+        public ClassSubjects2[] SubjectList { get; set; }
+    }
+
+    public class ClassSubjects2
     {
         public string SubjectId { get; set; }
         public string SubjectName { get; set; }

@@ -23,5 +23,6 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<UpdateClassTimeTableTime>> UpdateClassTimeTableTimeAsync(UpdateClassTimeTableTime request);
         Task<APIResponse<UpdateClassTimeTableDay>> UpdateClassTimeTableDayAsync(UpdateClassTimeTableDay request);
         Task<APIResponse<GetClassTimeActivity>> GetClassTimeTableByStudentAsync();
+        Task<APIResponse<GetClassTimeActivity>> GetClassTimeTableByParentsAsync(Guid classlkpId);
     }
 }

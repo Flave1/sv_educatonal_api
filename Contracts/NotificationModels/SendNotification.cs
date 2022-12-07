@@ -60,6 +60,7 @@ namespace SMP.Contracts.NotificationModels
             NotificationSourceId = x.NotificationSourceId;
             DateCreated = x.CreatedOn.ToString("f");
             NotificationId = x.NotificationId;
+            Content = x.Content;
         }
     }
 

@@ -1,9 +1,5 @@
 ﻿using DAL.StudentInformation;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.ParentModels
 {
@@ -15,10 +11,12 @@ namespace SMP.Contracts.ParentModels
         public string EnrollmentStatus { get; set; }
         public string Status { get; set; }
         public Guid ClassId { get; set; }
+        public Guid ClassLkId { get; set; }
         public string StudentId { get; set; }
         public string ProfileUrl { get;set; }
         public MyWards(StudentContact x, string regNoFormat)
         {
+            ClassLkId = x.SessionClass.ClassId;
             Class = x.SessionClass.Class.Name;
             ClassId = x.SessionClassId;
             StudentId = x.StudentContactId.ToString();

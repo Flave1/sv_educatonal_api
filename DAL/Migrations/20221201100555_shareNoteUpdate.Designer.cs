@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221201100555_shareNoteUpdate")]
+    partial class shareNoteUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1245,9 +1247,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1266,8 +1265,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("StudentNoteId");
 
                     b.HasIndex("SessionClassId");
-
-                    b.HasIndex("SessionTermId");
 
                     b.HasIndex("StudentContactId");
 
@@ -2513,10 +2510,6 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId");
-
                     b.HasOne("DAL.StudentInformation.StudentContact", "Student")
                         .WithMany("StudentNote")
                         .HasForeignKey("StudentContactId")
@@ -2536,8 +2529,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("SessionClass");
-
-                    b.Navigation("SessionTerm");
 
                     b.Navigation("Student");
 

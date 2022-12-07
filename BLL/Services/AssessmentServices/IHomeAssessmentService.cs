@@ -31,5 +31,6 @@ namespace SMP.BLL.Services.AssessmentServices
         Task<APIResponse<bool>> IncludeClassAssessmentToScoreEntry(string homeAssessmentId, bool Include);
         Task<APIResponse<bool>> IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId, bool include);
         APIResponse<string> ReadFileContent(IFormFile file);
+        Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, int status, string studentContactid, PaginationFilter filter);
     }
 }

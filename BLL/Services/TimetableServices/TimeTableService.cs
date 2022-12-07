@@ -345,5 +345,21 @@ namespace SMP.BLL.Services.TimetableServices
             return res;
         }
 
+        async Task<APIResponse<GetClassTimeActivity>> ITimeTableService.GetClassTimeTableByParentsAsync(Guid classlkpId)
+        {
+            var res = new APIResponse<GetClassTimeActivity>();
+            var result = await context.ClassTimeTable
+              .Include(s => s.Class)
+              .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
+               .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
+              .Where(d => d.Deleted == false && d.ClassId == classlkpId)
+              .Select(f => new GetClassTimeActivity(f)).FirstOrDefaultAsync();
+            res.Result = result;
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
     }
 }

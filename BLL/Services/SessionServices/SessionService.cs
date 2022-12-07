@@ -114,7 +114,7 @@ namespace BLL.SessionServices
             noOfTerms += 1;
             for (var i = 1; i < noOfTerms; i++)
             {
-                var termName = UtilTools.OrdinalSuffixOf(i);
+                var termName = Tools.OrdinalSuffixOf(i);
 
                 var term = new SessionTerm
                 {
@@ -380,7 +380,7 @@ namespace BLL.SessionServices
                     Session = d.StartDate + " / " + d.EndDate,
                     SessionTermId = d.Terms.FirstOrDefault(er => er.IsActive == true).SessionTermId.ToString(),
                     SessionTerm = d.Terms.FirstOrDefault(er => er.IsActive == true).TermName,
-                }).FirstOrDefaultAsync();
+                }).FirstOrDefaultAsync() ?? null;
 
                 var sessionClass = await context.SessionClass.FirstOrDefaultAsync(x => x.SessionId == Guid.Parse(result.SessionId));
 
