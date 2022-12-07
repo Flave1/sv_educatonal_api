@@ -585,16 +585,50 @@ namespace BLL.ClassServices
                 .Include(rr => rr.Class)
                 .OrderBy(d => d.Class.Name)
                 .Where(r => r.Deleted == false && r.SessionId == sessionId)
-                //.Include(r => r.ClassRegisters)
-                //.Include(r => r.Students)
-                //.Include(r => r.SessionClassSubjects).ThenInclude(x => x.ClassAssessments)
-                //.Include(r => r.SessionClassSubjects).ThenInclude(x => x.HomeAssessments)
-                //.Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User)
                 .Select(g => new GetSessionClassCbt(g)).ToListAsync();
             
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
             return res;
+        }
+
+        public async Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo)
+        {
+            var res = new APIResponse<GetSessionClassCbt>();
+            try
+            {
+                registrationNo = registrationNo.Split("/")[1];
+                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == registrationNo);
+                if (student == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Registration Number doesn't exists!";
+                    return res;
+                }
+
+                var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId)
+                    .Include(c => c.Session)
+                    .Include(c => c.Class)
+                    .Select(g => new GetSessionClassCbt(g)).FirstOrDefaultAsync();
+                
+                if (studentClass == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Student class doesn't exists!";
+                    return res;
+                }
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.Result = studentClass;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                return res;
+            }
         }
     }
 }
