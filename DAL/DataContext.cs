@@ -26,6 +26,7 @@ using SMP.DAL.Models.Timetable;
 using SMP.DAL.Models.AssessmentEntities;
 using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Parents;
+using SMP.DAL.Models.Admission;
 
 namespace DAL
 {
@@ -87,6 +88,9 @@ namespace DAL
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
         public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         public DbSet<Parents> Parents { get; set; }
+        public DbSet<AdmissionNotification> AdmissionNotifications { get; set; }
+        public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
+        public DbSet<Admission> Admissions { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
