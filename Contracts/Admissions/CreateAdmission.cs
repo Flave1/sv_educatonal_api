@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.Contracts.Admission
+namespace SMP.Contracts.Admissions
 {
     public class CreateAdmission
     {

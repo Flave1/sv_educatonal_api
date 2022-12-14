@@ -104,9 +104,10 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectAdmissionSettings>();
             try
             {
+                var classes =  context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 var result = await context.AdmissionSettings
                     .Where(d => d.Deleted != true)
-                    .Select(db => new SelectAdmissionSettings(db))
+                    .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x=> classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 
                 if (result == null)
