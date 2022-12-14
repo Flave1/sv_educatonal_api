@@ -20,6 +20,7 @@ namespace SMP.BLL.Services.FileUploadService
         private static string PrincipalStampPath = "PrincipalStamp";
         private static string StudentFeedbackFilesPath = "StudeentFeedbackFilesPath";
         private static string LessonNotePath = "LessonNotePath";
+        private static string AdmissionCredentialsPath = "AdmissionCredentials";
         public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
         {
             this.environment = environment;
@@ -426,6 +427,44 @@ namespace SMP.BLL.Services.FileUploadService
         {
             DocumentCore documentContent = DocumentCore.Load(filePath);
             return documentContent.Content.ToString();
+        }
+
+        public string UploadAdmissionCredentials(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return "";
+            }
+            int maxFileSize = 1024 * 1024 / 2;
+            var fileSize = file.Length;
+
+            if (fileSize > maxFileSize)
+            {
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+            }
+
+            if (file.FileName.EndsWith(".jpg")
+                        || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
+                        || file.FileName.EndsWith(".jpeg") || file.FileName.EndsWith(".png"))
+            {
+                string extension = Path.GetExtension(file.FileName);
+                string fileName = Guid.NewGuid().ToString() + extension;
+
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AdmissionCredentialsPath, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    fileStream.Position = 0;
+                    file.CopyTo(fileStream);
+                    fileStream.Flush();
+                    fileStream.Close();
+                }
+
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AdmissionCredentialsPath}/{fileName}";
+                return url;
+            }
+            throw new ArgumentException("Invalid Principal Stamp");
         }
     } 
 }

@@ -1,4 +1,6 @@
 ﻿using BLL;
+using Contracts.Common;
+using SMP.Contracts.Admission;
 using SMP.Contracts.AdmissionSettings;
 using System;
 using System.Collections.Generic;
@@ -12,5 +14,8 @@ namespace SMP.BLL.Services.AdmissionServices
     {
         Task<APIResponse<AdmissionLoginDetails>> Login(AdmissionLogin request);
         Task<APIResponse<bool>> ConfirmEmail(ConfirmEmail request);
+        Task<APIResponse<bool>> DeleteEmail(SingleDelete request);
+        Task<APIResponse<CreateAdmission>> CreateAdmission(CreateAdmission request);
+
     }
 }
