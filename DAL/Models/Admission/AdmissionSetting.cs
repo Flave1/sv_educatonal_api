@@ -13,7 +13,7 @@ namespace SMP.DAL.Models.Admission
         [Key]
         public Guid AdmissionSettingId { get; set; }
         public string Classes { get; set; }
-        public int AdmissionStatus { get; set; }
+        public bool AdmissionStatus { get; set; }
         public string PassedExamEmail { get; set; }
         public string FailedExamEmail { get; set; }
         public string ScreeningEmail { get; set; }

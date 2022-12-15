@@ -48,16 +48,16 @@ namespace SMP.BLL.MiddleWares
                     return;
                 }
 
-                var email = tokena.Claims.FirstOrDefault(x => x.Type == "Email").Value ?? "";
+                var parentEmail = tokena.Claims.FirstOrDefault(x => x.Type == "parentEmail").Value ?? "";
                 var admissionNotificationId = tokena.Claims.FirstOrDefault(x => x.Type == "admissionNotificationId").Value ?? "";
 
-                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(admissionNotificationId))
+                if (string.IsNullOrEmpty(parentEmail) || string.IsNullOrEmpty(admissionNotificationId))
                 {
                     context.HttpContext.Response.StatusCode = 401;
                     context.Result = new UnauthorizedObjectResult(new APIResponse<APIResponseMessage> { Message = new APIResponseMessage { FriendlyMessage = "Unauthorized access" } });
                     return;
                 }
-                context.HttpContext.Items["Email"] = email;
+                context.HttpContext.Items["parentEmail"] = parentEmail;
                 context.HttpContext.Items["admissionNotificationId"] = admissionNotificationId;
 
                 await next();
