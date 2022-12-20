@@ -491,20 +491,14 @@ namespace BLL.AuthenticationServices
                 return res;
             }
 
-            if(request.UserType == (int)UserTypes.Student)
+            try
             {
+                if (request.UserType == (int)UserTypes.Student)
+                {
 
-                var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
-                var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
-                if (student is null)
-                {
-                    res.Result.Status = "failed";
-                    res.Message.FriendlyMessage = "Student registration number not identified in selected school";
-                    return res;
-                }
-                else
-                {
-                    if(request.UsernameOrRegNumber != regNoFormat.Replace("%VALUE%", student.RegistrationNumber))
+                    var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
+                    var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
+                    if (student is null)
                     {
                         res.Result.Status = "failed";
                         res.Message.FriendlyMessage = "Student registration number not identified in selected school";
@@ -512,52 +506,69 @@ namespace BLL.AuthenticationServices
                     }
                     else
                     {
+                        if (request.UsernameOrRegNumber != regNoFormat.Replace("%VALUE%", student.RegistrationNumber))
+                        {
+                            res.Result.Status = "failed";
+                            res.Message.FriendlyMessage = "Student registration number not identified in selected school";
+                            return res;
+                        }
+                        else
+                        {
+                            res.Result.Status = "success";
+                            res.Result.FullName = student.User.FirstName + " " + student.User.LastName;
+                            res.Result.RegistrationNumber = student.RegistrationNumber;
+                            res.Result.UserName = student.User.UserName;
+                            res.Message.FriendlyMessage = Messages.GetSuccess;
+                            res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
+                            return res;
+                        }
+                    }
+                }
+
+                else if (request.UserType == (int)UserTypes.Teacher)
+                {
+                    var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
+                    if (teacher is null)
+                    {
+                        res.Message.FriendlyMessage = "Staff account not identified in selected school";
+                        return res;
+                    }
+                    else
+                    {
                         res.Result.Status = "success";
-                        res.Result.FullName = student.User.FirstName + " " + student.User.LastName;
-                        res.Result.RegistrationNumber = student.RegistrationNumber;
+                        res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                        res.Result.RegistrationNumber = "";
+                        res.Result.UserName = teacher.UserName;
+                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+                    }
+                }
+
+                else if (request.UserType == (int)UserTypes.Admin)
+                {
+                    var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
+                    if (teacher is null)
+                    {
+                        res.Message.FriendlyMessage = "Staff account not identified in selected school";
+                        return res;
+                    }
+                    else
+                    {
+                        res.Result.Status = "success";
+                        res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                        res.Result.UserName = teacher.UserName;
+                        res.Result.RegistrationNumber = "";
                         res.Message.FriendlyMessage = Messages.GetSuccess;
                         res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
                         return res;
                     }
                 }
             }
-
-            else if (request.UserType == (int)UserTypes.Teacher)
+            catch (ArgumentException ex)
             {
-                var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
-                if(teacher is null)
-                {
-                    res.Message.FriendlyMessage = "Staff account not identified in selected school";
-                    return res;
-                }
-                else
-                {
-                    res.Result.Status = "success";
-                    res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
-                    res.Result.RegistrationNumber = "";
-                    res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    return res;
-                }
-            }
-
-            else if (request.UserType == (int)UserTypes.Admin)
-            {
-                var teacher = await manager.FindByNameAsync(request.UsernameOrRegNumber);
-                if (teacher is null)
-                {
-                    res.Message.FriendlyMessage = "Staff account not identified in selected school";
-                    return res;
-                }
-                else
-                {
-                    res.Result.Status = "success";
-                    res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
-                    res.Result.RegistrationNumber = "";
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
-                    return res;
-                }
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
             }
             res.Result.Status = "failed";
             res.Message.FriendlyMessage = "invalid request";

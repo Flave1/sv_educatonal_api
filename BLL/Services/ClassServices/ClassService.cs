@@ -608,7 +608,7 @@ namespace BLL.ClassServices
 
                 var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId)
                     .Include(c => c.Session)
-                    .Include(c => c.Class)
+                    .Include(c => c.Class).Where(x => x.Session.IsActive == true)
                     .Select(g => new GetSessionClassCbt(g)).FirstOrDefaultAsync();
                 
                 if (studentClass == null)
