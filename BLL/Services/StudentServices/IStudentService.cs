@@ -3,6 +3,7 @@ using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Options;
 using DAL.StudentInformation;
+using SMP.Contracts.Students;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,5 +21,7 @@ namespace BLL.StudentServices
         Task<APIResponse<UpdateProfileByStudentRequest>> UpdateProfileByStudentAsync(UpdateProfileByStudentRequest student);
         Task<APIResponse<StudentContact>> UploadStudentsAsync();
         //Task<APIResponse<StudentContact>> UploadStudentsAsync(StudentContactCommand student);
+        Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo);
+        Task<APIResponse<List<GetStudentContactCbt>>> GetStudentBySessionClassCbtAsync(string SessionClassId);
     }
 }

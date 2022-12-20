@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Utilities;
 using SMP.DAL.Models.ClassEntities;
 using System;
 using System.Collections.Generic;
@@ -21,12 +22,14 @@ namespace BLL.ClassServices
         private readonly DataContext context;
         private readonly IResultsService resultsService;
         private readonly IHttpContextAccessor accessor;
+        private readonly IUtilitiesService utilitiesService;
 
-        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor)
+        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService)
         {
             this.context = context;
             this.resultsService = resultsService;
             this.accessor = accessor;
+            this.utilitiesService = utilitiesService;
         }
 
         //async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
@@ -597,8 +600,8 @@ namespace BLL.ClassServices
             var res = new APIResponse<GetSessionClassCbt>();
             try
             {
-                registrationNo = registrationNo.Split("/")[1];
-                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == registrationNo);
+                string regNo = utilitiesService.GetStudentRealRegNumber(registrationNo);
+                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == regNo);
                 if (student == null)
                 {
                     res.IsSuccessful = false;
@@ -608,7 +611,7 @@ namespace BLL.ClassServices
 
                 var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId)
                     .Include(c => c.Session)
-                    .Include(c => c.Class)
+                    .Include(c => c.Class).Where(x=>x.Session.IsActive)
                     .Select(g => new GetSessionClassCbt(g)).FirstOrDefaultAsync();
                 
                 if (studentClass == null)
@@ -624,6 +627,33 @@ namespace BLL.ClassServices
                 return res;
             }
             catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesBySubjectCbtAsync(string subjectId)
+        {
+
+            var res = new APIResponse<List<GetSessionClassCbt>>();
+            try
+            {
+                var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
+
+                res.Result = await context.SessionClass.Where(x=>x.SessionClassSubjects.Select(s=>s.SubjectId).ToList().Contains(Guid.Parse(subjectId)))
+                    .Include(rr => rr.Session)
+                    .Include(rr => rr.Class)
+                    .OrderBy(d => d.Class.Name)
+                    .Where(r => r.Deleted == false && r.SessionId == sessionId)
+                    .Select(g => new GetSessionClassCbt(g)).ToListAsync();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
             {
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
