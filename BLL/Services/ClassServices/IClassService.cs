@@ -24,5 +24,9 @@ namespace BLL.ClassServices
         Task<APIResponse<SessionClassCommand>> CreateSessionClassSubjectsAsync(ClassSubjectcommand request);
         Task<APIResponse<SessionClassCommand>> CreateSessionClass2Async(SessionClassCommand2 sClass);
         Task<APIResponse<SessionClassCommand>> UpdateSessionClass2Async(SessionClassCommand2 request);
+        Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesBySubjectCbtAsync(string subjectId);
+
+
+
     }
 }

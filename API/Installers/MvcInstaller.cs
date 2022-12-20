@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
 using BLL.PaginationService.Services;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Utilities;
 using SMP.BLL.Services.AdmissionServices;
 
 namespace API.Installers
@@ -77,6 +78,7 @@ namespace API.Installers
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<IWebRequestService, WebRequestService>();
             services.AddSingleton<IPaginationService, PaginationService>();
+            services.AddScoped<IUtilitiesService, UtilitiesService>();
             services.AddScoped<IAdmissionSettingService, AdmissionSettingService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddDistributedMemoryCache();

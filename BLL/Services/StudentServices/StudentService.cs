@@ -19,6 +19,8 @@ using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Utilities;
+using SMP.Contracts.Students;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -33,6 +35,7 @@ namespace BLL.StudentServices
     {
         private readonly DataContext context;
         private readonly IUserService userService;
+        private readonly IUtilitiesService utilitiesService;
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
@@ -41,7 +44,8 @@ namespace BLL.StudentServices
         private readonly IPaginationService paginationService;
         private readonly IParentService parentService;
 
-        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentService)
+        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentServices,
+            IUtilitiesService utilitiesService)
         {
             this.context = context;
             this.userManager = userManager;
@@ -51,6 +55,7 @@ namespace BLL.StudentServices
             this.pinService = pinService;
             this.paginationService = paginationService;
             this.userService = userService;
+            this.utilitiesService = utilitiesService;
             this.parentService = parentService;
         }
 
@@ -508,6 +513,44 @@ namespace BLL.StudentServices
             return res;
         }
 
+        public async Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo)
+        {
+            var res = new APIResponse<GetStudentContactCbt>();
+
+            string regNo = utilitiesService.GetStudentRealRegNumber(studentRegNo);
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var result = await context.StudentContact
+                .Where(d => regNo == d.RegistrationNumber && d.Deleted != true)
+                .OrderByDescending(d => d.CreatedOn)
+                .OrderByDescending(s => s.RegistrationNumber)
+                .Include(q => q.User)
+                .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        public async Task<APIResponse<List<GetStudentContactCbt>>> GetStudentBySessionClassCbtAsync(string SessionClassId)
+        {
+            var res = new APIResponse<List<GetStudentContactCbt>>();
+
+            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+
+            var result = await context.StudentContact
+                .Where(d => d.SessionClassId == Guid.Parse(SessionClassId) && d.Deleted != true)
+                .OrderByDescending(d => d.CreatedOn)
+                .OrderByDescending(s => s.RegistrationNumber)
+                .Include(q => q.User)
+                .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 
 
