@@ -5,8 +5,10 @@ using BLL.StudentServices;
 using Contracts.Common;
 using Contracts.Options;
 using DAL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using SMP.Contracts.Students;
 using System;
 using System.Threading.Tasks;
 
@@ -83,6 +85,24 @@ namespace API.Controllers
         public async Task<IActionResult> UploadStudentsAsync([FromForm] UploadClass file)
         {
             var response = await service.UploadStudentsAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [AllowAnonymous]
+        [HttpGet("get-student-contact-cbt")]
+        public async Task<IActionResult> GetSingleStudentByRegNoCbt(string studentRegNo)
+        {
+            var response = await service.GetSingleStudentByRegNoCbtAsync(studentRegNo);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [AllowAnonymous]
+        [HttpGet("getall-student-contact-cbt")]
+        public async Task<IActionResult> GetSingleStudentBySessionClassCbt(string sessionClassId)
+        {
+            var response = await service.GetStudentBySessionClassCbtAsync(sessionClassId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
