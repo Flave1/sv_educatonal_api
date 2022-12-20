@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221212113942_Admissions2")]
+    partial class Admissions2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -827,8 +829,8 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("AdmissionStatus")
-                        .HasColumnType("bit");
+                    b.Property<int>("AdmissionStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("Classes")
                         .HasColumnType("nvarchar(max)");
@@ -851,7 +853,7 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("RegistrationFee")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ScreeningEmail")
+                    b.Property<string>("ScreeningEmailContent")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UpdatedBy")
