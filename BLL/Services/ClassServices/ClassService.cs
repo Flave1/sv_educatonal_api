@@ -633,32 +633,5 @@ namespace BLL.ClassServices
                 return res;
             }
         }
-
-        public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesBySubjectCbtAsync(string subjectId)
-        {
-
-            var res = new APIResponse<List<GetSessionClassCbt>>();
-            try
-            {
-                var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
-
-                res.Result = await context.SessionClass.Where(x=>x.SessionClassSubjects.Select(s=>s.SubjectId).ToList().Contains(Guid.Parse(subjectId)))
-                    .Include(rr => rr.Session)
-                    .Include(rr => rr.Class)
-                    .OrderBy(d => d.Class.Name)
-                    .Where(r => r.Deleted == false && r.SessionId == sessionId)
-                    .Select(g => new GetSessionClassCbt(g)).ToListAsync();
-
-                res.Message.FriendlyMessage = Messages.GetSuccess;
-                res.IsSuccessful = true;
-                return res;
-            }
-            catch(Exception ex)
-            {
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = Messages.FriendlyException;
-                return res;
-            }
-        }
     }
 }
