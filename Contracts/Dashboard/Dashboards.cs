@@ -1,4 +1,6 @@
-﻿namespace SMP.Contracts.Dashboard
+﻿using System;
+
+namespace SMP.Contracts.Dashboard
 {
     public class GetDashboardCount
     { 
@@ -27,5 +29,14 @@
         public long TotalAssessments { get; set; }
         public long TotaldLessonNotes { get; set; }
         public long StudentNotes { get; set; }
+    }
+
+    public class Teacherclasses
+    {
+        public string SessionClass { get; set; }
+        public Guid SessionClassId { get; set; }
+        public int AssessmentCount { get; set; }
+        public int StudentNoteCount { get; set; }
+        public int StudentCounts { get; set; }
     }
 }

@@ -1,11 +1,6 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Annoucements;
-using Microsoft.AspNetCore.Mvc; 
-using SMP.BLL.Services.AnnouncementsServices;
+using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.DashboardServices;
-using SMP.BLL.Services.PinManagementService;
-using SMP.Contracts.PinManagement;
-using System.Threading.Tasks;
 
 namespace SMP.API.Controllers
 {
@@ -30,6 +25,13 @@ namespace SMP.API.Controllers
         public IActionResult GetStudentDashboardCountAsync()
         {
             var response = service.GetStudentDashboardCountAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("get-mobile/dashboard-count")]
+        public IActionResult GetTeacherMobileDashboardCountAsync()
+        {
+            var response = service.GetTeacherMobileDashboardCountAsync();
             return Ok(response);
         }
     }

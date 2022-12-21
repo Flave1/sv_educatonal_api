@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\MobileControllers\" />
     <Folder Include="wwwroot\AdmissionCredentials\" />
     <Folder Include="wwwroot\StudentFeedbackFilesPath\" />
     <Folder Include="wwwroot\PrincipalStamp\" />
