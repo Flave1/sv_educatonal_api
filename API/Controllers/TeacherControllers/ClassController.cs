@@ -217,6 +217,15 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [AllowAnonymous]
+        [HttpGet("getall/class-subjects-cbt")]
+        public async Task<IActionResult> GetSessionClassSubjectsCbtAsync(string sessionClassId)
+        {
+            var response = await classGoupService.GetSessionClassSubjectsCbtAsync(Guid.Parse(sessionClassId));
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
         #endregion
 

@@ -18,5 +18,6 @@ namespace BLL.ClassServices
         Task<APIResponse<MultipleDelete>> DeleteClassGroupAsync(MultipleDelete GroupId);
         Task<APIResponse<GetClassGroupRequest>> GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId);
         Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsAsync(Guid sessionClassId);
+        Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsCbtAsync(Guid sessionClassId);
     }
 }

@@ -204,6 +204,19 @@ namespace BLL.ClassServices
             res.Message.FriendlyMessage = "You have succesfully deleted a class Group";
             return res;
         }
-   
+
+        public async Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsCbtAsync(Guid sessionClassId)
+        {
+            var res = new APIResponse<List<SessionClassSubjects>>();
+           
+            res.Result = await context.SessionClassSubject
+            .Include(s => s.Subject)
+            .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
+            new SessionClassSubjects(a)).ToListAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }

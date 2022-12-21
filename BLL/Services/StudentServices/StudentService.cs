@@ -533,21 +533,24 @@ namespace BLL.StudentServices
             return res;
         }
 
-        public async Task<APIResponse<List<GetStudentContactCbt>>> GetStudentBySessionClassCbtAsync(string SessionClassId)
+        public async Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string classId)
         {
-            var res = new APIResponse<List<GetStudentContactCbt>>();
+            var res = new APIResponse<PagedResponse<List<GetStudentContactCbt>>>();
 
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var result = await context.StudentContact
-                .Where(d => d.SessionClassId == Guid.Parse(SessionClassId) && d.Deleted != true)
-                .OrderByDescending(d => d.CreatedOn)
+            var query = context.StudentContact
+                .Include(s => s.SessionClass)
+                .Where(d => d.SessionClass.ClassId == Guid.Parse(classId) && d.Deleted != true);
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.User)
                 .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
-
+            
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
             res.IsSuccessful = true;
             return res;
         }
