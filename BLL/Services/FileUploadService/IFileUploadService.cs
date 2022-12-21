@@ -16,5 +16,6 @@ namespace SMP.BLL.Services.FileUploadService
         string RetunFileContent(IFormFile file);
         void DeleteFile(string filePath);
         string ReadFileAsync(string filePath);
+        string UploadAdmissionCredentials(IFormFile file);
     }
 }

@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221212112724_Admission")]
+    partial class Admission
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -709,160 +711,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.Admission", b =>
-                {
-                    b.Property<Guid>("AdmissionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AdmissionNotificationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CandidateAdmissionStatus")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CountryOfOrigin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Credentials")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Firstname")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LGAOfOrigin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Lastname")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Middlename")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentPhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentRelationship")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StateOfOrigin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("AdmissionId");
-
-                    b.HasIndex("AdmissionNotificationId");
-
-                    b.HasIndex("ClassId");
-
-                    b.ToTable("Admissions");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionNotification", b =>
-                {
-                    b.Property<Guid>("AdmissionNotificationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ParentEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("AdmissionNotificationId");
-
-                    b.ToTable("AdmissionNotifications");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionSetting", b =>
-                {
-                    b.Property<Guid>("AdmissionSettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("AdmissionStatus")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Classes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("FailedExamEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PassedExamEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("RegistrationFee")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ScreeningEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("AdmissionSettingId");
-
-                    b.ToTable("AdmissionSettings");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Annoucement.Announcements", b =>
@@ -2446,25 +2294,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.Admission.Admission", b =>
-                {
-                    b.HasOne("SMP.DAL.Models.Admission.AdmissionNotification", "AdmissionNotification")
-                        .WithMany("Admission")
-                        .HasForeignKey("AdmissionNotificationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
-                        .WithMany()
-                        .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AdmissionNotification");
-
-                    b.Navigation("Class");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.Annoucement.Announcements", b =>
                 {
                     b.HasOne("DAL.Authentication.AppUser", "Sender")
@@ -3032,11 +2861,6 @@ namespace SMP.DAL.Migrations
                     b.Navigation("SessionClassArchive");
 
                     b.Navigation("StudentNote");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionNotification", b =>
-                {
-                    b.Navigation("Admission");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.AssessmentEntities.HomeAssessment", b =>
