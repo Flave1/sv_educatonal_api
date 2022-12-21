@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using DAL;
+using DAL.ClassEntities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -160,6 +161,93 @@ namespace SMP.BLL.Services.DashboardServices
                 StudentNotes = notes,
                 TotaldLessonNotes = classNotes,
             };
+        }
+
+        APIResponse<List<Teacherclasses>> IDashboardService.GetTeacherMobileDashboardCountAsync()
+        {
+            var res = new APIResponse<List<Teacherclasses>>();
+            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
+            var rolesActivities = context.RoleActivity.Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
+            IQueryable<SessionClass> classesAsASujectTeacher = null;
+            IQueryable<SessionClass> classesAsAFormTeacher = null;
+            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                {
+                    classesAsASujectTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false);
+
+                    classesAsAFormTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false );
+
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+
+                     classesAsASujectTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+
+                    classesAsAFormTeacher = context.SessionClass
+                        .Include(s => s.Class)
+                        .Include(s => s.Session)
+                        .Include(s => s.SessionClassSubjects)
+                        .OrderBy(s => s.Class.Name)
+                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+
+                   
+                    //res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
+                }
+                var allClasses = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new { ClassName = s.Class.Name, SessionClassId = s.SessionClassId, Classid = s.ClassId }).ToList();
+
+                var classRes = new List<Teacherclasses>();
+                for (int i = 0; i < allClasses.Count; i++)
+                {
+                    var result = new Teacherclasses();
+
+                    result.SessionClass = allClasses[i].ClassName;
+                    result.SessionClassId = allClasses[i].SessionClassId;
+
+                    var totalHomeAssessments = context.HomeAssessment
+                        .Where(x => x.SessionClassId == allClasses[i].SessionClassId)
+                        .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                        .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+                        .Count(x => x.Deleted == false && x.TeacherId == Guid.Parse(teacherId));
+
+                    var totalClassAssessments = context.ClassAssessment
+                        .Where(x => x.SessionClassId == allClasses[i].SessionClassId)
+                        .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                        .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+                       .Count(x => x.Scorer == Guid.Parse(teacherId));
+
+                    result.AssessmentCount = (totalHomeAssessments + totalClassAssessments);
+
+                    result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
+
+                result.StudentNoteCount = context.TeacherClassNote
+                    .Where(x => x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
+                    .Where(x => x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString())).Distinct().Count();
+                classRes.Add(result);
+            }
+
+            res.Result = classRes;
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
         }
     }
 
