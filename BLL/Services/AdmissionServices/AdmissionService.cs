@@ -372,5 +372,50 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
+
+        public async Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request)
+        {
+            var res = new APIResponse<string>();
+            try
+            {
+                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
+                var admission = await context.Admissions.Where(m => m.AdmissionId == Guid.Parse(request.AdmissionId) && m.AdmissionNotificationId == admissionNotificationId).FirstOrDefaultAsync();
+                if (admission == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "AdmissionId doesn't exist";
+                    return res;
+                }
+                var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
+                admission.Firstname = request.Firstname;
+                admission.Lastname = request.Lastname;
+                admission.Middlename = request.Middlename;
+                admission.Email = request.Email;
+                admission.PhoneNumber = request.PhoneNumber;
+                admission.DateOfBirth = request.DateOfBirth;
+                admission.CountryOfOrigin = request.CountryOfOrigin;
+                admission.StateOfOrigin = request.StateOfOrigin;
+                admission.LGAOfOrigin = request.LGAOfOrigin;
+                admission.Credentials = filePath;
+                admission.ParentName = request.ParentName;
+                admission.ParentRelationship = request.ParentRelationship;
+                admission.ParentPhoneNumber = request.ParentPhoneNumber;
+                admission.CandidateAdmissionStatus = request.CandidateAdmissionStatus;
+                admission.ClassId = Guid.Parse(request.ClassId);
+
+                await context.SaveChangesAsync();
+                res.Result = admission.AdmissionId.ToString();
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Updated;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 }
