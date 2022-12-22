@@ -29,6 +29,14 @@ namespace SMP.API.Controllers.AdmissionControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpPost("update")]
+        public async Task<IActionResult> Update([FromForm] UpdateAdmission request)
+        {
+            var response = await service.UpdateAdmission(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
         [HttpGet("get-all-admission")]
         public async Task<IActionResult> GetAllAdmission(PaginationFilter filter)
         {
