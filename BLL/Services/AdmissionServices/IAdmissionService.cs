@@ -22,5 +22,6 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<SelectAdmission>> GetAdmission(string AdmissionId);
         Task<APIResponse<bool>> DeleteAdmission(SingleDelete request);
         Task<APIResponse<List<AdmissionClasses>>> GetAdmissionClasses();
+        Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request);
     }
 }
