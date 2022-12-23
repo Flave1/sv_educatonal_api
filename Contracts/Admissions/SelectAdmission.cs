@@ -37,7 +37,7 @@ namespace SMP.Contracts.Admissions
             Lastname = admission.Lastname;
             Email = admission.Email;
             PhoneNumber = admission.PhoneNumber;
-            DateOfBirth = admission.DateOfBirth.ToShortDateString();
+            DateOfBirth = admission.DateOfBirth.ToString("yyyy-MM-dd");
             CountryOfOrigin = admission.CountryOfOrigin;
             StateOfOrigin = admission.StateOfOrigin;
             LGAOfOrigin = admission.LGAOfOrigin;

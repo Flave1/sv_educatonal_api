@@ -160,7 +160,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     ParentName = request.ParentName,
                     ParentRelationship = request.ParentRelationship,
                     ParentPhoneNumber = request.ParentPhoneNumber,
-                    CandidateAdmissionStatus = request.CandidateAdmissionStatus,
+                    CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Pending,
                     ClassId = Guid.Parse(request.ClassId),
                     AdmissionNotificationId = admissionNotificationId
 
@@ -400,7 +400,6 @@ namespace SMP.BLL.Services.AdmissionServices
                 admission.ParentName = request.ParentName;
                 admission.ParentRelationship = request.ParentRelationship;
                 admission.ParentPhoneNumber = request.ParentPhoneNumber;
-                admission.CandidateAdmissionStatus = request.CandidateAdmissionStatus;
                 admission.ClassId = Guid.Parse(request.ClassId);
 
                 await context.SaveChangesAsync();
