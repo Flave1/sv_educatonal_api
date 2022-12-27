@@ -56,7 +56,7 @@ namespace BLL.StudentServices
             this.paginationService = paginationService;
             this.userService = userService;
             this.utilitiesService = utilitiesService;
-            this.parentService = parentService;
+            this.parentService = parentServices;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
