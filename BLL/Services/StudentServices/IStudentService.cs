@@ -22,6 +22,7 @@ namespace BLL.StudentServices
         Task<APIResponse<StudentContact>> UploadStudentsAsync();
         //Task<APIResponse<StudentContact>> UploadStudentsAsync(StudentContactCommand student);
         Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo);
-        Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string classId);
+        Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId);
+        Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId);
     }
 }

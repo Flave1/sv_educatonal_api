@@ -100,9 +100,18 @@ namespace API.Controllers
         }
         [AllowAnonymous]
         [HttpGet("getall-student-contact-cbt")]
-        public async Task<IActionResult> GetSingleStudentBySessionClassCbt(PaginationFilter filter, string classId)
+        public async Task<IActionResult> GetStudentBySessionClassCbt(PaginationFilter filter, string sessionClassId)
         {
-            var response = await service.GetStudentBySessionClassCbtAsync(filter, classId);
+            var response = await service.GetStudentBySessionClassCbtAsync(filter, sessionClassId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [AllowAnonymous]
+        [HttpGet("getall-students-cbt")]
+        public async Task<IActionResult> GetAllStudentBySessionClassCbt(string sessionClassId)
+        {
+            var response = await service.GetAllStudentBySessionClassCbtAsync(sessionClassId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

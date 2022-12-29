@@ -14,9 +14,9 @@ namespace SMP.API.Controllers.AdmissionControllers
     [Route("smp/api/v1/candidate-admission")]
     public class CandidateAdmissionController: Controller
     {
-        private readonly IAdmissionService service;
+        private readonly ICandidateAdmissionService service;
 
-        public CandidateAdmissionController(IAdmissionService service)
+        public CandidateAdmissionController(ICandidateAdmissionService service)
         {
             this.service = service;
         }

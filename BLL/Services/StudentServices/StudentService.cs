@@ -11,6 +11,7 @@ using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NLog.Filters;
 using OfficeOpenXml;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
@@ -516,43 +517,84 @@ namespace BLL.StudentServices
         public async Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo)
         {
             var res = new APIResponse<GetStudentContactCbt>();
+            try
+            {
+                string regNo = utilitiesService.GetStudentRealRegNumber(studentRegNo);
+                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            string regNo = utilitiesService.GetStudentRealRegNumber(studentRegNo);
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var result = await context.StudentContact
+                    .Where(d => regNo == d.RegistrationNumber && d.Deleted != true)
+                    .OrderByDescending(d => d.CreatedOn)
+                    .OrderByDescending(s => s.RegistrationNumber)
+                    .Include(q => q.User)
+                    .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
 
-            var result = await context.StudentContact
-                .Where(d => regNo == d.RegistrationNumber && d.Deleted != true)
-                .OrderByDescending(d => d.CreatedOn)
-                .OrderByDescending(s => s.RegistrationNumber)
-                .Include(q => q.User)
-                .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
-
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.Result = result;
-            res.IsSuccessful = true;
-            return res;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.Result = result;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
 
-        public async Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string classId)
+        public async Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId)
         {
             var res = new APIResponse<PagedResponse<List<GetStudentContactCbt>>>();
+            try
+            {
+                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var query = context.StudentContact
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true);
 
-            var query = context.StudentContact
-                .Include(s => s.SessionClass)
-                .Where(d => d.SessionClass.ClassId == Guid.Parse(classId) && d.Deleted != true);
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
+                    .OrderByDescending(s => s.RegistrationNumber)
+                    .Include(q => q.User)
+                    .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
 
-            var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
-                .OrderByDescending(s => s.RegistrationNumber)
-                .Include(q => q.User)
-                .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
-            
-            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return res;
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId)
+        {
+            var res = new APIResponse<List<GetStudentContactCbt>>();
+            try
+            {
+                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var result = await context.StudentContact
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true)
+                    .OrderByDescending(d => d.CreatedOn)
+                    .OrderByDescending(s => s.RegistrationNumber)
+                    .Include(q => q.User)
+                    .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
+
+                res.Result = result;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
     }
 
