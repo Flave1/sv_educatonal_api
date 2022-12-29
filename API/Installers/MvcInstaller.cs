@@ -80,7 +80,7 @@ namespace API.Installers
             services.AddSingleton<IPaginationService, PaginationService>();
             services.AddScoped<IUtilitiesService, UtilitiesService>();
             services.AddScoped<IAdmissionSettingService, AdmissionSettingService>();
-            services.AddScoped<IAdmissionService, AdmissionService>();
+            services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 

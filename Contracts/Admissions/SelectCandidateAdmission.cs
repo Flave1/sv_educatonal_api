@@ -1,4 +1,5 @@
 ﻿using DAL.ClassEntities;
+using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Admission;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SMP.Contracts.Admissions
 {
-    public class SelectAdmission
+    public class SelectCandidateAdmission
     {
         public string AdmissionId { get; set; }
         public string Firstname { get; set; }
@@ -25,14 +26,13 @@ namespace SMP.Contracts.Admissions
         public string ParentRelationship { get; set; }
         public string ParentPhoneNumber { get; set; }
         public string ParentEmail { get; set; }
-        public int ExamStatus { get; set; }
         public int CandidateAdmissionStatus { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
-        public SelectAdmission(Admission admission, ClassLookup classLookup, int examStatus)
+        public SelectCandidateAdmission(Admission admission, ClassLookup classLookup)
         {
             AdmissionId = admission.AdmissionId.ToString();
-            Firstname  = admission.Firstname;
+            Firstname = admission.Firstname;
             Middlename = admission.Middlename;
             Lastname = admission.Lastname;
             Email = admission.Email;
@@ -46,7 +46,6 @@ namespace SMP.Contracts.Admissions
             ParentRelationship = admission.ParentRelationship;
             ParentPhoneNumber = admission.PhoneNumber;
             ParentEmail = admission.AdmissionNotification.ParentEmail;
-            ExamStatus = examStatus;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
             ClassId = admission.ClassId.ToString();
             ClassName = classLookup.Name;
