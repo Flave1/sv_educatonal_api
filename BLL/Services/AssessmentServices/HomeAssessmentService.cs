@@ -500,6 +500,22 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
 
+        async Task<APIResponse<GetHomeAssessmentFeedback>> IHomeAssessmentService.GetSingleHomeAssessmentsByStudentOnMobileAsync(Guid homeAssessmentFeedBackId)
+        {
+            var res = new APIResponse<GetHomeAssessmentFeedback>();
+
+            var result = await context.HomeAssessmentFeedBack
+              .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+              .Include(d => d.StudentContact)
+              .ThenInclude(s => s.User)
+              .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
         async Task<APIResponse<GetHomeAssessmentFeedback>> IHomeAssessmentService.GetSingleHomeAssessmentsByTeacherAsync(Guid homeAssessmentFeedBackId)
         {
             var res = new APIResponse<GetHomeAssessmentFeedback>();

@@ -40,6 +40,14 @@ namespace SMP.API.Controllers
             var response = await service.GetSingleHomeAssessmentsByStudentAsync(Guid.Parse(homeAssessmentFeedBackId));
             return Ok(response);
         }
+
+        [HttpGet("get-single/home-assessments-on-mobile")]
+        public async Task<IActionResult> GetSingleHomeAssessmentsByStudentOnMobileAsync(string homeAssessmentFeedBackId)
+        {
+            var response = await service.GetSingleHomeAssessmentsByStudentOnMobileAsync(Guid.Parse(homeAssessmentFeedBackId));
+            return Ok(response);
+        }
+
         [HttpPost("submit/assessment-feedback")]
         public async Task<IActionResult> SubmitHomeAssessmentByStudentAsync([FromForm] CreateHomeAssessmentFeedback request)
         {

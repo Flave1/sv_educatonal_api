@@ -99,6 +99,7 @@ namespace SMP.Contracts.Assessment
         public string TeacherName { get; set; }
         public Guid? TeacherId { get; set; }
         public bool Included { get; set; }
+        public string StudentName { get; set; }
 
         public GetHomeAssessmentRequest Assessment { get; set; } = new GetHomeAssessmentRequest();
         public GetHomeAssessmentFeedback(HomeAssessmentFeedBack db)
@@ -106,6 +107,7 @@ namespace SMP.Contracts.Assessment
             Score = db.Mark;
             Included = db.Included;
             Content = db.Content;
+            StudentName = db.StudentContact.User.FirstName + " " + db.StudentContact.User.LastName;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
             HomeAssessmentId = db.HomeAssessmentId;
             Files = (!string.IsNullOrEmpty(db.AttachmentUrls) ? db.AttachmentUrls.Split(',').ToList() : new List<string>()); 
