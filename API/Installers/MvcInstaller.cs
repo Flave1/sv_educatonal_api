@@ -81,6 +81,7 @@ namespace API.Installers
             services.AddScoped<IUtilitiesService, UtilitiesService>();
             services.AddScoped<IAdmissionSettingService, AdmissionSettingService>();
             services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
+            services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
