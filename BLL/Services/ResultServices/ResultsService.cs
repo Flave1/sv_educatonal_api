@@ -44,7 +44,7 @@ namespace SMP.BLL.Services.ResultServices
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass
-                        .Include(s => s.Class) 
+                        .Include(s => s.Class)
                         .Include(s => s.Session)
                         .OrderBy(s => s.Class.Name)
                         .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses(s)).ToListAsync();

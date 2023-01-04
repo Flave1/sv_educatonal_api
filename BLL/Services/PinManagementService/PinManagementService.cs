@@ -12,6 +12,7 @@ using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.WebRequestServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
@@ -31,25 +32,25 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly IResultsService resultService;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
-        private readonly RegNumber regNumberOptions;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IOptions<RegNumber> regNoOptions, IHttpContextAccessor accessor, IPaginationService paginationService)
+        private readonly IUtilitiesService utilitiesService;
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IHttpContextAccessor accessor, IPaginationService paginationService, UtilitiesService utilitiesService)
         {
             this.context = context;
             this.resultService = resultService;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
-            regNumberOptions = regNoOptions.Value;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.utilitiesService = utilitiesService;
         }
         async Task<APIResponse<PrintResult>> IPinManagementService.PrintResultAsync(PrintResultRequest request)
         {
             var res = new APIResponse<PrintResult>();
             try
             {
-                var regNo = (this as IPinManagementService).GetStudentRealRegNumber(request.RegistractionNumber);
+                var regNo = utilitiesService.GetStudentRegNumberValue(request.RegistractionNumber);
                 var studentInfo = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower());
                 if (studentInfo == null)
                 {
@@ -183,31 +184,6 @@ namespace SMP.BLL.Services.PinManagementService
             }
         }
 
-        string IPinManagementService.GetStudentRealRegNumber(string regNo)
-        {
-            try
-            {
-                var splited = regNo.Split('/');
-                if (regNumberOptions.StudentRegNoPosition == 3)
-                {
-                    return splited[2];
-                }
-                if (regNumberOptions.StudentRegNoPosition == 2)
-                {
-                    return splited[1];
-                }
-                if (regNumberOptions.StudentRegNoPosition == 1)
-                {
-                    return splited[0];
-                }
-                return regNo;
-            }
-            catch (Exception)
-            {
-                
-                throw new ArgumentException("Please ensure registeration number is in correct format");
-            }
-        }
         async Task<APIResponse<UploadPinRequest>> IPinManagementService.UploadPinAsync(UploadPinRequest request)
         {
             var res = new APIResponse<UploadPinRequest>();
@@ -440,7 +416,7 @@ namespace SMP.BLL.Services.PinManagementService
                             var pin = await context.UsedPin.Include(d => d.UploadedPin)
                                                        .Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == pinResult.pin).ToListAsync();
 
-                            var regNo = (this as IPinManagementService).GetStudentRealRegNumber(pinResult.studentRegNo);
+                            var regNo = utilitiesService.GetStudentRegNumberValue(pinResult.studentRegNo);
                             var studentInfor = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
                             if (pin.Any())
                             {
@@ -499,10 +475,8 @@ namespace SMP.BLL.Services.PinManagementService
            
         }
 
-
         List<UploadedPin> GetUnusedPins(int number) 
             => context.UploadedPin.Include(x => x.UsedPin).Where(d => d.Deleted == false && !d.UsedPin.Any()).Take(number).ToList(); 
-
        
         bool IsResultArchived(Guid classId, Guid termId, List<Guid> stdIds)
         {

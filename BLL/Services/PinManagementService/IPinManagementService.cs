@@ -20,7 +20,6 @@ namespace SMP.BLL.Services.PinManagementService
         Task<APIResponse<PagedResponse<List<GetPins>>>> GetAllUnusedPinsAsync(PaginationFilter filter); 
         Task<APIResponse<PinDetail>> GetUnusedPinDetailAsync(string pin);
         Task<APIResponse<PinDetail>> GetUsedPinDetailAsync(string pin);
-        string GetStudentRealRegNumber(string regNo);
         Task<APIResponse<List<PrintResult>>> PrintBatchResultResultAsync(BatchPrintResultRequest2 request);
     }
 }

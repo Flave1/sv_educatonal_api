@@ -209,7 +209,6 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
 
-
         async Task<APIResponse<bool>> IHomeAssessmentService.DeleteHomeAssessmentAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
@@ -1015,7 +1014,6 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
         
-
         private async Task NotifyAllStudentsOnAssessmentCreationAsync(HomeAssessment reg, bool shouldSendToStudents)
         {
 
@@ -1068,7 +1066,6 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
             }
         }
-    
     
         private async Task SendAssessmentStatusNotificationAsync(string status, HomeAssessment homeAssessment)
         {

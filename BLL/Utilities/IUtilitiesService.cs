@@ -8,6 +8,6 @@ namespace SMP.BLL.Utilities
 {
     public interface IUtilitiesService
     {
-        string GetStudentRealRegNumber(string regNo);
+        string GetStudentRegNumberValue(string regNo);
     }
 }

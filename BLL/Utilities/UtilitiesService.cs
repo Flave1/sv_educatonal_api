@@ -1,11 +1,6 @@
 ﻿using DAL;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace SMP.BLL.Utilities
 {
@@ -17,11 +12,11 @@ namespace SMP.BLL.Utilities
         {
             this.regNoOptions = regNoOptions.Value;
         }
-        public string GetStudentRealRegNumber(string regNo)
+        public string GetStudentRegNumberValue(string regNo)
         {
             try
             {
-                var splited = regNo.Split('/');
+                var splited = regNo.Split(regNoOptions.Separator);
                 if (regNoOptions.StudentRegNoPosition == 3)
                 {
                     return splited[2];

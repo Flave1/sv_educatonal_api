@@ -519,7 +519,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<GetStudentContactCbt>();
             try
             {
-                string regNo = utilitiesService.GetStudentRealRegNumber(studentRegNo);
+                string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo);
                 var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
                 var result = await context.StudentContact

@@ -600,7 +600,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<GetSessionClassCbt>();
             try
             {
-                string regNo = utilitiesService.GetStudentRealRegNumber(registrationNo);
+                string regNo = utilitiesService.GetStudentRegNumberValue(registrationNo);
                 var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == regNo);
                 if (student == null)
                 {
