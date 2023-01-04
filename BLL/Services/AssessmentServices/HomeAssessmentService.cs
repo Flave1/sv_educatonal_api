@@ -301,6 +301,92 @@ namespace SMP.BLL.Services.AssessmentServices
             return res;
         }
 
+        async Task<APIResponse<GetHomeAssessmentRequest>> IHomeAssessmentService.GetSingleHomeAssessmentOnMobileAsync(Guid homeAssessmentId, string sessionClasId)
+        {
+            var res = new APIResponse<GetHomeAssessmentRequest>();
+
+            if (string.IsNullOrEmpty(sessionClasId))
+            {
+                var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
+                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+                sessionClasId = student.SessionClassId.ToString();
+            }
+
+            var studentsInClass = context.StudentContact
+                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
+                .Include(s => s.User)
+                .ToList();
+            var ds = context.HomeAssessment;
+
+            var result = await context.HomeAssessment
+                .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Include(q => q.SessionClassGroup)
+                .Include(q => q.SessionTerm)
+                .Include(q => q.HomeAssessmentFeedBacks)
+                .OrderByDescending(d => d.CreatedOn)
+                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass, true)).FirstOrDefaultAsync();
+
+            if (result is not null)
+            {
+                var teacher = context.Teacher.Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
+                result.TeacherName = teacher.FirstName + " " + teacher.LastName;
+            }
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> IHomeAssessmentService.GetSingleHomeAssessmentStudentsAsync(Guid homeAssessmentId, string sessionClasId)
+        {
+            var res = new APIResponse<List<SubmittedAndUnsubmittedStudents>>();
+
+            if (string.IsNullOrEmpty(sessionClasId))
+            {
+                var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
+                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+                sessionClasId = student.SessionClassId.ToString();
+            }
+
+            var studentsInClass = context.StudentContact
+                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
+                .Include(s => s.User)
+                .ToList();
+
+
+
+
+            var hmAss = await context.HomeAssessment
+                .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Include(q => q.SessionClassGroup)
+                .Include(q => q.HomeAssessmentFeedBacks)
+                .OrderByDescending(d => d.CreatedOn).FirstOrDefaultAsync();
+
+            var studentIds = !string.IsNullOrEmpty(hmAss.SessionClassGroup.ListOfStudentContactIds) ?
+               hmAss.SessionClassGroup.ListOfStudentContactIds.Split(',').ToList() : new List<string>();
+
+            if (hmAss.SessionClassGroup.GroupName == "all-students")
+            {
+                studentsInClass.Select(s => s.StudentContactId).ToList().ForEach(ele =>
+                {
+                    studentIds.Add(ele.ToString());
+                });
+            }
+
+            var result = studentIds.OrderByDescending(x => hmAss.HomeAssessmentFeedBacks.Select(s => s.StudentContactId.ToString())
+            .Contains(x)).Select(id => new SubmittedAndUnsubmittedStudents(id, hmAss.HomeAssessmentFeedBacks, studentsInClass)).ToList();
+
+
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
+
         async Task<APIResponse<GetClassAssessmentRecord>> IHomeAssessmentService.GetSubjectAssessmentScoreRecordAsync(Guid sessionClassSubjectId, Guid sessionClasId)
         {
             var res = new APIResponse<GetClassAssessmentRecord>();

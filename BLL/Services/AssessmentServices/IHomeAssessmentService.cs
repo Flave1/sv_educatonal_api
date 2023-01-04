@@ -33,5 +33,7 @@ namespace SMP.BLL.Services.AssessmentServices
         APIResponse<string> ReadFileContent(IFormFile file);
         Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, int status, string studentContactid, PaginationFilter filter);
         Task<APIResponse<GetHomeAssessmentFeedback>> GetSingleHomeAssessmentsByStudentOnMobileAsync(Guid homeAssessmentFeedBackId);
+        Task<APIResponse<GetHomeAssessmentRequest>> GetSingleHomeAssessmentOnMobileAsync(Guid homeAssessmentId, string sessionClasId);
+        Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> GetSingleHomeAssessmentStudentsAsync(Guid homeAssessmentId, string sessionClasId);
     }
 }

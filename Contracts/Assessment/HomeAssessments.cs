@@ -29,6 +29,7 @@ namespace SMP.Contracts.Assessment
         public string TeacherName { get; set; }
         public Guid? TeacherId { get; set; }
         public bool Included { get; set; }
+        public int StudentCount { get; set; }
         public List<SubmittedAndUnsubmittedStudents> StudentList { get; set; }
         public GetHomeAssessmentRequest()
         {
@@ -116,6 +117,49 @@ namespace SMP.Contracts.Assessment
         
             if (studentIds.Any())
                 StudentList = studentIds.OrderByDescending(x =>  db.HomeAssessmentFeedBacks.Select(s => s.StudentContactId.ToString()).Contains(x)).Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
+        }
+
+        public GetHomeAssessmentRequest(HomeAssessment db, ICollection<StudentContact> classtudents, bool isMobile = true)
+        {
+            var studentIds = !string.IsNullOrEmpty(db.SessionClassGroup.ListOfStudentContactIds) ?
+                db.SessionClassGroup.ListOfStudentContactIds.Split(',').ToList() : new List<string>();
+            if (db.SessionClassGroup.GroupName == "all-students")
+            {
+                classtudents.Select(s => s.StudentContactId).ToList().ForEach(ele =>
+                {
+                    studentIds.Add(ele.ToString());
+                });
+            }
+
+            DateDeadLine = db.DateDeadLine;
+            TimeDeadLine = db.TimeDeadLine;
+            HomeAssessmentId = db.HomeAssessmentId.ToString();
+            Title = db.Title;
+            AssessmentScore = db.AssessmentScore;
+            SessionClassId = db.SessionClassId.ToString();
+            SessionClassName = db.SessionClass.Class.Name;
+            SessionClassSubjectId = db.SessionClassSubjectId.ToString();
+            SessionClassSubjectName = db.SessionClassSubject.Subject.Name;
+            SessionClassGroupId = db.SessionClassGroupId.ToString();
+            SessionClassGroupName = db.SessionClassGroup.GroupName;
+            SessionTermId = db.SessionTermId.ToString();
+            SessionTermName = db.SessionTerm.TermName;
+            Comment = db.Comment;
+            TeacherId = db.TeacherId;
+            NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
+            NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
+            if (db.Status == 1)
+                Status = "open";
+            if (db.Status == 2)
+                Status = "closed";
+            if (db.Status == 3)
+                Status = "submitted";
+            if (db.Status == 0)
+                Status = "saved";
+
+            if (studentIds.Any())
+                StudentCount = studentIds.Count();
+                //StudentList = studentIds.OrderByDescending(x => db.HomeAssessmentFeedBacks.Select(s => s.StudentContactId.ToString()).Contains(x)).Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
         }
     }
 

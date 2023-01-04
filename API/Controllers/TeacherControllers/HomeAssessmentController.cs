@@ -1,8 +1,6 @@
 ﻿using BLL.Filter;
 using BLL.MiddleWares;
-using Contracts.Annoucements;
 using Contracts.Common;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
@@ -53,6 +51,20 @@ namespace SMP.API.Controllers
         public async Task<IActionResult> GetSingleHomeAssessmentsAsync(string homeassessmentId, string sessionClassid)
         {
             var response = await service.GetSingleHomeAssessmentAsync(Guid.Parse(homeassessmentId), sessionClassid);
+            return Ok(response);
+        }
+
+        [HttpGet("get/single/mobile-home-assessments")]
+        public async Task<IActionResult> GetSingleHomeAssessmentsMobileAsync(string homeassessmentId, string sessionClassid)
+        {
+            var response = await service.GetSingleHomeAssessmentOnMobileAsync(Guid.Parse(homeassessmentId), sessionClassid);
+            return Ok(response);
+        }
+
+        [HttpGet("get/assessment-students")]
+        public async Task<IActionResult> GetSingleHomeAssessmentStudentsAsync(string homeassessmentId, string sessionClassid)
+        {
+            var response = await service.GetSingleHomeAssessmentStudentsAsync(Guid.Parse(homeassessmentId), sessionClassid);
             return Ok(response);
         }
 
