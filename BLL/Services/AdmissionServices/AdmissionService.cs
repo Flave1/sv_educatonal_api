@@ -63,7 +63,6 @@ namespace SMP.BLL.Services.AdmissionServices
                     res.Message.FriendlyMessage = "Ops! No Candidate available for export";
                     return res;
                 }
-
                 var candidates = new CreateAdmissionCandidateCbt
                 {
                     CandidateCategory = request.CategoryName,
@@ -95,6 +94,12 @@ namespace SMP.BLL.Services.AdmissionServices
                     res.Message.FriendlyMessage = result.Message.FriendlyMessage;
                     return res;
                 }
+
+                foreach(var item in admission)
+                {
+                    item.CandidateCategory = result.Result;
+                }
+                await context.SaveChangesAsync();
 
                 res.Result = true;
                 res.Message.FriendlyMessage = Messages.Created;
