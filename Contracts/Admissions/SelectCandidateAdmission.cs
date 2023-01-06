@@ -33,7 +33,7 @@ namespace SMP.Contracts.Admissions
         {
             AdmissionId = admission.AdmissionId.ToString();
             Firstname = admission.Firstname;
-            Middlename = admission.Middlename;
+            Middlename = !string.IsNullOrEmpty(admission.Middlename) ? admission.Middlename : "";
             Lastname = admission.Lastname;
             Email = admission.Email;
             PhoneNumber = admission.PhoneNumber;

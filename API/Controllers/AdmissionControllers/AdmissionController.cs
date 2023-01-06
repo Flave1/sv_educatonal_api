@@ -2,6 +2,7 @@
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AdmissionServices;
+using SMP.Contracts.Admissions;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers.AdmissionControllers
@@ -28,6 +29,14 @@ namespace SMP.API.Controllers.AdmissionControllers
         public async Task<IActionResult> GetAdmission(string admissionId)
         {
             var response = await service.GetAdmission(admissionId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("admission/export-to-cbt")]
+        public async Task<IActionResult> ExportCandidatesToCbt([FromBody]ExportCandidateToCbt request)
+        {
+            var response = await service.ExportCandidatesToCbt(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

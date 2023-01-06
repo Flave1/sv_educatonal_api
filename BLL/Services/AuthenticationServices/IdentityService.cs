@@ -4,6 +4,7 @@ using Contracts.Authentication;
 using Contracts.Options;
 using DAL;
 using DAL.Authentication;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.WebRequestServices;
+using SMP.Contracts.Options;
+using SMP.Contracts.PinManagement;
+using SMP.Contracts.Routes;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
@@ -28,7 +33,7 @@ namespace BLL.AuthenticationServices
 
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -37,6 +42,8 @@ namespace BLL.AuthenticationServices
             this.jwtSettings = jwtSettings.Value;
             this.context = context;
             this.accessor = accessor;
+            this.webRequestService = webRequestService;
+            fwsOptions = options.Value;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -46,6 +53,8 @@ namespace BLL.AuthenticationServices
         private readonly ILoggerService logger;
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly IWebRequestService webRequestService;
+        private readonly FwsConfigSettings fwsOptions;
 
         async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
         {
@@ -450,8 +459,6 @@ namespace BLL.AuthenticationServices
                 throw ex;
             }
         }
-
-
     }
 }
 
