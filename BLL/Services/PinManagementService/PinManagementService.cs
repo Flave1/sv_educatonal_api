@@ -112,6 +112,7 @@ namespace SMP.BLL.Services.PinManagementService
                             StudentRegNo = regNo,
                         };
 
+
                         FwsPinValResponse fwsResponse = await webRequestService.PostAsync<FwsPinValResponse, FwsPinValidationRequest>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validatePin}", fwsPayload);
 
                         if (fwsResponse.status != "success")
