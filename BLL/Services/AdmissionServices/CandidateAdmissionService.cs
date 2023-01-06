@@ -161,6 +161,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     ParentRelationship = request.ParentRelationship,
                     ParentPhoneNumber = request.ParentPhoneNumber,
                     CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Pending,
+                    CandidateCategory = string.Empty,
                     ClassId = Guid.Parse(request.ClassId),
                     AdmissionNotificationId = admissionNotificationId
 
