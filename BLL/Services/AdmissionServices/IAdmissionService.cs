@@ -15,5 +15,6 @@ namespace SMP.BLL.Services.AdmissionServices
         public Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter);
         public Task<APIResponse<SelectAdmission>> GetAdmission(string admissionId);
         public Task<APIResponse<bool>> EnrollCandidate(string admissionId);
+        public Task<APIResponse<bool>> ExportCandidatesToCbt(ExportCandidateToCbt request);
     }
 }
