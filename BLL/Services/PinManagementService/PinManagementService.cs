@@ -35,7 +35,7 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         private readonly IUtilitiesService utilitiesService;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IHttpContextAccessor accessor, IPaginationService paginationService, UtilitiesService utilitiesService)
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IHttpContextAccessor accessor, IPaginationService paginationService, IUtilitiesService utilitiesService)
         {
             this.context = context;
             this.resultService = resultService;

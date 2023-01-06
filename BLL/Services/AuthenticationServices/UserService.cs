@@ -20,6 +20,7 @@ using SMP.BLL.Constants;
 using Microsoft.AspNetCore.Http;
 using SMP.BLL.Services.PinManagementService;
 using BLL.Utilities;
+using SMP.BLL.Utilities;
 
 namespace BLL.AuthenticationServices
 {
@@ -35,8 +36,9 @@ namespace BLL.AuthenticationServices
         private readonly EmailConfiguration emailConfiguration;
         private readonly FwsConfigSettings fwsConfig;
         private readonly IPinManagementService pinService;
+        private readonly IUtilitiesService utilitiesService;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
-            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, IPinManagementService pinService)
+            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, IPinManagementService pinService, IUtilitiesService utilitiesService)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -48,6 +50,7 @@ namespace BLL.AuthenticationServices
             emailConfiguration = emailOptions.Value;
             fwsConfig = fwsOptions.Value;
             this.pinService = pinService;
+            this.utilitiesService = utilitiesService;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -496,7 +499,7 @@ namespace BLL.AuthenticationServices
                 if (request.UserType == (int)UserTypes.Student)
                 {
 
-                    var rgNo = pinService.GetStudentRealRegNumber(request.UsernameOrRegNumber);
+                    var rgNo = utilitiesService.GetStudentRegNumberValue(request.UsernameOrRegNumber);
                     var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
                     if (student is null)
                     {

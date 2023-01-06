@@ -44,7 +44,6 @@ namespace BLL.StudentServices
         private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
         private readonly IParentService parentService;
-
         public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentServices,
             IUtilitiesService utilitiesService)
         {
@@ -413,7 +412,7 @@ namespace BLL.StudentServices
                             }
                             else
                             {
-                                var regNo = pinService.GetStudentRealRegNumber(item.RegistrationNumber);
+                                var regNo = utilitiesService.GetStudentRegNumberValue(item.RegistrationNumber);
                                 std = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
                                 if (std == null)
                                 {
