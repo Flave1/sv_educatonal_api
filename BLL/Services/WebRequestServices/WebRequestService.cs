@@ -23,7 +23,7 @@ namespace SMP.BLL.Services.WebRequestServices
             fwsOptions = options.Value;
         }
    
-        public async Task<T> PostAsync<T, Y>(string url, Y data) where Y : class
+        public async Task<T> PostAsync<T, Y>(string url, Y data, Dictionary<string, string> pairs) where Y : class
         {
             var retries = 0;
             var maxRetries = 3;
@@ -36,7 +36,19 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    client.Timeout = TimeSpan.FromSeconds(1000000);
+                    if (pairs is not null)
+                    {
+                        foreach (var pair in pairs)
+                        {
+                            client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
+                        }
+                    }
+
+                    TimeSpan timeOut = TimeSpan.FromSeconds(1000000);
+                    if(client.Timeout != timeOut)
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(1000000);
+                    }
 
                     var serializeOptions = new JsonSerializerOptions
                     {

@@ -14,5 +14,7 @@ namespace SMP.Contracts.Routes
         public const string countrySelect = "fws/lookups/api/v1/get/country-select";
         public const string stateSelect = "fws/lookups/api/v1/get/state-select?country=";
         public const string citySelect = "fws/lookups/api/v1/get/city-select?state=";
+        public const string createCbtCandidate = "cbt/api/v1/admission/create-candidates";
+        public const string clientInformation = "fws/sms/api/v1/get/sms-client/information?";
     }
 }
