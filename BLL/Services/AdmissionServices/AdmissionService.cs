@@ -89,7 +89,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 clientDetails.Add("smsClientId", "");
                 clientDetails.Add("productBaseurlSuffix", fwsRequest.Result.BaseUrlAppendix);
 
-                var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.createCbtCandidate}", candidates, clientDetails);
+                var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{fwsOptions.FwsBaseUrl}{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
                 if (result.Result == null)
                 {
                     res.Message.FriendlyMessage = result.Message.FriendlyMessage;
