@@ -17,8 +17,11 @@ using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
+using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Assessment;
+using SMP.Contracts.Authentication;
 using SMP.Contracts.NotificationModels;
+using SMP.Contracts.Routes;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.ResultModels;
@@ -1094,5 +1097,6 @@ namespace SMP.BLL.Services.AssessmentServices
             }, true);
             await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
         }
+    
     }
 }

@@ -48,7 +48,6 @@ namespace SMP.API.Controllers
         [HttpGet("get/announcements")]
         public async Task<IActionResult> GetAnnouncementsAsync(PaginationFilter filter)
         {
-            
             var response = await service.GetAnnouncementsAsync(filter);
             return Ok(response);
         }

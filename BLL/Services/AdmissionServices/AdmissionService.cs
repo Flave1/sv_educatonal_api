@@ -1,28 +1,19 @@
 ﻿using BLL;
-using BLL.AuthenticationServices;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using DAL;
-using DAL.StudentInformation;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
-using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
-using SMP.Contracts.PinManagement;
-using SMP.Contracts.ResultModels;
 using SMP.Contracts.Routes;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,18 +23,14 @@ namespace SMP.BLL.Services.AdmissionServices
     {
         private readonly DataContext context;
         private readonly IPaginationService paginationService;
-        private readonly IUserService userService;
-        private readonly IParentService parentService;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
 
-        public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options, 
-            IParentService parentService, IWebRequestService webRequestService)
+        public AdmissionService(DataContext context, IPaginationService paginationService, IOptions<FwsConfigSettings> options, 
+           IWebRequestService webRequestService)
         {
             this.context = context;
             this.paginationService = paginationService;
-            this.userService = userService;
-            this.parentService = parentService;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
         }

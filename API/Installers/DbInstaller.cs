@@ -13,6 +13,7 @@ using SMP.BLL.Services.AnnouncementServices;
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.AttendanceServices;
+using SMP.BLL.Services.CBTAssessmentServices;
 using SMP.BLL.Services.DashboardServices;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.FileUploadService;
@@ -77,6 +78,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IClassAssessmentService, ClassAssessmentService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IParentService, ParentService>();
+            services.AddScoped<ICBTAssessmentService, CBTAssessmentService>();
         }
     }
 }

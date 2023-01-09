@@ -23,7 +23,7 @@ namespace SMP.BLL.Services.WebRequestServices
             fwsOptions = options.Value;
         }
    
-        public async Task<T> PostAsync<T, Y>(string url, Y data, Dictionary<string, string> pairs) where Y : class
+        public async Task<T> PostAsync<T, Y>(string url, Y data, Dictionary<string, string> credentials) where Y : class
         {
             var retries = 0;
             var maxRetries = 3;
@@ -36,9 +36,10 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    if (pairs is not null)
+                    client.BaseAddress = new Uri(fwsOptions.FwsBaseUrl);
+                    if (credentials is not null)
                     {
-                        foreach (var pair in pairs)
+                        foreach (var pair in credentials)
                         {
                             client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
                         }
@@ -59,11 +60,13 @@ namespace SMP.BLL.Services.WebRequestServices
                     if (response.IsSuccessStatusCode)
                     {
                         var result = await response.Content.ReadFromJsonAsync<T>();
+                        client.CancelPendingRequests();
                         return result;
                     }
                     else
                     {
                         var result = await response.Content.ReadAsStringAsync();
+                        client.CancelPendingRequests();
                         return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
                     }
                 }
@@ -87,7 +90,7 @@ namespace SMP.BLL.Services.WebRequestServices
             throw new HttpRequestException("Failed to post data.");
         }
 
-        public async Task<T> GetAsync<T>(string url)
+        public async Task<T> GetAsync<T>(string url, Dictionary<string, string> credentials)
         {
             var retries = 0;
             var maxRetries = 3;
@@ -101,6 +104,14 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
                     client.Timeout = TimeSpan.FromSeconds(1000000);
+
+                    if (credentials is not null)
+                    {
+                        foreach (var pair in credentials)
+                        {
+                            client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
+                        }
+                    }
 
                     var serializeOptions = new JsonSerializerOptions
                     {
