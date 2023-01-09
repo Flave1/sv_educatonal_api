@@ -12,14 +12,17 @@ namespace SMP.API.Controllers.AdmissionControllers
     public class AdmissionController: Controller
     {
         private readonly IAdmissionService service;
-        public AdmissionController(IAdmissionService service)
+        private readonly ICandidateAdmissionService candidateAdmissionService;
+
+        public AdmissionController(IAdmissionService service, ICandidateAdmissionService candidateAdmissionService)
         {
             this.service = service;
+            this.candidateAdmissionService = candidateAdmissionService;
         }
         [HttpGet("get-all-admission")]
-        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter)
+        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter, string classId, string examStatus)
         {
-            var response = await service.GetAllAdmission(filter);
+            var response = await service.GetAllAdmission(filter, classId, examStatus);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -37,6 +40,30 @@ namespace SMP.API.Controllers.AdmissionControllers
         public async Task<IActionResult> ExportCandidatesToCbt([FromBody]ExportCandidateToCbt request)
         {
             var response = await service.ExportCandidatesToCbt(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get-admission-classes")]
+        public async Task<IActionResult> GetAdmissionClasses()
+        {
+            var response = await candidateAdmissionService.GetAdmissionClasses();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("enroll-candidate")]
+        public async Task<IActionResult> EnrollCandidate([FromBody]EnrollCandidate request)
+        {
+            var response = await service.EnrollCandidate(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("enroll-candidates")]
+        public async Task<IActionResult> EnrollCandidates([FromBody]EnrollCandidates request)
+        {
+            var response = await service.EnrollMultipleCandidates(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

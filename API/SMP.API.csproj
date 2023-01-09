@@ -30,6 +30,7 @@
   <ItemGroup>
     <Folder Include="Controllers\MobileControllers\" />
     <Folder Include="wwwroot\AdmissionCredentials\" />
+    <Folder Include="wwwroot\AdmissionPassport\" />
     <Folder Include="wwwroot\StudentFeedbackFilesPath\" />
     <Folder Include="wwwroot\PrincipalStamp\" />
     <Folder Include="wwwroot\SchoolLogo\" />

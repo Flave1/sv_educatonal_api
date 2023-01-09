@@ -145,6 +145,7 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
+                var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
                 var admission = new Admission
                 {
                     Firstname = request.Firstname,
@@ -157,11 +158,13 @@ namespace SMP.BLL.Services.AdmissionServices
                     StateOfOrigin = request.StateOfOrigin,
                     LGAOfOrigin = request.LGAOfOrigin,
                     Credentials = filePath,
+                    Photo = photoPath,
                     ParentName = request.ParentName,
                     ParentRelationship = request.ParentRelationship,
                     ParentPhoneNumber = request.ParentPhoneNumber,
                     CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Pending,
                     CandidateCategory = string.Empty,
+                    ExaminationStatus = (int)AdmissionExamStatus.Pending,
                     ClassId = Guid.Parse(request.ClassId),
                     AdmissionNotificationId = admissionNotificationId
 

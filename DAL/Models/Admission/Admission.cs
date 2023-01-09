@@ -23,12 +23,14 @@ namespace SMP.DAL.Models.Admission
         public string CountryOfOrigin { get; set; }
         public string StateOfOrigin { get; set; }
         public string LGAOfOrigin { get; set; }
+        public string Photo { get; set; }
         public string Credentials { get; set; }
         public string ParentName { get; set; }
         public string ParentRelationship { get; set; }
         public string ParentPhoneNumber { get; set; }
         public int CandidateAdmissionStatus { get; set; }
         public string CandidateCategory { get; set; }
+        public int ExaminationStatus { get; set; }
         public Guid ClassId { get; set; }
         [ForeignKey("ClassId")]
         public ClassLookup Class { get; set; }

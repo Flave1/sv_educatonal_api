@@ -21,6 +21,7 @@ namespace SMP.Contracts.Admissions
         public string StateOfOrigin { get; set; }
         public string LGAOfOrigin { get; set; }
         public string Credentials { get; set; }
+        public string Photo { get; set; }
         public string ParentName { get; set; }
         public string ParentRelationship { get; set; }
         public string ParentPhoneNumber { get; set; }
@@ -30,7 +31,7 @@ namespace SMP.Contracts.Admissions
         public string CandidateCategory { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
-        public SelectAdmission(Admission admission, ClassLookup classLookup, int examStatus)
+        public SelectAdmission(Admission admission, ClassLookup classLookup)
         {
             AdmissionId = admission.AdmissionId.ToString();
             Firstname  = admission.Firstname;
@@ -43,11 +44,12 @@ namespace SMP.Contracts.Admissions
             StateOfOrigin = admission.StateOfOrigin;
             LGAOfOrigin = admission.LGAOfOrigin;
             Credentials = admission.Credentials;
+            Photo = admission.Photo;
             ParentName = admission.ParentName;
             ParentRelationship = admission.ParentRelationship;
             ParentPhoneNumber = admission.PhoneNumber;
             ParentEmail = admission.AdmissionNotification.ParentEmail;
-            ExamStatus = examStatus;
+            ExamStatus = admission.ExaminationStatus;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
             CandidateCategory = admission.CandidateCategory;
             ClassId = admission.ClassId.ToString();
