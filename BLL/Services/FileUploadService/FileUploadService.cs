@@ -21,6 +21,7 @@ namespace SMP.BLL.Services.FileUploadService
         private static string StudentFeedbackFilesPath = "StudeentFeedbackFilesPath";
         private static string LessonNotePath = "LessonNotePath";
         private static string AdmissionCredentialsPath = "AdmissionCredentials";
+        private static string AdmissionPassportPath = "AdmissionPassport";
         public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
         {
             this.environment = environment;
@@ -422,7 +423,20 @@ namespace SMP.BLL.Services.FileUploadService
             if(File.Exists(filePath))
                 File.Delete(filePath);
         }
+        void IFileUploadService.CopyFile(string oldFilePath, string newFilePath)
+        {
+            try
+            {
+                if (File.Exists(newFilePath))
+                    File.Delete(newFilePath);
 
+                File.Copy(oldFilePath, newFilePath);
+            }
+            catch(Exception ex)
+            {
+                throw new ArgumentException("Unable to move file!!! Please try again");
+            }
+        }
         string IFileUploadService.ReadFileAsync(string filePath)
         {
             DocumentCore documentContent = DocumentCore.Load(filePath);
@@ -464,7 +478,44 @@ namespace SMP.BLL.Services.FileUploadService
                 var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AdmissionCredentialsPath}/{fileName}";
                 return url;
             }
-            throw new ArgumentException("Invalid Principal Stamp");
+            throw new ArgumentException("Error uploading admission credentials");
+        }
+        public string UploadAdmissionPassport(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return "";
+            }
+            int maxFileSize = 1024 * 1024 / 2;
+            var fileSize = file.Length;
+
+            if (fileSize > maxFileSize)
+            {
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+            }
+
+            if (file.FileName.EndsWith(".jpg")
+                        || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
+                        || file.FileName.EndsWith(".jpeg") || file.FileName.EndsWith(".png"))
+            {
+                string extension = Path.GetExtension(file.FileName);
+                string fileName = Guid.NewGuid().ToString() + extension;
+
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AdmissionPassportPath, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    fileStream.Position = 0;
+                    file.CopyTo(fileStream);
+                    fileStream.Flush();
+                    fileStream.Close();
+                }
+
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AdmissionPassportPath}/{fileName}";
+                return url;
+            }
+            throw new ArgumentException("Error uploading admission passport");
         }
     } 
 }
