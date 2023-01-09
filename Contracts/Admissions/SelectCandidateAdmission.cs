@@ -22,11 +22,13 @@ namespace SMP.Contracts.Admissions
         public string StateOfOrigin { get; set; }
         public string LGAOfOrigin { get; set; }
         public string Credentials { get; set; }
+        public string Photo { get; set; }
         public string ParentName { get; set; }
         public string ParentRelationship { get; set; }
         public string ParentPhoneNumber { get; set; }
         public string ParentEmail { get; set; }
         public int CandidateAdmissionStatus { get; set; }
+        public int ExamStatus { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
         public SelectCandidateAdmission(Admission admission, ClassLookup classLookup)
@@ -42,11 +44,13 @@ namespace SMP.Contracts.Admissions
             StateOfOrigin = admission.StateOfOrigin;
             LGAOfOrigin = admission.LGAOfOrigin;
             Credentials = admission.Credentials;
+            Photo = admission.Photo; 
             ParentName = admission.ParentName;
             ParentRelationship = admission.ParentRelationship;
             ParentPhoneNumber = admission.PhoneNumber;
             ParentEmail = admission.AdmissionNotification.ParentEmail;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
+            ExamStatus = admission.ExaminationStatus;
             ClassId = admission.ClassId.ToString();
             ClassName = classLookup.Name;
         }

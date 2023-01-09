@@ -1,15 +1,26 @@
 ﻿using BLL;
 using BLL.AuthenticationServices;
+using BLL.Constants;
 using BLL.Filter;
 using BLL.Utilities;
 using BLL.Wrappers;
+using Contracts.Options;
 using DAL;
+using DAL.Authentication;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Org.BouncyCastle.Asn1.IsisMtt.X509;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.WebRequestServices;
@@ -19,10 +30,14 @@ using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
 using SMP.Contracts.Routes;
+using SMP.DAL.Migrations;
+using SMP.DAL.Models.Admission;
+using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,22 +50,271 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IUserService userService;
         private readonly IParentService parentService;
         private readonly IWebRequestService webRequestService;
+        private readonly UserManager<AppUser> manager;
+        private readonly IWebHostEnvironment environment;
+        private readonly IFileUploadService fileUploadService;
+        private readonly IHttpContextAccessor accessor;
         private readonly FwsConfigSettings fwsOptions;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options, 
-            IParentService parentService, IWebRequestService webRequestService)
+            IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment, 
+            IFileUploadService fileUploadService, IHttpContextAccessor httpContext)
         {
             this.context = context;
             this.paginationService = paginationService;
             this.userService = userService;
             this.parentService = parentService;
             this.webRequestService = webRequestService;
+            this.manager = manager;
+            this.environment = environment;
+            this.fileUploadService = fileUploadService;
+            this.accessor = httpContext;
             fwsOptions = options.Value;
         }
 
-        public async Task<APIResponse<bool>> EnrollCandidate(string admissionId)
+        public async Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request)
         {
-            throw new NotImplementedException();
+            var res = new APIResponse<bool>();
+            using (var transaction = await context.Database.BeginTransactionAsync())
+            {
+
+                try
+                {
+                    var admission = await context.Admissions.Where(x => x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true)
+                                    .Include(x => x.AdmissionNotification).FirstOrDefaultAsync();
+
+                    if(admission == null)
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = "AdmissionId doesn't exist!";
+                    }
+                    if (admission.CandidateAdmissionStatus == (int)CandidateAdmissionStatus.Admitted)
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = "Candidate already admitted";
+                    }
+
+                    var student = new StudentContactCommand
+                    {
+                        FirstName = admission.Firstname,
+                        LastName = admission.Lastname,
+                        MiddleName = admission.Middlename,
+                        Phone = admission.PhoneNumber,
+                        DOB = admission.DateOfBirth.ToString(),
+                        Email = admission.Email,
+                        HomePhone = admission.PhoneNumber,
+                        EmergencyPhone = admission.ParentPhoneNumber,
+                        ParentOrGuardianName = admission.ParentName,
+                        ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
+                        HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
+                        CityId = admission.StateOfOrigin,
+                        StateId = admission.StateOfOrigin,
+                        CountryId = admission.CountryOfOrigin,
+                        SessionClassId = request.SessionClassId,
+                        Photo = admission.Photo,
+                    };
+
+                    var result = RegistrationNumber.GenerateForStudents();
+
+                    var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    var item = new StudentContact
+                    {
+                        CityId = student.CityId,
+                        CountryId = student.CountryId,
+                        EmergencyPhone = student.EmergencyPhone,
+                        HomeAddress = student.HomeAddress,
+                        ParentId = parentId,
+                        HomePhone = student.HomePhone,
+                        StateId = student.StateId,
+                        UserId = userId,
+                        ZipCode = student.ZipCode,
+                        RegistrationNumber = result.Keys.First(),
+                        StudentContactId = Guid.NewGuid(),
+                        Status = (int)StudentStatus.Active,
+                        SessionClassId = Guid.Parse(student.SessionClassId),
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled
+                    };
+                    context.StudentContact.Add(item);
+
+                    admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
+
+                    await context.SaveChangesAsync();
+                    await CreateStudentSessionClassHistoryAsync(item);
+                    
+                    await transaction.CommitAsync();
+                    res.Message.FriendlyMessage = Messages.Created;
+                    res.Result = true;
+                    res.IsSuccessful = true;
+                    return res;
+                }
+                catch (DuplicateNameException ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = ex.Message;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    return res;
+                }
+
+
+                finally { await transaction.DisposeAsync(); }
+            }
+        }
+        public async Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request)
+        {
+            var res = new APIResponse<bool>();
+         
+            try
+            {
+                var admissions = context.Admissions.Where(x=> request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
+                                .Include(x=>x.AdmissionNotification);
+
+                if (admissions == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "AdmissionIds doesn't exist!";
+                }
+
+                var studentContactList = new List<StudentContactCommand>();
+
+                foreach(var admission in admissions)
+                {
+                    var student = new StudentContactCommand
+                    {
+                        FirstName = admission.Firstname,
+                        LastName = admission.Lastname,
+                        MiddleName = admission.Middlename,
+                        Phone = admission.PhoneNumber,
+                        DOB = admission.DateOfBirth.ToString(),
+                        Email = admission.Email,
+                        HomePhone = admission.PhoneNumber,
+                        EmergencyPhone = admission.ParentPhoneNumber,
+                        ParentOrGuardianName = admission.ParentName,
+                        ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
+                        HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
+                        CityId = admission.StateOfOrigin,
+                        StateId = admission.StateOfOrigin,
+                        CountryId = admission.CountryOfOrigin,
+                        SessionClassId = request.SessionClassId,
+                        Photo = admission.Photo,
+                    };
+                    studentContactList.Add(student);
+
+                    admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
+                }
+
+                foreach(var student in studentContactList)
+                {
+                    var result = RegistrationNumber.GenerateForStudents();
+
+                    var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    var item = new StudentContact
+                    {
+                        CityId = student.CityId,
+                        CountryId = student.CountryId,
+                        EmergencyPhone = student.EmergencyPhone,
+                        HomeAddress = student.HomeAddress,
+                        ParentId = parentId,
+                        HomePhone = student.HomePhone,
+                        StateId = student.StateId,
+                        UserId = userId,
+                        ZipCode = student.ZipCode,
+                        RegistrationNumber = result.Keys.First(),
+                        StudentContactId = Guid.NewGuid(),
+                        Status = (int)StudentStatus.Active,
+                        SessionClassId = Guid.Parse(student.SessionClassId),
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled
+                    };
+                    context.StudentContact.Add(item);
+
+                    await context.SaveChangesAsync();
+
+                    await CreateStudentSessionClassHistoryAsync(item);
+                }
+
+                res.Message.FriendlyMessage = Messages.Created;
+                res.Result = true;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = "Error Occurred trying to enroll student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+        }
+        async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
+        {
+            var history = new StudentSessionClassHistory();
+            history.SessionClassId = student.SessionClassId;
+            history.StudentContactId = student.StudentContactId;
+            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive)?.SessionTermId;
+            await context.StudentSessionClassHistory.AddAsync(history);
+            await context.SaveChangesAsync();
+        }
+        async Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat, string photoPath)
+        {
+            try
+            {
+                var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
+
+                string admissionFileName = photoPath.Split("AdmissionPassport/")[1];
+
+                var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", admissionFileName);
+
+                string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "ProfileImage", admissionFileName);
+
+                fileUploadService.CopyFile(admissionPath, profilePhotoPath);
+
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/ProfileImage/{admissionFileName}";
+
+                var user = new AppUser
+                {
+                    UserName = email,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    Email = email,
+                    UserType = (int)UserTypes.Student,
+                    LastName = student.LastName,
+                    DOB = student.DOB,
+                    FirstName = student.FirstName,
+                    MiddleName = student.MiddleName,
+                    Phone = student.Phone,
+                    Photo = photoUrl
+
+                };
+                var result = await manager.CreateAsync(user, regNoFormat);
+                if (!result.Succeeded)
+                {
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                    }
+                    else
+                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                }
+                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
+                if (!addTorole.Succeeded)
+                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+
+                return user.Id;
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
         public async Task<APIResponse<bool>> ExportCandidatesToCbt(ExportCandidateToCbt request)
         {
@@ -120,11 +384,10 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectAdmission>();
             try
             {
-                int examStatus = (int)AdmissionExamStatus.Pending; //Change this to get examStatus from CBT result
                 var result = await context.Admissions
                     .Where(c => c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId))
                     .Include(c => c.AdmissionNotification)
-                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), examStatus)).FirstOrDefaultAsync();
+                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)
                 {
@@ -148,20 +411,52 @@ namespace SMP.BLL.Services.AdmissionServices
             }
         }
 
-        public async Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter)
+        public async Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter, string classId, string examStatus)
         {
             var res = new APIResponse<PagedResponse<List<SelectAdmission>>>();
             try
             {
-                var query = context.Admissions
+                if(string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                {
+                    var query = context.Admissions
                     .Where(c => c.Deleted != true)
                     .Include(c => c.AdmissionNotification)
                     .OrderByDescending(c => c.CreatedOn);
-
-                int examStatus = (int)AdmissionExamStatus.Pending; //Change this to get examStatus from CBT result
-                var totalRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), examStatus)).ToListAsync();
-                res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
+                
+                if(!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                {
+                    var query = context.Admissions
+                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
+                   .Include(c => c.AdmissionNotification)
+                   .OrderByDescending(c => c.CreatedOn);
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
+                if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                {
+                    var query = context.Admissions
+                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId))
+                   .Include(c => c.AdmissionNotification)
+                   .OrderByDescending(c => c.CreatedOn);
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
+                if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                {
+                    var query = context.Admissions
+                   .Where(c => c.Deleted != true && c.ExaminationStatus == int.Parse(examStatus))
+                   .Include(c => c.AdmissionNotification)
+                   .OrderByDescending(c => c.CreatedOn);
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.GetSuccess;

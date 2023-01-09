@@ -15,7 +15,9 @@ namespace SMP.BLL.Services.FileUploadService
         string UpdateFeedbackFiles(string filePath);
         string RetunFileContent(IFormFile file);
         void DeleteFile(string filePath);
+        void CopyFile(string oldFilePath, string newFilePath);
         string ReadFileAsync(string filePath);
         string UploadAdmissionCredentials(IFormFile file);
+        string UploadAdmissionPassport(IFormFile file);
     }
 }
