@@ -34,7 +34,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
             var clientDetails = new Dictionary<string, string>();
-            clientDetails.Add("userId", fwsClientInformation.Result.ClientId);
+            clientDetails.Add("userId", fwsClientInformation.Result.UserId);
             clientDetails.Add("smsClientId", "");
             clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
 
