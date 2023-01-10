@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
-using SMP.Contracts.LookupModels;
 using SMP.Contracts.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -17,9 +14,10 @@ namespace SMP.BLL.Services.WebRequestServices
     {
         private readonly HttpClient client;
         private readonly FwsConfigSettings fwsOptions;
-        public WebRequestService(IHttpClientFactory clientFactory, IOptions<FwsConfigSettings> options)
+        public WebRequestService(HttpClient httpClient, IOptions<FwsConfigSettings> options)
         {
-            client = clientFactory.CreateClient();
+            //client = clientFactory.CreateClient();
+            client = httpClient;
             fwsOptions = options.Value;
         }
    
@@ -32,11 +30,11 @@ namespace SMP.BLL.Services.WebRequestServices
             {
                 try
                 {
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    client.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactoryExample");
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    client.BaseAddress = new Uri(fwsOptions.FwsBaseUrl);
                     if (credentials is not null)
                     {
                         foreach (var pair in credentials)
@@ -44,13 +42,6 @@ namespace SMP.BLL.Services.WebRequestServices
                             client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
                         }
                     }
-
-                    TimeSpan timeOut = TimeSpan.FromSeconds(1000000);
-                    if(client.Timeout != timeOut)
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(1000000);
-                    }
-
                     var serializeOptions = new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -60,13 +51,11 @@ namespace SMP.BLL.Services.WebRequestServices
                     if (response.IsSuccessStatusCode)
                     {
                         var result = await response.Content.ReadFromJsonAsync<T>();
-                        client.CancelPendingRequests();
                         return result;
                     }
                     else
                     {
                         var result = await response.Content.ReadAsStringAsync();
-                        client.CancelPendingRequests();
                         return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
                     }
                 }
@@ -99,12 +88,10 @@ namespace SMP.BLL.Services.WebRequestServices
             {
                 try
                 {
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    client.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactoryExample");
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
                     client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
-                    client.Timeout = TimeSpan.FromSeconds(1000000);
-
                     if (credentials is not null)
                     {
                         foreach (var pair in credentials)

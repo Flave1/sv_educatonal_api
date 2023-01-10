@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace SMP.Contracts.Admissions
 {
     public class SelectAdmission
@@ -34,7 +33,7 @@ namespace SMP.Contracts.Admissions
         public SelectAdmission(Admission admission, ClassLookup classLookup)
         {
             AdmissionId = admission.AdmissionId.ToString();
-            Firstname  = admission.Firstname;
+            Firstname = admission.Firstname;
             Middlename = !string.IsNullOrEmpty(admission.Middlename) ? admission.Middlename : "";
             Lastname = admission.Lastname;
             Email = admission.Email;

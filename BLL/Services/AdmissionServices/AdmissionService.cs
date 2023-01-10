@@ -51,6 +51,7 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IFileUploadService fileUploadService;
         private readonly IHttpContextAccessor accessor;
         private readonly FwsConfigSettings fwsOptions;
+        private readonly IParentService parentService;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options, 
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment, 
@@ -64,6 +65,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.fileUploadService = fileUploadService;
             this.accessor = httpContext;
             fwsOptions = options.Value;
+            this.parentService = parentService;
         }
 
         public async Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request)

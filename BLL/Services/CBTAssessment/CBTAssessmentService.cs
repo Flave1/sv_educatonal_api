@@ -38,13 +38,14 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             clientDetails.Add("smsClientId", "");
             clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
 
+
             res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}", clientDetails);
             if (res.Result == null)
             {
                 res.Message.FriendlyMessage = res.Message.FriendlyMessage;
                 return res;
             }
-
+            res.IsSuccessful = true;
             return res;
 
         }

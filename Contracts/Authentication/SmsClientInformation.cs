@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SMP.Contracts.PinManagement;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SMP.Contracts.PinManagement;
 
 namespace SMP.Contracts.Authentication
 {
@@ -24,5 +18,7 @@ namespace SMP.Contracts.Authentication
         public string IpAddress { get; set; }
         public string SmsapI_KEY { get; set; }
         public string BaseUrlAppendix { get; set; }
+        public string UserName { get; set; }
+        public string PasswordHash { get; set; }
     }
 }
