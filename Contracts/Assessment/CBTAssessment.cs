@@ -15,7 +15,7 @@ namespace SMP.Contracts.Assessment
         public string CandidateCategory_Class { get; set; }
         public int ExamScore { get; set; }
         public string CandidateExaminationId { get; set; }
-        public TimeSpan Duration { get; set; }
+        public string Duration { get; set; }
         public string StartTime { get; set; }
         public string EndTime { get; set; }
         public string Instruction { get; set; }
