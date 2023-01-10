@@ -182,28 +182,31 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 foreach(var admission in admissions)
                 {
-                    var student = new StudentContactCommand
+                    if (admission.CandidateAdmissionStatus != (int)CandidateAdmissionStatus.Admitted)
                     {
-                        FirstName = admission.Firstname,
-                        LastName = admission.Lastname,
-                        MiddleName = admission.Middlename,
-                        Phone = admission.PhoneNumber,
-                        DOB = admission.DateOfBirth.ToString(),
-                        Email = admission.Email,
-                        HomePhone = admission.PhoneNumber,
-                        EmergencyPhone = admission.ParentPhoneNumber,
-                        ParentOrGuardianName = admission.ParentName,
-                        ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
-                        HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
-                        CityId = admission.StateOfOrigin,
-                        StateId = admission.StateOfOrigin,
-                        CountryId = admission.CountryOfOrigin,
-                        SessionClassId = request.SessionClassId,
-                        Photo = admission.Photo,
-                    };
-                    studentContactList.Add(student);
+                        var student = new StudentContactCommand
+                        {
+                            FirstName = admission.Firstname,
+                            LastName = admission.Lastname,
+                            MiddleName = admission.Middlename,
+                            Phone = admission.PhoneNumber,
+                            DOB = admission.DateOfBirth.ToString(),
+                            Email = admission.Email,
+                            HomePhone = admission.PhoneNumber,
+                            EmergencyPhone = admission.ParentPhoneNumber,
+                            ParentOrGuardianName = admission.ParentName,
+                            ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
+                            HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
+                            CityId = admission.StateOfOrigin,
+                            StateId = admission.StateOfOrigin,
+                            CountryId = admission.CountryOfOrigin,
+                            SessionClassId = request.SessionClassId,
+                            Photo = admission.Photo,
+                        };
+                        studentContactList.Add(student);
 
-                    admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
+                        admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
+                    } 
                 }
 
                 foreach(var student in studentContactList)
@@ -341,14 +344,14 @@ namespace SMP.BLL.Services.AdmissionServices
                     ApiKey = fwsOptions.Apikey,
                     ClientId = fwsOptions.ClientId
                 };
-                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
                 var clientDetails = new Dictionary<string, string>();
                 clientDetails.Add("userId", fwsRequest.Result.ClientId);
                 clientDetails.Add("smsClientId", "");
                 clientDetails.Add("productBaseurlSuffix", fwsRequest.Result.BaseUrlAppendix);
 
-                var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{fwsOptions.FwsBaseUrl}{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
+                var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
                 if (result.Result == null)
                 {
                     res.Message.FriendlyMessage = result.Message.FriendlyMessage;
