@@ -10,5 +10,6 @@ namespace SMP.Contracts.Routes
     {
         public const string createCbtCandidate = "cbt/client/cbt/api/v1/admission/create-candidates";
         public const string getClassCBTs = "cbt/client/cbt/api/v1/smpexams/get-all-examination/by-sessionclass";
+        public const string getCbtResult = "cbt/client/cbt/api/v1/admission/get-candidates-result?candidateCategoryId=";
     }
 }
