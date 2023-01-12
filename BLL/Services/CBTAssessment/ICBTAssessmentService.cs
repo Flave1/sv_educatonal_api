@@ -9,5 +9,6 @@ namespace SMP.BLL.Services.CBTAssessmentServices
     public interface ICBTAssessmentService
     {
         Task<APIResponse<PagedResponse<List<CBTExamination>>>> GetCBTAssessmentsAsync(string sessionClassId, int pageNumber);
+        Task<APIResponse<bool>> IncludeCBTAssessmentToScoreEntryAsAssessment(string sessionClassId, string subjectId, string studentRegNos, bool Include, string examId);
     }
 }

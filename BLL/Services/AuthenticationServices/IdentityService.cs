@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.WebRequestServices;
+using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.Routes;
@@ -458,6 +459,38 @@ namespace BLL.AuthenticationServices
             {
                 throw ex;
             }
+        }
+
+        async Task<APIResponse<CBTLoginDetails>> IIdentityService.GetCBTTokenAsync()
+        {
+
+            var res = new APIResponse<CBTLoginDetails>();
+            var apiCredentials = new SmsClientInformationRequest
+            {
+                ApiKey = fwsOptions.Apikey,
+                ClientId = fwsOptions.ClientId
+            };
+            var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+
+            var clientDetails = new Dictionary<string, string>();
+            clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+            clientDetails.Add("smsClientId", "");
+            clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
+
+            var req = new LoginCommandByHash
+            {
+                PasswordHash = fwsClientInformation.Result.PasswordHash
+            };
+
+            res = await webRequestService.PostAsync<APIResponse<CBTLoginDetails>, LoginCommandByHash>($"{cbtRoutes.getToken}", req, clientDetails);
+            if (res.Result == null)
+            {
+                res.Message.FriendlyMessage = res.Message.FriendlyMessage;
+                return res;
+            }
+            res.IsSuccessful = true;
+            return res;
+
         }
     }
 }

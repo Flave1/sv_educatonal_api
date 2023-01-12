@@ -63,6 +63,23 @@ namespace Contracts.Authentication
     {
         public AuthenticationResult AuthResult { get; set; } = new AuthenticationResult(); 
     }
+
+    public class CBTLoginDetails
+    {
+        public AuthenticationResult AuthResult { get; set; }
+        public UserDetails UserDetails { get; set; }
+        public string ClientUrl { get; set; }
+    }
+    public class UserDetails
+    {
+        public string UserId { get; set; }
+        public string Email { get; set; }
+        public int UserType { get; set; }
+    }
+    public class LoginCommandByHash
+    {
+        public string PasswordHash { get; set; }
+    }
 }
 
    

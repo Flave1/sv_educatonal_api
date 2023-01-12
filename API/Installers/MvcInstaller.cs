@@ -28,6 +28,7 @@ using SMP.BLL.Utilities;
 using SMP.BLL.Services.AdmissionServices;
 using System.Net.Http;
 using System.Net;
+using SMP.DAL.Models;
 
 namespace API.Installers
 {
@@ -83,6 +84,7 @@ namespace API.Installers
             services.AddScoped<IAdmissionSettingService, AdmissionSettingService>();
             services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
+            services.AddSingleton<FwsClientInformation>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
@@ -159,27 +161,7 @@ namespace API.Installers
 
             });
 
-            //services.AddHttpClient<IWebRequestService, WebRequestService>()
-            //    .ConfigureHttpClient((serviceProvider, httpClient) =>
-            //    {
-            //        var clientConfig = serviceProvider.GetRequiredService<IWebRequestService>();
-            //        httpClient.BaseAddress = new Uri(configuration.GetValue<string>("FwsConfigSettings:FwsBaseUrl"));
-            //        httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            //        httpClient.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactoryExample");
-            //        httpClient.DefaultRequestHeaders.Add("Apikey", configuration.GetValue<string>("FwsConfigSettings:Apikey"));
-            //        httpClient.DefaultRequestHeaders.Add("ClientId", configuration.GetValue<string>("FwsConfigSettings:ClientId"));
-            //        httpClient.Timeout = TimeSpan.FromSeconds(1000000);
-            //        httpClient.DefaultRequestHeaders.Clear();
-            //    });
-            //.SetHandlerLifetime(TimeSpan.FromMinutes(5))
-            //.ConfigurePrimaryHttpMessageHandler(x =>
-            //    new HttpClientHandler
-            //    {
-            //        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-            //        UseCookies = false,
-            //        AllowAutoRedirect = false,
-            //        UseDefaultCredentials = true,
-            //    });
+           
 
             services.AddSwaggerGen(x =>
             {

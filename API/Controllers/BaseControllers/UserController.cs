@@ -138,6 +138,16 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [AllowAnonymous]
+        [HttpPost("get/cbt-token")]
+        public async Task<ActionResult> GetCBTTokenAsync()
+        {
+            var response = await identityService.GetCBTTokenAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
         #endregion
 
 

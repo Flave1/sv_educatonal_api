@@ -159,7 +159,7 @@ namespace BLL.ClassServices
             await resultsService.CreateClassScoreEntryAsync(sessionClass, request.SubjectList.Select(x => x.SubjectId).Select(Guid.Parse).ToArray());
 
             res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "Session class created successfully";
+            res.Message.FriendlyMessage = "Updated successfully";
             return res;
         }
 
