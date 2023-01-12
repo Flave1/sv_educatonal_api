@@ -145,7 +145,7 @@ namespace BLL.ClassServices
 
             if (!request.SubjectList.Any())
             {
-                res.Message.FriendlyMessage = "No Subjects found";
+                res.Message.FriendlyMessage = "No Subjects Selected";
                 return res;
             }
             if (!request.SubjectList.All(e => !string.IsNullOrEmpty(e.SubjectId) && !string.IsNullOrEmpty(e.SubjectTeacherId)))
@@ -154,7 +154,7 @@ namespace BLL.ClassServices
                 return res;
             }
 
-            await CreateClassSubjectsAsync(request.SubjectList, request.SessionClassId);
+            await CreateUpdateClassSubjectsAsync(request.SubjectList, request.SessionClassId);
 
             await resultsService.CreateClassScoreEntryAsync(sessionClass, request.SubjectList.Select(x => x.SubjectId).Select(Guid.Parse).ToArray());
 
@@ -162,91 +162,6 @@ namespace BLL.ClassServices
             res.Message.FriendlyMessage = "Updated successfully";
             return res;
         }
-
-
-        //async Task<APIResponse<SessionClassCommand>> IClassService.UpdateSessionClassAsync(SessionClassCommand sClass)
-        //{
-        //    var res = new APIResponse<SessionClassCommand>();
-
-        //    try
-        //    {
-
-        //        if (context.SessionClass
-        //          .Include(x => x.Session)
-        //          .Any(ss => ss.Deleted == false && ss.ClassId == Guid.Parse(sClass.ClassId)
-        //          && ss.SessionClassId != Guid.Parse(sClass.SessionClassId)
-        //          && ss.SessionId == Guid.Parse(sClass.SessionId)))
-        //        {
-        //            res.Message.FriendlyMessage = "This class has already been added to this session";
-        //            return res;
-        //        }
-
-        //        var sessionClass = context.SessionClass.FirstOrDefault(ss => ss.SessionClassId == Guid.Parse(sClass.SessionClassId) && ss.Deleted == false);
-
-        //        if (sessionClass == null)
-        //        {
-        //            res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-        //            return res;
-        //        }
-
-        //        if (!sClass.ClassSubjects.Any())
-        //        {
-        //            res.Message.FriendlyMessage = "No Subjects found";
-        //            return res;
-        //        }
-        //        if (!sClass.ClassSubjects.All(e => !string.IsNullOrEmpty(e.SubjectId) && !string.IsNullOrEmpty(e.SubjectTeacherId)))
-        //        {
-        //            res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
-        //            return res;
-        //        }
-
-        //        using (var transaction = await context.Database.BeginTransactionAsync())
-        //        {
-        //            try
-        //            {
-        //                sessionClass.FormTeacherId = Guid.Parse(sClass.FormTeacherId);
-        //                sessionClass.InSession = sClass.InSession;
-        //                sessionClass.ExamScore = sClass.ExamScore;
-        //                sessionClass.AssessmentScore = sClass.AssessmentScore;
-        //                sessionClass.PassMark = sClass.PassMark;
-        //                await context.SaveChangesAsync();
-
-        //                await DeleteDeselectedClassSubjectsOnAsync(sessionClass.SessionClassId, sClass.ClassSubjects);
-
-        //                await CreateUpdateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
-
-        //                await resultsService.CreateClassScoreEntryAsync(sessionClass);
-
-        //                await transaction.CommitAsync();
-        //                res.IsSuccessful = true;
-        //                res.Message.FriendlyMessage = "Session class updated successfully";
-        //                return res;
-        //            }
-        //            //DbUpdateException
-        //            catch (ArgumentException ex)
-        //            {
-        //                await transaction.RollbackAsync();
-        //                res.Message.FriendlyMessage = ex.Message;
-        //                return res;
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                await transaction.RollbackAsync();
-        //                res.Message.FriendlyMessage = Messages.FriendlyException;
-        //                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-        //                return res;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        res.Message.FriendlyMessage = Messages.FriendlyException;
-        //        res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-        //        return res;
-        //    }
-
-           
-        //}
 
         async Task<APIResponse<SessionClassCommand>> IClassService.UpdateSessionClass2Async(SessionClassCommand2 request)
         {
@@ -295,10 +210,14 @@ namespace BLL.ClassServices
         }
 
 
-        private async Task CreateUpdateClassSubjectsAsync(ClassSubjects[] ClassSubjects, Guid SessionClassId)
+        private async Task CreateUpdateClassSubjectsAsync(ClassSubjects2[] ClassSubjects, Guid SessionClassId)
         {
             try
             {
+                Guid[] selectedClassSubjectIds = ClassSubjects.Select(x => x.SubjectId).Select(Guid.Parse).ToArray();
+                var deselectedSubjects = context.SessionClassSubject.Where(x => !selectedClassSubjectIds.Contains(x.SubjectId) && x.SessionClassId == SessionClassId).ToList();
+                if (deselectedSubjects.Any()) context.RemoveRange(deselectedSubjects);
+
                 foreach (var subject in ClassSubjects)
                 {
                     var sub = context.SessionClassSubject.FirstOrDefault(x => x.SubjectId == Guid.Parse(subject.SubjectId) && x.SessionClassId == SessionClassId);
@@ -501,16 +420,45 @@ namespace BLL.ClassServices
             var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false)
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
-                .Include(rr => rr.Students)
-                .Include(r => r.ClassRegisters)
-                .Include(rr => rr.SessionClassSubjects).ThenInclude(sub => sub.Subject)
-                .Include(rr => rr.SessionClassSubjects).ThenInclude(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
+                //.Include(rr => rr.Students)
+                //.Include(r => r.ClassRegisters)
+                //.Include(rr => rr.SessionClassSubjects).ThenInclude(sub => sub.Subject)
+                //.Include(rr => rr.SessionClassSubjects).ThenInclude(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
                 .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
             res.Result = result;
             return res;
         }
+
+        async Task<APIResponse<GetSessionClass>> IClassService.GetSingleSessionClassesWithoutSubjectsAndStudentsAsync(Guid sessionClassId)
+        {
+            var res = new APIResponse<GetSessionClass>();
+
+            var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false)
+                .Include(rr => rr.Class)
+                .Include(rr => rr.Session)
+                .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
+
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
+        async Task<APIResponse<List<ClassSubjects>>> IClassService.GetSessionClassSubjects(Guid sessionClassId)
+        {
+            var res = new APIResponse<List<ClassSubjects>>();
+
+            var result = await context.SessionClassSubject.Where(r =>  sessionClassId == r.SessionClassId && r.Deleted == false)
+                .Include(sub => sub.Subject)
+                .Include(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
+                .Select(g => new ClassSubjects(g)).ToListAsync();
+
+            res.IsSuccessful = true;
+            res.Result = result;
+            return res;
+        }
+
 
         async Task<APIResponse<List<GetStudentContacts>>> IClassService.GetClassStudentsClassesAsync(Guid sessionClassId)
         {

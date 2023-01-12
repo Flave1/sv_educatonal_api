@@ -143,6 +143,21 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-single/session-classes/without-subs-students/{sessionClassId}")]
+        public async Task<IActionResult> GetSingleSessionClassesWithoutSubjectsAndStudentsAsync(string sessionClassId)
+        {
+            var response = await service.GetSingleSessionClassesWithoutSubjectsAndStudentsAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
+        [HttpGet("session-classes/subjetcs/{sessionClassId}")]
+        public async Task<IActionResult> GetSessionClassSubjects(string sessionClassId)
+        {
+            var response = await service.GetSessionClassSubjects(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+        
+
         [HttpGet("get-single/session-classes/{sessionClassId}")]
         public async Task<IActionResult> GetSingleSessionClassAsync(string sessionClassId)
         {

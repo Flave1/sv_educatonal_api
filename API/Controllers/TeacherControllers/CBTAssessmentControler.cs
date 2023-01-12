@@ -33,5 +33,13 @@ namespace SMP.API.Controllers.TeacherControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpPost("include/examintion")]
+        public async Task<IActionResult> InCludeAsExamination([FromBody] InCludeAssessmentRequest req)
+        {
+            var response = await service.IncludeCBTAssessmentToScoreEntryAsExamination(req.sessionClassId, req.subjectId, req.studentRegNos, req.Include, req.examId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }
