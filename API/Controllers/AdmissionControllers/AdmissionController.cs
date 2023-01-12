@@ -68,13 +68,5 @@ namespace SMP.API.Controllers.AdmissionControllers
                 return Ok(response);
             return BadRequest(response);
         }
-        [HttpGet("import-result")]
-        public async Task<IActionResult> ImportResult(string classId)
-        {
-            var response = await service.ImportCbtResult(classId);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
-        }
     }
 }
