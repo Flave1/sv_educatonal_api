@@ -34,4 +34,22 @@ namespace SMP.Contracts.Assessment
         public string Percentage { get; set; }
         
     }
+
+    public class InCludeAssessmentRequest
+    {
+        public string sessionClassId { get; set; }
+        public string subjectId { get; set; }
+        public string studentRegNos { get; set; }
+        public bool Include { get; set; }
+        public string examId { get; set; }
+    }
+
+    public class SelectResult
+    {
+        public string CandidateName { get; set; }
+        public string CandidateId { get; set; }
+        public string ExaminationName { get; set; }
+        public int TotalScore { get; set; }
+        public string Status { get; set; }
+    }
 }

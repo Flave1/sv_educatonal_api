@@ -11,5 +11,6 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<LoginSuccessResponse>> LoginAfterPasswordIsChangedAsync(AppUser userAccount);
         Task<APIResponse<MobileLoginSuccessResponse>> MobileLoginAsync(LoginCommand loginRequest);
         Task<APIResponse<List<string>>> GetMobilePermissionsAsync(string userId);
+        Task<APIResponse<CBTLoginDetails>> GetCBTTokenAsync();
     }
 }
