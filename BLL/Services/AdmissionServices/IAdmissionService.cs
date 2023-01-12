@@ -17,6 +17,5 @@ namespace SMP.BLL.Services.AdmissionServices
         public Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request);
         public Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request);
         public Task<APIResponse<bool>> ExportCandidatesToCbt(ExportCandidateToCbt request);
-        public Task<APIResponse<bool>> ImportCbtResult(string classId);
     }
 }
