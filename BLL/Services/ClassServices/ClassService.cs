@@ -219,6 +219,7 @@ namespace BLL.ClassServices
                 Guid[] selectedClassSubjectIds = ClassSubjects.Select(x => x.SubjectId).Select(Guid.Parse).ToArray();
                 var deselectedSubjects = context.SessionClassSubject.Where(x => !selectedClassSubjectIds.Contains(x.SubjectId) && x.SessionClassId == SessionClassId).ToList();
                 if (deselectedSubjects.Any()) context.RemoveRange(deselectedSubjects);
+                context.SaveChanges();
 
                 foreach (var subject in ClassSubjects)
                 {
