@@ -29,6 +29,7 @@ using SMP.BLL.Services.AdmissionServices;
 using System.Net.Http;
 using System.Net;
 using SMP.DAL.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace API.Installers
 {

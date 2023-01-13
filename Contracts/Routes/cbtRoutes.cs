@@ -13,5 +13,6 @@ namespace SMP.Contracts.Routes
         public const string getClassCBTs = RouteName + "cbt/api/v1/smpexams/get-all-examination/by-sessionclass";
         public const string getToken = RouteName + "cbt/api/v1/smpauth/login/by-hash";
         public const string studentResult = RouteName + "cbt/api/v1/smpexams/get-result";
+        public const string getCbtResult = RouteName + "cbt/api/v1/admission/get-candidates-result";
     }
 }

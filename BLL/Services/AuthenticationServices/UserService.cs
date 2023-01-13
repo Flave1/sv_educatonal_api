@@ -21,6 +21,10 @@ using Microsoft.AspNetCore.Http;
 using SMP.BLL.Services.PinManagementService;
 using BLL.Utilities;
 using SMP.BLL.Utilities;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Microsoft.AspNet.SignalR;
+using SMP.Contracts.Authentication;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 
 namespace BLL.AuthenticationServices
 {
@@ -389,12 +393,12 @@ namespace BLL.AuthenticationServices
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
                 var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
-                await SendResetLinkToEmailToUserAsync(user, link);
+                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification");
             }
 
         }
 
-        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link)
+        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link, string subject)
         {
             var to = new List<EmailAddress>();
             var frm = new List<EmailAddress>();
@@ -404,7 +408,7 @@ namespace BLL.AuthenticationServices
             {
                 Content = $"Click  <a href='{link}'>here</a> to reset password",
                 SentBy = "Flavetechs",
-                Subject = "Account Verification",
+                Subject = subject,
                 ToAddresses = to,
                 FromAddresses = frm
             };
@@ -440,7 +444,7 @@ namespace BLL.AuthenticationServices
             frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
             var emMsg = new EmailMessage
             {
-                Content = $"Your password has been reset successfuly",
+                Content = $"Your password has been reset successfully",
                 SentBy = "Flavetechs",
                 Subject = "Account Reset",
                 ToAddresses = to,
@@ -578,5 +582,71 @@ namespace BLL.AuthenticationServices
             return res;
         }
 
+        public async Task<APIResponse<bool>> ForgotPassword(ForgotPassword request)
+        {
+            var res = new APIResponse<bool>();
+            try
+            {
+                var user = await manager.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Trim() == request.Email.ToLower().Trim() && x.Deleted != true);
+                if (user == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Account with this email address doesn't exists";
+                    return res;
+                }
+
+                var token = await manager.GeneratePasswordResetTokenAsync(user);
+                var link = schoolSettings.Url + "PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+
+                await SendResetLinkToEmailToUserAsync(user, link, "Password Reset");
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successful! Kindly click the link sent to your email to reset password.";
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<bool>> ResetPassword(ResetAccount request)
+        {
+            var res = new APIResponse<bool>();
+            try
+            {
+                var user = await manager.FindByIdAsync(request.UserId);
+                if (user == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Account doesn't exists";
+                    return res;
+                }
+
+                var resetPasswordResult = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
+                if (!resetPasswordResult.Succeeded)
+                {
+                    res.IsSuccessful = false    ;
+                    res.Message.FriendlyMessage = "Error occurred on password reset!! Please contact administrator.";
+                    return res;
+                }
+                await SendResetSuccessEmailToUserAsync(user);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successful";
+                return res;
+
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 }

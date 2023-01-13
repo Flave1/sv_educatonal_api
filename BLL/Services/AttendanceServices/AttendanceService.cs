@@ -40,7 +40,7 @@ namespace SMP.BLL.Services.AttendanceServices
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
-                RegisterLabel = $"ATTENDANCE AS AT {Tools.GetServerDate().ToString("dd-MM-yyy hh:mm")}",
+                RegisterLabel = $"ATTENDANCE AS AT {Tools.GetCurrentLocalDateTime().ToString("dd-MM-yyy hh:mm")}",
                 SessionTermId = termid
             };
 

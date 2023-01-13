@@ -115,12 +115,12 @@ namespace DAL
                 if (entry.State == EntityState.Added)
                 { 
                     entry.Entity.Deleted = false; 
-                    entry.Entity.CreatedOn = GetServerDate();
+                    entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
                 }
                 else
                 {
-                    entry.Entity.UpdatedOn = GetServerDate();
+                    entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
                 }
             }
@@ -135,12 +135,12 @@ namespace DAL
                 if (entry.State == EntityState.Added)
                 { 
                     entry.Entity.Deleted = false;   
-                    entry.Entity.CreatedOn = GetServerDate();
+                    entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
                 }
                 else
                 {
-                    entry.Entity.UpdatedOn = GetServerDate();
+                    entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
                 }
             }
@@ -150,6 +150,12 @@ namespace DAL
         private static DateTimeOffset GetServerDate()
         {
             return DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
+        }
+        private DateTime GetCurrentLocalDateTime()
+        {
+            DateTime serverTime = DateTime.Now;
+            DateTime localTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(serverTime, TimeZoneInfo.Local.Id, "W. Central Africa Standard Time");
+            return localTime;
         }
     }
 }

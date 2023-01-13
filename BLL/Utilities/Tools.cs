@@ -88,6 +88,12 @@ namespace SMP.BLL.Utilities
         {
             return DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
         }
-       
+        public static DateTime GetCurrentLocalDateTime()
+        {
+            DateTime serverTime = DateTime.Now;
+            DateTime localTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(serverTime, TimeZoneInfo.Local.Id, "W. Central Africa Standard Time");
+            return localTime;
+        }
+
     }
 }

@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SMP.BLL.Constants
+namespace SMP.Contracts.Authentication
 {
-    public enum AdmissionExamStatus
+    public class ForgotPassword
     {
-        Pending = 0,
-        Passed = 1,
-        Failed = 2,
+        public string Email { get; set; }
     }
 }
