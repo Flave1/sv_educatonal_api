@@ -8,16 +8,11 @@ using Contracts.Options;
 using DAL;
 using DAL.Authentication;
 using DAL.StudentInformation;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
-using Org.BouncyCastle.Asn1.IsisMtt.X509;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
@@ -28,13 +23,10 @@ using SMP.Contracts.Admissions;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
-using SMP.DAL.Migrations;
-using SMP.DAL.Models.Admission;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,8 +45,8 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly FwsConfigSettings fwsOptions;
         private readonly IParentService parentService;
 
-        public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options, 
-            IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment, 
+        public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
+            IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
             IFileUploadService fileUploadService, IHttpContextAccessor httpContext)
         {
             this.context = context;
@@ -79,7 +71,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     var admission = await context.Admissions.Where(x => x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true)
                                     .Include(x => x.AdmissionNotification).FirstOrDefaultAsync();
 
-                    if(admission == null)
+                    if (admission == null)
                     {
                         res.IsSuccessful = false;
                         res.Message.FriendlyMessage = "AdmissionId doesn't exist!";
@@ -137,7 +129,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                     await context.SaveChangesAsync();
                     await CreateStudentSessionClassHistoryAsync(item);
-                    
+
                     await transaction.CommitAsync();
                     res.Message.FriendlyMessage = Messages.Created;
                     res.Result = true;
@@ -166,11 +158,11 @@ namespace SMP.BLL.Services.AdmissionServices
         public async Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request)
         {
             var res = new APIResponse<bool>();
-         
+
             try
             {
-                var admissions = context.Admissions.Where(x=> request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
-                                .Include(x=>x.AdmissionNotification);
+                var admissions = context.Admissions.Where(x => request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
+                                .Include(x => x.AdmissionNotification);
 
                 if (admissions == null)
                 {
@@ -180,7 +172,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 var studentContactList = new List<StudentContactCommand>();
 
-                foreach(var admission in admissions)
+                foreach (var admission in admissions)
                 {
                     if (admission.CandidateAdmissionStatus != (int)CandidateAdmissionStatus.Admitted)
                     {
@@ -206,10 +198,10 @@ namespace SMP.BLL.Services.AdmissionServices
                         studentContactList.Add(student);
 
                         admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
-                    } 
+                    }
                 }
 
-                foreach(var student in studentContactList)
+                foreach (var student in studentContactList)
                 {
                     var result = RegistrationNumber.GenerateForStudents();
 
@@ -319,9 +311,9 @@ namespace SMP.BLL.Services.AdmissionServices
         {
             var res = new APIResponse<bool>();
             try
-            {  
+            {
                 var admission = context.Admissions.Where(x => x.Deleted != true && x.ClassId == Guid.Parse(request.ClassId));
-                if(!admission.Any())
+                if (!admission.Any())
                 {
                     res.Message.FriendlyMessage = "Ops! No Candidate available for export";
                     return res;
@@ -329,7 +321,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 var candidates = new CreateAdmissionCandidateCbt
                 {
                     CandidateCategory = request.CategoryName,
-                    AdmissionCandidateList = await admission.Select(x=> new AdmissionCandidateList
+                    AdmissionCandidateList = await admission.Select(x => new AdmissionCandidateList
                     {
                         FirstName = x.Firstname,
                         LastName = x.Lastname,
@@ -358,7 +350,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     return res;
                 }
 
-                foreach(var item in admission)
+                foreach (var item in admission)
                 {
                     item.CandidateCategory = result.Result;
                 }
@@ -369,7 +361,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
@@ -415,7 +407,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<PagedResponse<List<SelectAdmission>>>();
             try
             {
-                if(string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
                     .Where(c => c.Deleted != true)
@@ -425,8 +417,8 @@ namespace SMP.BLL.Services.AdmissionServices
                     var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
                     res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                 }
-                
-                if(!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+
+                if (!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
                    .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
@@ -505,13 +497,15 @@ namespace SMP.BLL.Services.AdmissionServices
                 foreach (var item in result.Result)
                 {
                     var candidate = await admissions.FirstOrDefaultAsync(x => x.Email.ToLower() == item.CandidateEmail.ToLower() && x.Deleted != true);
-
-                    if (item.Status.ToLower() == "passed")
-                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Passed;
-                    if (item.Status.ToLower() == "failed")
-                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Failed;
-                    if (item.Status.ToLower() == "not taken")
-                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.NotTaken;
+                    if (candidate != null)
+                    {
+                        if (item.Status.ToLower() == "passed")
+                            candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Passed;
+                        if (item.Status.ToLower() == "failed")
+                            candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Failed;
+                        if (item.Status.ToLower() == "not taken")
+                            candidate.ExaminationStatus = (int)AdmissionExaminationStatus.NotTaken;
+                    }
                 }
                 await context.SaveChangesAsync();
 
