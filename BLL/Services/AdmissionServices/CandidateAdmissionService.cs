@@ -5,9 +5,11 @@ using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Email;
 using DAL;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NLog.Filters;
@@ -20,6 +22,7 @@ using SMP.DAL.Models.Admission;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
@@ -37,10 +40,12 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IHttpContextAccessor accessor;
         private readonly IFileUploadService fileUpload;
         private readonly IPaginationService paginationService;
+        private readonly IWebHostEnvironment environment;
         private readonly EmailConfiguration emailConfiguration;
 
         public CandidateAdmissionService(DataContext context, IConfiguration config, IEmailService emailService, IOptions<EmailConfiguration> emailOptions,
-            IHttpContextAccessor accessor, IFileUploadService fileUpload, IPaginationService paginationService)
+            IHttpContextAccessor accessor, IFileUploadService fileUpload, IPaginationService paginationService,
+            IWebHostEnvironment environment)
         {
             this.context = context;
             this.config = config;
@@ -48,6 +53,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.accessor = accessor;
             this.fileUpload = fileUpload;
             this.paginationService = paginationService;
+            this.environment = environment;
             emailConfiguration = emailOptions.Value;
         }
 
@@ -164,7 +170,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     ParentPhoneNumber = request.ParentPhoneNumber,
                     CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Pending,
                     CandidateCategory = string.Empty,
-                    ExaminationStatus = (int)AdmissionExamStatus.Pending,
+                    ExaminationStatus = (int)AdmissionExaminationStatus.Pending,
                     ClassId = Guid.Parse(request.ClassId),
                     AdmissionNotificationId = admissionNotificationId
 
@@ -391,6 +397,12 @@ namespace SMP.BLL.Services.AdmissionServices
                     return res;
                 }
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
+
+                string oldCredentials = admission.Credentials.Split("AdmissionCredentials/")[1];
+
+                var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
+                string oldPhoto = admission.Photo.Split("AdmissionPassport/")[1];
+
                 admission.Firstname = request.Firstname;
                 admission.Lastname = request.Lastname;
                 admission.Middlename = request.Middlename;
@@ -401,12 +413,19 @@ namespace SMP.BLL.Services.AdmissionServices
                 admission.StateOfOrigin = request.StateOfOrigin;
                 admission.LGAOfOrigin = request.LGAOfOrigin;
                 admission.Credentials = filePath;
+                admission.Photo = photoPath;
                 admission.ParentName = request.ParentName;
                 admission.ParentRelationship = request.ParentRelationship;
                 admission.ParentPhoneNumber = request.ParentPhoneNumber;
                 admission.ClassId = Guid.Parse(request.ClassId);
-
                 await context.SaveChangesAsync();
+
+                var oldCredentialsPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionCredentials", oldCredentials);
+                fileUpload.DeleteFile(oldCredentialsPath);
+
+                var oldPhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", oldPhoto);
+                fileUpload.DeleteFile(oldPhotoPath);
+
                 res.Result = admission.AdmissionId.ToString();
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Updated;

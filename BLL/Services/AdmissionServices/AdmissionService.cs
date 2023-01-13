@@ -347,7 +347,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
                 var clientDetails = new Dictionary<string, string>();
-                clientDetails.Add("userId", fwsRequest.Result.ClientId);
+                clientDetails.Add("userId", fwsRequest.Result.UserId);
                 clientDetails.Add("smsClientId", "");
                 clientDetails.Add("productBaseurlSuffix", fwsRequest.Result.BaseUrlAppendix);
 
@@ -459,6 +459,65 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<bool>> ImportCbtResult(string classId)
+        {
+            var res = new APIResponse<bool>();
+            try
+            {
+                var admissions = context.Admissions.Where(x => x.Deleted != true && x.ClassId == Guid.Parse(classId));
+                if (!admissions.Any())
+                {
+                    res.Message.FriendlyMessage = "Ops! No Candidate available on the selected class";
+                    return res;
+                }
+
+                var admission = await admissions.FirstOrDefaultAsync();
+                var apiCredentials = new SmsClientInformationRequest
+                {
+                    ApiKey = fwsOptions.Apikey,
+                    ClientId = fwsOptions.ClientId
+                };
+                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+
+                var clientDetails = new Dictionary<string, string>();
+                clientDetails.Add("userId", fwsRequest.Result.UserId);
+                clientDetails.Add("smsClientId", "");
+                clientDetails.Add("productBaseurlSuffix", fwsRequest.Result.BaseUrlAppendix);
+
+                var result = await webRequestService.GetAsync<APIResponse<List<GetCbtResult>>>($"{cbtRoutes.getCbtResult}?candidateCategoryId={admission.CandidateCategory}", clientDetails);
+                if (result.Result == null)
+                {
+                    res.Message.FriendlyMessage = result.Message.FriendlyMessage;
+                    return res;
+                }
+
+                foreach (var item in result.Result)
+                {
+                    var candidate = await admissions.FirstOrDefaultAsync(x => x.Email.ToLower() == item.CandidateEmail.ToLower() && x.Deleted != true);
+
+                    if (item.Status.ToLower() == "passed")
+                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Passed;
+                    if (item.Status.ToLower() == "failed")
+                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Failed;
+                    if (item.Status.ToLower() == "not taken")
+                        candidate.ExaminationStatus = (int)AdmissionExaminationStatus.NotTaken;
+                }
+                await context.SaveChangesAsync();
+
+                res.Result = true;
+                res.Message.FriendlyMessage = Messages.Created;
+                res.IsSuccessful = true;
                 return res;
             }
             catch (Exception ex)

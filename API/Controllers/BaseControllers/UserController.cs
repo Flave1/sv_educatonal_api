@@ -7,6 +7,7 @@ using Contracts.Common;
 using Contracts.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SMP.Contracts.Authentication;
 using System;
 using System.Threading.Tasks;
 
@@ -144,6 +145,24 @@ namespace API.Controllers
         public async Task<ActionResult> GetCBTTokenAsync()
         {
             var response = await identityService.GetCBTTokenAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult> ForgotPassword([FromBody]ForgotPassword request)
+        {
+            var response = await userService.ForgotPassword(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<ActionResult> ResetPassword([FromBody]ResetAccount request)
+        {
+            var response = await userService.ResetPassword(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

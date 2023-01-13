@@ -2,6 +2,7 @@
 using Contracts.Options;
 using DAL.Authentication;
 using Microsoft.AspNetCore.Http;
+using SMP.Contracts.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -24,5 +25,7 @@ namespace BLL.AuthenticationServices
         Task UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId);
         Task<string> CreateParentUserAccountAsync(string email, string phone);
         Task UpdateParentUserAccountAsync(string email, string phone, string id);
+        Task<APIResponse<bool>> ForgotPassword(ForgotPassword request);
+        Task<APIResponse<bool>> ResetPassword(ResetAccount request);
     }
 }
