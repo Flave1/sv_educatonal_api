@@ -92,9 +92,9 @@ namespace BLL.ClassServices
         //    }
         //}
 
-        async Task<APIResponse<SessionClassCommand>> IClassService.CreateSessionClass2Async(SessionClassCommand2 sClass)
+        async Task<APIResponse<SessionClassCommand2>> IClassService.CreateSessionClass2Async(SessionClassCommand2 sClass)
         {
-            var res = new APIResponse<SessionClassCommand>();
+            var res = new APIResponse<SessionClassCommand2>();
             if (context.SessionClass
                 .Include(x => x.Session)
                 .Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId) && ss.Deleted == false &&
@@ -120,6 +120,8 @@ namespace BLL.ClassServices
                 await context.SaveChangesAsync();
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Session class created successfully";
+                sClass.SessionClassId = sessionClass.SessionClassId.ToString();
+                res.Result = sClass;
                 return res;
             }
             catch (Exception ex)
