@@ -601,6 +601,7 @@ namespace BLL.AuthenticationServices
                 await SendResetLinkToEmailToUserAsync(user, link, "Password Reset");
 
                 res.IsSuccessful = true;
+                res.Result = true;
                 res.Message.FriendlyMessage = "Successful! Kindly click the link sent to your email to reset password.";
                 return res;
             }
@@ -625,7 +626,7 @@ namespace BLL.AuthenticationServices
                     res.Message.FriendlyMessage = "Account doesn't exists";
                     return res;
                 }
-
+                request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
                 var resetPasswordResult = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
                 if (!resetPasswordResult.Succeeded)
                 {
@@ -637,6 +638,7 @@ namespace BLL.AuthenticationServices
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successful";
+                res.Result = true;
                 return res;
 
             }

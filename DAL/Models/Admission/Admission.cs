@@ -31,6 +31,7 @@ namespace SMP.DAL.Models.Admission
         public int CandidateAdmissionStatus { get; set; }
         public string CandidateCategory { get; set; }
         public int ExaminationStatus { get; set; }
+        public string ExaminationId { get; set; }
         public Guid ClassId { get; set; }
         [ForeignKey("ClassId")]
         public ClassLookup Class { get; set; }
