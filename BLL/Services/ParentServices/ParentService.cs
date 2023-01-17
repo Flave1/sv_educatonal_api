@@ -1,18 +1,23 @@
 ﻿using BLL;
 using BLL.AuthenticationServices;
+using BLL.Constants;
 using BLL.Filter;
 using BLL.Utilities;
 using BLL.Wrappers;
+using Contracts.Annoucements;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using NLog.Filters;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.Contracts.ParentModels;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.ParentServices
@@ -89,6 +94,103 @@ namespace SMP.BLL.Services.ParentServices
 
         }
 
+        public async Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> GetAnnouncementsAsync(PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<GetAnnouncements>>>();
+            try
+            {
+                var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
+                var query = context.Announcement
+                        .Include(d => d.Sender)
+                    .OrderByDescending(d => d.CreatedOn)
+                    .Where(d => d.AssignedTo.ToLower() == "parent" && d.Deleted == false);
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, parent.UserId)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<GetAnnouncements>> GetAnnouncementDetailsAsync(string announcementId)
+        {
+            var res = new APIResponse<GetAnnouncements>();
+            try
+            {
+                var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
+
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
+                var result = await context.Announcement
+                            .Include(d => d.Sender)
+                            .OrderByDescending(d => d.CreatedOn)
+                            .Where(d => d.AssignedTo.ToLower() == "parent" && d.AnnouncementsId == Guid.Parse(announcementId) && d.Deleted == false)
+                            .Select(x => new GetAnnouncements(x, parent.UserId)).FirstOrDefaultAsync();
+
+                res.Result = result;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
+        {
+
+            var res = new APIResponse<GetAnnouncements>();
+            try
+            {
+                var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
+
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
+                var announcement = await context.Announcement.Include(d => d.Sender).FirstOrDefaultAsync(x => x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
+                if (announcement != null)
+                {
+                    var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
+                    if (!splitedIds.Any(d => d == parent.UserId))
+                    {
+                        splitedIds.Add(parent.UserId);
+                        announcement.SeenByIds = string.Join(',', splitedIds);
+                        await context.SaveChangesAsync();
+
+                    }
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.Result = new GetAnnouncements(announcement, parent.UserId);
+                    res.IsSuccessful = true;
+
+                    return res;
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 }
