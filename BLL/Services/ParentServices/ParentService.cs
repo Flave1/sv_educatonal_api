@@ -65,14 +65,14 @@ namespace SMP.BLL.Services.ParentServices
         async Task<APIResponse<PagedResponse<List<MyWards>>>> IParentService.GetMyWardsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<MyWards>>>();
-            var parentId = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
+            var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            if (!string.IsNullOrEmpty(parentId))
+            if (!string.IsNullOrEmpty(userName))
             {
                 var query = context.StudentContact
                     .Include(x => x.Parent)
-                    .Where(x => x.Parent.Email == parentId)
+                    .Where(x => x.Parent.Email == userName)
                         .Include(d => d.User)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Class)
                         .OrderByDescending(d => d.User.FirstName)
