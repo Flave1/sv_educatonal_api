@@ -505,6 +505,8 @@ namespace SMP.BLL.Services.AdmissionServices
                             candidate.ExaminationStatus = (int)AdmissionExaminationStatus.Failed;
                         if (item.Status.ToLower() == "not taken")
                             candidate.ExaminationStatus = (int)AdmissionExaminationStatus.NotTaken;
+
+                        candidate.ExaminationId = item.ExaminationId;
                     }
                 }
                 await context.SaveChangesAsync();

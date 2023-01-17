@@ -27,6 +27,7 @@ namespace SMP.Contracts.Admissions
         public string ParentEmail { get; set; }
         public int ExamStatus { get; set; }
         public int CandidateAdmissionStatus { get; set; }
+        public string ExaminationId { get; set; }
         public string CandidateCategory { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
@@ -50,6 +51,7 @@ namespace SMP.Contracts.Admissions
             ParentEmail = admission.AdmissionNotification.ParentEmail;
             ExamStatus = admission.ExaminationStatus;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
+            ExaminationId = !string.IsNullOrEmpty(admission.ExaminationId) ? admission.ExaminationId : "";
             CandidateCategory = admission.CandidateCategory;
             ClassId = admission.ClassId.ToString();
             ClassName = classLookup.Name;
