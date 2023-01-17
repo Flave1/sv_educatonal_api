@@ -7,6 +7,7 @@ using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
@@ -112,7 +113,6 @@ namespace SMP.BLL.Services.AssessmentServices
             var ass = context.ClassAssessment
                 .Include(s => s.SessionClassSubject).ThenInclude(d => d.SessionClassGroups)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session).ThenInclude(d => d.Terms)
-                .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
                 .FirstOrDefault(x => x.ClassAssessmentId == classAssessmentId && x.SessionTermId == activeTerm.SessionTermId );
 
             if (ass is null)
@@ -121,7 +121,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 return res;
             }
 
-            var students = ass.SessionClass.Students.ToList();
+            var students = context.StudentContact
+                .Where(x => x.SessionClassId == ass.SessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
+                .Include(d => d.User).ToList();
             foreach(var st in students)
             {
                 var item = new ClassAssessmentStudents();

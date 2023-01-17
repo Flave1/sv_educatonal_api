@@ -93,6 +93,7 @@ namespace SMP.Contracts.Assessment
             TimeDeadLine = db.TimeDeadLine;
             HomeAssessmentId = db.HomeAssessmentId.ToString();
             Title = db.Title;
+            Content = db.Content;
             AssessmentScore = db.AssessmentScore;
             SessionClassId = db.SessionClassId.ToString();
             SessionClassName = db.SessionClass.Class.Name;

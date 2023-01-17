@@ -565,6 +565,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             var result = await context.HomeAssessmentFeedBack
               .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+              .Include(x => x.StudentContact).ThenInclude(x => x.User)
               .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
             if (result != null)

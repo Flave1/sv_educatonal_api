@@ -258,7 +258,7 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
-                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                     result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
@@ -292,7 +292,7 @@ namespace SMP.BLL.Services.ResultServices
                         .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
 
-                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                     result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
 
                     foreach (var student in sts)
@@ -344,7 +344,7 @@ namespace SMP.BLL.Services.ResultServices
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
                     .Where(d => d.SessionTerm.IsActive == true && d.ClassScoreEntryId == result.ClassScoreEntryId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
-                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                 result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
@@ -660,7 +660,7 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     var query = context.StudentContact.Include(x => x.User).Where(d => d.EnrollmentStatus == 1 && d.SessionClassId == sessionClassId);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
-                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                     result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
@@ -693,7 +693,7 @@ namespace SMP.BLL.Services.ResultServices
                         .Include(x => x.StudentContact).ThenInclude(x => x.User)
                         .Where(d => d.SessionClassId == sessionClassId).Select(x => x.StudentContact);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
-                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                    var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                     result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
                     foreach (var student in sts)
                     {
@@ -881,7 +881,7 @@ namespace SMP.BLL.Services.ResultServices
                     .Include(s => s.StudentContact).ThenInclude(d => d.User)
                     .Where(d => d.SessionTermId == sessionTermId && d.ClassScoreEntryId == result.ClassScoreEntryId).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
-                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
+                var teacher = context.SessionClassSubject.Where(x => x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
                 result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();

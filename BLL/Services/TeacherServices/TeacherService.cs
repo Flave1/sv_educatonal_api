@@ -166,11 +166,10 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<PagedResponse<List<ApplicationUser>>>> ITeacherService.GetAllTeachersAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<ApplicationUser>>>();
-            var query = context.Teacher.Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher);
+            var query = context.Teacher.Include(s => s.User).Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).OrderBy(d => d.User.FirstName);
 
             var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).OrderByDescending(d => d.UserName).ToListAsync();
+            var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).ToListAsync();
             res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
