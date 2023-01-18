@@ -1,6 +1,7 @@
 ﻿using BLL.Filter;
 using BLL.MiddleWares;
 using BLL.StudentServices;
+using Contracts.Annoucements;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.NoteServices;
@@ -91,6 +92,31 @@ namespace SMP.API.Controllers.ParentControllers
         {
             var response = await studentService.GetSingleStudentAsync(Guid.Parse(StudentAccountId));
             return Ok(response);
+        }
+
+        [HttpGet("get/maywards-announcements")]
+        public async Task<IActionResult> GetMyWardsAnnouncementsAsync(PaginationFilter filter)
+        {
+            var response = await service.GetAnnouncementsAsync(filter);
+            if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/maywards-announcement-details/{announcementId}")]
+        public async Task<IActionResult> GetMyWardsAnnouncementDetailsAsync(string announcementId)
+        {
+            var response = await service.GetAnnouncementDetailsAsync(announcementId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("get/maywards/update/seen-announcement")]
+        public async Task<IActionResult> UpdateSeenAnnouncementAsync([FromBody]UpdatSeenAnnouncement request)
+        {
+            var response = await service.UpdateSeenAnnouncementAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
     }
