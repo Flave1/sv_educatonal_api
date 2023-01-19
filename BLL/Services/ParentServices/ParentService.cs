@@ -192,5 +192,85 @@ namespace SMP.BLL.Services.ParentServices
                 return res;
             }
         }
+
+        public async Task<APIResponse<PagedResponse<List<GetParents>>>> GetParentsAsync(PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<GetParents>>>();
+            try
+            {
+                var query = context.Parents
+                    .OrderBy(d => d.Name);
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetParents(x)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<PagedResponse<List<GetParentWards>>>> GetParentWardsAsync(PaginationFilter filter, string parentId)
+        {
+
+            var res = new APIResponse<PagedResponse<List<GetParentWards>>>();
+
+            try
+            {
+                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var query = context.StudentContact
+                        .Include(x => x.Parent)
+                        .Where(x => x.ParentId == Guid.Parse(parentId))
+                        .Include(d => d.User)
+                        .Include(x => x.SessionClass).ThenInclude(x => x.Class)
+                        .OrderByDescending(d => d.User.FirstName)
+                        .Where(d => d.Deleted == false);
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetParentWards(x, regNoFormat)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<GetParents>> GetParentByIdAsync(string parentId)
+        {
+            var res = new APIResponse<GetParents>();
+            try
+            {
+                var parent = await context.Parents
+                    .Where(d => d.Parentid == Guid.Parse(parentId)).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
+
+                res.Result = parent;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 }
