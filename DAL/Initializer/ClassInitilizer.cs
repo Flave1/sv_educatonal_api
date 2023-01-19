@@ -18,6 +18,7 @@ namespace SMP.DAL.Initializer
                     { 
                         SessionClassGroupId = Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767"),
                         GroupName = "all-students",
+                        ClientId = "D7F710A5-592F-4390-068C-08DA686DA23E"
                     },
                  
                 };

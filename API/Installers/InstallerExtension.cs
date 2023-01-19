@@ -1,5 +1,6 @@
 ﻿using API;
 using API.Installers;
+using DAL;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,5 +19,7 @@ namespace SMP.API.Installers
 
             instanceOfInstallers.ForEach(installer => installer.InstallServices(services, configuration));
         }
+
+        
     }
 }

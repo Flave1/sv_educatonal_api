@@ -1,9 +1,10 @@
-﻿using System;
+﻿using DAL;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SMP.DAL.Models.ResultModels
 {
-    public class ScoreEntryHistory
+    public class ScoreEntryHistory : CommonEntity
     {
         [Key]
         public Guid ScoreEntryHistoryId { get; set; }

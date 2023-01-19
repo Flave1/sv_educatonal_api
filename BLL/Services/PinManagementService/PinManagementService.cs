@@ -337,6 +337,7 @@ namespace SMP.BLL.Services.PinManagementService
             var query2 = result.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).AsQueryable();
             var totaltRecord = query2.Count();
             res.Result =  paginationService.CreatePagedReponse(query2.ToList(), filter, totaltRecord);
+            context.DBContext()
 
             res.IsSuccessful = true;
 

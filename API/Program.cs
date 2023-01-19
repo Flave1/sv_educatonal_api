@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using SMP.DAL.Initializer;
 
 namespace API
 {
@@ -7,8 +8,8 @@ namespace API
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
-        }//.SeedData()
+            CreateHostBuilder(args).Build().SeedData().Run();
+        }//
 
         //public static IWebHost CreateHostBuilder(string[] args) =>
         //    Host.CreateDefaultBuilder(args)

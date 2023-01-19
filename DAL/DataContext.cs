@@ -11,7 +11,6 @@ using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.Register;
-using SMP.DAL.Models.PromotionEntities;
 using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
@@ -107,9 +106,11 @@ namespace DAL
             base.OnModelCreating(builder);
         }
 
+       
         public override int SaveChanges()
         {
             var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -117,11 +118,13 @@ namespace DAL
                     entry.Entity.Deleted = false; 
                     entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
                 else
                 {
                     entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
             }
             return base.SaveChanges();
@@ -130,6 +133,7 @@ namespace DAL
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -137,11 +141,13 @@ namespace DAL
                     entry.Entity.Deleted = false;   
                     entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
                 else
                 {
                     entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
             }
             return base.SaveChangesAsync(cancellationToken);

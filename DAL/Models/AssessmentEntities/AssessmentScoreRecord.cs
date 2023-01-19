@@ -1,11 +1,12 @@
-﻿using DAL.StudentInformation;
+﻿using DAL;
+using DAL.StudentInformation;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMP.DAL.Models.AssessmentEntities
 {
-    public class AssessmentScoreRecord
+    public class AssessmentScoreRecord: CommonEntity
     {
         [Key]
         public Guid  AssessmentScoreRecordId { get; set; }

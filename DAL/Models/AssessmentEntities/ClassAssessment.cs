@@ -1,4 +1,5 @@
-﻿using DAL.ClassEntities;
+﻿using DAL;
+using DAL.ClassEntities;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.SessionEntities;
 using System;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMP.DAL.Models.AssessmentEntities
 {
-    public class ClassAssessment
+    public class ClassAssessment : CommonEntity
     {
         [Key]
         public Guid ClassAssessmentId { get; set; }
