@@ -124,7 +124,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     }
                     else
                     {
-                        scoreEntry.AssessmentScore = score;
+                        scoreEntry.AssessmentScore = scoreEntry.AssessmentScore + score;
                         scoreEntry.IsOffered = true;
                         scoreEntry.IsSaved = true;
                         await context.SaveChangesAsync();
@@ -137,7 +137,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 throw;
             }
 
-            res.Message.FriendlyMessage = "Assessment Scores Included Successfully";
+            res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
             res.IsSuccessful = true;
             return res;
         }
@@ -202,7 +202,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     }
                     else
                     {
-                        scoreEntry.ExamScore = score;
+                        scoreEntry.ExamScore = scoreEntry.ExamScore + score;
                         scoreEntry.IsOffered = true;
                         scoreEntry.IsSaved = true;
                         await context.SaveChangesAsync();
@@ -215,7 +215,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 throw;
             }
 
-            res.Message.FriendlyMessage = "Assessment Scores Included Successfully";
+            res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
             res.IsSuccessful = true;
             return res;
         }
