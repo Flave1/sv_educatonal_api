@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Filter;
 using BLL.Wrappers;
+using Contracts.Annoucements;
 using SMP.Contracts.ParentModels;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,9 @@ namespace SMP.BLL.Services.ParentServices
     {
         Task<APIResponse<PagedResponse<List<MyWards>>>> GetMyWardsAsync(PaginationFilter filter);
         Task<Guid> SaveParentDetail(string email, string name, string relationship, string number, Guid id);
+        Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> GetAnnouncementsAsync(PaginationFilter filter);
+        Task<APIResponse<GetAnnouncements>> GetAnnouncementDetailsAsync(string announcementId);
+        Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
+
     }
 }

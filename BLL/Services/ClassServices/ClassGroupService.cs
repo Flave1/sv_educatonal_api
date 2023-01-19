@@ -145,7 +145,8 @@ namespace BLL.ClassServices
                     .Include(d => d.SessionClass)
                     .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId) && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new SessionClassSubjects(s));
 
-                res.Result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable()).Distinct().ToList();
+                var result = subjectTeacherSubjects.AsEnumerable().Concat(formTeacherSubjects.AsEnumerable());
+                res.Result = result.GroupBy(x => new { x.SessionClassSubjectId, x.Subjectid }).Select(s => s.FirstOrDefault()).ToList();
 
                 res.Message.FriendlyMessage = Messages.GetSuccess;
                 res.IsSuccessful = true;
