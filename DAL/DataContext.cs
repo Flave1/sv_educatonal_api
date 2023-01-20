@@ -26,6 +26,7 @@ using SMP.DAL.Models.AssessmentEntities;
 using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.Admission;
+using System.Linq;
 
 namespace DAL
 {
@@ -129,7 +130,7 @@ namespace DAL
             }
             return base.SaveChanges();
         }
-
+       
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
