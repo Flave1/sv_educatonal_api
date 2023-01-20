@@ -118,6 +118,14 @@ namespace SMP.API.Controllers.ParentControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpGet("get/dashboard-count")]
+        public async Task<IActionResult> GetDashboardCountAsync()
+        {
+            var response = await service.GetDashboardCount();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
     }
 }
