@@ -16,6 +16,8 @@ using Contracts.Options;
 using System.Linq;
 using SMP.API.Hubs;
 using SMP.API.Installers;
+using SMP.DAL;
+using DAL;
 
 namespace API
 {
@@ -34,6 +36,7 @@ namespace API
         {
             RegistrationNumber.Initialize(Configuration);
             services.InstallServicesInAssembly(Configuration);
+            var ds =  ReflectiveEnumerator.GetEnumerableOfType<CommonEntity>();
         }
          
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
