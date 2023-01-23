@@ -2,6 +2,7 @@
 using BLL.MiddleWares;
 using BLL.StudentServices;
 using Contracts.Annoucements;
+using DAL.StudentInformation;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.NoteServices;
@@ -50,10 +51,10 @@ namespace SMP.API.Controllers.ParentControllers
         }
 
         [HttpGet("get/maywards-class-notes")]
-        public async Task<IActionResult> GetMyWardsClassNoteAsync(int pageNumber, string classId, string subjectId)
+        public async Task<IActionResult> GetMyWardsClassNoteAsync(int pageNumber, string studentId, string subjectId)
         {
             var filter = new PaginationFilter { PageNumber = pageNumber };
-            var response = await classNoteService.GetMyWardsClassNotesByAsync(subjectId, classId, filter);
+            var response = await classNoteService.GetMyWardsClassNotesByAsync(subjectId, studentId, filter);
             return Ok(response);
         }
 
