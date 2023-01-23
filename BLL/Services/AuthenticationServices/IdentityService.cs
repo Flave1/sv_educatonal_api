@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
+using SMP.BLL.Services;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
@@ -28,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace BLL.AuthenticationServices
 {
-    public class IdentityService : IIdentityService
+    public class IdentityService : BaseService, IIdentityService
     {
 
 
@@ -332,6 +333,7 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
+                    new Claim("smsClientId",user.ClientId),
                     new Claim("name",user.FirstName + " " + user.LastName),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),

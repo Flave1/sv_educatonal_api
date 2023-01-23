@@ -18,37 +18,15 @@ namespace SMP.DAL
             this.context = context;
         }
 
-        public static TEntity Filter<TEntity>(string entityId) where TEntity : class
-        {
-            using (DataContext rpContext = new DataContext())
-            {
-                foreach (Type type in Assembly.GetAssembly(typeof(CommonEntity)).GetTypes()
-               .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(CommonEntity))))
-                {
-                    //objects.Add((T)Activator.CreateInstance(type, constructorArgs));
-                }
-                return 
-                //return (from e in rpContext.Set<TEntity>()
-                //        where e["ClientId"] == entityId
-                //        select e).FirstOrDefault();
-            }
-        }
+      
     }
 
     public static class ReflectiveEnumerator
     {
-        static ReflectiveEnumerator() { }
-
-        public static IEnumerable<T> GetEnumerableOfType<T>(params object[] constructorArgs) where T : class, IComparable<T>
+        public static IEnumerable<T> GetEnumerableOfType<T>(T data)
         {
-            List<T> objects = new List<T>();
-            foreach (Type type in Assembly.GetAssembly(typeof(T)).GetTypes()
-                .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(T))))
-            {
-                //objects.Add((T)Activator.CreateInstance(type, constructorArgs));
-            }
-            objects.Sort();
-            return objects;
+            var dynamics = (dynamic)data;
+            return dynamics.Where(x => x.ClientId == "ClientID");
         }
     }
 

@@ -30,6 +30,7 @@ using System.Net.Http;
 using System.Net;
 using SMP.DAL.Models;
 using Microsoft.AspNetCore.Identity;
+using SMP.BLL.Services;
 
 namespace API.Installers
 {
@@ -86,6 +87,7 @@ namespace API.Installers
             services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddSingleton<FwsClientInformation>();
+            services.AddSingleton<BaseService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
