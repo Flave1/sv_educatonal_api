@@ -21,7 +21,7 @@ namespace BLL.ClassServices
             this.context = context;
         }
 
-        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, Guid gradeLevelId)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, bool isActive, Guid gradeLevelId)
         {
             var res = new APIResponse<ClassLookup>();
             try
@@ -34,7 +34,7 @@ namespace BLL.ClassServices
                 var lookup = new ClassLookup
                 {
                     Name = className,
-                    IsActive = true,
+                    IsActive = isActive,
                     GradeGroupId = gradeLevelId
                 };
                 context.ClassLookUp.Add(lookup);
