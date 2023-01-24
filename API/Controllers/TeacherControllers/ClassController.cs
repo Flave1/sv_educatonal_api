@@ -32,7 +32,7 @@ namespace API.Controllers
         [HttpPost("create/class-lookup")]
         public async Task<IActionResult> CreateClassLookupAsync([FromBody] ApplicationLookupCommand request)
         {
-            var response = await lookupService.CreateClassLookupAsync(request.Name, Guid.Parse(request.GradeLevelId));
+            var response = await lookupService.CreateClassLookupAsync(request.Name, request.IsActive, Guid.Parse(request.GradeLevelId));
             if(response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
