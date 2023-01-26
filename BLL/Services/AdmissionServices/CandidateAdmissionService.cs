@@ -112,8 +112,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                     await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail);
                     
-                    res.Result = new AdmissionLoginDetails( null,
-                    new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
+                    res.Result = new AdmissionLoginDetails( null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
 
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
