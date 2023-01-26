@@ -1,5 +1,6 @@
 ﻿using DAL;
 using Microsoft.Extensions.Options;
+using SMP.DAL.Models;
 using System;
 
 namespace SMP.BLL.Utilities

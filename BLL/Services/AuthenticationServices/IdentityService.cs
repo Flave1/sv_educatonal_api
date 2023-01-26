@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace BLL.AuthenticationServices
 {
-    public class IdentityService : BaseService, IIdentityService
+    public class IdentityService : IIdentityService
     {
 
 

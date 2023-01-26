@@ -87,7 +87,6 @@ namespace API.Installers
             services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddSingleton<FwsClientInformation>();
-            services.AddSingleton<BaseService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 
@@ -164,7 +163,8 @@ namespace API.Installers
 
             });
 
-           
+
+
 
             services.AddSwaggerGen(x =>
             {

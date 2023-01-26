@@ -18,6 +18,7 @@ using SMP.API.Hubs;
 using SMP.API.Installers;
 using SMP.DAL;
 using DAL;
+using SMP.BLL.Services;
 
 namespace API
 {
@@ -36,7 +37,6 @@ namespace API
         {
             RegistrationNumber.Initialize(Configuration);
             services.InstallServicesInAssembly(Configuration);
-            var ds =  ReflectiveEnumerator.GetEnumerableOfType<CommonEntity>();
         }
          
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
@@ -90,6 +90,8 @@ namespace API
 
             app.UseMvc();
 
+
+            BaseService.Initialize(serviceProvider);
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<NotificationHub>("/hubs/pushnotification");

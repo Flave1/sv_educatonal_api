@@ -1,21 +1,32 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 
 namespace SMP.BLL.Services
 {
-    public class BaseService
+    public static class BaseService
     {
-        public BaseService()
-           : base()
+        //public static BaseService()
+        //   : base()
+        //{
+
+        //}
+        public static IHttpContextAccessor config;
+       
+        public static bool ISForClient { get; set; }
+        public static string smsClientId { get; set; }
+        public static void Initialize(IServiceProvider services)
         {
+            config = (IHttpContextAccessor)services.GetService(typeof(IHttpContextAccessor));
+            ISForClient = ISClient(smsClientId);
 
         }
-        private readonly IHttpContextAccessor contextAccessor;
-        private readonly Func<string, bool> clientFilter = null;
-        //_clientFilter = (accessor.HttpContext.Items["smsClientId"].ToString() => "kmaklda");
-        public BaseService(IHttpContextAccessor contextAccessor)
+        public static bool ISClient(string clientID)
         {
-            this.contextAccessor = contextAccessor;
+            var res = config.HttpContext.Items["smsClientId"].ToString() == clientID;
+            return res;
         }
     }
 }
