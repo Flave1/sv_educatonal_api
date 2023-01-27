@@ -105,12 +105,11 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetClassGroupRequest>>();
             var student = context.StudentContact.Where(x=>x.ClientId == smsClientId).Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
             
-            var result = await context.SessionClassGroup.Where(x => x.ClientId == smsClientId)
+            var result = await context.SessionClassGroup.Where(x => x.ClientId == smsClientId && x.GroupName != "all-students")
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
-                .Where(d => d.Deleted == false 
-                && d.GroupName != "all-students" 
+                .Where(d => d.Deleted == false   
                 && d.SessionClassSubjectId == sessionClassSubjectId).Select(a => 
                 new GetClassGroupRequest(a, student.Count())).ToListAsync();
             res.IsSuccessful = true;
