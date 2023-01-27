@@ -2,6 +2,7 @@
 using Contracts.Common;
 using DAL;
 using DAL.ClassEntities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
@@ -15,10 +16,11 @@ namespace BLL.ClassServices
     public class ClassLookupService : IClassLookupService
     {
         private readonly DataContext context;
-
-        public ClassLookupService(DataContext context)
+        private readonly string smsClientId;
+        public ClassLookupService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, Guid gradeLevelId)
@@ -26,7 +28,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<ClassLookup>();
             try
             {
-                if (context.ClassLookUp.AsEnumerable().Any(r => Tools.ReplaceWhitespace(className) == Tools.ReplaceWhitespace(r.Name) && r.Deleted == false))
+                if (context.ClassLookUp.Where(c=> c.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(className) == Tools.ReplaceWhitespace(r.Name) && r.Deleted == false))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
                     return res;
@@ -59,14 +61,14 @@ namespace BLL.ClassServices
 
             try
             {
-                if (context.ClassLookUp.AsEnumerable().Any(r => Tools.ReplaceWhitespace(lookupName) == Tools.ReplaceWhitespace(r.Name) 
+                if (context.ClassLookUp.Where(c => c.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(lookupName) == Tools.ReplaceWhitespace(r.Name) 
                 && r.ClassLookupId != Guid.Parse(lookupId)))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
                     return res;
                 }
 
-                var lookup = context.ClassLookUp.FirstOrDefault(r => r.ClassLookupId == Guid.Parse(lookupId));
+                var lookup = context.ClassLookUp.FirstOrDefault(r => r.ClassLookupId == Guid.Parse(lookupId) && r.ClientId == smsClientId);
                 if (lookup == null)
                 {
                     res.Message.FriendlyMessage = "Class Lookup does not exist";
@@ -95,7 +97,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllClassLookupsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.ClassLookUp
+            var result = await context.ClassLookUp.Where(c => c.ClientId == smsClientId)
                 .OrderBy(s => s.Name)
                 .Include(d => d.GradeLevel)
                 .Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { 
@@ -113,7 +115,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllActiveClassLookupsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true)
+            var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true && d.ClientId == smsClientId)
                 .OrderBy(d => d.Name)
                 .Select(a => new GetApplicationLookups { 
                     LookupId = a.ClassLookupId.ToString().ToLower(), 
@@ -131,14 +133,14 @@ namespace BLL.ClassServices
             var res = new APIResponse<ClassLookup>();
             foreach(var lookupId in request.Items)
             {
-                var lookup = context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId));
+                var lookup = context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId) && d.ClientId == smsClientId);
                 if (lookup == null)
                 {
                     res.Message.FriendlyMessage = "Class Lookup does not exist";
                     return res;
                 }
 
-                if(context.SessionClass.Any(x => x.ClassId == lookup.ClassLookupId && x.Deleted == false))
+                if(context.SessionClass.Any(x => x.ClassId == lookup.ClassLookupId && x.Deleted == false && x.ClientId == smsClientId))
                 {
                     res.Message.FriendlyMessage = "Class setup cannot be deleted";
                     return res;

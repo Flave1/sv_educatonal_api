@@ -30,6 +30,7 @@ namespace SMP.BLL.Services.AnnouncementServices
         private readonly IPaginationService paginationService;
         private readonly INotificationService notificationService;
         protected readonly IHubContext<NotificationHub> hub;
+        private readonly string smsClientId;
 
         public AnnouncementService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
@@ -38,13 +39,15 @@ namespace SMP.BLL.Services.AnnouncementServices
             this.paginationService = paginationService;
             this.hub = hub;
             this.notificationService = notificationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
         {
             var res = new APIResponse<GetAnnouncements>();
             var userId = accessor.HttpContext.User.FindFirst(d => d.Type == "userId").Value;
-            var announcement = await context.Announcement.Include(d => d.Sender).FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
+
+            var announcement = await context.Announcement.Where(c => c.ClientId == smsClientId).Include(d => d.Sender).FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
             if(announcement != null)
             {
                 var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
@@ -77,10 +80,9 @@ namespace SMP.BLL.Services.AnnouncementServices
             {
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
-                    var query = context.Announcement
+                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.Deleted == false)
                           .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn)
-                        .Where(d => d.Deleted == false);
+                        .OrderByDescending(d => d.CreatedOn);
 
                     var totaltRecord = query.Count();
                     var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
@@ -93,10 +95,9 @@ namespace SMP.BLL.Services.AnnouncementServices
 
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
-                    var query =  context.Announcement
+                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "teacher" && c.Deleted == false)
                          .Include(d => d.Sender)
-                         .OrderByDescending(d => d.CreatedOn)
-                         .Where(d => d.AssignedTo == "teacher" && d.Deleted == false);
+                         .OrderByDescending(d => d.CreatedOn);
 
                     var totaltRecord = query.Count();
                     var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
@@ -108,10 +109,9 @@ namespace SMP.BLL.Services.AnnouncementServices
                 }
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
                 {
-                    var query = context.Announcement
+                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "student" && c.Deleted == false)
                           .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn)
-                        .Where(d => d.AssignedTo == "student" && d.Deleted == false);
+                        .OrderByDescending(d => d.CreatedOn);
 
                     var totaltRecord = query.Count();
                     var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
@@ -169,7 +169,8 @@ namespace SMP.BLL.Services.AnnouncementServices
         async Task<APIResponse<UpdateAnnouncement>> IAnnouncementsService.UpdateAnnouncementsAsync(UpdateAnnouncement request)
         {
             var res = new APIResponse<UpdateAnnouncement>();
-            var ann = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == request.AnnouncementsId);
+
+            var ann = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == request.AnnouncementsId && d.ClientId == smsClientId);
             if(ann == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -191,7 +192,8 @@ namespace SMP.BLL.Services.AnnouncementServices
         async Task<APIResponse<bool>> IAnnouncementsService.DeleteAnnouncementsAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
-            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item));
+
+            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item) && d.ClientId == smsClientId);
             if (result != null)
             {
                 result.Deleted = true;

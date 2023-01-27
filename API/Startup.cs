@@ -91,7 +91,7 @@ namespace API
             app.UseMvc();
 
 
-            BaseService.Initialize(serviceProvider);
+            //BaseService.Initialize(serviceProvider);
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<NotificationHub>("/hubs/pushnotification");

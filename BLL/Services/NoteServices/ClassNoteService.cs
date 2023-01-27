@@ -33,7 +33,7 @@ namespace SMP.BLL.Services.NoteServices
         private readonly IPaginationService paginationService;
         private readonly IHubContext<NotificationHub> hub;
         private readonly INotificationService notificationService;
-
+        private readonly string smsClientId;
         public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             this.context = context;
@@ -41,13 +41,14 @@ namespace SMP.BLL.Services.NoteServices
             this.paginationService = paginationService;
             this.hub = hub;
             this.notificationService = notificationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<ClassNotes>> IClassNoteService.CreateClassNotesAsync(ClassNotes request)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
             var res = new APIResponse<ClassNotes>();
 
             var newClassNote = new ClassNote()
@@ -152,12 +153,11 @@ namespace SMP.BLL.Services.NoteServices
 
             IQueryable<TeacherClassNote> query = null;
 
-            query = context.TeacherClassNote
+            query = context.TeacherClassNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
            .Include(d => d.Teacher).ThenInclude(d => d.User)
                    .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                    .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
-                   .OrderByDescending(x => x.CreatedOn)
-                .Where(u => u.Deleted == false);
+                   .OrderByDescending(x => x.CreatedOn);
 
             if (status == -2)
             {
@@ -208,7 +208,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 if (!string.IsNullOrEmpty(subjectId))
                 {
-                    res.Result = await context.TeacherClassNote
+                    res.Result = await context.TeacherClassNote.Where(x => x.ClientId == smsClientId)
                     .Include(d => d.Teacher).ThenInclude(d => d.User)
                             .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                             .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
@@ -222,7 +222,7 @@ namespace SMP.BLL.Services.NoteServices
                 }
                 else
                 {
-                    res.Result = await context.TeacherClassNote
+                    res.Result = await context.TeacherClassNote.Where(x => x.ClientId == smsClientId)
                    .Include(d => d.Teacher).ThenInclude(d => d.User)
                            .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                            .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
@@ -248,7 +248,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 var noteList = await context.ClassNote
                          .Where(u => u.Deleted == false 
-                         && u.AprrovalStatus == (int)NoteApprovalStatus.Approved && u.Author == userid)
+                         && u.AprrovalStatus == (int)NoteApprovalStatus.Approved && u.Author == userid && u.ClientId == smsClientId)
                          .Select(x => new GetClassNotes(x)).ToListAsync();
 
                 res.Result = noteList;
@@ -264,7 +264,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<GetClassNotes>>();
 
-            var noteList = await context.TeacherClassNote
+            var noteList = await context.TeacherClassNote.Where(x => x.ClientId == smsClientId)
                            .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                            .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
                            .Include(x => x.Teacher).ThenInclude(x => x.User)
@@ -283,7 +283,7 @@ namespace SMP.BLL.Services.NoteServices
         {
                 var res = new APIResponse<ShareNotes>();
                 var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
 
             try
             {
@@ -338,7 +338,7 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<bool>> IClassNoteService.ApproveOrDisapproveClassNotesAsync(ApproveClassNotes request)
         { 
             var res = new APIResponse<bool>();
-            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.Deleted == false && d.ClassNoteId == Guid.Parse(request.ClassNoteId));
+            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.Deleted == false && d.ClassNoteId == Guid.Parse(request.ClassNoteId) && d.ClientId == smsClientId);
             if (note != null)
             {
                 note.AprrovalStatus = request.ShouldApprove ? (int)NoteApprovalStatus.Approved : (int)NoteApprovalStatus.NotApproved;
@@ -368,7 +368,7 @@ namespace SMP.BLL.Services.NoteServices
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var res = new APIResponse<UpdateClassNote>();
 
-            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == request.ClassNoteId);
+            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == request.ClassNoteId && d.ClientId == smsClientId);
             if (note == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -390,12 +390,11 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<GetClassNotes>> IClassNoteService.GetSingleTeacherClassNotesAsync(string TeacherClassNoteId)
         {
             var res = new APIResponse<GetClassNotes>();
-            res.Result = await context.TeacherClassNote  
+            res.Result = await context.TeacherClassNote.Where(x => x.ClientId == smsClientId && x.Deleted == false
+                && x.TeacherClassNoteId == Guid.Parse(TeacherClassNoteId))
                 .Include(d => d.Teacher).ThenInclude(d => d.User)
                 .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                 .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail).ThenInclude(x => x.Teacher)
-                .Where(u => u.Deleted == false 
-                && u.TeacherClassNoteId == Guid.Parse(TeacherClassNoteId)) 
                 .Select(x => new GetClassNotes(x, true)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
@@ -406,9 +405,8 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetSingleClassNotesByAdminAsync(SingleClassNotes request)
         {
             var res = new APIResponse<List<GetClassNotes>>();
-            res.Result = await context.ClassNote
-                .Include(d => d.Subject)         
-                .Where(u => u.Deleted == false && u.AprrovalStatus == (int)NoteApprovalStatus.Approved)
+            res.Result = await context.ClassNote.Where(u => u.ClientId == smsClientId && u.Deleted == false && u.AprrovalStatus == (int)NoteApprovalStatus.Approved)
+                .Include(d => d.Subject)
                 .Select(x => new GetClassNotes(x)).ToListAsync();
 
             res.IsSuccessful = true;
@@ -420,9 +418,9 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<ClassNoteTeachers>>();
 
-            var alreadyShared = context.ClassNote.Include(x => x.TeacherClassNotes).Where(d => d.ClassNoteId == classNoteId).SelectMany(s => s.TeacherClassNotes).Select(x => x.TeacherId).ToList();
-            res.Result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                 .Where(d => d.Deleted == false  && d.Status == (int)TeacherStatus.Active).Select(a => new ClassNoteTeachers(a, alreadyShared.Contains(a.TeacherId))).ToListAsync();
+            var alreadyShared = context.ClassNote.Where(d => d.ClassNoteId == classNoteId && d.ClientId == smsClientId).Include(x => x.TeacherClassNotes).SelectMany(s => s.TeacherClassNotes).Select(x => x.TeacherId).ToList();
+            res.Result = await context.Teacher.Where(d => d.Deleted == false && d.Status == (int)TeacherStatus.Active && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+                 .Select(a => new ClassNoteTeachers(a, alreadyShared.Contains(a.TeacherId))).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -434,8 +432,8 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<List<ClassNoteTeachers>>();
 
             var alreadyShared = context.ClassNote.Include(x => x.TeacherClassNotes).Where(d => d.ClassNoteId == classNoteId).SelectMany(s => s.TeacherClassNotes).Select(x => x.TeacherId).ToList();
-            res.Result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                 .Where(d => d.Deleted == false && d.Status == (int)TeacherStatus.Active && alreadyShared.Contains(d.TeacherId)).Select(a => new ClassNoteTeachers(a)).ToListAsync();
+            res.Result = await context.Teacher.Where(d => d.Deleted == false && d.Status == (int)TeacherStatus.Active && alreadyShared.Contains(d.TeacherId) && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+                 .Select(a => new ClassNoteTeachers(a)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -447,7 +445,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<string>();
 
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
+            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId && d.ClientId == smsClientId);
             if (note == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -477,7 +475,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<string>();
 
             var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId);
+            var note = await context.ClassNote.FirstOrDefaultAsync(d => d.ClassNoteId == classNoteId && d.ClientId == smsClientId);
             if (note == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -544,7 +542,7 @@ namespace SMP.BLL.Services.NoteServices
             var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
-            var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId);
+            var note = await context.TeacherClassNoteComment.FirstOrDefaultAsync(d => d.TeacherClassNoteCommentId == commentId && d.ClientId == smsClientId);
             if (note == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -606,11 +604,11 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<List<ClassNoteComment>>();
             res.Result = await context.TeacherClassNoteComment
+                .Where(u => u.ClientId == smsClientId && u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
                 .Include(x => x.AppUser)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
                 .Include(d => d.Replies).ThenInclude(s => s.AppUser)
                 .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.AppUser)
-                .Where(u => u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
                 .Select(x => new ClassNoteComment(x)).ToListAsync();
 
             res.IsSuccessful = true;
@@ -623,21 +621,20 @@ namespace SMP.BLL.Services.NoteServices
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherid = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
-            var note = context.ClassNote.FirstOrDefault(d => d.ClassNoteId == classNoteId);
+            var note = context.ClassNote.FirstOrDefault(d => d.ClassNoteId == classNoteId && d.ClientId == smsClientId);
 
             var res = new APIResponse<List<GetClassNotes>>();
             if (!string.IsNullOrEmpty(teacherid))
             {
-                res.Result = await context.TeacherClassNote
-                 .Include(d => d.Teacher).ThenInclude(d => d.User)
+                res.Result = await context.TeacherClassNote.Where(u => u.ClientId == smsClientId && u.Deleted == false && u.ClassNote.SubjectId == note.SubjectId
+                         && u.ClassNote.AprrovalStatus != (int)NoteApprovalStatus.Saved
+                         && u.ClassNote.AprrovalStatus != (int)NoteApprovalStatus.NotApproved
+                         && u.TeacherId == Guid.Parse(teacherid))
+                        .Include(d => d.Teacher).ThenInclude(d => d.User)
                          .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                          .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
                           .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Saved)
                            .OrderBy(d => d.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
-                      .Where(u => u.Deleted == false && u.ClassNote.SubjectId == note.SubjectId
-                         && u.ClassNote.AprrovalStatus != (int)NoteApprovalStatus.Saved 
-                         && u.ClassNote.AprrovalStatus != (int)NoteApprovalStatus.NotApproved  
-                         && u.TeacherId == Guid.Parse(teacherid))
                       .Select(x => new GetClassNotes(x, true)).ToListAsync();
             }
 
@@ -652,7 +649,7 @@ namespace SMP.BLL.Services.NoteServices
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             try
             {
-                var noteToSend = context.TeacherClassNote.Include(d => d.ClassNote).FirstOrDefault(x => x.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId));
+                var noteToSend = context.TeacherClassNote.Where(x=>x.ClientId == smsClientId).Include(d => d.ClassNote).FirstOrDefault(x => x.TeacherClassNoteId == Guid.Parse(request.TeacherClassNoteId));
                 if (noteToSend is not null)
                 {
                     if(noteToSend.ClassNote.AprrovalStatus is not (int)NoteApprovalStatus.Approved)
@@ -707,7 +704,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var alreadyShared = context.TeacherClassNote.FirstOrDefault(d => d.TeacherClassNoteId == teacherClassNoteId)?.Classes?.Split(',').ToList();
+            var alreadyShared = context.TeacherClassNote.FirstOrDefault(d => d.ClientId == smsClientId && d.TeacherClassNoteId == teacherClassNoteId)?.Classes?.Split(',').ToList();
             var res = new APIResponse<List<GetClasses2>>();
 
             if (!string.IsNullOrEmpty(userid))
@@ -715,11 +712,11 @@ namespace SMP.BLL.Services.NoteServices
                 //GET SUPER ADMIN CLASSES
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
-                    res.Result = await context.SessionClass
+                    res.Result = await context.SessionClass.Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false).Select(s => new GetClasses2(s, alreadyShared.Contains(s.ClassId.ToString()))).ToListAsync();
+                        .Select(s => new GetClasses2(s, alreadyShared.Contains(s.ClassId.ToString()))).ToListAsync();
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     res.IsSuccessful = true;
                     return res;
@@ -728,19 +725,19 @@ namespace SMP.BLL.Services.NoteServices
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
                 {
                     var classesAsASujectTeacher = context.SessionClass
+                         .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                         .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
                          .Include(s => s.Class)
                          .Include(s => s.Session)
                          .Include(s => s.SessionClassSubjects)
-                         .OrderBy(s => s.Class.Name)
-                         .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
-                         .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+                         .OrderBy(s => s.Class.Name);
 
                     var classesAsAFormTeacher = context.SessionClass
+                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId))
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+                        .OrderBy(s => s.Class.Name);
 
                     res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct()
                         .Select(s => new GetClasses2(s, alreadyShared is null ? false : alreadyShared.Contains(s.ClassId.ToString()))).GroupBy(x => x.ClassId).Select(x => x.First()).ToList();
@@ -761,7 +758,7 @@ namespace SMP.BLL.Services.NoteServices
 
             var classId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(studentContactId)).SessionClassId.ToString();
             var query = context.TeacherClassNote
-                .Where(x => x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved)
+                        .Where(x => x.ClientId == smsClientId && x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved)
                         .Include(d => d.Teacher).ThenInclude(d => d.User)
                         .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                         .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
@@ -775,9 +772,7 @@ namespace SMP.BLL.Services.NoteServices
            
             if (!string.IsNullOrEmpty(classId))
             {
-                //var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
-                //var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
-                //query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
+                query = query.Where(u => u.Classes.Split(',', StringSplitOptions.None).ToList().Select(x => x).Contains(classId));
             }
 
             var totaltRecord = query.Count();
@@ -795,12 +790,11 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<GetClassNotes>();
 
             var query = context.TeacherClassNote
-                .Where(x => x.TeacherClassNoteId == teacherClassNoteId)
+                .Where(x => x.ClientId == smsClientId && x.TeacherClassNoteId == teacherClassNoteId && x.Deleted == false)
                .Include(d => d.Teacher).ThenInclude(d => d.User)
                        .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
                        .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
-                       .OrderByDescending(x => x.CreatedOn)
-                    .Where(u => u.Deleted == false);
+                       .OrderByDescending(x => x.CreatedOn);
 
             res.Result = await query.Select(x => new GetClassNotes(x, true)).FirstOrDefaultAsync();
 
@@ -812,12 +806,12 @@ namespace SMP.BLL.Services.NoteServices
         private async Task SendNotificationToAdminAsync(string userid, Guid classNoteId, Guid subjectId)
         {
             var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id //Can Review Lesson Notes
-            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false).RoleId;
+            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false && r.ClientId == smsClientId).RoleId;
             var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
             string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
 
-            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId).Name;
-            var author = context.Users.FirstOrDefault(m => m.Id == userid);
+            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId && m.ClientId == smsClientId).Name;
+            var author = context.Users.FirstOrDefault(m => m.Id == userid && m.ClientId == smsClientId);
             await notificationService.CreateNotitficationAsync(new NotificationDTO
             {
                 Content = $"{author.FirstName} {author.LastName} submitted note on {subject} for approval",
@@ -833,7 +827,7 @@ namespace SMP.BLL.Services.NoteServices
     
         private async Task NotifyTeacherOnNoteShareAsync(ClassNote noteToShare, ShareNotes request)
         {
-            var teachers = context.Teacher.Where(x => request.TeacherId.Contains(x.TeacherId)).Include(x => x.User).ToList();
+            var teachers = context.Teacher.Where(x => x.ClientId == smsClientId && request.TeacherId.Contains(x.TeacherId)).Include(x => x.User).ToList();
             string teachersEmail = string.Join(",", teachers.Select(x => x.User.Email));
 
             await notificationService.CreateNotitficationAsync(new NotificationDTO
@@ -851,8 +845,8 @@ namespace SMP.BLL.Services.NoteServices
 
         private async Task NotifyTeacherOnNoteApprovalAsync(ClassNote note)
         {
-            string teacherEmail = context.Users.FirstOrDefault(x => x.Id == note.Author).Email;
-            var subject = context.Subject.FirstOrDefault(x => x.SubjectId == note.SubjectId).Name;
+            string teacherEmail = context.Users.FirstOrDefault(x => x.Id == note.Author && x.ClientId == smsClientId).Email;
+            var subject = context.Subject.FirstOrDefault(x => x.SubjectId == note.SubjectId && x.ClientId == smsClientId).Name;
             await notificationService.CreateNotitficationAsync(new NotificationDTO
             {
                 Content = $"Note on {subject} has been approved",

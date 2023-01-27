@@ -23,6 +23,7 @@ namespace BLL.ClassServices
         private readonly IResultsService resultsService;
         private readonly IHttpContextAccessor accessor;
         private readonly IUtilitiesService utilitiesService;
+        private readonly string smsClientId;
 
         public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService)
         {
@@ -30,6 +31,7 @@ namespace BLL.ClassServices
             this.resultsService = resultsService;
             this.accessor = accessor;
             this.utilitiesService = utilitiesService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         //async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
@@ -95,7 +97,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<SessionClassCommand2>> IClassService.CreateSessionClass2Async(SessionClassCommand2 sClass)
         {
             var res = new APIResponse<SessionClassCommand2>();
-            if (context.SessionClass
+            if (context.SessionClass.Where(c => c.ClientId == smsClientId)
                 .Include(x => x.Session)
                 .Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId) && ss.Deleted == false &&
                         ss.SessionId == Guid.Parse(sClass.SessionId)))
@@ -137,8 +139,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<SessionClassCommand>();
 
-
-            var sessionClass = context.SessionClass.Where(x => x.SessionClassId == request.SessionClassId).Include(x => x.SessionClassSubjects).FirstOrDefault();
+            var sessionClass = context.SessionClass.Where(x => x.SessionClassId == request.SessionClassId && x.ClientId == smsClientId).Include(x => x.SessionClassSubjects).FirstOrDefault();
             if(sessionClass is null)
             {
                 res.Message.FriendlyMessage = "Invalid Session class";
@@ -171,7 +172,7 @@ namespace BLL.ClassServices
 
             try
             {
-                if (context.SessionClass
+                if (context.SessionClass.Where(c => c.ClientId == smsClientId)
                       .Include(x => x.Session)
                       .Any(ss => ss.Deleted == false && ss.ClassId == Guid.Parse(request.ClassId)
                       && ss.SessionClassId != Guid.Parse(request.SessionClassId)
@@ -181,7 +182,7 @@ namespace BLL.ClassServices
                     return res;
                 }
 
-                var sessionClass = context.SessionClass.FirstOrDefault(ss => ss.SessionClassId == Guid.Parse(request.SessionClassId) && ss.Deleted == false);
+                var sessionClass = context.SessionClass.FirstOrDefault(ss => ss.SessionClassId == Guid.Parse(request.SessionClassId) && ss.Deleted == false && ss.ClientId == smsClientId);
 
                 if (sessionClass == null)
                 {
@@ -207,8 +208,6 @@ namespace BLL.ClassServices
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
             }
-
-
         }
 
 
@@ -307,7 +306,7 @@ namespace BLL.ClassServices
             //GET SUPER ADMIN CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
-                res.Result = await context.SessionClass
+                res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
@@ -318,14 +317,14 @@ namespace BLL.ClassServices
             //GET TEACHER CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
             {
-                var classesAsASujectTeacher = context.SessionClass
+                var classesAsASujectTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                      .Include(s => s.Class)
                      .Include(s => s.Session)
                      .OrderBy(s => s.Class.Name)
-                     .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.SessionClassSubjects 
+                     .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.SessionClassSubjects
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
-                var classesAsAFormTeacher = context.SessionClass
+                var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .OrderBy(s => s.Class.Name)
@@ -344,7 +343,7 @@ namespace BLL.ClassServices
             //GET SUPER ADMIN CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
-                res.Result = await context.SessionClass
+                res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
@@ -355,7 +354,7 @@ namespace BLL.ClassServices
             //GET TEACHER CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
             {
-                var classesAsAFormTeacher = context.SessionClass
+                var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .OrderBy(s => s.Class.Name)
@@ -370,12 +369,12 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClasses2Async()
         {
             var res = new APIResponse<List<GetSessionClass>>();
-            var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
+            var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionId;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             //GET SUPER ADMIN CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
-                res.Result = await context.SessionClass
+                res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
@@ -391,7 +390,7 @@ namespace BLL.ClassServices
             //GET TEACHER CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
             {
-                var classesAsASujectTeacher = context.SessionClass
+                var classesAsASujectTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                      .Include(s => s.Class)
                      .Include(s => s.Session)
                      .Include(r => r.ClassRegisters)
@@ -402,7 +401,7 @@ namespace BLL.ClassServices
                      .Where(e => e.Deleted == false && e.SessionId == sessionId && e.SessionClassSubjects 
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
-                var classesAsAFormTeacher = context.SessionClass
+                var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .Include(r => r.Students)
@@ -420,7 +419,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<GetSessionClass>();
 
-            var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false)
+            var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
                 //.Include(rr => rr.Students)
@@ -438,7 +437,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<GetSessionClass>();
 
-            var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false)
+            var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
                 .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
@@ -452,7 +451,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<List<ClassSubjects>>();
 
-            var result = await context.SessionClassSubject.Where(r =>  sessionClassId == r.SessionClassId && r.Deleted == false)
+            var result = await context.SessionClassSubject.Where(r =>  sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(sub => sub.Subject)
                 .Include(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
                 .Select(g => new ClassSubjects(g)).ToListAsync();
@@ -468,7 +467,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetStudentContacts>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var result = await context.StudentContact
+            var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId)
                 .Include(q => q.User)
                 .OrderByDescending(d => d.User.FirstName)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
@@ -485,7 +484,7 @@ namespace BLL.ClassServices
 
             var res = new APIResponse<List<GetSessionClass>>();
 
-            var query = context.SessionClass.OrderByDescending(d => d.CreatedOn)
+            var query = context.SessionClass.Where(s=>s.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn)
              .Include(rr => rr.Class)
              .Include(rr => rr.Session)
              .Include(rr => rr.Students).ThenInclude(uuu => uuu.User)
@@ -507,7 +506,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<bool>();
 
-            var result = await context.SessionClass.Include(x => x.Students).FirstOrDefaultAsync(r => sessionClassId == r.SessionClassId && r.Deleted == false);
+            var result = await context.SessionClass.Where(s=>s.ClientId == smsClientId).Include(x => x.Students).FirstOrDefaultAsync(r => sessionClassId == r.SessionClassId && r.Deleted == false);
             if(result == null)
             {
                 res.Result = false;
@@ -532,9 +531,9 @@ namespace BLL.ClassServices
         public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync()
         {
             var res = new APIResponse<List<GetSessionClassCbt>>();
-            var sessionId = context.Session.FirstOrDefault(x => x.IsActive).SessionId;
+            var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionId;
 
-            res.Result = await context.SessionClass
+            res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                 .Include(rr => rr.Session)
                 .Include(rr => rr.Class)
                 .OrderBy(d => d.Class.Name)
@@ -552,7 +551,7 @@ namespace BLL.ClassServices
             try
             {
                 string regNo = utilitiesService.GetStudentRegNumberValue(registrationNo);
-                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == regNo);
+                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == regNo && x.ClientId == smsClientId);
                 if (student == null)
                 {
                     res.IsSuccessful = false;
@@ -560,7 +559,7 @@ namespace BLL.ClassServices
                     return res;
                 }
 
-                var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId)
+                var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.ClientId == smsClientId)
                     .Include(c => c.Session)
                     .Include(c => c.Class).Where(x=>x.Session.IsActive)
                     .Select(g => new GetSessionClassCbt(g)).FirstOrDefaultAsync();
