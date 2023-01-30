@@ -1,5 +1,6 @@
 ﻿using BLL;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
@@ -14,18 +15,19 @@ namespace SMP.BLL.Services.PortalService
     {
         private readonly DataContext context;
         private readonly IFileUploadService upload;
-
-        public PortalSettingService(DataContext context, IFileUploadService upload)
+        private readonly string smsClientId;
+        public PortalSettingService(DataContext context, IFileUploadService upload, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.upload = upload;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<PostSchoolSetting>> IPortalSettingService.CreateUpdateSchollSettingsAsync(PostSchoolSetting request)
         {
             var res = new APIResponse<PostSchoolSetting>();
             try
             {
-                var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync();
+                var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
 
                 if (schoolSetting == null)
                 {
@@ -80,7 +82,7 @@ namespace SMP.BLL.Services.PortalService
             var res = new APIResponse<PostResultSetting>();
             try
             {
-                var setting = await context.ResultSetting.FirstOrDefaultAsync();
+                var setting = await context.ResultSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
                 if (setting == null)
                 {
                     var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
@@ -122,7 +124,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<UpdateResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(UpdateResultSetting request)
         {
             var res = new APIResponse<UpdateResultSetting>();
-            var result = await context.ResultSetting.FirstOrDefaultAsync();
+            var result = await context.ResultSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
             if (result == null)
             { 
                 res.Message.FriendlyMessage = "Result Settings Not Found";
@@ -143,7 +145,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
             var res = new APIResponse<PostNotificationSetting>();
-            var setting = await context.NotificationSetting.FirstOrDefaultAsync();
+            var setting = await context.NotificationSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
 
             if (setting is not null)
             {
@@ -169,7 +171,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
-            res.Result = await context.SchoolSettings.Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
+            res.Result = await context.SchoolSettings.Where(x=>x.ClientId == smsClientId).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
             res.IsSuccessful = true;
             return res;
         }
@@ -177,13 +179,13 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            var result = await context.ResultSetting.Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
+            var result = await context.ResultSetting.Where(x=>x.ClientId == smsClientId).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
             if (result != null)
             {
-                var session = context.Session.FirstOrDefault(x => x.IsActive);
+                var session = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
                 if(session is not null)
                 {
-                    var user = context.Teacher.Include(c => c.User).Where(x => x.TeacherId == session.HeadTeacherId).Select(x => x.User).FirstOrDefault();
+                    var user = context.Teacher.Where(x => x.ClientId == smsClientId && x.TeacherId == session.HeadTeacherId).Include(c => c.User).Select(x => x.User).FirstOrDefault();
                     result.Headteacher = user?.FirstName + " " + user?.LastName;
                 }
                
@@ -195,7 +197,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostNotificationSetting>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<PostNotificationSetting>();
-            res.Result = await context.NotificationSetting.Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync();
+            res.Result = await context.NotificationSetting.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }
