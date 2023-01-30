@@ -4,6 +4,7 @@ using BLL.StudentServices;
 using BLL.Utilities;
 using BLL.Wrappers;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
@@ -21,11 +22,13 @@ namespace SMP.BLL.Services.EnrollmentServices
         private readonly DataContext context;
         private readonly IStudentService studentService;
         private readonly IPaginationService paginationService;
-        public EnrollmentService(DataContext context, IStudentService studentService, IPaginationService paginationService)
+        private readonly string smsClientId;
+        public EnrollmentService(DataContext context, IStudentService studentService, IPaginationService paginationService, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.studentService = studentService;
             this.paginationService = paginationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetEnrolledStudentsAsync(Guid sessionClassId, PaginationFilter filter)
@@ -34,7 +37,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var status = (int)EnrollmentStatus.Enrolled;
 
-            var cls = context.SessionClass.Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
+            var cls = context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
             if (cls.Session.IsActive)
                 status = (int)EnrollmentStatus.Enrolled;
             else
@@ -45,7 +48,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 .Include(x => x.User)
                                 .Include(s => s.SessionClass)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                          where a.Status == status && a.SessionClassId == sessionClassId select a);
+                          where a.ClientId == smsClientId && a.Status == status && a.SessionClassId == sessionClassId select a);
 
             var totaltRecord = query.Count();
             var result = paginationService.GetPagedResult(query, filter).Select(a =>  new EnrolledStudents(a, regNoFormat)).ToList();
@@ -62,7 +65,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var query =  (from a in context.StudentContact.Include(s => s.User)
-                                where a.Status == (int)EnrollmentStatus.UnEnrolled
+                                where a.ClientId == smsClientId && a.Status == (int)EnrollmentStatus.UnEnrolled
                                 select new EnrolledStudents
                                 {
                                     Status = "unenrrolled",

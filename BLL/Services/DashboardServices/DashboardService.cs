@@ -137,7 +137,7 @@ namespace SMP.BLL.Services.DashboardServices
         private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
         {
             var student = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(x => x.StudentContactId == studentId);
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
             if (student == null)
                 throw new ArgumentException("Not found");
             var totalSubject = context.SessionClassSubject
