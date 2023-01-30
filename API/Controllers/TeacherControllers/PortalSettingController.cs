@@ -84,9 +84,26 @@ namespace API.Controllers
             var response = await service.GetNotificationSettingsAsync();
             return Ok(response);
         }
-        
-          
+
+        [HttpPost("update-applayout-setting")]
+        public async Task<IActionResult> UpdateAppLayoutSettingAsync([FromBody] AppLayoutSettings request)
+        {
+
+            var response = await service.UpdateAppLayoutSettingsAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/applayout-setting")]
+        public async Task<IActionResult> GetAppLayoutSettingsAsync()
+        {
+            var response = await service.GetAppLayoutSettingsAsync();
+            return Ok(response);
+        }
+
+
         #endregion
-         
+
     }
 }

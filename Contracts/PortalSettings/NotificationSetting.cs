@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SMP.Contracts.PortalSettings
 {
-    public class RecoverPassword : NotificationSesstionMedia 
+    public class RecoverPassword : NotificationSesstionMedia
     {
         public RecoverPassword()
         {
@@ -17,7 +17,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Announcement : NotificationSesstionMedia 
+    public class Announcement : NotificationSesstionMedia
     {
         public Announcement()
         {
@@ -30,7 +30,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Assessment : NotificationSesstionMedia 
+    public class Assessment : NotificationSesstionMedia
     {
         public Assessment()
         {
@@ -43,7 +43,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Permission : NotificationSesstionMedia 
+    public class Permission : NotificationSesstionMedia
     {
         public Permission()
         {
@@ -56,7 +56,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Session : NotificationSesstionMedia 
+    public class Session : NotificationSesstionMedia
     {
         public Session()
         {
@@ -69,7 +69,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class ClassManagement : NotificationSesstionMedia 
+    public class ClassManagement : NotificationSesstionMedia
     {
         public ClassManagement()
         {
@@ -82,7 +82,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Staff : NotificationSesstionMedia 
+    public class Staff : NotificationSesstionMedia
     {
         public Staff()
         {
@@ -95,7 +95,7 @@ namespace SMP.Contracts.PortalSettings
             send = splitted[1] == "True" ? true : false;
         }
     }
-    public class Enrollment : NotificationSesstionMedia 
+    public class Enrollment : NotificationSesstionMedia
     {
         public Enrollment()
         {
@@ -129,7 +129,7 @@ namespace SMP.Contracts.PortalSettings
     {
         public string media { get; set; }
         public bool send { get; set; }
-        
+
     }
     public class PostNotificationSetting
     {
@@ -159,5 +159,19 @@ namespace SMP.Contracts.PortalSettings
             PublishResult = new PublishResult(st.PublishResult, st.ShouldSendToParentsOnResultPublish);
         }
     }
-    
+
+    public class AppLayoutSettings
+    {
+        public string scheme { get; set; }
+        public string colorcustomizer { get; set; }
+        public string colorinfo { get; set; }
+        public string colorprimary { get; set; }
+        public string schemeDir { get; set; }
+        public string sidebarcolor { get; set; }
+        public string sidebarType { get; set; }
+        public string sidebarActiveStyle { get; set; }
+        public string navbarstyle { get; set; }
+        public string loginTemplate { get; set; }
+
+    }
 }

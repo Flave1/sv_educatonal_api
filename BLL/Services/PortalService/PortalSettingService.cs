@@ -201,5 +201,69 @@ namespace SMP.BLL.Services.PortalService
             res.IsSuccessful = true;
             return res;
         }
+
+        async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync()
+        {
+            var res = new APIResponse<AppLayoutSettings>();
+            res.Result = new AppLayoutSettings();
+            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+
+            if (setting is not null)
+            {
+                res.Result.scheme = setting.scheme;
+                res.Result.schemeDir = setting.schemeDir;
+                res.Result.colorprimary = setting.colorprimary;
+                res.Result.navbarstyle = setting.navbarstyle;
+                res.Result.sidebarcolor = setting.sidebarcolor;
+                res.Result.colorcustomizer = setting.colorcustomizer;
+                res.Result.colorinfo = setting.colorinfo;
+                res.Result.loginTemplate = setting.loginTemplate;
+                res.Result.sidebarActiveStyle = setting.sidebarActiveStyle;
+            }
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.UpdateAppLayoutSettingsAsync(AppLayoutSettings request)
+        {
+            var res = new APIResponse<AppLayoutSettings>();
+            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+
+            if (setting is not null)
+            {
+                setting.scheme = request.scheme;
+                setting.schemeDir = request.schemeDir;
+                setting.colorprimary = request.colorprimary;
+                setting.navbarstyle = request.navbarstyle;
+                setting.sidebarcolor = request.sidebarcolor;
+                setting.colorcustomizer = request.colorcustomizer;
+                setting.colorinfo = request.colorinfo;
+                setting.loginTemplate = request.loginTemplate;
+                setting.sidebarActiveStyle = request.sidebarActiveStyle;
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                setting = new AppLayoutSetting();
+                setting.scheme = request.scheme;
+                setting.schemeDir = request.schemeDir;
+                setting.colorprimary = request.colorprimary;
+                setting.navbarstyle = request.navbarstyle;
+                setting.sidebarcolor = request.sidebarcolor;
+                setting.colorcustomizer = request.colorcustomizer;
+                setting.colorinfo = request.colorinfo;
+                setting.loginTemplate = request.loginTemplate;
+                setting.sidebarActiveStyle = request.sidebarActiveStyle;
+                context.AppLayoutSetting.Add(setting);
+                context.SaveChanges();
+            }
+
+            res.Message.FriendlyMessage = Messages.Created;
+            res.Result = request;
+            res.IsSuccessful = true;
+            return res;
+        }
     }
 }

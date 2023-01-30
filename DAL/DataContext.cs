@@ -92,6 +92,7 @@ namespace DAL
         public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
+        public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
