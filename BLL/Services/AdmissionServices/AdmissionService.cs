@@ -474,6 +474,12 @@ namespace SMP.BLL.Services.AdmissionServices
                     return res;
                 }
 
+                if(admissions.Any(x=> string.IsNullOrEmpty(x.CandidateCategory)))
+                {
+                    res.Message.FriendlyMessage = "Ops! Kindly export all Candidates to CBT.";
+                    return res;
+                }
+
                 var admission = await admissions.FirstOrDefaultAsync();
                 var apiCredentials = new SmsClientInformationRequest
                 {
