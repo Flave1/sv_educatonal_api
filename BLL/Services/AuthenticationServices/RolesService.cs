@@ -3,6 +3,7 @@ using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
 using DAL.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -18,12 +19,14 @@ namespace BLL.AuthenticationServices
         private readonly RoleManager<UserRole> manager;
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
+        private readonly string smsClientId;
 
-        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context)
+        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor)
         {
             this.manager = manager;
             this.userManager = userManager;
             this.context = context;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<UserRole>> IRolesService.CreateRoleAsync(CreateRoleActivity request)
         {
@@ -117,7 +120,7 @@ namespace BLL.AuthenticationServices
         async Task DeleteExistingActivitiesAsync(string roleId)
         {
 
-            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId).ToListAsync();
+            var existingActivities = await context.RoleActivity.Where(context => context.RoleId == roleId && context.ClientId == smsClientId).ToListAsync();
             if (existingActivities.Any())
                 context.RoleActivity.RemoveRange(existingActivities);
             await context.SaveChangesAsync();
@@ -126,7 +129,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.Name != DefaultRoles.FLAVETECH)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.Name != DefaultRoles.FLAVETECH && d.ClientId == smsClientId)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;
@@ -137,7 +140,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result = await context.AppActivity.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true)
+            var result = await context.AppActivity.Where(d => d.Deleted != true && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new GetActivities
                 {
@@ -154,7 +157,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivityParent>>> IRolesService.GetActivityParentsAsync()
         {
             var res = new APIResponse<List<GetActivityParent>>();
-            var result = await context.AppActivityParent.Where(d => d.Deleted != true)
+            var result = await context.AppActivityParent.Where(d => d.Deleted != true && d.ClientId == smsClientId)
                 .Select(a => new GetActivityParent
                 {
                     ParentActivityId = a.Id.ToString(),
@@ -180,7 +183,7 @@ namespace BLL.AuthenticationServices
             }).FirstOrDefaultAsync();
             if (role != null)
             {
-                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
+                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId && d.ClientId == smsClientId).Select(a => a.ActivityId).ToList();
             }
             res.Result = role;
             res.IsSuccessful = true;
@@ -199,7 +202,7 @@ namespace BLL.AuthenticationServices
             if (role != null)
             {
                 var addedUserIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
-                role.Users = context.Users.Where(d => !addedUserIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.Deleted == false).Select(a => new UserNames
+                role.Users = context.Users.Where(d => !addedUserIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.Deleted == false && d.ClientId == smsClientId).Select(a => new UserNames
                 {
                     UserId = a.Id,
                     UserName = a.FirstName + " " + a.LastName,
@@ -269,7 +272,7 @@ namespace BLL.AuthenticationServices
             var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d)).FirstOrDefault();
             if (selectedRole != null)
             {
-                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher).Select(x => new UserNames
+                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.ClientId == smsClientId).Select(x => new UserNames
                 {
                     UserId = x.Id,
                     UserName = x.FirstName + " " + x.LastName,
