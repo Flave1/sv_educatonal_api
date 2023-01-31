@@ -69,6 +69,16 @@ namespace SMP.API.Controllers.AdmissionControllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpGet("get-settings")]
+        public async Task<IActionResult> GetAdmissionSettings()
+        {
+            var response = await service.GetSettings();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AdmissionLogin request)
