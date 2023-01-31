@@ -772,12 +772,10 @@ namespace SMP.BLL.Services.NoteServices
             {
                 query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
             }
-           
+
             if (!string.IsNullOrEmpty(classId))
             {
-                //var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
-                //var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
-                //query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
+                query = query.Where(u => u.Classes.Split(',', StringSplitOptions.None).ToList().Select(x => x).Contains(classId));
             }
 
             var totaltRecord = query.Count();
