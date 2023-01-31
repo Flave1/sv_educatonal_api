@@ -28,6 +28,7 @@ namespace SMP.BLL.Services.ParentServices
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         private readonly IUserService userService;
+        private readonly string smsClientId;
 
         public ParentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IUserService userService)
         {
@@ -35,14 +36,15 @@ namespace SMP.BLL.Services.ParentServices
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.userService = userService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<Guid> IParentService.SaveParentDetail(string email, string name, string relationship, string number, Guid id)
         {
             string userid = string.Empty;
-            var parent = context.Parents.FirstOrDefault(x => x.Email.ToLower() == email.Trim().ToLower()) ?? null;
+            var parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Email.ToLower() == email.Trim().ToLower()) ?? null;
             if (parent == null)
-                parent = context.Parents.FirstOrDefault(x => x.Parentid == id) ?? null;
+                parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Parentid == id) ?? null;
 
             if (parent == null)
             {
@@ -75,7 +77,7 @@ namespace SMP.BLL.Services.ParentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             if (!string.IsNullOrEmpty(userName))
             {
-                var query = context.StudentContact
+                var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
                     .Include(x => x.Parent)
                     .Where(x => x.Parent.Email == userName)
                         .Include(d => d.User)
@@ -101,7 +103,7 @@ namespace SMP.BLL.Services.ParentServices
             {
                 var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.Email.ToLower() == userName.ToLower());
                 var query = context.Announcement
                         .Include(d => d.Sender)
                     .OrderByDescending(d => d.CreatedOn)
@@ -131,8 +133,8 @@ namespace SMP.BLL.Services.ParentServices
             {
                 var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
-                var result = await context.Announcement
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.Email.ToLower() == userName.ToLower());
+                var result = await context.Announcement.Where(x => x.ClientId == smsClientId)
                             .Include(d => d.Sender)
                             .OrderByDescending(d => d.CreatedOn)
                             .Where(d => d.AssignedTo.ToLower() == "parent" && d.AnnouncementsId == Guid.Parse(announcementId) && d.Deleted == false)
@@ -160,8 +162,8 @@ namespace SMP.BLL.Services.ParentServices
             {
                 var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Email.ToLower() == userName.ToLower());
-                var announcement = await context.Announcement.Include(d => d.Sender).FirstOrDefaultAsync(x => x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.Email.ToLower() == userName.ToLower());
+                var announcement = await context.Announcement.Where(x => x.ClientId == smsClientId).Include(d => d.Sender).FirstOrDefaultAsync(x => x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
                 if (announcement != null)
                 {
                     var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();

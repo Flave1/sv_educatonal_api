@@ -27,6 +27,7 @@ namespace SMP.BLL.Services.NotififcationServices
         private readonly IPaginationService paginationService;
         private readonly IHttpContextAccessor accessor;
         protected readonly IHubContext<NotificationHub> hub;
+        private readonly string smsClientId;
         public NotificationService(DataContext context, IEmailService emailService, IPaginationService paginationService, IHttpContextAccessor accessor, IHubContext<NotificationHub> hub)
         {
             this.context = context;
@@ -34,6 +35,7 @@ namespace SMP.BLL.Services.NotififcationServices
             this.paginationService = paginationService;
             this.accessor = accessor;
             this.hub = hub;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
 
@@ -91,7 +93,7 @@ namespace SMP.BLL.Services.NotififcationServices
             var res = new APIResponse<PagedResponse<List<GetNotificationDTO>>>();
             try
             {
-                var query =  context.Notification.OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
+                var query =  context.Notification.Where(x=>x.ClientId == smsClientId).OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
 
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
                 {
@@ -155,7 +157,7 @@ namespace SMP.BLL.Services.NotififcationServices
             try
             {
                res.Result = await context.Notification
-                    .Where(x => x.NotificationId == notificationId).Select(d => new GetNotificationDTO(d)).FirstOrDefaultAsync();
+                    .Where(x => x.ClientId == smsClientId && x.NotificationId == notificationId).Select(d => new GetNotificationDTO(d)).FirstOrDefaultAsync();
                 
                 res.IsSuccessful = true;
                 return res;
