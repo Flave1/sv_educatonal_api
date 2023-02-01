@@ -2,6 +2,7 @@
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
@@ -219,6 +220,7 @@ namespace SMP.BLL.Services.PortalService
                 res.Result.colorinfo = setting.colorinfo;
                 res.Result.loginTemplate = setting.loginTemplate;
                 res.Result.sidebarActiveStyle = setting.sidebarActiveStyle;
+                res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.sidebarType);
             }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -240,6 +242,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.sidebarcolor = request.sidebarcolor;
                 setting.colorcustomizer = request.colorcustomizer;
                 setting.colorinfo = request.colorinfo;
+                setting.sidebarType = JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
                 await context.SaveChangesAsync();
@@ -254,6 +257,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.sidebarcolor = request.sidebarcolor;
                 setting.colorcustomizer = request.colorcustomizer;
                 setting.colorinfo = request.colorinfo;
+                setting.sidebarType= JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
                 context.AppLayoutSetting.Add(setting);

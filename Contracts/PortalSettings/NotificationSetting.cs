@@ -168,10 +168,16 @@ namespace SMP.Contracts.PortalSettings
         public string colorprimary { get; set; }
         public string schemeDir { get; set; }
         public string sidebarcolor { get; set; }
-        public string sidebarType { get; set; }
+        public SidebarType sidebarType { get; set; }
         public string sidebarActiveStyle { get; set; }
         public string navbarstyle { get; set; }
         public string loginTemplate { get; set; }
 
+    }
+    public class SidebarType
+    {
+        public string Mini { get; set; }
+        public string Hover { get; set; }
+        public string Boxed { get; set; }
     }
 }

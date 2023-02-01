@@ -94,6 +94,17 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [AllowAnonymous]
+
+        [HttpPost("create-school-admin-user")]
+        public async Task<IActionResult> CreateSchoolAdminUser([FromBody] UserCommand request)
+        {
+            var response = await service.CreateAdminAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
 
         #endregion
 

@@ -1,5 +1,4 @@
-﻿using DAL.Authentication;
-using DAL.TeachersInfor;
+﻿using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ namespace Contracts.Authentication
     {
         public string Id { get; set; }
         public string Email { get; set; }
+        public string ClientId { get; set; }
         public IFormFile ProfileImage { get; set; }
     }
 

@@ -323,6 +323,7 @@ namespace SMP.BLL.Services.TeacherServices
             {
                 if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
                 {
+                    res.Result = "failed";
                     res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
                     return res;
                 }
@@ -343,17 +344,20 @@ namespace SMP.BLL.Services.TeacherServices
                     Phone = request.Phone,
                     PhoneNumber = request.Phone,
                     PhoneNumberConfirmed = false,
-                    Photo = ""
+                    Photo = "",
+                    ClientId = request.ClientId,
                 };
                 var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
                 if (!result.Succeeded)
                 {
+                    res.Result = "failed";
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
                 var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.TEACHER);
                 if (!addTorole.Succeeded)
                 {
+                    res.Result = "failed";
                     res.Message.FriendlyMessage = addTorole.Errors.FirstOrDefault().Description;
                     return res;
                 }
@@ -364,7 +368,7 @@ namespace SMP.BLL.Services.TeacherServices
                 //await SendEmailToTeacherOnCreateAsync(user);
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
-                res.Result = "Success";
+                res.Result = "success";
                 return res;
 
             }
