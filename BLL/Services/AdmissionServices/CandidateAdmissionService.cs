@@ -150,6 +150,8 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
+                var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
                 var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
                 var admission = new Admission
@@ -172,7 +174,8 @@ namespace SMP.BLL.Services.AdmissionServices
                     CandidateCategory = string.Empty,
                     ExaminationStatus = (int)AdmissionExaminationStatus.Pending,
                     ClassId = Guid.Parse(request.ClassId),
-                    AdmissionNotificationId = admissionNotificationId
+                    AdmissionNotificationId = admissionNotificationId,
+                    AdmissionSettingId = admissionSettings.AdmissionSettingId
 
                 };
                 context.Admissions.Add(admission);
@@ -219,20 +222,39 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-        public async Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter)
+        public async Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter, string admissionSettingsId)
         {
             var res = new APIResponse<PagedResponse<List<SelectCandidateAdmission>>>();
             try
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
-                var query = context.Admissions
-                    .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId)
-                    .Include(c => c.AdmissionNotification)
-                    .OrderByDescending(c => c.CreatedOn);
 
-                var totalRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
-                res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                if(string.IsNullOrEmpty(admissionSettingsId))
+                {
+                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+                    var query = context.Admissions
+                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == admissionSettings.AdmissionSettingId)
+                        .Include(c => c.AdmissionNotification)
+                        .Include(c => c.AdmissionSettings)
+                        .OrderByDescending(c => c.CreatedOn);
+
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
+                else
+                {
+                    var query = context.Admissions
+                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                        .Include(c => c.AdmissionNotification)
+                        .Include(c => c.AdmissionSettings)
+                        .OrderByDescending(c => c.CreatedOn);
+
+                    var totalRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                }
+                
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -285,15 +307,15 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
-                var category = await context.Admissions.Where(d => d.Deleted != true && d.AdmissionId == Guid.Parse(request.Item) && d.AdmissionNotificationId == admissionNotificationId).FirstOrDefaultAsync();
-                if (category == null)
+                var admission = await context.Admissions.Where(d => d.Deleted != true && d.AdmissionId == Guid.Parse(request.Item) && d.AdmissionNotificationId == admissionNotificationId).FirstOrDefaultAsync();
+                if (admission == null)
                 {
                     res.Message.FriendlyMessage = "Admission Id does not exist";
                     res.IsSuccessful = false;
                     return res;
                 }
 
-                category.Deleted = true;
+                admission.Deleted = true;
                 await context.SaveChangesAsync();
 
                 res.IsSuccessful = true;
@@ -447,13 +469,13 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var classes = context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 var result = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true)
+                    .Where(d => d.Deleted != true && d.AdmissionStatus == true)
                     .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 
                 if (result == null)
                 {
-                    res.Message.FriendlyMessage = "No item found";
+                    res.Message.FriendlyMessage = "No admission in progress.";
                 }
                 else
                 {

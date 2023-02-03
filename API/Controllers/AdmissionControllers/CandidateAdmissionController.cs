@@ -38,9 +38,9 @@ namespace SMP.API.Controllers.AdmissionControllers
             return BadRequest(response);
         }
         [HttpGet("get-all-admission")]
-        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter)
+        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter, string admissionSettingsId)
         {
-            var response = await service.GetAllAdmission(filter);
+            var response = await service.GetAllAdmission(filter, admissionSettingsId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

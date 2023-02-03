@@ -1,4 +1,6 @@
 ﻿using BLL;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Common;
 using SMP.Contracts.AdmissionSettings;
 using System;
@@ -12,7 +14,9 @@ namespace SMP.BLL.Services.AdmissionServices
     public interface IAdmissionSettingService
     {
         Task<APIResponse<CreateAdmissionSettings>> CreateSettings(CreateAdmissionSettings request);
-        Task<APIResponse<SelectAdmissionSettings>> GetSettings();
+        Task<APIResponse<PagedResponse<List<SelectAdmissionSettings>>>> GetAllSettings(PaginationFilter filter);
+        Task<APIResponse<SelectAdmissionSettings>> GetSettingsById(string admissionSettingsId);
         Task<APIResponse<bool>> DeleteSettings(SingleDelete request);
+        Task<APIResponse<UpdateAdmissionSettings>> UpdateSettings(UpdateAdmissionSettings request);
     }
 }

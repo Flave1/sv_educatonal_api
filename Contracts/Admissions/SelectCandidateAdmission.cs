@@ -31,6 +31,8 @@ namespace SMP.Contracts.Admissions
         public int ExamStatus { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
+        public string AdmissionSettingId { get; set; }
+        public string AdmissionSettingName { get; set; }
         public SelectCandidateAdmission(Admission admission, ClassLookup classLookup)
         {
             AdmissionId = admission.AdmissionId.ToString();
@@ -53,6 +55,8 @@ namespace SMP.Contracts.Admissions
             ExamStatus = admission.ExaminationStatus;
             ClassId = admission.ClassId.ToString();
             ClassName = classLookup.Name;
+            AdmissionSettingId = admission.AdmissionSettings.AdmissionSettingId.ToString();
+            AdmissionSettingName = admission.AdmissionSettings.AdmissionSettingName;
         }
     }
 }

@@ -11,6 +11,7 @@ namespace SMP.Contracts.AdmissionSettings
     public class SelectAdmissionSettings
     {
         public string AdmissionSettingId { get; set; }
+        public string AdmissionSettingName { get; set; }
         public List<AdmissionClasses> Classes { get; set; }
         public bool AdmissionStatus { get; set; }
         public string PassedExamEmail { get; set; }
@@ -20,6 +21,7 @@ namespace SMP.Contracts.AdmissionSettings
         public SelectAdmissionSettings(AdmissionSetting settings, List<ClassLookup> classLookup)
         {
             AdmissionSettingId = settings.AdmissionSettingId.ToString();
+            AdmissionSettingName = settings.AdmissionSettingName.ToString();
             Classes = classLookup?.Select(x => new AdmissionClasses
             {
                 ClassId = x.ClassLookupId.ToString(),
