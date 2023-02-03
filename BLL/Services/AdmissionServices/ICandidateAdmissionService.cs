@@ -18,7 +18,7 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<bool>> ConfirmEmail(ConfirmEmail request);
         Task<APIResponse<bool>> DeleteEmail(SingleDelete request);
         Task<APIResponse<string>> CreateAdmission(CreateAdmission request);
-        Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter);
+        Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter, string admissionSettingsId);
         Task<APIResponse<SelectCandidateAdmission>> GetAdmission(string admissionId);
         Task<APIResponse<SelectAdmissionSettings>> GetSettings();
         Task<APIResponse<bool>> DeleteAdmission(SingleDelete request);

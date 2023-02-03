@@ -1,8 +1,14 @@
 ﻿using BLL;
+using BLL.Filter;
+using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
 using Microsoft.EntityFrameworkCore;
+using NLog.Filters;
+using Org.BouncyCastle.Asn1.IsisMtt.X509;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.FilterService;
+using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
 using SMP.DAL.Migrations;
 using SMP.DAL.Models.Admission;
@@ -11,16 +17,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SMP.BLL.Services.AdmissionServices
 {
     public class AdmissionSettingService : IAdmissionSettingService
     {
         private readonly DataContext context;
+        private readonly IPaginationService paginationService;
 
-        public AdmissionSettingService(DataContext context)
+        public AdmissionSettingService(DataContext context, IPaginationService paginationService)
         {
             this.context = context;
+            this.paginationService = paginationService;
         }
         public async Task<APIResponse<CreateAdmissionSettings>> CreateSettings(CreateAdmissionSettings request)
         {
@@ -29,30 +38,27 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var setting = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true).FirstOrDefaultAsync();
+                    .Where(d => d.Deleted != true && d.AdmissionStatus == true).FirstOrDefaultAsync();
 
-                if (setting == null)
+                if(setting != null && request.AdmissionStatus == true)
                 {
-                    var newSetting = new AdmissionSetting
-                    {
-                        Classes = string.Join(",", request.Classes),
-                        AdmissionStatus = request.AdmissionStatus,
-                        PassedExamEmail = request.PassedExamEmail,
-                        FailedExamEmail = request.FailedExamEmail,
-                        ScreeningEmail = request.ScreeningEmail,
-                        RegistrationFee = request.RegistrationFee
-                    };
-                    context.AdmissionSettings.Add(newSetting);
+                    res.Message.FriendlyMessage = $"New admission cannot be created, {setting.AdmissionSettingName} is currently in progress.";
+                    res.IsSuccessful = false;
+                    return res;
                 }
-                else
+
+
+                var newSetting = new AdmissionSetting
                 {
-                    setting.Classes = string.Join(",", request.Classes);
-                    setting.AdmissionStatus = request.AdmissionStatus;
-                    setting.PassedExamEmail = request.PassedExamEmail;
-                    setting.FailedExamEmail = request.FailedExamEmail;
-                    setting.ScreeningEmail = request.ScreeningEmail;
-                    setting.RegistrationFee = request.RegistrationFee;
-                }
+                    AdmissionSettingName = request.AdmissionSettingName,
+                    Classes = string.Join(",", request.Classes),
+                    AdmissionStatus = request.AdmissionStatus,
+                    PassedExamEmail = request.PassedExamEmail,
+                    FailedExamEmail = request.FailedExamEmail,
+                    ScreeningEmail = request.ScreeningEmail,
+                    RegistrationFee = request.RegistrationFee
+                };
+                context.AdmissionSettings.Add(newSetting);
 
                 await context.SaveChangesAsync();
                 res.Result = request;
@@ -61,6 +67,52 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
             catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<UpdateAdmissionSettings>> UpdateSettings(UpdateAdmissionSettings request)
+        {
+            var res = new APIResponse<UpdateAdmissionSettings>();
+            try
+            {
+                var admissionSettings = await context.AdmissionSettings.Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(request.AdmissionSettingsId)).FirstOrDefaultAsync();
+                if (admissionSettings == null)
+                {
+                    res.Message.FriendlyMessage = "Admission Settings Id does not exist";
+                    res.IsSuccessful = false;
+                    return res;
+                }
+
+                var setting = await context.AdmissionSettings
+                    .Where(d => d.Deleted != true && d.AdmissionStatus == true).FirstOrDefaultAsync();
+
+                if (setting != null && request.AdmissionStatus == true)
+                {
+                    res.Message.FriendlyMessage = $"New admission cannot be created {setting.AdmissionSettingName} is currently in progress";
+                    res.IsSuccessful = false;
+                    return res;
+                }
+
+                admissionSettings.AdmissionSettingName = request.AdmissionSettingName;
+                admissionSettings.Classes = string.Join(",", request.Classes);
+                admissionSettings.AdmissionStatus = request.AdmissionStatus;
+                admissionSettings.PassedExamEmail = request.PassedExamEmail;
+                admissionSettings.FailedExamEmail = request.FailedExamEmail;
+                admissionSettings.ScreeningEmail = request.ScreeningEmail;
+                admissionSettings.RegistrationFee = request.RegistrationFee;
+
+                await context.SaveChangesAsync();
+                res.Result = request;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.Updated;
+                return res;
+            }
+            catch(Exception ex)
             {
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
@@ -99,15 +151,41 @@ namespace SMP.BLL.Services.AdmissionServices
             }
         }
 
-        public async Task<APIResponse<SelectAdmissionSettings>> GetSettings()
+        public async Task<APIResponse<PagedResponse<List<SelectAdmissionSettings>>>> GetAllSettings(PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<SelectAdmissionSettings>>>();
+            try
+            {
+                var classes =  context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var query = context.AdmissionSettings
+                    .Where(d => d.Deleted != true);
+
+                var totalRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList())).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<SelectAdmissionSettings>> GetSettingsById(string admissionSettingsId)
         {
             var res = new APIResponse<SelectAdmissionSettings>();
             try
             {
-                var classes =  context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes = context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 var result = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true)
-                    .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x=> classes.Contains(x.ClassLookupId.ToString())).ToList()))
+                    .Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                    .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 
                 if (result == null)

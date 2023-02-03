@@ -23,6 +23,7 @@ using SMP.Contracts.Admissions;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
+using SMP.DAL.Models.Admission;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -402,52 +403,103 @@ namespace SMP.BLL.Services.AdmissionServices
             }
         }
 
-        public async Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter, string classId, string examStatus)
+        public async Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter, string classId, string examStatus, string admissionSettingsId)
         {
             var res = new APIResponse<PagedResponse<List<SelectAdmission>>>();
             try
             {
-                if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                if(string.IsNullOrEmpty(admissionSettingsId))
                 {
-                    var query = context.Admissions
-                    .Where(c => c.Deleted != true)
-                    .Include(c => c.AdmissionNotification)
-                    .OrderByDescending(c => c.CreatedOn);
-                    var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+
+                    if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                        .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId)
+                        .Include(c => c.AdmissionNotification)
+                        .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+                    if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ClassId == Guid.Parse(classId))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+                    if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ExaminationStatus == int.Parse(examStatus))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                        .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                        .Include(c => c.AdmissionNotification)
+                        .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+                    if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ClassId == Guid.Parse(classId))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
+                    if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
+                    {
+                        var query = context.Admissions
+                       .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ExaminationStatus == int.Parse(examStatus))
+                       .Include(c => c.AdmissionNotification)
+                       .OrderByDescending(c => c.CreatedOn);
+                        var totalRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+                    }
                 }
 
-                if (!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
-                {
-                    var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
-                   .Include(c => c.AdmissionNotification)
-                   .OrderByDescending(c => c.CreatedOn);
-                    var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
-                }
-                if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
-                {
-                    var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId))
-                   .Include(c => c.AdmissionNotification)
-                   .OrderByDescending(c => c.CreatedOn);
-                    var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
-                }
-                if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
-                {
-                    var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ExaminationStatus == int.Parse(examStatus))
-                   .Include(c => c.AdmissionNotification)
-                   .OrderByDescending(c => c.CreatedOn);
-                    var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
-                }
+                
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
