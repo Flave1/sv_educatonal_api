@@ -44,6 +44,7 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IHttpContextAccessor accessor;
         private readonly FwsConfigSettings fwsOptions;
         private readonly IParentService parentService;
+        private readonly string smsClientId;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
@@ -58,6 +59,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.accessor = httpContext;
             fwsOptions = options.Value;
             this.parentService = parentService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         public async Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request)
@@ -68,7 +70,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 try
                 {
-                    var admission = await context.Admissions.Where(x => x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true)
+                    var admission = await context.Admissions.Where(x => x.ClientId == smsClientId && x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true)
                                     .Include(x => x.AdmissionNotification).FirstOrDefaultAsync();
 
                     if (admission == null)
@@ -161,7 +163,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
             try
             {
-                var admissions = context.Admissions.Where(x => request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
+                var admissions = context.Admissions.Where(x => x.ClientId == smsClientId && request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
                                 .Include(x => x.AdmissionNotification);
 
                 if (admissions == null)
@@ -248,7 +250,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var history = new StudentSessionClassHistory();
             history.SessionClassId = student.SessionClassId;
             history.StudentContactId = student.StudentContactId;
-            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive)?.SessionTermId;
+            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive && s.ClientId == smsClientId)?.SessionTermId;
             await context.StudentSessionClassHistory.AddAsync(history);
             await context.SaveChangesAsync();
         }
@@ -312,7 +314,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var admission = context.Admissions.Where(x => x.Deleted != true && x.ClassId == Guid.Parse(request.ClassId));
+                var admission = context.Admissions.Where(x => x.ClientId == smsClientId && x.Deleted != true && x.ClassId == Guid.Parse(request.ClassId));
                 if (!admission.Any())
                 {
                     res.Message.FriendlyMessage = "Ops! No Candidate available for export";
@@ -376,9 +378,9 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var result = await context.Admissions
-                    .Where(c => c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId))
+                    .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId))
                     .Include(c => c.AdmissionNotification)
-                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
+                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)
                 {
@@ -410,7 +412,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
-                    .Where(c => c.Deleted != true)
+                    .Where(c => c.ClientId == smsClientId && c.Deleted != true)
                     .Include(c => c.AdmissionNotification)
                     .OrderByDescending(c => c.CreatedOn);
                     var totalRecord = query.Count();
@@ -421,7 +423,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 if (!string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
+                   .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
                    .Include(c => c.AdmissionNotification)
                    .OrderByDescending(c => c.CreatedOn);
                     var totalRecord = query.Count();
@@ -431,7 +433,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ClassId == Guid.Parse(classId))
+                   .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.ClassId == Guid.Parse(classId))
                    .Include(c => c.AdmissionNotification)
                    .OrderByDescending(c => c.CreatedOn);
                     var totalRecord = query.Count();
@@ -441,7 +443,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
                 {
                     var query = context.Admissions
-                   .Where(c => c.Deleted != true && c.ExaminationStatus == int.Parse(examStatus))
+                   .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.ExaminationStatus == int.Parse(examStatus))
                    .Include(c => c.AdmissionNotification)
                    .OrderByDescending(c => c.CreatedOn);
                     var totalRecord = query.Count();
@@ -467,7 +469,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var admissions = context.Admissions.Where(x => x.Deleted != true && x.ClassId == Guid.Parse(classId));
+                var admissions = context.Admissions.Where(x => x.ClientId == smsClientId && x.Deleted != true && x.ClassId == Guid.Parse(classId));
                 if (!admissions.Any())
                 {
                     res.Message.FriendlyMessage = "Ops! No Candidate available on the selected class";
@@ -496,7 +498,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 foreach (var item in result.Result)
                 {
-                    var candidate = await admissions.FirstOrDefaultAsync(x => x.Email.ToLower() == item.CandidateEmail.ToLower() && x.Deleted != true);
+                    var candidate = await admissions.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.Email.ToLower() == item.CandidateEmail.ToLower() && x.Deleted != true);
                     if (candidate != null)
                     {
                         if (item.Status.ToLower() == "passed")
