@@ -20,9 +20,9 @@ namespace SMP.API.Controllers.AdmissionControllers
             this.candidateAdmissionService = candidateAdmissionService;
         }
         [HttpGet("get-all-admission")]
-        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter, string classId, string examStatus)
+        public async Task<IActionResult> GetAllAdmission(PaginationFilter filter, string classId, string examStatus , string admissionSettingsId)
         {
-            var response = await service.GetAllAdmission(filter, classId, examStatus);
+            var response = await service.GetAllAdmission(filter, classId, examStatus, admissionSettingsId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

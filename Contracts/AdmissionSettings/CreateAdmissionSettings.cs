@@ -8,6 +8,7 @@ namespace SMP.Contracts.AdmissionSettings
 {
     public class CreateAdmissionSettings
     {
+        public string AdmissionSettingName { get; set; }
         public string[] Classes { get; set; }
         public bool AdmissionStatus { get; set; }
         public string PassedExamEmail { get; set; }
