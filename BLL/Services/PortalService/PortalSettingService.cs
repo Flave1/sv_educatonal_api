@@ -207,7 +207,7 @@ namespace SMP.BLL.Services.PortalService
         {
             var res = new APIResponse<AppLayoutSettings>();
             res.Result = new AppLayoutSettings();
-            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == url);
+            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == url.TrimEnd('/').ToLower());
 
             if (setting is not null)
             {
