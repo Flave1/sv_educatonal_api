@@ -18,6 +18,7 @@ namespace SMP.DAL.Models.PortalSettings
         public string sidebarActiveStyle { get; set; }
         public string navbarstyle { get; set; }
         public string loginTemplate { get; set; }
+        public string schoolUrl { get; set; }
 
     }
 }

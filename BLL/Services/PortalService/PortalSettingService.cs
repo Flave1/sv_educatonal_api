@@ -203,11 +203,11 @@ namespace SMP.BLL.Services.PortalService
             return res;
         }
 
-        async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync()
+        async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync(string url)
         {
             var res = new APIResponse<AppLayoutSettings>();
             res.Result = new AppLayoutSettings();
-            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == url);
 
             if (setting is not null)
             {
@@ -220,6 +220,7 @@ namespace SMP.BLL.Services.PortalService
                 res.Result.colorinfo = setting.colorinfo;
                 res.Result.loginTemplate = setting.loginTemplate;
                 res.Result.sidebarActiveStyle = setting.sidebarActiveStyle;
+                res.Result.schoolUrl = setting.schoolUrl;
                 res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.sidebarType);
             }
 
@@ -245,6 +246,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.sidebarType = JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
+                setting.schoolUrl = request.schoolUrl;
                 await context.SaveChangesAsync();
             }
             else
@@ -259,6 +261,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.colorinfo = request.colorinfo;
                 setting.sidebarType= JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
+                setting.schoolUrl = request.schoolUrl;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
                 context.AppLayoutSetting.Add(setting);
                 context.SaveChanges();

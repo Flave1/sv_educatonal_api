@@ -1,5 +1,6 @@
 ﻿using BLL.MiddleWares;
 using Contracts.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.PinManagementService;
@@ -95,10 +96,11 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [AllowAnonymous]
         [HttpGet("get/applayout-setting")]
-        public async Task<IActionResult> GetAppLayoutSettingsAsync()
+        public async Task<IActionResult> GetAppLayoutSettingsAsync(string url)
         {
-            var response = await service.GetAppLayoutSettingsAsync();
+            var response = await service.GetAppLayoutSettingsAsync(url);
             return Ok(response);
         }
 

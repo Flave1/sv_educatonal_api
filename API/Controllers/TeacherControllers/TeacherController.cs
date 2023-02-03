@@ -86,7 +86,6 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
-
         [HttpGet("get-teacher/classes-subject")]
         public async Task<IActionResult> GetSingleTeacherClassesAndSubjectsAsync(string teacherAccountId)
         {

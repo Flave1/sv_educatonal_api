@@ -341,7 +341,7 @@ namespace SMP.BLL.Services.TeacherServices
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
                     Email = request.Email,
-                    UserType = (int)UserTypes.Teacher,
+                    UserType = (int)UserTypes.Admin,
                     EmailConfirmed = false,
                     DOB = request.DOB,
                     FirstName = request.FirstName,
@@ -352,15 +352,16 @@ namespace SMP.BLL.Services.TeacherServices
                     PhoneNumberConfirmed = false,
                     Photo = "",
                     ClientId = request.ClientId,
+                    PasswordHash = request.PasswordHash
                 };
-                var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
+                var result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
                     res.Result = "failed";
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
-                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.TEACHER);
+                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.SCHOOLADMIN);
                 if (!addTorole.Succeeded)
                 {
                     res.Result = "failed";

@@ -172,6 +172,7 @@ namespace SMP.Contracts.PortalSettings
         public string sidebarActiveStyle { get; set; }
         public string navbarstyle { get; set; }
         public string loginTemplate { get; set; }
+        public string schoolUrl { get; set; }
 
     }
     public class SidebarType
