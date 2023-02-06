@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.PortalService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,8 +35,9 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IUserService userService;
         private readonly IPaginationService paginationService;
         private readonly string smsClientId;
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, 
-            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor)
+        private readonly IPortalSettingService portalSettingService;
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
+            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, IPortalSettingService portalSettingService)
         {
             this.userManager = userManager;
             this.context = context;
@@ -45,6 +47,7 @@ namespace SMP.BLL.Services.TeacherServices
             this.userService = userService;
             this.paginationService = paginationService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.portalSettingService = portalSettingService;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -371,6 +374,7 @@ namespace SMP.BLL.Services.TeacherServices
                 }
 
                 context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
+                portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 
                 //await SendEmailToTeacherOnCreateAsync(user);

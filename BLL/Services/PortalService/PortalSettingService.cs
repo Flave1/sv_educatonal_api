@@ -232,7 +232,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.UpdateAppLayoutSettingsAsync(AppLayoutSettings request)
         {
             var res = new APIResponse<AppLayoutSettings>();
-            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => request.schoolUrl == x.schoolUrl);
 
             if (setting is not null)
             {
@@ -246,31 +246,41 @@ namespace SMP.BLL.Services.PortalService
                 setting.sidebarType = JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
-                setting.schoolUrl = request.schoolUrl;
+                //setting.schoolUrl = request.schoolUrl;
+                setting.ClientId = smsClientId;
                 await context.SaveChangesAsync();
             }
-            else
-            {
-                setting = new AppLayoutSetting();
-                setting.scheme = request.scheme;
-                setting.schemeDir = request.schemeDir;
-                setting.colorprimary = request.colorprimary;
-                setting.navbarstyle = request.navbarstyle;
-                setting.sidebarcolor = request.sidebarcolor;
-                setting.colorcustomizer = request.colorcustomizer;
-                setting.colorinfo = request.colorinfo;
-                setting.sidebarType= JsonConvert.SerializeObject(request.sidebarType);
-                setting.loginTemplate = request.loginTemplate;
-                setting.schoolUrl = request.schoolUrl;
-                setting.sidebarActiveStyle = request.sidebarActiveStyle;
-                context.AppLayoutSetting.Add(setting);
-                context.SaveChanges();
-            }
+            
 
             res.Message.FriendlyMessage = Messages.Created;
             res.Result = request;
             res.IsSuccessful = true;
             return res;
+        }
+
+        void IPortalSettingService.CreateAppLayoutSettingsAsync(string clientId, string schoolUrl)
+        {
+            try
+            {
+                var setting = new AppLayoutSetting();
+                setting.scheme = "light";
+                setting.schemeDir = "ltr";
+                setting.colorprimary = "#3a57e8";
+                setting.navbarstyle = "sticky";
+                setting.sidebarcolor = "white";
+                setting.colorcustomizer = "default";
+                setting.colorinfo = "#4bc7d2";
+                setting.sidebarType = JsonConvert.SerializeObject(new SidebarType());
+                setting.loginTemplate = "default-login-template";
+                setting.schoolUrl = schoolUrl;
+                setting.sidebarActiveStyle = "roundedAllSide";
+                setting.ClientId = clientId;
+                context.AppLayoutSetting.Add(setting);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
         }
 
     }

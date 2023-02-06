@@ -40,6 +40,7 @@ namespace BLL.AuthenticationServices
                     Deleted = false,
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
+                    ClientId = smsClientId
                 };
                 var result = await manager.CreateAsync(role);
                 if (!result.Succeeded)
@@ -129,12 +130,11 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true
-            && d.Name != DefaultRoles.FLAVETECH
-            || d.Name == DefaultRoles.SCHOOLADMIN
-            || d.Name == DefaultRoles.TEACHER
-            || d.Name == DefaultRoles.PARENTS
-            && d.ClientId == smsClientId)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn)
+                .Where(d => d.Deleted != true  && d.Name != DefaultRoles.FLAVETECH
+                    && (d.Name == DefaultRoles.SCHOOLADMIN || d.Name == DefaultRoles.TEACHER || d.Name == DefaultRoles.PARENTS)
+                    || d.ClientId == smsClientId
+                    )
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;

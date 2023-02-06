@@ -19,5 +19,6 @@ namespace SMP.BLL.Services.PortalService
         Task<APIResponse<UpdateResultSetting>> UpdateResultSettingTemplateAsync(UpdateResultSetting request);
         Task<APIResponse<AppLayoutSettings>> UpdateAppLayoutSettingsAsync(AppLayoutSettings request);
         Task<APIResponse<AppLayoutSettings>> GetAppLayoutSettingsAsync(string url);
+        void CreateAppLayoutSettingsAsync(string clientId, string schoolUrl);
     }
 }
