@@ -756,7 +756,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
 
-            var classId = context.StudentContact.FirstOrDefault(x => x.StudentContactId == Guid.Parse(studentContactId)).SessionClassId.ToString();
+            var classId = context.StudentContact.FirstOrDefault(x => x.ClientId == smsClientId && x.StudentContactId == Guid.Parse(studentContactId)).SessionClassId.ToString();
             var query = context.TeacherClassNote
                         .Where(x => x.ClientId == smsClientId && x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved)
                         .Include(d => d.Teacher).ThenInclude(d => d.User)
