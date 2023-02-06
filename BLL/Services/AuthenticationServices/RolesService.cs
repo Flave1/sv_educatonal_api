@@ -129,7 +129,12 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true && d.Name != DefaultRoles.FLAVETECH && d.ClientId == smsClientId)
+            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted != true
+            && d.Name != DefaultRoles.FLAVETECH
+            || d.Name == DefaultRoles.SCHOOLADMIN
+            || d.Name == DefaultRoles.TEACHER
+            || d.Name == DefaultRoles.PARENTS
+            && d.ClientId == smsClientId)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
             res.IsSuccessful = true;
@@ -140,7 +145,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result = await context.AppActivity.Where(d => d.Deleted != true && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn)
+            var result = await context.AppActivity.Where(d => d.Deleted != true).OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new GetActivities
                 {
@@ -157,7 +162,7 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<GetActivityParent>>> IRolesService.GetActivityParentsAsync()
         {
             var res = new APIResponse<List<GetActivityParent>>();
-            var result = await context.AppActivityParent.Where(d => d.Deleted != true && d.ClientId == smsClientId)
+            var result = await context.AppActivityParent.Where(d => d.Deleted != true)
                 .Select(a => new GetActivityParent
                 {
                     ParentActivityId = a.Id.ToString(),
@@ -183,7 +188,7 @@ namespace BLL.AuthenticationServices
             }).FirstOrDefaultAsync();
             if (role != null)
             {
-                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId && d.ClientId == smsClientId).Select(a => a.ActivityId).ToList();
+                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
             }
             res.Result = role;
             res.IsSuccessful = true;

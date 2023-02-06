@@ -75,7 +75,8 @@ namespace SMP.BLL.Services.TeacherServices
                     Phone = request.Phone,
                     PhoneNumber = request.Phone,
                     PhoneNumberConfirmed = false,
-                    Photo = uploadProfile
+                    Photo = uploadProfile,
+                    ClientId = smsClientId
                 };
                 var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
                 if (!result.Succeeded)
@@ -150,7 +151,7 @@ namespace SMP.BLL.Services.TeacherServices
                 user.DOB = userDetail.DOB;
                 user.Photo = uploadProfile;
                 user.EmailConfirmed = true;
-
+                user.ClientId = smsClientId;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
                 await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);

@@ -121,9 +121,10 @@ namespace BLL.AuthenticationServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                res.Message.FriendlyMessage = "Unexpected Error Occurred";
+                return res;
             }
         }
 

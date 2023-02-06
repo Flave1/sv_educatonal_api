@@ -20,5 +20,6 @@ namespace API.Controllers.BaseControllers
             res.Result = true;
             return Ok(res);
         }
+
     }
 }
