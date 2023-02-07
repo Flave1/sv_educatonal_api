@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace BLL.Services.SubjectServices
 {
@@ -36,12 +35,7 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                #region
-                //if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(subject.Name) == Tools.ReplaceWhitespace(r.Name) && r.ClientId == smsClientId))
-                #endregion
-
-                var subjectName = await context.Subject.FirstOrDefaultAsync(r => r.Name.ToLower() == subject.Name.ToLower() && r.ClientId == smsClientId);
-                if (subjectName != null)
+                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(subject.Name) == Tools.ReplaceWhitespace(r.Name) && r.ClientId == smsClientId))
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;
@@ -74,12 +68,7 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                #region
-                //if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(Name) == Tools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id) && r.ClientId == smsClientId))
-                #endregion
-
-                var subject = await context.Subject.FirstOrDefaultAsync(r => r.Name.ToLower() == Name.ToLower() && r.SubjectId != Guid.Parse(Id) && r.ClientId == smsClientId);
-                if(subject != null)
+                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(Name) == Tools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id) && r.ClientId == smsClientId))
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;

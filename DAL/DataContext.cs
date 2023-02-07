@@ -112,7 +112,7 @@ namespace DAL
         public override int SaveChanges()
         {
             var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
-            var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -135,7 +135,7 @@ namespace DAL
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
-            var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)

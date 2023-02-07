@@ -46,7 +46,6 @@ namespace BLL.AuthenticationServices
             this.accessor = accessor;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
-            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -58,7 +57,6 @@ namespace BLL.AuthenticationServices
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
-        private readonly string smsClientId;
 
         async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
         {
@@ -97,7 +95,7 @@ namespace BLL.AuthenticationServices
                     id = techerAccount.TeacherId;
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Where(x => x.ClientId == smsClientId).Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
@@ -115,7 +113,7 @@ namespace BLL.AuthenticationServices
                 {
                 }
 
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == userAccount.ClientId) ?? new SchoolSetting();
+                var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
@@ -341,7 +339,6 @@ namespace BLL.AuthenticationServices
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
                 };
-                accessor.HttpContext.Items["smsClientId"] = user.ClientId;
 
                 var userClaims = await userManager.GetClaimsAsync(user);
 
