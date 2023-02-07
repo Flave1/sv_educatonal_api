@@ -303,7 +303,10 @@ namespace BLL.AuthenticationServices
                 {
                     var clientIds = account.ClientId.Split("||").ToList();
                     if(!clientIds.Any(x => x == smsClientId))
+                    {
+                        clientIds.Add(smsClientId);
                         account.ClientId = String.Join("||", clientIds);
+                    }
                 } else
                     account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
