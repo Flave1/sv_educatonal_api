@@ -2,6 +2,7 @@
 using BLL.MiddleWares;
 using BLL.StudentServices;
 using Contracts.Annoucements;
+using DAL.StudentInformation;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.AssessmentServices;
 using SMP.BLL.Services.NoteServices;
@@ -114,6 +115,14 @@ namespace SMP.API.Controllers.ParentControllers
         public async Task<IActionResult> UpdateSeenAnnouncementAsync([FromBody]UpdatSeenAnnouncement request)
         {
             var response = await service.UpdateSeenAnnouncementAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/dashboard-count")]
+        public async Task<IActionResult> GetDashboardCountAsync()
+        {
+            var response = await service.GetDashboardCount();
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

@@ -769,7 +769,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
             }
-           
+
             if (!string.IsNullOrEmpty(classId))
             {
                 query = query.Where(u => u.Classes.Split(',', StringSplitOptions.None).ToList().Select(x => x).Contains(classId));

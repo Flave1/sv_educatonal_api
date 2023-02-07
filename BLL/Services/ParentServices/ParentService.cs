@@ -5,6 +5,7 @@ using BLL.Filter;
 using BLL.Utilities;
 using BLL.Wrappers;
 using Contracts.Annoucements;
+using Contracts.Session;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -187,6 +188,129 @@ namespace SMP.BLL.Services.ParentServices
                 }
             }
             catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<PagedResponse<List<GetParents>>>> GetParentsAsync(PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<GetParents>>>();
+            try
+            {
+                var query = context.Parents
+                    .OrderBy(d => d.Name);
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetParents(x)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<PagedResponse<List<GetParentWards>>>> GetParentWardsAsync(PaginationFilter filter, string parentId)
+        {
+
+            var res = new APIResponse<PagedResponse<List<GetParentWards>>>();
+
+            try
+            {
+                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var query = context.StudentContact
+                        .Include(x => x.Parent)
+                        .Where(x => x.ParentId == Guid.Parse(parentId))
+                        .Include(d => d.User)
+                        .Include(x => x.SessionClass).ThenInclude(x => x.Class)
+                        .OrderByDescending(d => d.User.FirstName)
+                        .Where(d => d.Deleted == false);
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetParentWards(x, regNoFormat)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<GetParents>> GetParentByIdAsync(string parentId)
+        {
+            var res = new APIResponse<GetParents>();
+            try
+            {
+                var parent = await context.Parents
+                    .Where(d => d.Parentid == Guid.Parse(parentId)).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
+
+                res.Result = parent;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<ParentDashboardCount>> GetDashboardCount()
+        {
+            var res = new APIResponse<ParentDashboardCount>();
+            try
+            {
+                var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
+                var parent = await context.Parents.Where(d => d.Email.ToLower() == userName.ToLower()).FirstOrDefaultAsync();
+
+                var students = context.StudentContact
+                               .Include(x => x.Parent)
+                               .Where(x => x.ParentId == parent.Parentid)
+                               .Include(x => x.SessionClass).ThenInclude(x => x.Class)
+                               .Where(d => d.Deleted == false); ;
+
+                var totalWards = students.Count();
+
+                var studentsSessionClassId = await students.Select(x => x.SessionClassId).ToListAsync();
+
+                var classAssessment = context.ClassAssessment.Where(x => studentsSessionClassId.Contains(x.SessionClassId));
+                var totalClassAssessment = classAssessment.Count();
+
+                var studentsTeacherId = await students.Select(x => x.SessionClass.Teacher.TeacherId).ToListAsync();
+                var teacherClassNote = context.TeacherClassNote.Where(x => studentsTeacherId.Contains(x.TeacherId) && x.Deleted != true);
+                var totalTeacherClassNote = teacherClassNote.Count();
+
+                var studentsContactId = await students.Select(x => x.StudentContactId).ToListAsync();
+                var studentClassNote = context.StudentNote.Where(x => studentsContactId.Contains(x.StudentContactId) && x.Deleted != true);
+                var totalstudentClassNote = studentClassNote.Count();
+
+                res.Result = new ParentDashboardCount { TotalWards = totalWards, TotalAssessment = totalClassAssessment, TeachersNote = totalTeacherClassNote, WardsNote = totalstudentClassNote};
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
             {
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;

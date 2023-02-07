@@ -23,7 +23,7 @@ namespace BLL.ClassServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
-        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, Guid gradeLevelId)
+        async Task<APIResponse<ClassLookup>> IClassLookupService.CreateClassLookupAsync(string className, bool isActive, Guid gradeLevelId)
         {
             var res = new APIResponse<ClassLookup>();
             try
@@ -36,7 +36,7 @@ namespace BLL.ClassServices
                 var lookup = new ClassLookup
                 {
                     Name = className,
-                    IsActive = true,
+                    IsActive = isActive,
                     GradeGroupId = gradeLevelId
                 };
                 context.ClassLookUp.Add(lookup);

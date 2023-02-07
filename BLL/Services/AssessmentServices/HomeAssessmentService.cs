@@ -551,7 +551,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Successfully submitted";
+                res.Message.FriendlyMessage = request.ShouldSubmit ? "Successfully submitted" : "Successfully Saved";
                 return res;
             }
             catch (Exception ex)

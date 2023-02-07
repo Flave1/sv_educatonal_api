@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230203114532_admissionSettingUpdate")]
+    partial class admissionSettingUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,9 +28,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ActivityParentId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -66,9 +65,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -105,9 +101,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -207,20 +200,8 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("JwtId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
@@ -230,12 +211,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("Token")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("Used")
                         .HasColumnType("bit");
@@ -272,9 +247,6 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("CanUpdate")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -307,9 +279,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("ClassLookupId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -356,9 +325,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -407,9 +373,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -454,9 +417,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CityId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClientId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CountryId")
@@ -530,9 +490,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -571,9 +528,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClientId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -768,7 +722,7 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionNotificationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AdmissionSettingId")
+                    b.Property<Guid>("AdmissionSettingsId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("CandidateAdmissionStatus")
@@ -779,9 +733,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CountryOfOrigin")
                         .HasColumnType("nvarchar(max)");
@@ -850,7 +801,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasIndex("AdmissionNotificationId");
 
-                    b.HasIndex("AdmissionSettingId");
+                    b.HasIndex("AdmissionSettingsId");
 
                     b.HasIndex("ClassId");
 
@@ -862,9 +813,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionNotificationId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -905,9 +853,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Classes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClientId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -952,9 +897,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("AssignedTo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClientId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Content")
@@ -1006,18 +948,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("ClassAssessmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<Guid?>("HomeAssessmentId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1029,12 +959,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("AssessmentScoreRecordId");
 
@@ -1056,18 +980,6 @@ namespace SMP.DAL.Migrations
                     b.Property<decimal>("AssessmentScore")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -1085,12 +997,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid?>("SessionTermId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("ClassAssessmentId");
 
@@ -1111,9 +1017,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<int>("AssessmentScore")
                         .HasColumnType("int");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
@@ -1188,9 +1091,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("AttachmentUrls")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
 
@@ -1248,9 +1148,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("ClassRegisterId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1283,9 +1180,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassGroupId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -1332,9 +1226,6 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("AssessmentScore")
                         .HasColumnType("int");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1379,9 +1270,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1425,9 +1313,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1467,9 +1352,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("Author")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -1520,9 +1402,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<int>("AprrovalStatus")
                         .HasColumnType("int");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -1581,9 +1460,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
 
@@ -1637,9 +1513,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("Classes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -1680,9 +1553,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassNoteId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
@@ -1728,18 +1598,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
@@ -1751,12 +1609,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("Relationship")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(max)");
@@ -1771,9 +1623,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("UploadedPinId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -1806,9 +1655,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("UsedPinId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -1853,76 +1699,11 @@ namespace SMP.DAL.Migrations
                     b.ToTable("UsedPin");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.PortalSettings.AppLayoutSetting", b =>
-                {
-                    b.Property<Guid>("AppLayoutSettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("colorcustomizer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("colorinfo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("colorprimary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("loginTemplate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("navbarstyle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("scheme")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("schemeDir")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("schoolUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarActiveStyle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarcolor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AppLayoutSettingId");
-
-                    b.ToTable("AppLayoutSetting");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.PortalSettings.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -2001,9 +1782,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("ClassManagement")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2054,9 +1832,6 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("BatchPrinting")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2100,9 +1875,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SchoolSettingsId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
@@ -2160,9 +1932,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2202,29 +1971,11 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("ClassScoreEntryId");
 
@@ -2246,9 +1997,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassScoreEntryId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2297,18 +2045,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Score")
                         .HasColumnType("nvarchar(max)");
 
@@ -2324,12 +2060,6 @@ namespace SMP.DAL.Migrations
                     b.Property<string>("Subjectid")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
                     b.HasKey("ScoreEntryHistoryId");
 
                     b.ToTable("ScoreEntryHistory");
@@ -2340,9 +2070,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassArchiveId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2394,18 +2121,6 @@ namespace SMP.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2414,12 +2129,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("TermName")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("SessionTermId");
 
@@ -2433,9 +2142,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("StudentSessionClassHistoryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2481,9 +2187,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2514,9 +2217,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassTimeTableId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2551,9 +2251,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<Guid>("ClassTimeTableId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2598,24 +2295,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("ClassTimeTableTimeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
                     b.HasKey("ClassTimeTableTimeActivityId");
 
                     b.HasIndex("ClassTimeTableDayId");
@@ -2631,9 +2310,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2828,7 +2504,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("SMP.DAL.Models.Admission.AdmissionSetting", "AdmissionSettings")
                         .WithMany("Admission")
-                        .HasForeignKey("AdmissionSettingId")
+                        .HasForeignKey("AdmissionSettingsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

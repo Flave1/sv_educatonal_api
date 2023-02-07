@@ -14,6 +14,7 @@ using SMP.BLL.Hubs;
 using SMP.BLL.Services.AnnouncementsServices;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.Annoucement;
 using System;
@@ -139,7 +140,7 @@ namespace SMP.BLL.Services.AnnouncementServices
             var newAnnouncement = new Announcements()
             {
                 Header = request.Header,
-                AnnouncementDate = DateTime.UtcNow,
+                AnnouncementDate = Tools.GetCurrentLocalDateTime(),
                 AssignedTo = request.AssignedTo,
                 SentBy = userid,
                 Content = request.Content

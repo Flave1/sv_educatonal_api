@@ -12,7 +12,7 @@ namespace SMP.BLL.Services.AdmissionServices
 {
     public interface IAdmissionService
     {
-        public Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter, string classId, string examStatus);
+        public Task<APIResponse<PagedResponse<List<SelectAdmission>>>> GetAllAdmission(PaginationFilter filter, string classId, string examStatus, string admissionSettingsId);
         public Task<APIResponse<SelectAdmission>> GetAdmission(string admissionId);
         public Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request);
         public Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request);
