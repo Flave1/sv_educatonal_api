@@ -44,6 +44,7 @@ namespace BLL.StudentServices
         private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
         private readonly IParentService parentService;
+        private readonly string smsClientId;
         public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentServices,
             IUtilitiesService utilitiesService)
         {
@@ -57,6 +58,7 @@ namespace BLL.StudentServices
             this.userService = userService;
             this.utilitiesService = utilitiesService;
             this.parentService = parentServices;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
@@ -125,7 +127,7 @@ namespace BLL.StudentServices
             var history  = new StudentSessionClassHistory();
             history.SessionClassId = student.SessionClassId;
             history.StudentContactId = student.StudentContactId;
-            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive)?.SessionTermId;
+            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive && s.ClientId == smsClientId)?.SessionTermId;
             await context.StudentSessionClassHistory.AddAsync(history);
             await context.SaveChangesAsync();
         }
@@ -139,7 +141,7 @@ namespace BLL.StudentServices
 
                 try
                 {
-                    var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId));
+                    var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId) && a.ClientId == smsClientId);
                     if (studentInfor == null)
                     {
                         res.Message.FriendlyMessage = "Student Account not found";
@@ -191,7 +193,7 @@ namespace BLL.StudentServices
 
             try
             {
-                var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(request.StudentContactId));
+                var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.ClientId == smsClientId && a.StudentContactId == Guid.Parse(request.StudentContactId));
                 if (studentInfor == null)
                 {
                     res.Message.FriendlyMessage = "Student Account not found";
@@ -224,11 +226,10 @@ namespace BLL.StudentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
            
-            var query = context.StudentContact
+            var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.User.UserType == (int)UserTypes.Student)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.User) 
-                .OrderBy(s => s.User.FirstName)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student);
+                .OrderBy(s => s.User.FirstName);
 
              var totaltRecord = query.Count();
              var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetStudentContacts(f, regNoFormat)).ToListAsync();
@@ -246,7 +247,7 @@ namespace BLL.StudentServices
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var result = await context.StudentContact
-                .Where(d => studentContactId == d.StudentContactId)
+                .Where(d => studentContactId == d.StudentContactId && d.ClientId == smsClientId)
                 .OrderByDescending(d => d.CreatedOn)
                 .OrderByDescending(s => s.RegistrationNumber)
                 .Include(q => q.User)
@@ -275,7 +276,7 @@ namespace BLL.StudentServices
                     return res;
                 }
 
-                var act = context.StudentContact.FirstOrDefault(d => d.UserId == user.Id);
+                var act = context.StudentContact.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
                 if (act != null)
                 {
                     act.Deleted = true;
@@ -301,7 +302,7 @@ namespace BLL.StudentServices
 
         async Task IStudentService.ChangeClassAsync(Guid studentId, Guid classId)
         {
-            var std = await context.StudentContact.FirstOrDefaultAsync(wh => wh.StudentContactId == studentId);
+            var std = await context.StudentContact.FirstOrDefaultAsync(wh => wh.StudentContactId == studentId && wh.ClientId == smsClientId);
             if (std != null)
             {
                 std.SessionClassId = classId;
@@ -397,7 +398,7 @@ namespace BLL.StudentServices
                             }
                             else
                             {
-                                var clas = context.SessionClass.Include(x => x.Class).Include(x => x.Session)
+                                var clas = context.SessionClass.Where(x => x.ClientId == smsClientId).Include(x => x.Class).Include(x => x.Session)
                                     .FirstOrDefault(z => z.Class.Name.ToLower() == item.SessionClass.ToLower() && z.Deleted == false && z.Session.IsActive);
                                 if (clas == null)
                                 {
@@ -413,7 +414,7 @@ namespace BLL.StudentServices
                             else
                             {
                                 var regNo = utilitiesService.GetStudentRegNumberValue(item.RegistrationNumber);
-                                std = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
+                                std = context.StudentContact.FirstOrDefault(x => x.ClientId == smsClientId && x.RegistrationNumber == regNo);
                                 if (std == null)
                                 {
                                     res.Message.FriendlyMessage = $"No Student found with registration number {item.RegistrationNumber} detected on line {item.ExcelLineNumber}";
@@ -522,7 +523,7 @@ namespace BLL.StudentServices
                 var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
                 var result = await context.StudentContact
-                    .Where(d => regNo == d.RegistrationNumber && d.Deleted != true)
+                    .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == smsClientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Include(q => q.User)
@@ -549,7 +550,7 @@ namespace BLL.StudentServices
                 var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
                 var query = context.StudentContact
-                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true);
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId);
 
                 var totaltRecord = query.Count();
                 var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
@@ -577,7 +578,7 @@ namespace BLL.StudentServices
             {
                 var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
                 var result = await context.StudentContact
-                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true)
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Include(q => q.User)

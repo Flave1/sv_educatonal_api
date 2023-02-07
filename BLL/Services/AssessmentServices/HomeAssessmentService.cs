@@ -22,6 +22,7 @@ using SMP.Contracts.Assessment;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.NotificationModels;
 using SMP.Contracts.Routes;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.ResultModels;
@@ -41,6 +42,7 @@ namespace SMP.BLL.Services.AssessmentServices
         public readonly IFileUploadService uploadService;
         private readonly IHubContext<NotificationHub> hub;
         private readonly INotificationService notificationService;
+        private readonly string smsClientId;
 
         public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
@@ -50,6 +52,7 @@ namespace SMP.BLL.Services.AssessmentServices
             this.uploadService = uploadService;
             this.hub = hub;
             this.notificationService = notificationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -123,7 +126,7 @@ namespace SMP.BLL.Services.AssessmentServices
             try
             {
                 var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-                var assessment = await context.HomeAssessment.FirstOrDefaultAsync(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId));
+                var assessment = await context.HomeAssessment.FirstOrDefaultAsync(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId) && d.ClientId == smsClientId);
                 if (assessment is null)
                 {
                     res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -172,15 +175,14 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var teacherId = accessor.HttpContext.User.FindFirst(x => x.Type == "teacherId").Value;
             var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var query =  context.HomeAssessment
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive);
+            var query = context.HomeAssessment.Where(d => d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                  .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
-                .OrderByDescending(d => d.CreatedOn).Where(d => d.Deleted == false)
-                .Where(d => d.SessionTermId == activeTerm.SessionTermId);
+                .OrderByDescending(d => d.CreatedOn).Where(d=> d.Deleted == false);
 
             if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
             {
@@ -198,9 +200,9 @@ namespace SMP.BLL.Services.AssessmentServices
             if (!string.IsNullOrEmpty(groupId))
             {
                 if(groupId == "all-students")
-                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767"));
+                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767") && d.ClientId == smsClientId);
                 else
-                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse(groupId));
+                    query = query.Where(d => d.SessionClassGroupId == Guid.Parse(groupId) && d.ClientId == smsClientId);
             }
 
             var totaltRecord = query.Count();
@@ -217,7 +219,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<bool>();
             var result = await context.HomeAssessment
                 .Include(d => d.HomeAssessmentFeedBacks)
-                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(request.Item));
+                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(request.Item) && x.ClientId == smsClientId);
 
             if (result != null)
             {
@@ -236,7 +238,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<bool>();
             try
             {
-                var assessment = await context.HomeAssessment.FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId));
+                var assessment = await context.HomeAssessment.FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId) && x.ClientId == smsClientId);
 
                 if (assessment != null)
                 {
@@ -271,18 +273,18 @@ namespace SMP.BLL.Services.AssessmentServices
             if (string.IsNullOrEmpty(sessionClasId))
             {
                 var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
-                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
                 sessionClasId = student.SessionClassId.ToString();
             }
 
             var studentsInClass = context.StudentContact
-                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
+                .Where(f => f.ClientId == smsClientId && f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
                 .Include(s => s.User)
                 .ToList();
             var ds = context.HomeAssessment;
 
             var result = await context.HomeAssessment
-                .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Include(q => q.SessionClassGroup)
@@ -293,7 +295,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             if(result is not null)
             {
-                var teacher = context.Teacher.Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
+                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -310,18 +312,18 @@ namespace SMP.BLL.Services.AssessmentServices
             if (string.IsNullOrEmpty(sessionClasId))
             {
                 var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
-                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
                 sessionClasId = student.SessionClassId.ToString();
             }
 
             var studentsInClass = context.StudentContact
-                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
+                .Where(f => f.ClientId == smsClientId && f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
                 .Include(s => s.User)
                 .ToList();
             var ds = context.HomeAssessment;
 
             var result = await context.HomeAssessment
-                .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                 .Include(q => q.SessionClassGroup)
@@ -332,7 +334,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             if (result is not null)
             {
-                var teacher = context.Teacher.Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
+                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -349,12 +351,12 @@ namespace SMP.BLL.Services.AssessmentServices
             if (string.IsNullOrEmpty(sessionClasId))
             {
                 var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
-                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
+                var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
                 sessionClasId = student.SessionClassId.ToString();
             }
 
             var studentsInClass = context.StudentContact
-                .Where(f => f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
+                .Where(f => f.ClientId == smsClientId && f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
                 .Include(s => s.User)
                 .ToList();
 
@@ -362,7 +364,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
 
             var hmAss = await context.HomeAssessment
-                .Where(d => d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentId == homeAssessmentId)
                 .Include(q => q.SessionClassGroup)
                 .Include(q => q.HomeAssessmentFeedBacks)
                 .OrderByDescending(d => d.CreatedOn).FirstOrDefaultAsync();
@@ -392,10 +394,10 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<GetClassAssessmentRecord>> IHomeAssessmentService.GetSubjectAssessmentScoreRecordAsync(Guid sessionClassSubjectId, Guid sessionClasId)
         {
             var res = new APIResponse<GetClassAssessmentRecord>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var selectedClass = context.SessionClass.FirstOrDefault(s => s.SessionClassId == sessionClasId);
-            var homeAssessment = context.HomeAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId);
-            var classAssessment = context.ClassAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId);
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var selectedClass = context.SessionClass.FirstOrDefault(s => s.SessionClassId == sessionClasId && s.ClientId == smsClientId);
+            var homeAssessment = context.HomeAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId);
+            var classAssessment = context.ClassAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId);
             var homeAScore = homeAssessment.Sum(d => d.AssessmentScore);
             var classAScore = classAssessment.Sum(d => d.AssessmentScore);
 
@@ -417,10 +419,10 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<List<StudentHomeAssessmentRequest>>();
             res.Result = new List<StudentHomeAssessmentRequest>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
             var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
-            var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid));
-            var result = await context.HomeAssessment
+            var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
+            var result = await context.HomeAssessment.Where(x=>x.ClientId == smsClientId)
                 .Include(d => d.HomeAssessmentFeedBacks)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
@@ -452,11 +454,11 @@ namespace SMP.BLL.Services.AssessmentServices
             var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid));
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
 
             var query = context.HomeAssessment
-                .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId)
+                .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
                 .OrderByDescending(d => d.CreatedOn)
                 .Include(d => d.HomeAssessmentFeedBacks)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
@@ -500,7 +502,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 if (!string.IsNullOrEmpty(request.HomeAssessmentFeedBackId))
                 {
-                    reg = context.HomeAssessmentFeedBack.Include(x => x.HomeAssessment).FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
+                    reg = context.HomeAssessmentFeedBack.Where(x=> x.ClientId == smsClientId).Include(x => x.HomeAssessment).FirstOrDefault(d => d.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
                     if(reg is null)
                     {
                         res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -527,7 +529,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 else
                 {
-                    var assessment = context.HomeAssessment.FirstOrDefault(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId));
+                    var assessment = context.HomeAssessment.FirstOrDefault(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId) && d.ClientId == smsClientId);
 
                     if (assessment.Status == (int)HomeAssessmentStatus.Closed)
                     {
@@ -564,13 +566,13 @@ namespace SMP.BLL.Services.AssessmentServices
 
 
             var result = await context.HomeAssessmentFeedBack
-              .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+              .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
               .Include(x => x.StudentContact).ThenInclude(x => x.User)
               .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
             if (result != null)
             {
-                var assessment = context.HomeAssessment
+                var assessment = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                     .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                     .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                     .Include(q => q.SessionClassGroup)
@@ -578,7 +580,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
                 result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
 
-                var teacher = context.Teacher.Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
+                var teacher = context.Teacher.Where(x=> x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -594,7 +596,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<GetHomeAssessmentFeedback>();
 
             var result = await context.HomeAssessmentFeedBack
-              .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+              .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
               .Include(d => d.StudentContact)
               .ThenInclude(s => s.User)
               .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
@@ -610,12 +612,12 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<GetHomeAssessmentFeedback>();
 
             var result = await context.HomeAssessmentFeedBack
-                .Where(d => d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.HomeAssessmentFeedBackId == homeAssessmentFeedBackId)
                 .Select(f => new GetHomeAssessmentFeedback(f)).FirstOrDefaultAsync();
 
             if(result != null)
             {
-                var assessment = context.HomeAssessment
+                var assessment = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                     .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                     .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
                     .Include(q => q.SessionClassGroup)
@@ -623,7 +625,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
                 result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
 
-                var teacher = context.Teacher.Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
+                var teacher = context.Teacher.Where(x => x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -638,7 +640,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<ScoreHomeAssessmentFeedback>();
             try
             {
-                var feedBack = context.HomeAssessmentFeedBack
+                var feedBack = context.HomeAssessmentFeedBack.Where(x => x.ClientId == smsClientId)
                     .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
                     .Include(x => x.HomeAssessment)
                     .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(request.HomeAssessmentFeedBackId));
@@ -697,7 +699,7 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<bool>();
             var homeAssessment = await context.HomeAssessment
-                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
+                .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId) && x.ClientId == smsClientId);
 
             if (homeAssessment != null)
             {
@@ -716,7 +718,7 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<List<SubmittedAndUnsubmittedStudents>>> IHomeAssessmentService.GetHomeAssessmentRecord(string homeAssessmentId)
         {
             var res = new APIResponse<List<SubmittedAndUnsubmittedStudents>>();
-            var result = await context.HomeAssessment
+            var result = await context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
                 .Include(x => x.HomeAssessmentFeedBacks)
                 .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
@@ -737,9 +739,9 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<bool>> IHomeAssessmentService.IncludeClassAssessmentToScoreEntry(string homeAssessmentId, bool Include)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
             var assessment = await context.HomeAssessment
-                .Where(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId))
+                .Where(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId) && x.ClientId == smsClientId)
                 .Include(x => x.HomeAssessmentFeedBacks)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
                 .Include(x => x.SessionClassSubject)
@@ -771,18 +773,18 @@ namespace SMP.BLL.Services.AssessmentServices
 
             foreach(var std in students)
             {
-                var feedBack = context.HomeAssessmentFeedBack.FirstOrDefault(x => x.HomeAssessmentFeedBackId == std.FeedBackId);
+                var feedBack = context.HomeAssessmentFeedBack.FirstOrDefault(x => x.HomeAssessmentFeedBackId == std.FeedBackId && x.ClientId == smsClientId);
                 if (feedBack is null)
                 {
                     continue;
                 }
-                var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == std.StudentId && s.ClassScoreEntry.SubjectId == std.SubjectId);
+                var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == std.StudentId && s.ClassScoreEntry.SubjectId == std.SubjectId && s.ClientId == smsClientId);
 
                 if (scoreEntry is null)
                 {
                     scoreEntry = new ScoreEntry();
                     scoreEntry.SessionTermId = termId;
-                    scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == std.SubjectId && x.SessionClassId == assessment.SessionClassId).ClassScoreEntryId;
+                    scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == std.SubjectId && x.SessionClassId == assessment.SessionClassId && x.ClientId == smsClientId).ClassScoreEntryId;
                     scoreEntry.AssessmentScore = Include ? Convert.ToInt16(std.Score) : 0;
                     scoreEntry.IsOffered = true;
                     scoreEntry.IsSaved = true;
@@ -836,9 +838,9 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<bool>> IHomeAssessmentService.IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId, bool include)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
             
-            var feedBack = context.HomeAssessmentFeedBack
+            var feedBack = context.HomeAssessmentFeedBack.Where(x=> x.ClientId == smsClientId)
                 .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
                 .Include(x => x.HomeAssessment)
                 .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(homeAssessmentFeedbackId));
@@ -857,12 +859,14 @@ namespace SMP.BLL.Services.AssessmentServices
             //    res.Message.FriendlyMessage = $"Feedback has already be included to score entry";
             //    return res;
             //}
-            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.ClientId == smsClientId && s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId 
+            && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId);
             if (scoreEntry is null)
             {
                 scoreEntry = new ScoreEntry();
                 scoreEntry.SessionTermId = termId;
-                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId && x.SessionClassId == feedBack.HomeAssessment.SessionClassId).ClassScoreEntryId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId 
+                && x.SessionClassId == feedBack.HomeAssessment.SessionClassId && x.ClientId == smsClientId).ClassScoreEntryId;
                 scoreEntry.AssessmentScore = include ? Convert.ToInt16(feedBack.Mark) : 0;
                 scoreEntry.IsOffered = true;
                 scoreEntry.IsSaved = true;
@@ -912,7 +916,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
         private string IncludeStudentAssessmentToScoreEntry(HomeAssessmentFeedBack feedBack, bool include)
         {
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
 
             if (feedBack is null)
             {
@@ -926,12 +930,14 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 return $"Feedback has already be included to score entry";
             }
-            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == termId && s.StudentContactId == feedBack.StudentContactId 
+            && s.ClassScoreEntry.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId && s.ClientId == smsClientId);
             if (scoreEntry is null)
             {
                 scoreEntry = new ScoreEntry();
                 scoreEntry.SessionTermId = termId;
-                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId && x.SessionClassId == feedBack.HomeAssessment.SessionClassId).ClassScoreEntryId;
+                scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == feedBack.HomeAssessment.SessionClassSubject.SubjectId
+                && x.SessionClassId == feedBack.HomeAssessment.SessionClassId && x.ClientId == smsClientId).ClassScoreEntryId;
                 scoreEntry.AssessmentScore = Convert.ToInt16(feedBack.Mark);
                 scoreEntry.IsOffered = true;
                 scoreEntry.IsSaved = true;
@@ -987,11 +993,11 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive);
-            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid));
+            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
 
             var query = context.HomeAssessment
-                .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId 
+                .Where(d => d.ClientId == smsClientId && d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId 
                 && d.SessionClassSubjectId == sessionClassSubjectId && d.Status == status)
                 .OrderByDescending(d => d.CreatedOn)
                 .Include(d => d.HomeAssessmentFeedBacks)
@@ -1021,10 +1027,10 @@ namespace SMP.BLL.Services.AssessmentServices
         private async Task NotifyAllStudentsOnAssessmentCreationAsync(HomeAssessment reg, bool shouldSendToStudents)
         {
 
-            var notifications = context.Notification.Where(x => x.NotificationSourceId == reg.HomeAssessmentId.ToString()).FirstOrDefault() ?? null;
+            var notifications = context.Notification.Where(x => x.ClientId == smsClientId && x.NotificationSourceId == reg.HomeAssessmentId.ToString()).FirstOrDefault() ?? null;
             if (notifications == null)
             {
-                var subject = context.SessionClassSubject.Where(x => x.SessionClassSubjectId == reg.SessionClassSubjectId).Select(x => x.Subject.Name).FirstOrDefault();
+                var subject = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SessionClassSubjectId == reg.SessionClassSubjectId).Select(x => x.Subject.Name).FirstOrDefault();
 
                 if (shouldSendToStudents)
                 {
@@ -1046,14 +1052,14 @@ namespace SMP.BLL.Services.AssessmentServices
 
         private async Task NotifyGroupOfStudentsOnAssessmentCreationAsync(HomeAssessment reg, bool shouldSendToStudents)
         {
-            var notifications = context.Notification.Where(x => x.NotificationSourceId == reg.HomeAssessmentId.ToString()).FirstOrDefault() ?? null;
+            var notifications = context.Notification.Where(x => x.ClientId == smsClientId && x.NotificationSourceId == reg.HomeAssessmentId.ToString()).FirstOrDefault() ?? null;
             if (notifications == null)
             {
                 if (shouldSendToStudents)
                 {
-                    var subject = context.SessionClassSubject.Include(x => x.Subject).FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId);
-                    var studentIds = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId).ListOfStudentContactIds.Split(",").ToList();
-                    var userIds = context.StudentContact.Where(x => studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
+                    var subject = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId).Include(x => x.Subject).FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId);
+                    var studentIds = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId && x.ClientId == smsClientId).ListOfStudentContactIds.Split(",").ToList();
+                    var userIds = context.StudentContact.Where(x => x.ClientId == smsClientId && studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
                     string studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x => x.Email).ToList());
 
                     await notificationService.CreateNotitficationAsync(new NotificationDTO
@@ -1073,8 +1079,8 @@ namespace SMP.BLL.Services.AssessmentServices
     
         private async Task SendAssessmentStatusNotificationAsync(string status, HomeAssessment homeAssessment)
         {
-            var subject = context.SessionClassSubject.Where(x => x.SessionClassSubjectId == homeAssessment.SessionClassSubjectId).Include(x => x.Subject).FirstOrDefault().Subject.Name;
-            var sessionClassGroup = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == homeAssessment.SessionClassGroupId);
+            var subject = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SessionClassSubjectId == homeAssessment.SessionClassSubjectId).Include(x => x.Subject).FirstOrDefault().Subject.Name;
+            var sessionClassGroup = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == homeAssessment.SessionClassGroupId && x.ClientId == smsClientId);
             string studentEmails = "";
             if (sessionClassGroup.GroupName == "all-students")
             {
@@ -1083,7 +1089,7 @@ namespace SMP.BLL.Services.AssessmentServices
             else
             {
                 var studentIds = sessionClassGroup.ListOfStudentContactIds.Split(",").ToList();
-                var userIds = context.StudentContact.Where(x => studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
+                var userIds = context.StudentContact.Where(x => x.ClientId == smsClientId && studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
                 studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x => x.Email).ToList());
             }
             await notificationService.CreateNotitficationAsync(new NotificationDTO

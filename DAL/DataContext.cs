@@ -11,7 +11,6 @@ using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.Register;
-using SMP.DAL.Models.PromotionEntities;
 using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
@@ -27,6 +26,7 @@ using SMP.DAL.Models.AssessmentEntities;
 using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.Admission;
+using System.Linq;
 
 namespace DAL
 {
@@ -92,6 +92,7 @@ namespace DAL
         public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
+        public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
@@ -107,9 +108,11 @@ namespace DAL
             base.OnModelCreating(builder);
         }
 
+       
         public override int SaveChanges()
         {
             var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -117,19 +120,22 @@ namespace DAL
                     entry.Entity.Deleted = false; 
                     entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
                 else
                 {
                     entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
             }
             return base.SaveChanges();
         }
-
+       
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
+            var smsClientId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value ?? "";
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -137,11 +143,13 @@ namespace DAL
                     entry.Entity.Deleted = false;   
                     entry.Entity.CreatedOn = GetCurrentLocalDateTime();
                     entry.Entity.CreatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
                 else
                 {
                     entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
                     entry.Entity.UpdatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
                 }
             }
             return base.SaveChangesAsync(cancellationToken);

@@ -1,10 +1,11 @@
-﻿using System;
+﻿using DAL;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMP.DAL.Models.Timetable
 {
-    public class ClassTimeTableTimeActivity
+    public class ClassTimeTableTimeActivity : CommonEntity
     {
         [Key]
         public Guid ClassTimeTableTimeActivityId { get; set; }

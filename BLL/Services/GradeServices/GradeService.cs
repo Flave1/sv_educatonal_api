@@ -1,6 +1,7 @@
 ﻿using BLL;
 using Contracts.Common;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
@@ -16,10 +17,12 @@ namespace SMP.BLL.Services.GradeServices
     public class GradeService : IGradeService
     {
         private readonly DataContext context;
+        private readonly string smsClientId;
 
-        public GradeService(DataContext context)
+        public GradeService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<EditGradeGroupModel>> IGradeService.UpdateGradeAsync(EditGradeGroupModel request)
@@ -30,9 +33,9 @@ namespace SMP.BLL.Services.GradeServices
             {
                 try
                 {
-                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == request.GradeGroupId);
+                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == request.GradeGroupId && r.ClientId == smsClientId);
 
-                    var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
+                    var currentSession = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive == true);
                     if (currentSession != null)
                     {
                         gg.GradeGroupName = request.GradeGroupName;
@@ -48,7 +51,7 @@ namespace SMP.BLL.Services.GradeServices
                         await transaction.CommitAsync();
                         res.Result = request;
                         res.IsSuccessful = true;
-                        res.Message.FriendlyMessage = $"You have successfuly setted up grade setting for { request.GradeGroupName }";
+                        res.Message.FriendlyMessage = $"You have successfuly set up grade setting for { request.GradeGroupName }";
                         return res;
 
                     }
@@ -57,7 +60,7 @@ namespace SMP.BLL.Services.GradeServices
                         //return some messge
                         await transaction.RollbackAsync();
                         res.IsSuccessful = false;
-                        res.Message.FriendlyMessage = "There is no session setted up for school";
+                        res.Message.FriendlyMessage = "There is no session set up for school";
                         return res;
                     }
 
@@ -79,7 +82,7 @@ namespace SMP.BLL.Services.GradeServices
         async Task<APIResponse<AddGradeGroupModel>> IGradeService.CreateGradeAsync(AddGradeGroupModel request)
         {
             var res = new APIResponse<AddGradeGroupModel>();
-            if (context.GradeGroup.AsEnumerable().Any(s => Tools.ReplaceWhitespace(s.GradeGroupName) == Tools.ReplaceWhitespace(request.GradeGroupName)))
+            if (context.GradeGroup.Where(x=>x.ClientId == smsClientId).AsEnumerable().Any(s => Tools.ReplaceWhitespace(s.GradeGroupName) == Tools.ReplaceWhitespace(request.GradeGroupName)))
             {
                 res.Message.FriendlyMessage = "Group Name Already added";
                 return res;
@@ -89,7 +92,7 @@ namespace SMP.BLL.Services.GradeServices
             {
                 try
                 {
-                    var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
+                    var currentSession = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive == true);
                     if (currentSession != null)
                     {
                         var gg = new GradeGroup();
@@ -107,13 +110,13 @@ namespace SMP.BLL.Services.GradeServices
                     }
                     else
                     {
-                        res.Message.FriendlyMessage = "There is no session setted up for school";
+                        res.Message.FriendlyMessage = "There is no session set up for school";
                         await transaction.RollbackAsync();
                         return res;
                     }
 
                     res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = $"You have successfuly setted up grade setting for { request.GradeGroupName }";
+                    res.Message.FriendlyMessage = $"You have successfuly set up grade setting for { request.GradeGroupName }";
                     return res;
 
                 }
@@ -149,10 +152,9 @@ namespace SMP.BLL.Services.GradeServices
         {
             var res = new APIResponse<List<GetGradeGroupModel>>();
 
-            var result = await context.GradeGroup
+            var result = await context.GradeGroup.Where(x=>x.ClientId == smsClientId && x.Deleted == false)
                      .Include(d => d.Classes)
                      .Include(d => d.Grades)
-                     .Where(d => d.Deleted == false)
                      .Select(d => new GetGradeGroupModel(d)).ToListAsync();
 
             res.IsSuccessful = true;
@@ -165,13 +167,13 @@ namespace SMP.BLL.Services.GradeServices
         {
             var res = new APIResponse<List<GetSessionClass>>();
 
-            var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true);
+            var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true && d.ClientId == smsClientId);
             if (currentSession != null)
             {
 
-                var result = await context.SessionClass
+                var result = await context.SessionClass.Where(d=> d.SessionId == currentSession.SessionId && d.ClientId == smsClientId)
                     .Include(rr => rr.Class)
-                    .Where(a => a.SessionId == currentSession.SessionId).OrderBy(s => s.Class.Name)
+                    .OrderBy(s => s.Class.Name)
                     .Select(d => new GetSessionClass(d)).ToListAsync();
 
                               //select new GetSessionClass(a)).ToList();
@@ -185,7 +187,7 @@ namespace SMP.BLL.Services.GradeServices
             {
                 //return some messge
                 res.IsSuccessful = false;
-                res.Message.FriendlyMessage = "There is no session setted up for school";
+                res.Message.FriendlyMessage = "There is no session set up for school";
                 return res;
             }
         }
@@ -193,7 +195,7 @@ namespace SMP.BLL.Services.GradeServices
      
         private async Task DeleteGroupGradesAsync(Guid groupId)
         {
-            var groupGrade = await context.Grade.Where(d => d.GradeGroupId == groupId).ToListAsync();
+            var groupGrade = await context.Grade.Where(d => d.GradeGroupId == groupId && d.ClientId == smsClientId).ToListAsync();
             if (groupGrade.Any())
             {
                 context.Grade.RemoveRange(groupGrade);
@@ -209,7 +211,7 @@ namespace SMP.BLL.Services.GradeServices
             {
                 try
                 {
-                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == Guid.Parse(request.Item));
+                    var gg = await context.GradeGroup.FirstOrDefaultAsync(r => r.GradeGroupId == Guid.Parse(request.Item) && r.ClientId == smsClientId);
 
                     if (gg == null)
                     {

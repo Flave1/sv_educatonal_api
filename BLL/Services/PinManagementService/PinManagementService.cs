@@ -35,6 +35,7 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         private readonly IUtilitiesService utilitiesService;
+        private readonly string smsClientId;
         public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IHttpContextAccessor accessor, IPaginationService paginationService, IUtilitiesService utilitiesService)
         {
             this.context = context;
@@ -44,6 +45,7 @@ namespace SMP.BLL.Services.PinManagementService
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.utilitiesService = utilitiesService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<PrintResult>> IPinManagementService.PrintResultAsync(PrintResultRequest request)
         {
@@ -51,13 +53,13 @@ namespace SMP.BLL.Services.PinManagementService
             try
             {
                 var regNo = utilitiesService.GetStudentRegNumberValue(request.RegistractionNumber);
-                var studentInfo = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower());
+                var studentInfo = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower() && x.ClientId == smsClientId);
                 if (studentInfo == null)
                 {
                     res.Message.FriendlyMessage = "Invalid student registration number";
                     return res;
                 }
-                var studentClassArchive = context.SessionClassArchive.FirstOrDefault(s => s.SessionTermId == Guid.Parse(request.TermId) && s.StudentContactId == studentInfo.StudentContactId);
+                var studentClassArchive = context.SessionClassArchive.FirstOrDefault(s => s.SessionTermId == Guid.Parse(request.TermId) && s.StudentContactId == studentInfo.StudentContactId && s.ClientId == smsClientId);
                 if(studentClassArchive is null)
                 {
                     res.Message.FriendlyMessage = "Republish Class result to capture this student result";
@@ -74,7 +76,7 @@ namespace SMP.BLL.Services.PinManagementService
                         res.Message.FriendlyMessage = "Result not published";
                         return res;
                     }
-                    var pin = await context.UsedPin.Include(d => d.UploadedPin).Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
+                    var pin = await context.UsedPin.Where(x=>x.ClientId == smsClientId).Include(d => d.UploadedPin).Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == request.Pin).ToListAsync();
                     if (pin.Any())
                     {
                         if (pin.Count >= 3)
@@ -120,7 +122,7 @@ namespace SMP.BLL.Services.PinManagementService
                             res.Message.FriendlyMessage = fwsResponse.message.friendlyMessage;
                             return res;
                         }
-                        var uploadedPin = await context.UploadedPin.FirstOrDefaultAsync(x => x.Pin == request.Pin);
+                        var uploadedPin = await context.UploadedPin.FirstOrDefaultAsync(x => x.Pin == request.Pin && x.ClientId == smsClientId);
                         if (uploadedPin == null)
                         {
                             res.Message.FriendlyMessage = "Pin not uploaded";
@@ -298,8 +300,8 @@ namespace SMP.BLL.Services.PinManagementService
         async Task<APIResponse<PagedResponse<List<GetPins>>>> IPinManagementService.GetAllUnusedPinsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<GetPins>>>();
-            var query = context.UploadedPin.Where(d => d.Deleted == false);
-            var usedPinIds = context.UsedPin.Where(d => d.Deleted == false).Select(x => x.UploadedPinId);
+            var query = context.UploadedPin.Where(d => d.Deleted == false && d.ClientId == smsClientId);
+            var usedPinIds = context.UsedPin.Where(d => d.Deleted == false && d.ClientId == smsClientId).Select(x => x.UploadedPinId);
 
             query = query.OrderByDescending(x => x.CreatedOn).Where(d => !usedPinIds.Contains(d.UploadedPinId));
 
@@ -314,7 +316,7 @@ namespace SMP.BLL.Services.PinManagementService
         {
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
             var res = new APIResponse<PagedResponse<List<GetPins>>>();
-            var query = context.UsedPin.Where(d => d.Deleted == false)
+            var query = context.UsedPin.Where(d => d.Deleted == false && d.ClientId == smsClientId)
                 .Include(x => x.UploadedPin)
                 .Include(x => x.Student).ThenInclude(d => d.User)
                 .Include(x => x.Sessionterm)
@@ -337,6 +339,7 @@ namespace SMP.BLL.Services.PinManagementService
             var query2 = result.AsEnumerable().GroupBy(d => d.UploadedPinId).Select(grp => grp).Select(f => new GetPins(f, regNoFormat)).AsQueryable();
             var totaltRecord = query2.Count();
             res.Result =  paginationService.CreatePagedReponse(query2.ToList(), filter, totaltRecord);
+        
 
             res.IsSuccessful = true;
 
@@ -346,7 +349,7 @@ namespace SMP.BLL.Services.PinManagementService
         async Task<APIResponse<PinDetail>> IPinManagementService.GetUnusedPinDetailAsync(string pin)
         {
             var res = new APIResponse<PinDetail>();
-            res.Result = await context.UploadedPin.Where(x => x.Pin == pin).Select(e => new PinDetail(e)).FirstOrDefaultAsync();
+            res.Result = await context.UploadedPin.Where(x => x.Pin == pin && x.ClientId == smsClientId).Select(e => new PinDetail(e)).FirstOrDefaultAsync();
             res.IsSuccessful = true;
             return res;
         }
@@ -356,7 +359,7 @@ namespace SMP.BLL.Services.PinManagementService
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
             var res = new APIResponse<PinDetail>();
-            res.Result = context.UsedPin
+            res.Result = context.UsedPin.Where(x=>x.ClientId == smsClientId)
             .Include(x => x.UploadedPin)
             .Include(x => x.Student).ThenInclude(d => d.User)
             .Include(x => x.Sessionterm)
@@ -375,7 +378,7 @@ namespace SMP.BLL.Services.PinManagementService
             {
                 try
                 {
-                    var students = context.ScoreEntry.Include(x => x.ClassScoreEntry)
+                    var students = context.ScoreEntry.Where(x=>x.ClientId == smsClientId).Include(x => x.ClassScoreEntry)
                         .Where(x => x.ClassScoreEntry.SessionClassId == request.SessionClassId && x.SessionTermId == request.TermId && x.IsOffered).Select(x => x.StudentContact);
                
                     var isArchived = IsResultArchived(request.SessionClassId, request.TermId, students.Select(x => x.StudentContactId).Distinct().ToList());
@@ -414,7 +417,7 @@ namespace SMP.BLL.Services.PinManagementService
                         foreach(var pinResult in fwsResponse.result)
                         {
 
-                            var pin = await context.UsedPin.Include(d => d.UploadedPin)
+                            var pin = await context.UsedPin.Where(x => x.ClientId == smsClientId).Include(d => d.UploadedPin)
                                                        .Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == pinResult.pin).ToListAsync();
 
                             var regNo = utilitiesService.GetStudentRegNumberValue(pinResult.studentRegNo);
@@ -477,11 +480,11 @@ namespace SMP.BLL.Services.PinManagementService
         }
 
         List<UploadedPin> GetUnusedPins(int number) 
-            => context.UploadedPin.Include(x => x.UsedPin).Where(d => d.Deleted == false && !d.UsedPin.Any()).Take(number).ToList(); 
+            => context.UploadedPin.Where(x => x.ClientId == smsClientId).Include(x => x.UsedPin).Where(d => d.Deleted == false && !d.UsedPin.Any()).Take(number).ToList(); 
        
         bool IsResultArchived(Guid classId, Guid termId, List<Guid> stdIds)
         {
-            var stds = context.SessionClassArchive.Where(s => s.SessionTermId == termId && s.SessionClassId == classId && s.IsPublished).Select(x => x.StudentContactId).ToList();
+            var stds = context.SessionClassArchive.Where(s => s.SessionTermId == termId && s.SessionClassId == classId && s.IsPublished && s.ClientId == smsClientId).Select(x => x.StudentContactId).ToList();
             return stdIds.All(x => stds.Contains(x));
         }
         

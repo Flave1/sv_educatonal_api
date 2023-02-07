@@ -19,5 +19,6 @@ namespace SMP.BLL.Services.TeacherServices
         Task<APIResponse<List<ApplicationUser>>> GetAllActiveTeachersAsync();
         Task<APIResponse<UpdateProfileByTeacher>> UpdateTeacherProfileByTeacherAsync(UpdateProfileByTeacher userDetail);
         Task<APIResponse<TeacheerClassAndSibjects>> GetSingleTeacherClassesAndSubjectsAsync(Guid teacherId);
+        Task<APIResponse<string>> CreateAdminAsync(UserCommand request);
     }
 }

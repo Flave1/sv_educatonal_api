@@ -41,8 +41,11 @@ namespace BLL.AuthenticationServices
         private readonly FwsConfigSettings fwsConfig;
         private readonly IPinManagementService pinService;
         private readonly IUtilitiesService utilitiesService;
+        private readonly string smsClientId;
+        public readonly IHttpContextAccessor accessor;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
-            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, IPinManagementService pinService, IUtilitiesService utilitiesService)
+            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, 
+            IPinManagementService pinService, IUtilitiesService utilitiesService, IHttpContextAccessor accessor)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -50,11 +53,13 @@ namespace BLL.AuthenticationServices
             this.context = context;
             this.identityService = identityService;
             this.schoolSettings = options.Value;
+            this.accessor = accessor;
             this.uploadService = uploadService;
             emailConfiguration = emailOptions.Value;
             fwsConfig = fwsOptions.Value;
             this.pinService = pinService;
             this.utilitiesService = utilitiesService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -111,8 +116,8 @@ namespace BLL.AuthenticationServices
                     FirstName = student.FirstName,
                     MiddleName = student.MiddleName,
                     Phone = student.Phone,
-                    Photo = filePath
-
+                    Photo = filePath,
+                    ClientId = smsClientId,
                 };
                 var result = await manager.CreateAsync(user, regNoFormat);
                 if (!result.Succeeded)
@@ -199,6 +204,7 @@ namespace BLL.AuthenticationServices
                 account.MiddleName = student.MiddleName;
                 account.Phone = student.Phone;
                 account.Photo = filePath;
+                account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -229,6 +235,7 @@ namespace BLL.AuthenticationServices
                 account.FirstName = student.FirstName;
                 account.MiddleName = student.MiddleName;
                 account.Phone = student.Phone;
+                account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -255,7 +262,7 @@ namespace BLL.AuthenticationServices
                     Email = email,
                     UserType = (int)UserTypes.Parent,
                     Phone = phone,
-
+                    ClientId = smsClientId,
                 };
                 var result = await manager.CreateAsync(user, "000000");
                 if (!result.Succeeded)
@@ -292,6 +299,16 @@ namespace BLL.AuthenticationServices
                 account.UserName = email;
                 account.Email = email;
                 account.UserType = (int)UserTypes.Parent;
+                if (!string.IsNullOrEmpty(account.ClientId))
+                {
+                    var clientIds = account.ClientId.Split("||").ToList();
+                    if(!clientIds.Any(x => x == smsClientId))
+                    {
+                        clientIds.Add(smsClientId);
+                        account.ClientId = String.Join("||", clientIds);
+                    }
+                } else
+                    account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {

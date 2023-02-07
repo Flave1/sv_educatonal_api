@@ -1,4 +1,5 @@
-﻿using DAL.ClassEntities;
+﻿using DAL;
+using DAL.ClassEntities;
 using DAL.SubjectModels;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMP.DAL.Models.ResultModels
 {
-    public class ClassScoreEntry
+    public class ClassScoreEntry : CommonEntity
     {
         [Key]
         public Guid ClassScoreEntryId { get; set; }

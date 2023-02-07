@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DAL.Authentication
 {
-    public class RefreshToken
+    public class RefreshToken : CommonEntity
     {
         [Key]
         public string JwtId { get; set; }

@@ -17,11 +17,12 @@ namespace SMP.BLL.Services.DashboardServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
-
+        private readonly string smsClientId;
         public DashboardService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.accessor = accessor;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         APIResponse<GetDashboardCount> IDashboardService.GetDashboardCountAsync()
@@ -30,7 +31,8 @@ namespace SMP.BLL.Services.DashboardServices
             var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
-            var rolesActivities = context.RoleActivity.Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
+            var rolesActivities = context.RoleActivity.Where(x=>x.ClientId == smsClientId)
+                .Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
 
             if (!string.IsNullOrEmpty(userId))
             { 
@@ -61,25 +63,25 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetDashboardCounts()
         {
-            var enrolledStudents = context.StudentContact.Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
-            var totalClass = context.SessionClass
+            var enrolledStudents = context.StudentContact.Where(x=>x.ClientId == smsClientId).Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
+            var totalClass = context.SessionClass.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true);
 
-            var totalSubject = context.Subject
+            var totalSubject = context.Subject.Where(x => x.ClientId == smsClientId)
                 .Count(x => x.Deleted == false && x.IsActive == true);
 
-            var totalStaff = context.Teacher
+            var totalStaff = context.Teacher.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.User)
                 .Count(x => x.Deleted == false && x.User.Active == true);
 
-            var totalUnusedPins = context.UploadedPin
+            var totalUnusedPins = context.UploadedPin.Where(x => x.ClientId == smsClientId)
                 .Count(x => x.Deleted == false && !x.UsedPin.Any());
 
-            var totalHomeAssessments = context.HomeAssessment
+            var totalHomeAssessments = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                 .Count(x => x.Deleted == false);
 
-            var totalClassAssessments = context.ClassAssessment
+            var totalClassAssessments = context.ClassAssessment.Where(x => x.ClientId == smsClientId)
                .Count();
 
             return new GetDashboardCount
@@ -95,13 +97,13 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetTeacherDashboardCounts(Guid teacherId, List<string> permissions)
         {
-            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
-            var totalClass = context.SessionClass
+            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+            var totalClass = context.SessionClass.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true && x.FormTeacherId == teacherId);
 
 
-            var totalSubject = context.SessionClassSubject
+            var totalSubject = context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.Subject)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                 .Where(x => x.SessionClass.Session.IsActive && x.SubjectTeacherId == teacherId)
@@ -111,12 +113,12 @@ namespace SMP.BLL.Services.DashboardServices
 
 
 
-            var totalHomeAssessments = context.HomeAssessment
+            var totalHomeAssessments = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                 .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
                 .Count(x => x.Deleted == false && x.TeacherId == teacherId);
 
-            var totalClassAssessments = context.ClassAssessment
+            var totalClassAssessments = context.ClassAssessment.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                 .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
                .Count( x => x.Scorer == teacherId);
@@ -135,20 +137,20 @@ namespace SMP.BLL.Services.DashboardServices
         private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
         {
             var student = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(x => x.StudentContactId == studentId);
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
             if (student == null)
                 throw new ArgumentException("Not found");
             var totalSubject = context.SessionClassSubject
-                .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId);
+                .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.ClientId == smsClientId);
 
             var totalHomeAssessments = context.HomeAssessment
-               .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId && x.Status != (int)HomeAssessmentStatus.Saved);
+               .Count(x => x.ClientId == smsClientId && x.Deleted == false && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId && x.Status != (int)HomeAssessmentStatus.Saved);
 
             var totalClassAssessments = context.ClassAssessment
-               .Count(x =>  x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
+               .Count(x => x.ClientId == smsClientId && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);
 
             var notes = context.StudentNote
-               .Count(x => x.StudentContactId == studentId && x.Deleted == false  && x.SessionTermId == termId);
+               .Count(x => x.ClientId == smsClientId && x.StudentContactId == studentId && x.Deleted == false  && x.SessionTermId == termId);
 
 
             var classNotes = context.TeacherClassNote.Where(x => x.Deleted == false && x.SessionTermId == termId).Include(x=>x.ClassNote)
@@ -171,45 +173,45 @@ namespace SMP.BLL.Services.DashboardServices
             var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
-            var rolesActivities = context.RoleActivity.Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
+            var rolesActivities = context.RoleActivity.Where(x=>x.ClientId == smsClientId).Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
             IQueryable<SessionClass> classesAsASujectTeacher = null;
             IQueryable<SessionClass> classesAsAFormTeacher = null;
-            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive);
+            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
             if (!string.IsNullOrEmpty(userId))
             {
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     classesAsASujectTeacher = context.SessionClass
+                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false);
+                        .OrderBy(s => s.Class.Name);
 
                     classesAsAFormTeacher = context.SessionClass
+                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false );
+                        .OrderBy(s => s.Class.Name);
 
                 }
                 else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
 
                      classesAsASujectTeacher = context.SessionClass
+                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
-                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+                        .OrderBy(s => s.Class.Name);
 
                     classesAsAFormTeacher = context.SessionClass
+                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId))
                         .Include(s => s.Class)
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId));
+                        .OrderBy(s => s.Class.Name);
 
                    
                     //res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
@@ -225,13 +227,13 @@ namespace SMP.BLL.Services.DashboardServices
                     result.SessionClassId = allClasses[i].SessionClassId;
 
                     var totalHomeAssessments = context.HomeAssessment
-                        .Where(x => x.SessionClassId == allClasses[i].SessionClassId)
+                        .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
                         .Count(x => x.Deleted == false && x.TeacherId == Guid.Parse(teacherId));
 
                     var totalClassAssessments = context.ClassAssessment
-                        .Where(x => x.SessionClassId == allClasses[i].SessionClassId)
+                        .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
                        .Count(x => x.Scorer == Guid.Parse(teacherId));
@@ -241,7 +243,7 @@ namespace SMP.BLL.Services.DashboardServices
                     result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
 
                 result.StudentNoteCount = context.TeacherClassNote
-                    .Where(x => x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
+                    .Where(x => x.ClientId == smsClientId && x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
                     .Where(x => x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString())).Distinct().Count();
                 classRes.Add(result);
             }

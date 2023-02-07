@@ -22,6 +22,7 @@ namespace BLL.ClassServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly string smsClientId;
         public ClassGroupService(DataContext context, IHttpContextAccessor accessor)
         {
             this.context = context;
@@ -33,7 +34,8 @@ namespace BLL.ClassServices
             var res = new APIResponse<CreateClassGroup>();
             try
             {
-                if (context.SessionClassGroup.AsEnumerable().Any(r => Tools.ReplaceWhitespace(request.GroupName) == Tools.ReplaceWhitespace(r.GroupName) && request.SessionClassId == r.SessionClassId.ToString()))
+                if (context.SessionClassGroup.Where(x=>x.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(request.GroupName) == Tools.ReplaceWhitespace(r.GroupName) 
+                && request.SessionClassId == r.SessionClassId.ToString()))
                 {
                     res.Message.FriendlyMessage = "Group Name Already exist";
                     return res;
@@ -65,14 +67,14 @@ namespace BLL.ClassServices
             var res = new APIResponse<UpdateClassGroup>();
             try
             {
-                if (context.SessionClassGroup.AsEnumerable().Any(r => Tools.ReplaceWhitespace(request.GroupName) == Tools.ReplaceWhitespace(r.GroupName) 
+                if (context.SessionClassGroup.Where(x=>x.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(request.GroupName) == Tools.ReplaceWhitespace(r.GroupName) 
                 && r.SessionClassGroupId != Guid.Parse(request.GroupId) && request.SessionClassId == r.SessionClassId.ToString()))
                 {
                     res.Message.FriendlyMessage = "Group Name Already exist";
                     return res;
                 }
 
-                var grp = context.SessionClassGroup.FirstOrDefault(r => r.SessionClassGroupId == Guid.Parse(request.GroupId));
+                var grp = context.SessionClassGroup.FirstOrDefault(r => r.SessionClassGroupId == Guid.Parse(request.GroupId) && r.ClientId == smsClientId);
                 if (grp == null)
                 {
                     res.Message.FriendlyMessage = "Group Group does not exist";
@@ -101,14 +103,13 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetClassGroupRequest>>> IClassGroupService.GetAllClassGroupsAsync(Guid sessionClassId, Guid sessionClassSubjectId)
         {
             var res = new APIResponse<List<GetClassGroupRequest>>();
-            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
+            var student = context.StudentContact.Where(x=>x.ClientId == smsClientId).Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
             
-            var result = await context.SessionClassGroup
+            var result = await context.SessionClassGroup.Where(x => x.ClientId == smsClientId && x.GroupName != "all-students")
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
-                .Where(d => d.Deleted == false 
-                && d.GroupName != "all-students" 
+                .Where(d => d.Deleted == false   
                 && d.SessionClassSubjectId == sessionClassSubjectId).Select(a => 
                 new GetClassGroupRequest(a, student.Count())).ToListAsync();
             res.IsSuccessful = true;
@@ -124,7 +125,7 @@ namespace BLL.ClassServices
             //GET SUPER ADMIN CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
-                res.Result = await context.SessionClassSubject
+                res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                 .Include(s => s.Subject)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
                 new SessionClassSubjects(a)).ToListAsync();
@@ -136,11 +137,11 @@ namespace BLL.ClassServices
 
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
             {
-                var subjectTeacherSubjects = context.SessionClassSubject
+                var subjectTeacherSubjects = context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                     .Include(d => d.Subject)
                     .Where(e => e.SubjectTeacherId == Guid.Parse(teacherId) && e.SessionClassId == sessionClassId && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new SessionClassSubjects(s));
 
-                var formTeacherSubjects = context.SessionClassSubject
+                var formTeacherSubjects = context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                     .Include(d => d.Subject)
                     .Include(d => d.SessionClass)
                     .Where(e => e.SessionClassId == sessionClassId && e.SessionClass.FormTeacherId == Guid.Parse(teacherId) && e.Subject.Deleted == false && e.Subject.IsActive == true).Select(s => new SessionClassSubjects(s));
@@ -155,7 +156,7 @@ namespace BLL.ClassServices
 
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
             {
-                res.Result = await context.SessionClassSubject
+                res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                 .Include(s => s.Subject)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
                 new SessionClassSubjects(a)).ToListAsync();
@@ -172,8 +173,8 @@ namespace BLL.ClassServices
         async Task<APIResponse<GetClassGroupRequest>> IClassGroupService.GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId)
         {
             var res = new APIResponse<GetClassGroupRequest>();
-            var student = context.StudentContact.Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
-            var result = await context.SessionClassGroup
+            var student = context.StudentContact.Where(x => x.ClientId == smsClientId).Include(s => s.User).Where(e => e.SessionClassId == sessionClassId && e.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).ToList();
+            var result = await context.SessionClassGroup.Where(x => x.ClientId == smsClientId)
                 .OrderBy(s => s.GroupName)
                 .Include(d => d.SessionClass).ThenInclude(s => s.Class)
                 .Include(d => d.SessionClassSubject).ThenInclude(s => s.Subject)
@@ -189,7 +190,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<MultipleDelete>();
             foreach(var GroupId in request.Items)
             {
-                var Group = context.SessionClassGroup.FirstOrDefault(d => d.SessionClassGroupId == Guid.Parse(GroupId));
+                var Group = context.SessionClassGroup.FirstOrDefault(d => d.SessionClassGroupId == Guid.Parse(GroupId) && d.ClientId == smsClientId);
                 if (Group == null)
                 {
                     res.Message.FriendlyMessage = "Class Group does not exist";
@@ -210,7 +211,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<List<SessionClassSubjects>>();
            
-            res.Result = await context.SessionClassSubject
+            res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
             .Include(s => s.Subject)
             .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
             new SessionClassSubjects(a)).ToListAsync();

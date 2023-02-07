@@ -11,11 +11,13 @@ using DAL;
 using DAL.Authentication;
 using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.PortalService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +34,10 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IFileUploadService upload;
         private readonly IUserService userService;
         private readonly IPaginationService paginationService;
-        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment, IFileUploadService upload, IUserService userService, IPaginationService paginationService)
+        private readonly string smsClientId;
+        private readonly IPortalSettingService portalSettingService;
+        public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
+            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, IPortalSettingService portalSettingService)
         {
             this.userManager = userManager;
             this.context = context;
@@ -41,6 +46,8 @@ namespace SMP.BLL.Services.TeacherServices
             this.upload = upload;
             this.userService = userService;
             this.paginationService = paginationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.portalSettingService = portalSettingService;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -71,7 +78,8 @@ namespace SMP.BLL.Services.TeacherServices
                     Phone = request.Phone,
                     PhoneNumber = request.Phone,
                     PhoneNumberConfirmed = false,
-                    Photo = uploadProfile
+                    Photo = uploadProfile,
+                    ClientId = smsClientId
                 };
                 var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
                 if (!result.Succeeded)
@@ -133,7 +141,7 @@ namespace SMP.BLL.Services.TeacherServices
                 res.Message.FriendlyMessage = "Teacher user account does not exist";
                 return res;
             }
-            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
+            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
             if (teacherAct != null)
             {
                 user.Email = userDetail.Email;
@@ -146,7 +154,7 @@ namespace SMP.BLL.Services.TeacherServices
                 user.DOB = userDetail.DOB;
                 user.Photo = uploadProfile;
                 user.EmailConfirmed = true;
-
+                user.ClientId = smsClientId;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
                 await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
@@ -166,7 +174,7 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<PagedResponse<List<ApplicationUser>>>> ITeacherService.GetAllTeachersAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<ApplicationUser>>>();
-            var query = context.Teacher.Include(s => s.User).Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).OrderBy(d => d.User.FirstName);
+            var query = context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).Include(s => s.User).OrderBy(d => d.User.FirstName);
 
             var totaltRecord = query.Count();
             var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).ToListAsync();
@@ -181,8 +189,8 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<List<ApplicationUser>>();
 
-            var result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active).Select(a => new ApplicationUser(a)).ToListAsync();
+            var result = await context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active).OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+                .Select(a => new ApplicationUser(a)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
@@ -193,8 +201,8 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<ApplicationUser>> ITeacherService.GetSingleTeacherAsync(Guid teacherId)
         {
             var res = new APIResponse<ApplicationUser>();
-            var result = await context.Teacher.OrderByDescending(d => d.CreatedOn).Include(s => s.User)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+            var result = await context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+                .OrderByDescending(d => d.CreatedOn).Include(s => s.User)
                 .Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
@@ -215,7 +223,7 @@ namespace SMP.BLL.Services.TeacherServices
                     return res;
                 }
 
-                var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
+                var teacherAct = context.Teacher.FirstOrDefault(d => d.ClientId == smsClientId && d.UserId == user.Id);
                 if (teacherAct != null)
                 {
                     teacherAct.Deleted = true;
@@ -250,7 +258,7 @@ namespace SMP.BLL.Services.TeacherServices
                 return res;
             }
             var uploadProfile = userService.UpdateTeacherUserProfileImageAsync(userDetail.ProfileImage, user);
-            var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id);
+            var teacherAct = context.Teacher.FirstOrDefault(d => d.ClientId == smsClientId && d.UserId == user.Id);
             if (teacherAct != null)
             {
                 user.Email = userDetail.Email;
@@ -290,9 +298,10 @@ namespace SMP.BLL.Services.TeacherServices
             res.Result = new TeacheerClassAndSibjects();
             
             res.Result.ClassesAsFormTeacher = await context.SessionClass
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.FormTeacherId == teacherId && d.Session.IsActive)
                 .Include(d => d.Session)
                 .Include(s => s.Class).Include(s => s.SessionClassSubjects).ThenInclude(d => d.Subject).OrderByDescending(d => d.Class.Name)
-                .Where(d => d.Deleted == false  && d.FormTeacherId == teacherId && d.Session.IsActive).Select(a => new TeacherClassesAsFormTeacher
+                .Select(a => new TeacherClassesAsFormTeacher
                 {
                     Class = a.Class.Name,
                     SubjectsInClass = a.SessionClassSubjects.Select(d => d.Subject.Name).ToList()
@@ -303,7 +312,8 @@ namespace SMP.BLL.Services.TeacherServices
                 .Include(s => s.Subject)
                 .Include(s => s.SessionClass).ThenInclude(d => d.Session)
                 .Include(s => s.SessionClass).ThenInclude(d => d.Class)
-                .Where(d => d.Deleted == false && d.SubjectTeacherId == teacherId && d.SessionClass.Session.IsActive).AsEnumerable()
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.SubjectTeacherId == teacherId && d.SessionClass.Session.IsActive)
+                .AsEnumerable()
                 .GroupBy(s => s.SubjectId).Select(a => new TeacherSubjectsAsSubjectTeacher
                 {
                     Subject = a.First().Subject.Name,
@@ -315,6 +325,73 @@ namespace SMP.BLL.Services.TeacherServices
             res.IsSuccessful = true;
             return res;
         }
+
+        async Task<APIResponse<string>> ITeacherService.CreateAdminAsync(UserCommand request)
+        {
+            var res = new APIResponse<string>();
+            try
+            {
+                if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
+                {
+                    res.Result = "failed";
+                    res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                    return res;
+                }
+                var user = new AppUser
+                {
+                    UserName = request.Email,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    Email = request.Email,
+                    UserType = (int)UserTypes.Admin,
+                    EmailConfirmed = false,
+                    DOB = request.DOB,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    MiddleName = request.MiddleName,
+                    Phone = request.Phone,
+                    PhoneNumber = request.Phone,
+                    PhoneNumberConfirmed = false,
+                    Photo = "",
+                    ClientId = request.ClientId,
+                    PasswordHash = request.PasswordHash
+                };
+                var result = await userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                {
+                    res.Result = "failed";
+                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.SCHOOLADMIN);
+                if (!addTorole.Succeeded)
+                {
+                    res.Result = "failed";
+                    res.Message.FriendlyMessage = addTorole.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+
+                context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
+                portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
+                await context.SaveChangesAsync();
+
+                //await SendEmailToTeacherOnCreateAsync(user);
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successfully added a staff";
+                res.Result = "success";
+                return res;
+
+            }
+            catch (ArgumentException ex)
+            {
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
+        }
+
+
 
     }
 }

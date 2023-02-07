@@ -86,12 +86,22 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
-
         [HttpGet("get-teacher/classes-subject")]
         public async Task<IActionResult> GetSingleTeacherClassesAndSubjectsAsync(string teacherAccountId)
         {
             var response = await service.GetSingleTeacherClassesAndSubjectsAsync(Guid.Parse(teacherAccountId));
             return Ok(response);
+        }
+
+        [AllowAnonymous]
+
+        [HttpPost("create-school-admin-user")]
+        public async Task<IActionResult> CreateSchoolAdminUser([FromBody] UserCommand request)
+        {
+            var response = await service.CreateAdminAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
 
 

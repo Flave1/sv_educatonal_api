@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230203094928_schoolOnAppSetting")]
+    partial class schoolOnAppSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -768,9 +770,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionNotificationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AdmissionSettingId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("CandidateAdmissionStatus")
                         .HasColumnType("int");
 
@@ -850,8 +849,6 @@ namespace SMP.DAL.Migrations
 
                     b.HasIndex("AdmissionNotificationId");
 
-                    b.HasIndex("AdmissionSettingId");
-
                     b.HasIndex("ClassId");
 
                     b.ToTable("Admissions");
@@ -897,9 +894,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionSettingId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AdmissionSettingName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("AdmissionStatus")
                         .HasColumnType("bit");
@@ -2826,12 +2820,6 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.Admission.AdmissionSetting", "AdmissionSettings")
-                        .WithMany("Admission")
-                        .HasForeignKey("AdmissionSettingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
                         .WithMany()
                         .HasForeignKey("ClassId")
@@ -2839,8 +2827,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("AdmissionNotification");
-
-                    b.Navigation("AdmissionSettings");
 
                     b.Navigation("Class");
                 });
@@ -3415,11 +3401,6 @@ namespace SMP.DAL.Migrations
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionNotification", b =>
-                {
-                    b.Navigation("Admission");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionSetting", b =>
                 {
                     b.Navigation("Admission");
                 });

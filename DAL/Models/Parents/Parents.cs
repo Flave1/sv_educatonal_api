@@ -1,9 +1,10 @@
-﻿using System;
+﻿using DAL;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SMP.DAL.Models.Parents
 {
-    public class Parents
+    public class Parents : CommonEntity
     {
         [Key]
         public Guid Parentid { get; set; }

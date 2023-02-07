@@ -8,6 +8,7 @@ using DAL;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Smime;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Utilities;
@@ -25,17 +26,21 @@ namespace SMP.BLL.Services.AttendanceServices
     {
         private readonly DataContext context;
         private readonly IPaginationService paginationService;
+        private readonly string smsClientId;
 
-        public AttendanceService(DataContext context, IPaginationService paginationService)
+        public AttendanceService(DataContext context, IPaginationService paginationService, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.paginationService = paginationService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<GetAttendance>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
             var res = new APIResponse<GetAttendance>();
+
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive).SessionTermId;
+            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+
             var datTimeNote = DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
             var reg = new ClassRegister
             {
@@ -47,7 +52,7 @@ namespace SMP.BLL.Services.AttendanceServices
             await context.ClassRegister.AddAsync(reg);
             await context.SaveChangesAsync();
 
-            var classAttendance = await context.ClassRegister.Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User).Where(d =>
+            var classAttendance = await context.ClassRegister.Where(c => c.ClientId == smsClientId).Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User).Where(d =>
             d.ClassRegisterId == reg.ClassRegisterId)
                 .Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
 
@@ -59,8 +64,9 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<PostStudentAttendance>> IAttendanceService.UpdateStudentAttendanceRecord(PostStudentAttendance attendance)
         {
             var res = new APIResponse<PostStudentAttendance>();
+
             var attendanceRecord = await context.StudentAttendance.FirstOrDefaultAsync(x => x.ClassRegisterId == attendance.ClassRegisterId 
-            && x.StudentContactId == attendance.StudentContactId);
+            && x.StudentContactId == attendance.StudentContactId && x.ClientId == smsClientId);
 
             if (attendance.IsPresent && attendanceRecord == null)
             {
@@ -89,10 +95,11 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<GetAttendance>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var register = await context.ClassRegister
+            var register = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == ClassRegisterId)
                 .Include(d => d.StudentAttendances)
                 .Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(s => s.User)
-                .Where(d => d.ClassRegisterId == ClassRegisterId).Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
+                .Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
+
             if(register == null)
             {
                 res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -109,7 +116,7 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             var res = new APIResponse<PagedResponse<List<GetAttendance>>>();
 
-            var query = context.ClassRegister
+            var query = context.ClassRegister.Where(c => c.ClientId == smsClientId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(q => q.StudentAttendances)
                 .OrderByDescending(d => d.CreatedOn)
@@ -138,9 +145,8 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<List<AttendanceList>> ();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
 
-            var classRegister = await context.ClassRegister
-                .Include(s => s.StudentAttendances).ThenInclude(q => q.StudentContact).ThenInclude(x => x.User)
-                .Where(x => x.ClassRegisterId == classRegisterId).FirstOrDefaultAsync();
+            var classRegister = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
+                .Include(s => s.StudentAttendances).ThenInclude(q => q.StudentContact).ThenInclude(x => x.User).FirstOrDefaultAsync();
             
             if (classRegister == null)
             {
@@ -160,10 +166,10 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             var res = new APIResponse<List<AttendanceList>>();
             var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
-            var classRegister = await context.ClassRegister
+
+            var classRegister = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Students).ThenInclude(e => e.User)
-                .Include(q => q.StudentAttendances).ThenInclude(x=>x.StudentContact).ThenInclude(e => e.User)
-                .Where(x => x.ClassRegisterId == classRegisterId).FirstOrDefaultAsync();
+                .Include(q => q.StudentAttendances).ThenInclude(x=>x.StudentContact).ThenInclude(e => e.User).FirstOrDefaultAsync();
            
             if (classRegister == null)
             {
@@ -184,7 +190,8 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<bool>> IAttendanceService.DeleteClassRegisterAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
-            var result = await context.ClassRegister.FirstOrDefaultAsync(x => x.ClassRegisterId == Guid.Parse(request.Item));
+
+            var result = await context.ClassRegister.FirstOrDefaultAsync(x => x.ClassRegisterId == Guid.Parse(request.Item) && x.ClientId == smsClientId);
 
             if (result != null)
             {
@@ -200,8 +207,9 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<UpdateClassRegister>> IAttendanceService.UpdateClassRegisterLabel(UpdateClassRegister request)
         {
             var res = new APIResponse<UpdateClassRegister>();
+
             var result = await context.ClassRegister
-                .FirstOrDefaultAsync(x => x.ClassRegisterId == request.ClassRegisterId && x.Deleted == false);
+                .FirstOrDefaultAsync(x => x.ClassRegisterId == request.ClassRegisterId && x.Deleted == false && x.ClientId == smsClientId);
 
             if (result != null)
             {

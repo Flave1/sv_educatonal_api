@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SMP.DAL.Models.PinManagement
 {
-    public class UploadedPin:CommonEntity
+    public class UploadedPin : CommonEntity
     {
         [Key]
         public Guid UploadedPinId { get; set; }

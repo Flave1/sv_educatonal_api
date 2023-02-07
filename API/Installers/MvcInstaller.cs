@@ -15,7 +15,6 @@ using Microsoft.OpenApi.Models;
 using Contracts.Email;
 using BLL.EmailServices;
 using BLL.LoggerService;
-using DAL;
 using Contracts.Options;
 using Microsoft.AspNetCore.Builder;
 using SMP.Contracts.Options;
@@ -26,10 +25,7 @@ using BLL.PaginationService.Services;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Utilities;
 using SMP.BLL.Services.AdmissionServices;
-using System.Net.Http;
-using System.Net;
 using SMP.DAL.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace API.Installers
 {
@@ -162,7 +158,8 @@ namespace API.Installers
 
             });
 
-           
+
+
 
             services.AddSwaggerGen(x =>
             {

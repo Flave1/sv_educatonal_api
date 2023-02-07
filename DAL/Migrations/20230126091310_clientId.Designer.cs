@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230126091310_clientId")]
+    partial class clientId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -768,9 +770,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionNotificationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AdmissionSettingId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("CandidateAdmissionStatus")
                         .HasColumnType("int");
 
@@ -850,8 +849,6 @@ namespace SMP.DAL.Migrations
 
                     b.HasIndex("AdmissionNotificationId");
 
-                    b.HasIndex("AdmissionSettingId");
-
                     b.HasIndex("ClassId");
 
                     b.ToTable("Admissions");
@@ -897,9 +894,6 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("AdmissionSettingId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AdmissionSettingName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("AdmissionStatus")
                         .HasColumnType("bit");
@@ -1853,68 +1847,6 @@ namespace SMP.DAL.Migrations
                     b.ToTable("UsedPin");
                 });
 
-            modelBuilder.Entity("SMP.DAL.Models.PortalSettings.AppLayoutSetting", b =>
-                {
-                    b.Property<Guid>("AppLayoutSettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("UpdatedOn")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("colorcustomizer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("colorinfo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("colorprimary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("loginTemplate")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("navbarstyle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("scheme")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("schemeDir")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("schoolUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarActiveStyle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("sidebarcolor")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AppLayoutSettingId");
-
-                    b.ToTable("AppLayoutSetting");
-                });
-
             modelBuilder.Entity("SMP.DAL.Models.PortalSettings.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -2826,12 +2758,6 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.Admission.AdmissionSetting", "AdmissionSettings")
-                        .WithMany("Admission")
-                        .HasForeignKey("AdmissionSettingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
                         .WithMany()
                         .HasForeignKey("ClassId")
@@ -2839,8 +2765,6 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("AdmissionNotification");
-
-                    b.Navigation("AdmissionSettings");
 
                     b.Navigation("Class");
                 });
@@ -3415,11 +3339,6 @@ namespace SMP.DAL.Migrations
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionNotification", b =>
-                {
-                    b.Navigation("Admission");
-                });
-
-            modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionSetting", b =>
                 {
                     b.Navigation("Admission");
                 });

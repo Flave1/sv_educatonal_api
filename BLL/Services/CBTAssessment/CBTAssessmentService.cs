@@ -2,6 +2,7 @@
 using BLL.Wrappers;
 using DAL;
 using DAL.StudentInformation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.BLL.Utilities;
@@ -25,14 +26,18 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         private readonly DataContext context;
         private readonly IUtilitiesService utilitiesService;
         private readonly FwsClientInformation fwsClientInformations;
+        private readonly string smsClientId;
 
-        public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context, IUtilitiesService utilitiesService, FwsClientInformation fwsClientInformations)
+        public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context, 
+            IUtilitiesService utilitiesService, FwsClientInformation fwsClientInformations,
+            IHttpContextAccessor accessor)
         {
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
             this.context = context;
             this.utilitiesService = utilitiesService;
             this.fwsClientInformations = fwsClientInformations;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId, int pageNumber)
@@ -67,7 +72,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         async Task<APIResponse<bool>> ICBTAssessmentService.IncludeCBTAssessmentToScoreEntryAsAssessment(string sessionClassId, string subjectId, string studentRegNos, bool Include, string examId)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
 
             try
             {
@@ -75,7 +80,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 foreach (var stdRegNumber in students)
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
-                    var student =  context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo).FirstOrDefault();
+                    var student =  context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
                     var scoreEntry = context.ScoreEntry.Where(s => s.SessionTermId == termId && s.StudentContactId == student.StudentContactId && s.ClassScoreEntry.SubjectId == Guid.Parse(subjectId)).FirstOrDefault();
                     var scoreHistory = context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == sessionClassId && x.Subjectid == subjectId && x.SessionTermId == termId.ToString() && x.StudentId == student.StudentContactId.ToString());
                    
@@ -114,7 +119,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     {
                         scoreEntry = new ScoreEntry();
                         scoreEntry.SessionTermId = termId;
-                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId)).ClassScoreEntryId;
+                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId) && x.ClientId == smsClientId).ClassScoreEntryId;
                         scoreEntry.AssessmentScore = score;
                         scoreEntry.IsOffered = true;
                         scoreEntry.IsSaved = true;
@@ -145,7 +150,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         async Task<APIResponse<bool>> ICBTAssessmentService.IncludeCBTAssessmentToScoreEntryAsExamination(string sessionClassId, string subjectId, string studentRegNos, bool Include, string examId)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true).SessionTermId;
+            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
 
             try
             {
@@ -153,7 +158,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 foreach (var stdRegNumber in students)
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
-                    var student = context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo).FirstOrDefault();
+                    var student = context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
                     var scoreEntry = context.ScoreEntry.Where(s => s.SessionTermId == termId && s.StudentContactId == student.StudentContactId && s.ClassScoreEntry.SubjectId == Guid.Parse(subjectId)).FirstOrDefault();
                     var scoreHistory = context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == sessionClassId && x.Subjectid == subjectId && x.SessionTermId == termId.ToString() && x.StudentId == student.StudentContactId.ToString());
 
@@ -192,7 +197,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     {
                         scoreEntry = new ScoreEntry();
                         scoreEntry.SessionTermId = termId;
-                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId)).ClassScoreEntryId;
+                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId) && x.ClientId == smsClientId).ClassScoreEntryId;
                         scoreEntry.ExamScore = score;
                         scoreEntry.IsOffered = true;
                         scoreEntry.IsSaved = true;

@@ -29,6 +29,7 @@ namespace SMP.DAL.Initializer
                         Session = "email/false",
                         ShouldSendToParentsOnResultPublish = false,
                         Staff = "email/false",
+                        ClientId = "D7F710A5-592F-4390-068C-08DA686DA23E"
                     },
 
                 };

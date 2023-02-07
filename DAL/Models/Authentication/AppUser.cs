@@ -24,5 +24,6 @@ namespace DAL.Authentication
         public string UpdatedBy { get; set; }
 
         public Teacher Teacher { get; set; }
+        public string ClientId { get; set; }
     }
 }
