@@ -9,5 +9,6 @@ namespace SMP.Contracts.AdmissionSettings
     public class AdmissionLogin
     {
         public string ParentEmail { get; set; }
+        public string SchoolUrl { get; set; }
     }
 }
