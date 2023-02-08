@@ -407,8 +407,10 @@ namespace BLL.AuthenticationServices
                 if (user == null)
                     throw new ArgumentException("Student account with this email address is not registered");
 
+                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == user.ClientId); 
+
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var link = schoolSettings.Url + "AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                var link = appSettings.schoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link, "Account Verification");
             }
@@ -613,7 +615,8 @@ namespace BLL.AuthenticationServices
                 }
 
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var link = schoolSettings.Url + "PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == user.ClientId);
+                var link = appSettings.schoolUrl + "/PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link, "Password Reset");
 

@@ -28,7 +28,6 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace SMP.BLL.Services.AdmissionServices
 {
@@ -42,6 +41,7 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IPaginationService paginationService;
         private readonly IWebHostEnvironment environment;
         private readonly EmailConfiguration emailConfiguration;
+        private readonly string smsClientId;
 
         public CandidateAdmissionService(DataContext context, IConfiguration config, IEmailService emailService, IOptions<EmailConfiguration> emailOptions,
             IHttpContextAccessor accessor, IFileUploadService fileUpload, IPaginationService paginationService,
@@ -55,6 +55,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.paginationService = paginationService;
             this.environment = environment;
             emailConfiguration = emailOptions.Value;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         public async Task<APIResponse<bool>> ConfirmEmail(ConfirmEmail request)
@@ -98,7 +99,10 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<AdmissionLoginDetails>();
             try
             {
-                var result = await context.AdmissionNotifications.FirstOrDefaultAsync(x => x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
+
+                var appLayoutSetting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == request.SchoolUrl);
+                var result = await context.AdmissionNotifications.FirstOrDefaultAsync(x => x.ClientId == appLayoutSetting.ClientId && x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
+                
                 if(result == null)
                 {
                     var notification = new AdmissionNotification
@@ -110,7 +114,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     context.AdmissionNotifications.Add(notification);
                     await context.SaveChangesAsync();
 
-                    await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail);
+                    await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl);
                     
                     res.Result = new AdmissionLoginDetails( null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
 
@@ -125,7 +129,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     return res;
                 }
 
-                res.Result = new AdmissionLoginDetails(await GenerateToken(result.ParentEmail, result.AdmissionNotificationId.ToString()),
+                res.Result = new AdmissionLoginDetails(await GenerateToken(result.ParentEmail, result.AdmissionNotificationId.ToString(), appLayoutSetting.ClientId),
                     new UserDetails(result.ParentEmail, result.AdmissionNotificationId.ToString()));
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successful";
@@ -149,7 +153,7 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
-                var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+                var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId &&  x.AdmissionStatus == true);
 
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
                 var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
@@ -198,7 +202,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var notificationEmail = await context.AdmissionNotifications.Where(d => d.Deleted != true && d.ParentEmail.ToLower() == request.Item.ToLower()).FirstOrDefaultAsync();
+                var notificationEmail = await context.AdmissionNotifications.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.ParentEmail.ToLower() == request.Item.ToLower()).FirstOrDefaultAsync();
                 if (notificationEmail == null)
                 {
                     res.Message.FriendlyMessage = "Email does not exist";
@@ -230,7 +234,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 if(string.IsNullOrEmpty(admissionSettingsId))
                 {
-                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.AdmissionStatus == true);
                     var query = context.Admissions
                         .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == admissionSettings.AdmissionSettingId)
                         .Include(c => c.AdmissionNotification)
@@ -244,7 +248,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 else
                 {
                     var query = context.Admissions
-                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                        .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
                         .Include(c => c.AdmissionNotification)
                         .Include(c => c.AdmissionSettings)
                         .OrderByDescending(c => c.CreatedOn);
@@ -275,7 +279,7 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
                 var result = await context.Admissions
-                    .Where(c => c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.AdmissionNotificationId == admissionNotificationId)
+                    .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.AdmissionNotificationId == admissionNotificationId)
                     .Include(c => c.AdmissionNotification)
                     .Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
 
@@ -330,7 +334,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-        private async Task<AdmissionAuth> GenerateToken(string parentEmail, string admissionNotificationId)
+        private async Task<AdmissionAuth> GenerateToken(string parentEmail, string admissionNotificationId, string smsClientId)
         {
             var claims = new List<Claim>
             {
@@ -338,7 +342,8 @@ namespace SMP.BLL.Services.AdmissionServices
                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                new Claim(JwtRegisteredClaimNames.Email, parentEmail),
                new Claim("parentEmail", parentEmail),
-               new Claim("admissionNotificationId", admissionNotificationId)
+               new Claim("admissionNotificationId", admissionNotificationId),
+               new Claim("smsClientId", smsClientId)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection("JwtSettings:Secret").Value));
@@ -354,7 +359,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
             return new AdmissionAuth { Token = tokenHandler.WriteToken(token), Expires = tokenDescriptor.Expires.ToString() };
         }
-        private async Task SendNotifications(string admissionNotificationId, string receiver)
+        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL)
         {
             var toEmail = new List<EmailAddress>();
             var frmEmail = new List<EmailAddress>();
@@ -363,7 +368,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var host = accessor.HttpContext.Request.Host.ToUriComponent();
             var email = new EmailMessage
             {
-                Content = $"Hello, you've Successfully registered. Kindly click the link below to confirm your email address.<br /> {config.GetSection("SchoolSettings:Url").Value}candidate-admission?admissionNotificationId={admissionNotificationId}",
+                Content = $"Hello, you've Successfully registered. Kindly click the link below to confirm your email address.<br /> {schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}",
                 Subject = "Admission Registration Notice",
                 ToAddresses = toEmail,
                 FromAddresses = frmEmail,
@@ -377,7 +382,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<List<AdmissionClasses>>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 var result = await context.ClassLookUp
                     .Where(d => d.Deleted != true && classes.Contains(d.ClassLookupId.ToString())).Select(d=> new AdmissionClasses { ClassId = d.ClassLookupId.ToString(), ClassName = d.Name})
                     .ToListAsync();
@@ -466,9 +471,9 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectAdmissionSettings>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 var result = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true && d.AdmissionStatus == true)
+                    .Where(d => d.ClientId == smsClientId && d.Deleted != true && d.AdmissionStatus == true)
                     .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 
