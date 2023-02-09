@@ -114,9 +114,10 @@ namespace BLL.AuthenticationServices
                 }
 
                 var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
+                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
                 res.IsSuccessful = true;
                 return res;
@@ -319,7 +320,7 @@ namespace BLL.AuthenticationServices
 
 
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, AppLayoutSetting appLayoutSetting = null)
         {
             try
             {
@@ -334,10 +335,10 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
-                    new Claim("smsClientId",user.ClientId),
                     new Claim("name",user.FirstName + " " + user.LastName),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
+                    appLayoutSetting != null ? new Claim("smsClientId", appLayoutSetting.ClientId) : new Claim("smsClientId",user.ClientId),
                 };
 
                 var userClaims = await userManager.GetClaimsAsync(user);
