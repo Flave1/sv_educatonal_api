@@ -105,7 +105,7 @@ namespace SMP.BLL.Services.ParentServices
                 var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
                 var parent = await context.Parents.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.Email.ToLower() == userName.ToLower());
-                var query = context.Announcement
+                var query = context.Announcement.Where(x => x.ClientId == smsClientId)
                         .Include(d => d.Sender)
                     .OrderByDescending(d => d.CreatedOn)
                     .Where(d => d.AssignedTo.ToLower() == "parent" && d.Deleted == false);
@@ -282,13 +282,13 @@ namespace SMP.BLL.Services.ParentServices
             try
             {
                 var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
-                var parent = await context.Parents.Where(d => d.Email.ToLower() == userName.ToLower()).FirstOrDefaultAsync();
+                var parent = await context.Parents.Where(d => d.ClientId == smsClientId && d.Email.ToLower() == userName.ToLower()).FirstOrDefaultAsync();
 
-                var students = context.StudentContact
+                var students = context.StudentContact.Where(x => x.ClientId == smsClientId)
                                .Include(x => x.Parent)
                                .Where(x => x.ParentId == parent.Parentid)
                                .Include(x => x.SessionClass).ThenInclude(x => x.Class)
-                               .Where(d => d.Deleted == false); ;
+                               .Where(d => d.Deleted == false);
 
                 var totalWards = students.Count();
 
