@@ -11,7 +11,6 @@ using BLL.Constants;
 using DAL.Authentication;
 using System.IO;
 using NLog;
-using BLL.Utilities;
 using Contracts.Options;
 using System.Linq;
 using SMP.API.Hubs;
@@ -35,7 +34,6 @@ namespace API
 
         public void ConfigureServices(IServiceCollection services)
         {
-            RegistrationNumber.Initialize(Configuration);
             services.InstallServicesInAssembly(Configuration);
         }
          

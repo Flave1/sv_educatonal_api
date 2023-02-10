@@ -1,6 +1,5 @@
 ﻿using BLL;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using DAL;
 using Microsoft.AspNetCore.Http;
@@ -314,7 +313,7 @@ namespace SMP.BLL.Services.PinManagementService
 
         async Task<APIResponse<PagedResponse<List<GetPins>>>> IPinManagementService.GetAllUsedPinsAsync(string sessionId, string termId, PaginationFilter filter)
         {
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             var res = new APIResponse<PagedResponse<List<GetPins>>>();
             var query = context.UsedPin.Where(d => d.Deleted == false && d.ClientId == smsClientId)
                 .Include(x => x.UploadedPin)
@@ -356,7 +355,7 @@ namespace SMP.BLL.Services.PinManagementService
 
         async Task<APIResponse<PinDetail>> IPinManagementService.GetUsedPinDetailAsync(string pin)
         {
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var res = new APIResponse<PinDetail>();
             res.Result = context.UsedPin.Where(x=>x.ClientId == smsClientId)
@@ -490,7 +489,7 @@ namespace SMP.BLL.Services.PinManagementService
         
         async Task<FwsMultiPinValResponse> ValidatePinsAsync(List<UploadedPin> pins, List<string> stds)
         {
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             var stdsAndPins = stds.Zip(pins, (s, p) => new FwsPinValidationRequest
             {
                Pin = p.Pin,

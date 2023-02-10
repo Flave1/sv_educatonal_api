@@ -19,7 +19,6 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Constants;
 using Microsoft.AspNetCore.Http;
 using SMP.BLL.Services.PinManagementService;
-using BLL.Utilities;
 using SMP.BLL.Utilities;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Microsoft.AspNet.SignalR;
@@ -508,7 +507,7 @@ namespace BLL.AuthenticationServices
             var res = new APIResponse<SmpStudentValidationResponse>();
             res.Result = new SmpStudentValidationResponse();
             res.IsSuccessful = true;
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             if (request.ClientId.ToLower() != fwsConfig.ClientId.ToLower())
             {

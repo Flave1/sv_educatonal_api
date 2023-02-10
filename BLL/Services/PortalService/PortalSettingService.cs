@@ -3,10 +3,12 @@ using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
 using SMP.DAL.Models.PortalSettings;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -283,5 +285,93 @@ namespace SMP.BLL.Services.PortalService
             }
         }
 
+        public async Task<APIResponse<CreateRegNoSetting>> CreateUpdateRegNoSettingsAsync(CreateRegNoSetting request)
+        {
+            var res = new APIResponse<CreateRegNoSetting>();
+            try
+            {
+                var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+
+                if (schoolSetting == null)
+                {
+                    string studentRegNoFormat = GenerateStudentRegNoFormat(request);
+                    string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);
+
+                    schoolSetting = new SchoolSetting()
+                    {
+                        StudentRegNoFormat = studentRegNoFormat,
+                        RegNoPosition = request.RegNoPosition,
+                        TeacherRegNoFormat = teacherRegNoFormat,
+                        RegNoSeperator = request.RegNoSeperator
+                    };
+                    await context.SchoolSettings.AddAsync(schoolSetting);
+
+                }
+                else
+                {
+                    string studentRegNoFormat = GenerateStudentRegNoFormat(request);
+                    string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);
+
+                    schoolSetting.StudentRegNoFormat = studentRegNoFormat;
+                    schoolSetting.RegNoPosition = request.RegNoPosition;
+                    schoolSetting.TeacherRegNoFormat = teacherRegNoFormat;
+                    schoolSetting.RegNoSeperator = request.RegNoSeperator;
+                }
+
+                await context.SaveChangesAsync();
+                res.Message.FriendlyMessage = Messages.Saved;
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
+
+            }
+            catch (System.ArgumentException ex)
+            {
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
+        }
+        public async Task<APIResponse<RegNoSetting>> GetRegNoSettingsAsync()
+        {
+            var res = new APIResponse<RegNoSetting>();
+            try
+            {
+                res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new RegNoSetting(f)).FirstOrDefaultAsync() ?? new RegNoSetting();
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+        private string GenerateStudentRegNoFormat(CreateRegNoSetting request)
+        {
+            string studentRegNoFormat = "";
+            if (request.RegNoPosition == 1)
+                studentRegNoFormat = $"%VALUE%{request.RegNoSeperator}{request.StudentRegNoPrefix}{request.RegNoSeperator}{request.StudentRegNoSufix}";
+            if (request.RegNoPosition == 2)
+                studentRegNoFormat = $"{request.StudentRegNoPrefix}{request.RegNoSeperator}%VALUE%{request.RegNoSeperator}{request.StudentRegNoSufix}";
+            if (request.RegNoPosition == 3)
+                studentRegNoFormat = $"{request.StudentRegNoPrefix}{request.RegNoSeperator}{request.StudentRegNoSufix}{request.RegNoSeperator}%VALUE%";
+
+            return studentRegNoFormat;
+        }
+        private string GenerateTeacherRegNoFormat(CreateRegNoSetting request)
+        {
+            string teacherRegNoFormat = "";
+            if (request.RegNoPosition == 1)
+                teacherRegNoFormat = $"%VALUE%{request.RegNoSeperator}{request.TeacherRegNoPrefix}{request.RegNoSeperator}{request.TeacherRegNoSufix}";
+            if (request.RegNoPosition == 2)
+                teacherRegNoFormat = $"{request.TeacherRegNoPrefix}{request.RegNoSeperator}%VALUE%{request.RegNoSeperator}{request.TeacherRegNoSufix}";
+            if (request.RegNoPosition == 3)
+                teacherRegNoFormat = $"{request.TeacherRegNoPrefix}{request.RegNoSeperator}{request.TeacherRegNoSufix}{request.RegNoSeperator}%VALUE%";
+
+            return teacherRegNoFormat;
+        }
     }
 }

@@ -2,7 +2,6 @@
 using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using Contracts.Session;
@@ -75,7 +74,7 @@ namespace SMP.BLL.Services.ParentServices
             var res = new APIResponse<PagedResponse<List<MyWards>>>();
             var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             if (!string.IsNullOrEmpty(userName))
             {
                 var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
@@ -228,7 +227,7 @@ namespace SMP.BLL.Services.ParentServices
 
             try
             {
-                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
                 var query = context.StudentContact
                         .Include(x => x.Parent)
                         .Where(x => x.ParentId == Guid.Parse(parentId))
