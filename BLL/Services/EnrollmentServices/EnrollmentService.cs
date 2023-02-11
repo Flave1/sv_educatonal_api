@@ -1,7 +1,6 @@
 ﻿using BLL;
 using BLL.Filter;
 using BLL.StudentServices;
-using BLL.Utilities;
 using BLL.Wrappers;
 using DAL;
 using Microsoft.AspNetCore.Http;
@@ -34,7 +33,7 @@ namespace SMP.BLL.Services.EnrollmentServices
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetEnrolledStudentsAsync(Guid sessionClassId, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             var status = (int)EnrollmentStatus.Enrolled;
 
             var cls = context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
@@ -62,7 +61,7 @@ namespace SMP.BLL.Services.EnrollmentServices
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetUnenrrolledStudentsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var query =  (from a in context.StudentContact.Include(s => s.User)
                                 where a.ClientId == smsClientId && a.Status == (int)EnrollmentStatus.UnEnrolled

@@ -1,7 +1,6 @@
 ﻿using BLL;
 using BLL.Constants;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using Contracts.Class;
 using Contracts.Common;
@@ -18,6 +17,7 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
 using SMP.BLL.Services.WebRequestServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.NotificationModels;
@@ -125,7 +125,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<UpdateHomeAssessmentRequest>();
             try
             {
-                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
                 var assessment = await context.HomeAssessment.FirstOrDefaultAsync(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId) && d.ClientId == smsClientId);
                 if (assessment is null)
                 {

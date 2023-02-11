@@ -1,7 +1,6 @@
 ﻿using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Options;
@@ -69,7 +68,7 @@ namespace BLL.StudentServices
                 
                 try
                 { 
-                    var result = RegistrationNumber.GenerateForStudents();
+                    var result = await utilitiesService.GenerateForStudents();
 
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
@@ -223,9 +222,8 @@ namespace BLL.StudentServices
         async Task<APIResponse<PagedResponse<List<GetStudentContacts>>>> IStudentService.GetAllStudensAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<GetStudentContacts>>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
-           
             var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.User.UserType == (int)UserTypes.Student)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.User) 
@@ -244,7 +242,7 @@ namespace BLL.StudentServices
         async Task<APIResponse<GetStudentContacts>> IStudentService.GetSingleStudentAsync(Guid studentContactId)
         {
             var res = new APIResponse<GetStudentContacts>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var result = await context.StudentContact
                 .Where(d => studentContactId == d.StudentContactId && d.ClientId == smsClientId)
@@ -409,7 +407,8 @@ namespace BLL.StudentServices
                             }
                             if (string.IsNullOrEmpty(item.RegistrationNumber))
                             {
-                                item.RegistrationNumber = RegistrationNumber.GenerateForStudents(context).FirstOrDefault().Key;
+                                var regNo = await utilitiesService.GenerateForStudents();
+                                item.RegistrationNumber = regNo.FirstOrDefault().Key;
                             }
                             else
                             {
@@ -443,7 +442,7 @@ namespace BLL.StudentServices
                             {
                                 if (std is null)
                                 {
-                                    var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x=> x.ClientId == smsClientId).StudentRegNoFormat;
                                     var rgNo = regNoFormat.Replace("%VALUE%", item.RegistrationNumber);
                                     var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, rgNo);
                                     std = new StudentContact();
@@ -520,7 +519,7 @@ namespace BLL.StudentServices
             try
             {
                 string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo);
-                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
                 var result = await context.StudentContact
                     .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == smsClientId)
@@ -547,7 +546,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<PagedResponse<List<GetStudentContactCbt>>>();
             try
             {
-                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
                 var query = context.StudentContact
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId);
@@ -576,7 +575,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<List<GetStudentContactCbt>>();
             try
             {
-                var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
                 var result = await context.StudentContact
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId)
                     .OrderByDescending(d => d.CreatedOn)

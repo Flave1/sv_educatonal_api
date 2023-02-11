@@ -9,5 +9,6 @@ namespace SMP.BLL.Utilities
     public interface IUtilitiesService
     {
         string GetStudentRegNumberValue(string regNo);
+        Task<IDictionary<string, string>> GenerateForStudents();
     }
 }

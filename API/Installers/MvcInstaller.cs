@@ -65,9 +65,6 @@ namespace API.Installers
             services.Configure<JwtSettings>(
          configuration.GetSection("JwtSettings"));
 
-            services.Configure<RegNumber>(
-                configuration.GetSection("RegNumber"));
-
                     services.Configure<SchoolSettings>(
                configuration.GetSection("SchoolSettings"));
 
@@ -80,6 +77,7 @@ namespace API.Installers
             services.AddScoped<IUtilitiesService, UtilitiesService>();
             services.AddScoped<IAdmissionSettingService, AdmissionSettingService>();
             services.AddScoped<ICandidateAdmissionService, CandidateAdmissionService>();
+            services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddSingleton<FwsClientInformation>();
             services.AddDistributedMemoryCache();
