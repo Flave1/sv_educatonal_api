@@ -89,10 +89,10 @@ namespace Contracts.Authentication
         public string RoleId { get; set; }
         public string Name { get; private set; }
         public List<UserNames> Users { get; set; }
-        public GetUsersInRole(IdentityRole role)
+        public GetUsersInRole(IdentityRole role, string smsClientId)
         {
             RoleId = role.Id;
-            Name = role.Name;
+            Name = role.Name.Replace(smsClientId, "");
         }
     }
 }

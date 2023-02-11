@@ -100,39 +100,48 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
 
-                var appLayoutSetting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == request.SchoolUrl);
-                var result = await context.AdmissionNotifications.FirstOrDefaultAsync(x => x.ClientId == appLayoutSetting.ClientId && x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
-                
-                if(result == null)
+                var clientId = context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == request.SchoolUrl)?.ClientId?? string.Empty;
+                if (!string.IsNullOrEmpty(clientId))
                 {
-                    var notification = new AdmissionNotification
+                    var result = context.AdmissionNotifications.FirstOrDefault(x => x.ClientId == clientId && x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
+
+                    if (result == null)
                     {
-                        ParentEmail = request.ParentEmail,
-                        IsConfirmed = false,
-                    };
+                        var notification = new AdmissionNotification
+                        {
+                            ParentEmail = request.ParentEmail,
+                            IsConfirmed = false,
+                        };
 
-                    context.AdmissionNotifications.Add(notification);
-                    await context.SaveChangesAsync();
+                        context.AdmissionNotifications.Add(notification);
+                        await context.SaveChangesAsync();
 
-                    await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl);
-                    
-                    res.Result = new AdmissionLoginDetails( null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
+                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl);
 
+                        res.Result = new AdmissionLoginDetails(null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
+
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
+                        return res;
+                    }
+                    if (result.IsConfirmed == false)
+                    {
+                        res.IsSuccessful = false;
+                        res.Message.FriendlyMessage = "Kindly confirm your email address. A confirmation mail was sent to your email.";
+                        return res;
+                    }
+
+                    res.Result = new AdmissionLoginDetails(await GenerateToken(result.ParentEmail, result.AdmissionNotificationId.ToString(), clientId),
+                        new UserDetails(result.ParentEmail, result.AdmissionNotificationId.ToString()));
                     res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
-                    return res;
+                    res.Message.FriendlyMessage = "Successful";
                 }
-                if(result.IsConfirmed == false)
+                else
                 {
                     res.IsSuccessful = false;
-                    res.Message.FriendlyMessage = "Kindly confirm your email address. A confirmation mail was sent to your email.";
-                    return res;
+                    res.Message.FriendlyMessage = "Unable to precess request! Try again later";
                 }
-
-                res.Result = new AdmissionLoginDetails(await GenerateToken(result.ParentEmail, result.AdmissionNotificationId.ToString(), appLayoutSetting.ClientId),
-                    new UserDetails(result.ParentEmail, result.AdmissionNotificationId.ToString()));
-                res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Successful";
+                
                 return res;
 
 

@@ -35,7 +35,7 @@ namespace BLL.AuthenticationServices
             {
                 var role = new UserRole
                 {
-                    Name = request.Name,
+                    Name = request.Name + "" + smsClientId,
                     Active = true,
                     Deleted = false,
                     CreatedOn = DateTime.UtcNow,
@@ -130,13 +130,15 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.OrderByDescending(d => d.CreatedOn)
-                .Where(d => d.Deleted != true  && d.Name != DefaultRoles.FLAVETECH
+            
+            var result = await manager.Roles.Where(x => x.Deleted == false).OrderByDescending(d => d.CreatedOn)
+                .Where(d => d.Name != DefaultRoles.FLAVETECH
                     && (d.Name == DefaultRoles.SCHOOLADMIN || d.Name == DefaultRoles.TEACHER || d.Name == DefaultRoles.PARENTS)
                     || d.ClientId == smsClientId
                     )
                 .OrderByDescending(we => we.UpdatedBy)
-                .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name }).ToListAsync();
+                .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name.Replace(smsClientId, "") }).ToListAsync();
+
             res.IsSuccessful = true;
             res.Result = result;
             return res;
@@ -183,7 +185,7 @@ namespace BLL.AuthenticationServices
 
             var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new GetRoleActivities
             {
-                Name = w.Name,
+                Name = w.Name.Replace(smsClientId, ""),
                 RoleId = roleId
             }).FirstOrDefaultAsync();
             if (role != null)
@@ -201,7 +203,7 @@ namespace BLL.AuthenticationServices
 
             var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new NotAddedUserRole
             {
-                RoleName = w.Name,
+                RoleName = w.Name.Replace(smsClientId, ""),
                 RoleId = roleId
             }).FirstOrDefaultAsync();
             if (role != null)
@@ -254,7 +256,7 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
                 role.Deleted = true;
-                role.Name = role.Name + "_DELETED";
+                role.Name = role.Name + "_DELETED" + DateTime.UtcNow.ToUniversalTime();
                 var result = await manager.UpdateAsync(role);
                 if (!result.Succeeded)
                 {
@@ -274,7 +276,7 @@ namespace BLL.AuthenticationServices
         {
             var res = new APIResponse<GetUsersInRole>();
             var userIds = context.UserRoles.Where(d => d.RoleId == request.RoleId).Select(x => x.UserId);
-            var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d)).FirstOrDefault();
+            var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d, smsClientId)).FirstOrDefault();
             if (selectedRole != null)
             {
                 selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.ClientId == smsClientId).Select(x => new UserNames
