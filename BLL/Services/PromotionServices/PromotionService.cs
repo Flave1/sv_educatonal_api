@@ -2,7 +2,6 @@
 using BLL.Constants;
 using BLL.SessionServices;
 using BLL.StudentServices;
-using BLL.Utilities;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -135,7 +134,7 @@ namespace SMP.BLL.Services.PromorionServices
         async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllPassedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && ids.Contains(x.StudentContactId.ToString()))
                 .OrderByDescending(d => d.CreatedOn)
@@ -153,7 +152,7 @@ namespace SMP.BLL.Services.PromorionServices
         async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllFailedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
             var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId && x.Deleted == false && ids.Contains(x.StudentContactId.ToString()))
                 .OrderByDescending(d => d.CreatedOn)

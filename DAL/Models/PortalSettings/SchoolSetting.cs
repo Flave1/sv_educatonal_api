@@ -18,5 +18,9 @@ namespace SMP.DAL.Models.PortalSettings
         public string PhoneNo2 { get; set; }
         public string SchoolType  { get; set; }
         public string Photo { get; set; }
+        public string StudentRegNoFormat { get; set; }
+        public string TeacherRegNoFormat { get; set; }
+        public int? RegNoPosition { get; set; }
+        public string RegNoSeperator { get; set; }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using BLL.Constants;
-using BLL.Utilities;
 using Contracts.Class;
 using Contracts.Options;
 using DAL;
@@ -465,7 +464,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetStudentContacts>>> IClassService.GetClassStudentsClassesAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetStudentContacts>>();
-            var regNoFormat = RegistrationNumber.config.GetSection("RegNumber:Student").Value;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId)
                 .Include(q => q.User)

@@ -116,10 +116,11 @@ namespace BLL.AuthenticationServices
                         appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
                 }
 
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == userAccount.ClientId) ?? new SchoolSetting();
+                var schoolSetting = context.SchoolSettings.FirstOrDefault() ?? new SchoolSetting();
+                //var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
                 res.IsSuccessful = true;
                 return res;

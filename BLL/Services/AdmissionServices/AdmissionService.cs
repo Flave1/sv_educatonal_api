@@ -2,7 +2,6 @@
 using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
-using BLL.Utilities;
 using BLL.Wrappers;
 using Contracts.Options;
 using DAL;
@@ -19,6 +18,7 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.WebRequestServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
@@ -43,13 +43,14 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IWebHostEnvironment environment;
         private readonly IFileUploadService fileUploadService;
         private readonly IHttpContextAccessor accessor;
+        private readonly IUtilitiesService utilitiesService;
         private readonly FwsConfigSettings fwsOptions;
         private readonly IParentService parentService;
         private readonly string smsClientId;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
-            IFileUploadService fileUploadService, IHttpContextAccessor httpContext)
+            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService)
         {
             this.context = context;
             this.paginationService = paginationService;
@@ -58,6 +59,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.environment = environment;
             this.fileUploadService = fileUploadService;
             this.accessor = httpContext;
+            this.utilitiesService = utilitiesService;
             fwsOptions = options.Value;
             this.parentService = parentService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
@@ -105,7 +107,7 @@ namespace SMP.BLL.Services.AdmissionServices
                         Photo = admission.Photo,
                     };
 
-                    var result = RegistrationNumber.GenerateForStudents();
+                    var result = await utilitiesService.GenerateForStudents();
 
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
@@ -206,7 +208,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 foreach (var student in studentContactList)
                 {
-                    var result = RegistrationNumber.GenerateForStudents();
+                    var result = await utilitiesService.GenerateForStudents();
 
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);

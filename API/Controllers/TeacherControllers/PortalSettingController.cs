@@ -104,6 +104,23 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpPost("create-update/reg-no-setting")]
+        public async Task<IActionResult> CreatUpdateRegNoSettingAsync([FromBody]CreateRegNoSetting request)
+        {
+            var response = await service.CreateUpdateRegNoSettingsAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get/reg-no-setting")]
+        public async Task<IActionResult> GetRegNoSetting()
+        {
+            var response = await service.GetRegNoSettingsAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
         #endregion
 
