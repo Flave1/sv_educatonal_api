@@ -101,8 +101,10 @@ namespace SMP.BLL.Services.AdmissionServices
             {
 
                 var clientId = context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == request.SchoolUrl)?.ClientId?? string.Empty;
+
                 if (!string.IsNullOrEmpty(clientId))
                 {
+                    accessor.HttpContext.Items["smsClientId"] = clientId;
                     var result = context.AdmissionNotifications.FirstOrDefault(x => x.ClientId == clientId && x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
 
                     if (result == null)

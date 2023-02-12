@@ -59,6 +59,7 @@ namespace SMP.BLL.MiddleWares
                 }
                 context.HttpContext.Items["parentEmail"] = parentEmail;
                 context.HttpContext.Items["admissionNotificationId"] = admissionNotificationId;
+                context.HttpContext.Items["smsClientId"] = context.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value;
 
                 await next();
                 return;
