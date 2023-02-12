@@ -55,7 +55,9 @@ namespace BLL.MiddleWares
                     IServiceProvider scopedServices = scope.ServiceProvider;
                     JwtSettings tokenSettings = scopedServices.GetRequiredService<JwtSettings>();
                     DataContext _dataContext = scopedServices.GetRequiredService<DataContext>();
-  
+
+                    context.HttpContext.Items["smsClientId"] = context.HttpContext?.User?.FindFirst(x => x?.Type == "smsClientId")?.Value;
+
                     await next();
                     return;
                 }
