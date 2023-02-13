@@ -35,7 +35,8 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(subject.Name) == Tools.ReplaceWhitespace(r.Name) && r.ClientId == smsClientId))
+                var subjectName = await context.Subject.FirstOrDefaultAsync(r => r.Name.ToLower() == subject.Name.ToLower() && r.ClientId == smsClientId && r.Deleted != true);
+                if(subjectName != null)
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;

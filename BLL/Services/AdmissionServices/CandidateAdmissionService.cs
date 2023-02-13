@@ -394,21 +394,25 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
-                var result = await context.ClassLookUp
-                    .Where(d => d.Deleted != true && classes.Contains(d.ClassLookupId.ToString())).Select(d=> new AdmissionClasses { ClassId = d.ClassLookupId.ToString(), ClassName = d.Name})
-                    .ToListAsync();
+                if(classes != null)
+                {
 
-                if (result == null)
-                {
-                    res.Message.FriendlyMessage = "No item found";
-                }
-                else
-                {
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    var result = await context.ClassLookUp
+                        .Where(d => d.Deleted != true && classes.Contains(d.ClassLookupId.ToString())).Select(d => new AdmissionClasses { ClassId = d.ClassLookupId.ToString(), ClassName = d.Name })
+                        .ToListAsync();
+
+                    if (result == null)
+                    {
+                        res.Message.FriendlyMessage = "No item found";
+                    }
+                    else
+                    {
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                    }
+                    res.Result = result;
                 }
 
                 res.IsSuccessful = true;
-                res.Result = result;
                 return res;
             }
             catch (Exception ex)

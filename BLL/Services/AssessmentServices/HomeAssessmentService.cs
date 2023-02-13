@@ -173,7 +173,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
         async Task<APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>> IHomeAssessmentService.GetSubjectHomeAssessmentAsync(string classId, string sessionClassSubjectId, string groupId, PaginationFilter filter)
         {
-            var teacherId = accessor.HttpContext.User.FindFirst(x => x.Type == "teacherId").Value;
+            var teacherId = accessor?.HttpContext?.User?.FindFirst(x => x.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive);
             var query = context.HomeAssessment.Where(d => d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
