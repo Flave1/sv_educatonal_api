@@ -36,6 +36,7 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IPaginationService paginationService;
         private readonly string smsClientId;
         private readonly IPortalSettingService portalSettingService;
+        private readonly IHttpContextAccessor contextaccessor;
         public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
             IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, IPortalSettingService portalSettingService)
         {
@@ -48,6 +49,7 @@ namespace SMP.BLL.Services.TeacherServices
             this.paginationService = paginationService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.portalSettingService = portalSettingService;
+            contextaccessor = accessor;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -331,6 +333,7 @@ namespace SMP.BLL.Services.TeacherServices
             var res = new APIResponse<string>();
             try
             {
+                contextaccessor.HttpContext.Items["smsClientId"] = request.ClientId;
                 if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
                 {
                     res.Result = "failed";
@@ -374,6 +377,7 @@ namespace SMP.BLL.Services.TeacherServices
                 }
 
                 context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
+                
                 portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 

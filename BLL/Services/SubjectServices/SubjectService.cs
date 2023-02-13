@@ -59,7 +59,7 @@ namespace BLL.Services.SubjectServices
 
 
             res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "You have successfuly created a class lookup";
+            res.Message.FriendlyMessage = "You have successfuly created a subject";
             return res;
         }
 
@@ -94,7 +94,7 @@ namespace BLL.Services.SubjectServices
             }
 
             res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "You have successfuly updated a class lookup";
+            res.Message.FriendlyMessage = "You have successfuly updated a subject";
             return res;
         }
 
@@ -142,7 +142,7 @@ namespace BLL.Services.SubjectServices
 
            
             res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "You have successfuly deleted a class lookup";
+            res.Message.FriendlyMessage = "You have successfuly deleted a subject";
             return res;
         }
 

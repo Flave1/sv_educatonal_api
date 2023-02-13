@@ -8,7 +8,7 @@ namespace BLL.AuthenticationServices
     public interface IIdentityService
     {
         Task<APIResponse<LoginSuccessResponse>>  WebLoginAsync(LoginCommand user);
-        Task<APIResponse<LoginSuccessResponse>> LoginAfterPasswordIsChangedAsync(AppUser userAccount);
+        Task<APIResponse<LoginSuccessResponse>> LoginAfterPasswordIsChangedAsync(AppUser userAccount, string schoolUrl);
         Task<APIResponse<MobileLoginSuccessResponse>> MobileLoginAsync(LoginCommand loginRequest);
         Task<APIResponse<List<string>>> GetMobilePermissionsAsync(string userId);
         Task<APIResponse<CBTLoginDetails>> GetCBTTokenAsync();

@@ -190,7 +190,7 @@ namespace BLL.AuthenticationServices
             }).FirstOrDefaultAsync();
             if (role != null)
             {
-                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId).Select(a => a.ActivityId).ToList();
+                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId && d.ClientId == smsClientId).Select(a => a.ActivityId).ToList();
             }
             res.Result = role;
             res.IsSuccessful = true;

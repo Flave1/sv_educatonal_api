@@ -493,7 +493,7 @@ namespace BLL.AuthenticationServices
             if (changePassword.Succeeded)
             {
                 await SendResetSuccessEmailToUserAsync(user);
-                return await identityService.LoginAfterPasswordIsChangedAsync(user);
+                return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl);
             }
             else
             {

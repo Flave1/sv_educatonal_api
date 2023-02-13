@@ -27,6 +27,7 @@ namespace BLL.ClassServices
         {
             this.context = context;
             this.accessor = accessor;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<CreateClassGroup>> IClassGroupService.CreateClassGroupAsync(CreateClassGroup request)

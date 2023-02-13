@@ -248,7 +248,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.sidebarType = JsonConvert.SerializeObject(request.sidebarType);
                 setting.loginTemplate = request.loginTemplate;
                 setting.sidebarActiveStyle = request.sidebarActiveStyle;
-                setting.schoolUrl = request.schoolUrl;
+                //setting.schoolUrl = request.schoolUrl;
                 setting.ClientId = smsClientId;
                 await context.SaveChangesAsync();
             }
