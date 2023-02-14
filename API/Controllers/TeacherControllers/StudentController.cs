@@ -116,6 +116,14 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpGet("download/student-template")]
+        public async Task<IActionResult> DownloadStudentTemplateAsync()
+        {
+            var response = await service.DownloadStudentTemplate();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
 
         #endregion
 

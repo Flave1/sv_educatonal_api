@@ -595,6 +595,56 @@ namespace BLL.StudentServices
                 return res;
             }
         }
+
+        public async Task<APIResponse<byte[]>> DownloadStudentTemplate()
+        {
+            var res = new APIResponse<byte[]>();
+            try
+            {
+                byte[] templateFile = new byte[0];
+               
+                DataTable templateColumn = new DataTable();
+                templateColumn.Columns.Add("Session Class");
+                templateColumn.Columns.Add("Registration Number");
+                templateColumn.Columns.Add("Firstname");
+                templateColumn.Columns.Add("Lastname");
+                templateColumn.Columns.Add("Middlename");
+                templateColumn.Columns.Add("Phone");
+                templateColumn.Columns.Add("DOB");
+                templateColumn.Columns.Add("Email");
+                templateColumn.Columns.Add("Home Phone");
+                templateColumn.Columns.Add("Emergency Phone");
+                templateColumn.Columns.Add("Parent Or Guardian Name");
+                templateColumn.Columns.Add("Parent Or Guardian Relationship");
+                templateColumn.Columns.Add("Parent Or Guardian Phone");
+                templateColumn.Columns.Add("Parent Or Guardian Email");
+                templateColumn.Columns.Add("Home Address");
+                templateColumn.Columns.Add("City Id");
+                templateColumn.Columns.Add("State Id");
+                templateColumn.Columns.Add("Country Id");
+                templateColumn.Columns.Add("Zip Code");
+
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                using (ExcelPackage excelPck = new ExcelPackage())
+                {
+                    ExcelWorksheet workSheet = excelPck.Workbook.Worksheets.Add("Student");
+                    workSheet.DefaultColWidth = 20;
+                    workSheet.Cells["A1"].LoadFromDataTable(templateColumn, true, OfficeOpenXml.Table.TableStyles.None);
+                    templateFile = excelPck.GetAsByteArray();
+                }
+                res.IsSuccessful = true;
+                res.Result = templateFile;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 
 
