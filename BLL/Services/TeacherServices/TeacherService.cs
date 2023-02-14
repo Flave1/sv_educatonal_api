@@ -18,6 +18,7 @@ using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.PortalService;
+using SMP.Contracts.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -377,11 +378,14 @@ namespace SMP.BLL.Services.TeacherServices
                 }
 
                 context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
-                
+
+                var schooSetting = new SMSSMPAccountSetting(request.SchoolName, request.Country, request.State, request.Address, request.SchoolLogo, request.ClientId);
+
+                await portalSettingService.CreateSchollSettingsAsync(schooSetting, user.Email);
+
                 portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 
-                //await SendEmailToTeacherOnCreateAsync(user);
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
                 res.Result = "success";

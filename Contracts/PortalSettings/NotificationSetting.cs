@@ -181,4 +181,22 @@ namespace SMP.Contracts.PortalSettings
         public string Hover { get; set; }
         public string Boxed { get; set; }
     }
+    public class SMSSMPAccountSetting
+    {
+        public string ClientId { get; set; }
+        public string SchoolName { get; set; }
+        public string Country { get; set; }
+        public string State { get; set; }
+        public string Address { get; set; }
+        public string SchoolLogo { get; set; }
+        public SMSSMPAccountSetting(string SchoolName, string Country, string State, string Address, string SchoolLogo, string clientId)
+        {
+            this.SchoolName = SchoolName;
+            this.Country = Country;
+            this.State = State;
+            this.Address = Address;
+            this.SchoolLogo = SchoolLogo;
+            ClientId = clientId;
+        }
+    }
 }

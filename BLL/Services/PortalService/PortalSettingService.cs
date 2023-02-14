@@ -279,7 +279,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.ClientId = clientId;
                 context.AppLayoutSetting.Add(setting);
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 throw;
             }
@@ -373,5 +373,32 @@ namespace SMP.BLL.Services.PortalService
 
             return teacherRegNoFormat;
         }
+
+        async Task IPortalSettingService.CreateSchollSettingsAsync(SMSSMPAccountSetting request, string email)
+        {
+            try
+            {
+                var splittedWords = request.SchoolName.Split(' ');
+                var schoolSetting = new SchoolSetting();
+                schoolSetting.SchoolName = request.SchoolName;
+                schoolSetting.SchoolAddress = request.Address;
+                for(int i = 0; i < splittedWords.Length; i++)
+                {
+                    schoolSetting.SchoolAbbreviation += " " + splittedWords[i].Substring(0, 1).ToUpper();
+                }
+                schoolSetting.Country = request.Country;
+                schoolSetting.State = request.State;
+                schoolSetting.Email = email;
+                schoolSetting.ClientId = request.ClientId;
+                
+                await context.SchoolSettings.AddAsync(schoolSetting);
+                await context.SaveChangesAsync();
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+        }
+
     }
 }

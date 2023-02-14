@@ -14,6 +14,12 @@ namespace Contracts.Authentication
         public string SchoolUrl { get; set; }
         public string PasswordHash { get; set; }
         public IFormFile ProfileImage { get; set; }
+
+        public string SchoolName { get; set; }
+        public string Country { get; set; }
+        public string State { get; set; }
+        public string Address { get; set; }
+        public string SchoolLogo { get; set; }
     }
 
 
