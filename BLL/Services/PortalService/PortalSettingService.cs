@@ -264,7 +264,14 @@ namespace SMP.BLL.Services.PortalService
         {
             try
             {
-                var setting = new AppLayoutSetting();
+                var isNew = false;
+                var setting = context.AppLayoutSetting.Where(x => x.ClientId == clientId).FirstOrDefault();
+                if(setting == null)
+                {
+                    setting = new AppLayoutSetting();
+                    isNew = true;
+                }
+                    
                 setting.scheme = "light";
                 setting.schemeDir = "ltr";
                 setting.colorprimary = "#3a57e8";
@@ -277,7 +284,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.schoolUrl = schoolUrl;
                 setting.sidebarActiveStyle = "roundedAllSide";
                 setting.ClientId = clientId;
-                context.AppLayoutSetting.Add(setting);
+                if(isNew) context.AppLayoutSetting.Add(setting);
             }
             catch (Exception)
             {
@@ -378,21 +385,26 @@ namespace SMP.BLL.Services.PortalService
         {
             try
             {
+                var isNew = false;
                 var splittedWords = request.SchoolName.Split(' ');
-                var schoolSetting = new SchoolSetting();
+                var schoolSetting = context.SchoolSettings.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
+
+                if(schoolSetting is null)
+                {
+                    schoolSetting = new SchoolSetting();
+                    isNew = true;
+                }
+
                 schoolSetting.SchoolName = request.SchoolName;
                 schoolSetting.SchoolAddress = request.Address;
                 for(int i = 0; i < splittedWords.Length; i++)
-                {
                     schoolSetting.SchoolAbbreviation += " " + splittedWords[i].Substring(0, 1).ToUpper();
-                }
                 schoolSetting.Country = request.Country;
                 schoolSetting.State = request.State;
                 schoolSetting.Email = email;
                 schoolSetting.ClientId = request.ClientId;
-                
-                await context.SchoolSettings.AddAsync(schoolSetting);
-                await context.SaveChangesAsync();
+
+                if (isNew) await context.SchoolSettings.AddAsync(schoolSetting);
             }
             catch (ArgumentException)
             {

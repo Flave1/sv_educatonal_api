@@ -341,27 +341,29 @@ namespace SMP.BLL.Services.TeacherServices
                     res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
                     return res;
                 }
-                var user = new AppUser
-                {
-                    UserName = request.Email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = request.Email,
-                    UserType = (int)UserTypes.Admin,
-                    EmailConfirmed = false,
-                    DOB = request.DOB,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    MiddleName = request.MiddleName,
-                    Phone = request.Phone,
-                    PhoneNumber = request.Phone,
-                    PhoneNumberConfirmed = false,
-                    Photo = "",
-                    ClientId = request.ClientId,
-                    PasswordHash = request.PasswordHash
-                };
+                var user = context.Users.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
+                if(user is null)
+                    user = new AppUser();
+
+                user.UserName = request.Email;
+                user.Active = true;
+                user.Deleted = false;
+                user.CreatedOn = DateTime.UtcNow;
+                user.CreatedBy = "";
+                user.Email = request.Email;
+                user.UserType = (int)UserTypes.Admin;
+                user.EmailConfirmed = false;
+                user.DOB = request.DOB;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.MiddleName = request.MiddleName;
+                user.Phone = request.Phone;
+                user.PhoneNumber = request.Phone;
+                user.PhoneNumberConfirmed = false;
+                user.Photo = "";
+                user.ClientId = request.ClientId;
+                user.PasswordHash = request.PasswordHash;
+
                 var result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
