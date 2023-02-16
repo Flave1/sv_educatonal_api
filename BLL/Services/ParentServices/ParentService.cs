@@ -200,7 +200,7 @@ namespace SMP.BLL.Services.ParentServices
             var res = new APIResponse<PagedResponse<List<GetParents>>>();
             try
             {
-                var query = context.Parents
+                var query = context.Parents.Where(x => x.ClientId == smsClientId)
                     .OrderBy(d => d.Name);
 
                 var totaltRecord = query.Count();
@@ -228,7 +228,7 @@ namespace SMP.BLL.Services.ParentServices
             try
             {
                 var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
-                var query = context.StudentContact
+                var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
                         .Include(x => x.Parent)
                         .Where(x => x.ParentId == Guid.Parse(parentId))
                         .Include(d => d.User)
