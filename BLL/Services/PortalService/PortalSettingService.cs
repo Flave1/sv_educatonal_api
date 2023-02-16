@@ -200,7 +200,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostNotificationSetting>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<PostNotificationSetting>();
-            res.Result = await context.NotificationSetting.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync();
+            res.Result = await context.NotificationSetting.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync() ?? new PostNotificationSetting();
             res.IsSuccessful = true;
             return res;
         }

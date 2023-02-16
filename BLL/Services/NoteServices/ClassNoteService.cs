@@ -756,7 +756,9 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
 
-            var classId = context.StudentContact.FirstOrDefault(x => x.ClientId == smsClientId && x.StudentContactId == Guid.Parse(studentContactId)).SessionClassId.ToString();
+            var classId = context.StudentContact.Where(x => x.ClientId == smsClientId && x.StudentContactId == Guid.Parse(studentContactId))
+                .Include(x => x.SessionClass).FirstOrDefault().SessionClass.ClassId.ToString();
+
             var query = context.TeacherClassNote
                         .Where(x => x.ClientId == smsClientId && x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved)
                         .Include(d => d.Teacher).ThenInclude(d => d.User)
@@ -772,7 +774,7 @@ namespace SMP.BLL.Services.NoteServices
 
             if (!string.IsNullOrEmpty(classId))
             {
-                query = query.Where(u => u.Classes.Split(',', StringSplitOptions.None).ToList().Select(x => x).Contains(classId));
+                query = query.Where(u => u.Classes.Contains(classId));
             }
 
             var totaltRecord = query.Count();
