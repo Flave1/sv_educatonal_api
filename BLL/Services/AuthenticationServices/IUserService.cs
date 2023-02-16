@@ -1,8 +1,11 @@
 ﻿using Contracts.Authentication;
 using Contracts.Options;
 using DAL.Authentication;
+using DAL.StudentInformation;
+using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using SMP.Contracts.Authentication;
+using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -27,5 +30,6 @@ namespace BLL.AuthenticationServices
         Task UpdateParentUserAccountAsync(string email, string phone, string id);
         Task<APIResponse<bool>> ForgotPassword(ForgotPassword request);
         Task<APIResponse<bool>> ResetPassword(ResetAccount request);
+      
     }
 }

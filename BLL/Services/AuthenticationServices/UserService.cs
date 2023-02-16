@@ -24,6 +24,9 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Microsoft.AspNet.SignalR;
 using SMP.Contracts.Authentication;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
+using DAL.StudentInformation;
+using SMP.DAL.Models.Parents;
+using DAL.TeachersInfor;
 
 namespace BLL.AuthenticationServices
 {
@@ -628,5 +631,6 @@ namespace BLL.AuthenticationServices
                 return res;
             }
         }
+
     }
 }

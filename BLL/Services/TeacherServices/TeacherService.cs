@@ -402,7 +402,7 @@ namespace SMP.BLL.Services.TeacherServices
             }
         }
 
-        Teacher ITeacherService.GetTeacherByUserId(string userId) => context.Teacher.FirstOrDefault(x => x.UserId == userId);
+       
 
     }
 }

@@ -318,7 +318,7 @@ namespace SMP.BLL.Services.ParentServices
             }
         }
 
-        Parents IParentService.GetParentByUserId(string userId) => context.Parents.FirstOrDefault(x => x.UserId == userId);
+        
 
         public Task SaveParentDetail(string parentOrGuardianEmail, string parentOrGuardianFirstName, object parentOrGuardianLastName, string parentOrGuardianRelationship, string parentOrGuardianPhone, Guid empty)
         {

@@ -25,6 +25,6 @@ namespace BLL.StudentServices
         Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId);
         Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId);
         Task<APIResponse<byte[]>> DownloadStudentTemplate();
-        StudentContact GetStudentByUserId(string userId);
+        //StudentContact GetStudentByUserId(string userId);
     }
 }

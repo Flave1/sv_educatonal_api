@@ -672,7 +672,7 @@ namespace BLL.StudentServices
             }
         }
 
-        StudentContact IStudentService.GetStudentByUserId(string userId) => context.StudentContact.FirstOrDefault(x => x.UserId == userId);
+       
     }
 
 

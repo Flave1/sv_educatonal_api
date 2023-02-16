@@ -5,6 +5,8 @@ using Contracts.Authentication;
 using Contracts.Options;
 using DAL;
 using DAL.Authentication;
+using DAL.StudentInformation;
+using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -21,6 +23,7 @@ using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.Routes;
+using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
@@ -36,7 +39,7 @@ namespace BLL.AuthenticationServices
     {
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, ITeacherService teacherService, IStudentService studentService, IParentService parentService)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -47,9 +50,6 @@ namespace BLL.AuthenticationServices
             this.accessor = accessor;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
-            this.teacherService = teacherService;
-            this.studentService = studentService;
-            this.parentService = parentService;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -61,9 +61,7 @@ namespace BLL.AuthenticationServices
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
-        private readonly ITeacherService teacherService;
-        private readonly IStudentService studentService;
-        private readonly IParentService parentService;
+
 
         async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
         {
@@ -91,8 +89,8 @@ namespace BLL.AuthenticationServices
 
                 if(userAccount.UserType == (int)UserTypes.Admin)
                 {
-                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
-                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
@@ -108,23 +106,23 @@ namespace BLL.AuthenticationServices
                     id = techerAccount.TeacherId;
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
 
-                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
                 {
-                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id && e.ClientId == clientId);
                     if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
-                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    var student = GetStudentByUserId(userAccount.Id, clientId);
                     firstName = student.FirstName;
                     lastName = student.LastName;
                 }
@@ -132,7 +130,7 @@ namespace BLL.AuthenticationServices
 
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
-                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    var parent = GetParentByUserId(userAccount.Id, clientId);
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                 }
@@ -187,7 +185,7 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = techerAccount.TeacherId;
-                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
@@ -201,14 +199,14 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
-                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    var student = GetStudentByUserId(userAccount.Id, clientId);
                     firstName = student.FirstName;
                     lastName = student.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
-                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    var parent = GetParentByUserId(userAccount.Id, clientId);
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                 }
@@ -356,8 +354,6 @@ namespace BLL.AuthenticationServices
                             StringComparison.InvariantCultureIgnoreCase);
         }
 
-
-
         private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, AppLayoutSetting appLayoutSetting = null, string firstName = "", string lastName = "", string clientId = "")
         {
             try
@@ -442,7 +438,6 @@ namespace BLL.AuthenticationServices
 
         }
 
-
         public async Task<AppUser> FetchLoggedInUserDetailsAsync(string userId)
         {
             var currentUser = await userManager?.FindByIdAsync(userId);
@@ -461,6 +456,7 @@ namespace BLL.AuthenticationServices
                 string firstName = String.Empty;
                 string lastName = String.Empty;
 
+                var clientId = ClientId(schoolUrl);
                 if (!string.IsNullOrEmpty(schoolUrl))
                     appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == schoolUrl.ToLower());
                 else
@@ -474,7 +470,7 @@ namespace BLL.AuthenticationServices
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.AppActivity.Where(d => d.IsActive && d.ClientId == appSettings.ClientId).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
 
-                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
@@ -492,7 +488,7 @@ namespace BLL.AuthenticationServices
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == appSettings.ClientId).Select(s => s.Activity.Permission).Distinct().ToList();
 
-                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
@@ -506,13 +502,13 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
-                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    var student = GetStudentByUserId(userAccount.Id, clientId);
                     firstName = student.FirstName;
                     lastName = student.LastName;
                 }
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
-                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    var parent = GetParentByUserId(userAccount.Id, clientId);
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                 }
@@ -570,6 +566,13 @@ namespace BLL.AuthenticationServices
         }
 
         string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
+
+        StudentContact GetStudentByUserId(string userId, string clientId) => context.StudentContact.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+
+        Parents GetParentByUserId(string userId, string clientId) => context.Parents.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+
+        Teacher GetTeacherByUserId(string userId, string clientId) => context.Teacher.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+
     }
 }
 
