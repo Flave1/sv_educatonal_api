@@ -3,6 +3,7 @@ using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using SMP.Contracts.ParentModels;
+using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace SMP.BLL.Services.ParentServices
     public interface IParentService
     {
         Task<APIResponse<PagedResponse<List<MyWards>>>> GetMyWardsAsync(PaginationFilter filter);
-        Task<Guid> SaveParentDetail(string email, string name, string relationship, string number, Guid id);
+        Task<Guid> SaveParentDetail(string email, string firstName, string lastName, string relationship, string number, Guid id);
         Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> GetAnnouncementsAsync(PaginationFilter filter);
         Task<APIResponse<GetAnnouncements>> GetAnnouncementDetailsAsync(string announcementId);
         Task<APIResponse<GetAnnouncements>> UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request);
@@ -20,6 +21,6 @@ namespace SMP.BLL.Services.ParentServices
         Task<APIResponse<PagedResponse<List<GetParentWards>>>> GetParentWardsAsync(PaginationFilter filter, string parentId);
         Task<APIResponse<GetParents>> GetParentByIdAsync(string parentId);
         public Task<APIResponse<ParentDashboardCount>> GetDashboardCount();
-
+        Parents GetParentByUserId(string userId);
     }
 }

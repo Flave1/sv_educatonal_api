@@ -1,4 +1,5 @@
 ﻿using BLL.Constants;
+using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
+using SMP.BLL.Services.TeacherServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +22,17 @@ namespace BLL.AuthenticationServices
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
         private readonly string smsClientId;
+        private readonly ITeacherService teacherService;
+        private readonly IStudentService studentService;
 
-        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor)
+        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor, ITeacherService teacherService, IStudentService studentService)
         {
             this.manager = manager;
             this.userManager = userManager;
             this.context = context;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.teacherService = teacherService;
+            this.studentService = studentService;
         }
         async Task<APIResponse<UserRole>> IRolesService.CreateRoleAsync(CreateRoleActivity request)
         {
@@ -197,7 +203,7 @@ namespace BLL.AuthenticationServices
             res.Result = role;
             return res;
         }
-        async Task<APIResponse<NotAddedUserRole>> IRolesService.GetNotAddedUsersAsync(string roleId)
+        async Task<APIResponse<NotAddedUserRole>> IRolesService.GetUsersNotInRoleAsync(string roleId)
         {
             var res = new APIResponse<NotAddedUserRole>();
 
@@ -208,12 +214,8 @@ namespace BLL.AuthenticationServices
             }).FirstOrDefaultAsync();
             if (role != null)
             {
-                var addedUserIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
-                role.Users = context.Users.Where(d => !addedUserIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.Deleted == false && d.ClientId == smsClientId).Select(a => new UserNames
-                {
-                    UserId = a.Id,
-                    UserName = a.FirstName + " " + a.LastName,
-                }).ToList();
+                var userIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
+                role.Users = context.Teacher.Where(x => !userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(a => new UserNames(a, null)).ToList();
             }
             res.Result = role;
             res.IsSuccessful = true;
@@ -279,11 +281,7 @@ namespace BLL.AuthenticationServices
             var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d, smsClientId)).FirstOrDefault();
             if (selectedRole != null)
             {
-                selectedRole.Users = await context.Users.Where(d => userIds.Contains(d.Id) && d.UserType == (int)UserTypes.Teacher && d.ClientId == smsClientId).Select(x => new UserNames
-                {
-                    UserId = x.Id,
-                    UserName = x.FirstName + " " + x.LastName,
-                }).ToListAsync();
+                selectedRole.Users = await context.Teacher.Where(x => userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(x => new UserNames(x, null)).ToListAsync();
 
                 res.IsSuccessful = true;
                 res.Result = selectedRole;

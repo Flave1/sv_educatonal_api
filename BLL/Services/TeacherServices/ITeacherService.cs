@@ -3,6 +3,7 @@ using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
+using DAL.TeachersInfor;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,5 +21,6 @@ namespace SMP.BLL.Services.TeacherServices
         Task<APIResponse<UpdateProfileByTeacher>> UpdateTeacherProfileByTeacherAsync(UpdateProfileByTeacher userDetail);
         Task<APIResponse<TeacheerClassAndSibjects>> GetSingleTeacherClassesAndSubjectsAsync(Guid teacherId);
         Task<APIResponse<string>> CreateAdminAsync(UserCommand request);
+        Teacher GetTeacherByUserId(string userId);
     }
 }

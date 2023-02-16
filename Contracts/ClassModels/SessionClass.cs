@@ -65,25 +65,7 @@ namespace Contracts.Class
             AssessmentScore = sClass.AssessmentScore;
             PassMark = sClass.PassMark;
             Session = sClass.Session.StartDate + " / " + sClass.Session.EndDate;
-            FormTeacher = sClass?.Teacher?.User?.FirstName + " " + sClass?.Teacher?.User?.LastName;
-            //if (sClass.SessionClassSubjects != null && sClass.SessionClassSubjects.Any())
-            //{
-            //    SubjectCount = sClass.SessionClassSubjects.Count();
-            //    ClassSubjects = sClass.SessionClassSubjects.Select(w => new ClassSubjects
-            //    {
-            //        SubjectId = w.SubjectId.ToString().ToLower(),
-            //        SubjectTeacherId = w.SubjectTeacherId.ToString().ToLower(),
-            //        SubjectName = w.Subject.Name,
-            //        SubjectTeacherName = w?.SubjectTeacher?.User?.FirstName + " " + w?.SubjectTeacher?.User?.LastName,
-            //        Assessment = w.AssessmentScore,
-            //        ExamSCore = w.ExamScore
-            //    }).ToArray();
-            //    SubjectCount = sClass.SessionClassSubjects.Count();
-            //}
-            //if(sClass.Students != null && sClass.Students.Where(d => d.EnrollmentStatus == 1).Any())
-            //{
-            //    StudentCount = sClass.Students.Count();
-            //}
+            FormTeacher = sClass?.Teacher?.FirstName + " " + sClass?.Teacher?.LastName;
         }
 
         public GetSessionClass(SessionClass sClass, bool isMobile)
@@ -99,7 +81,7 @@ namespace Contracts.Class
             AssessmentScore = sClass.AssessmentScore;
             PassMark = sClass.PassMark;
             Session = sClass.Session.StartDate + " / " + sClass.Session.EndDate;
-            FormTeacher = sClass?.Teacher?.User?.FirstName + " " + sClass?.Teacher?.User?.LastName;
+            FormTeacher = sClass?.Teacher?.FirstName + " " + sClass?.Teacher?.LastName;
             AttendanceCount = sClass.ClassRegisters.Count();
             AssessmentCount = sClass.SessionClassSubjects.SelectMany(x => x.HomeAssessments).Count() + sClass.SessionClassSubjects.SelectMany(x => x.ClassAssessments).Count();
             StudentCount = sClass.Students.Count(x => x.EnrollmentStatus == 1);
@@ -128,7 +110,7 @@ namespace Contracts.Class
             SubjectId = w.SubjectId.ToString().ToLower();
             SubjectTeacherId = w.SubjectTeacherId.ToString().ToLower();
             SubjectName = w.Subject.Name;
-            SubjectTeacherName = w?.SubjectTeacher?.User?.FirstName + " " + w?.SubjectTeacher?.User?.LastName;
+            SubjectTeacherName = w?.SubjectTeacher?.FirstName + " " + w?.SubjectTeacher?.LastName;
             Assessment = w.AssessmentScore;
             ExamSCore = w.ExamScore;
         }

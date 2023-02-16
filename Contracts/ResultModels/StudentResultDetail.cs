@@ -21,7 +21,7 @@ namespace SMP.Contracts.ResultModels
                 //IsPublished = entries.FirstOrDefault().ClassScoreEntry?.SessionClass?.PublishStatus?.IsPublished ?? false;
                 PublishResult = entries.Select(x => new StudentResultDetail
                 {
-                    StudentName = entries.FirstOrDefault()?.StudentContact.User?.FirstName + " " + entries.FirstOrDefault()?.StudentContact.User?.LastName,
+                    StudentName = entries.FirstOrDefault()?.StudentContact?.FirstName + " " + entries.FirstOrDefault()?.StudentContact?.LastName,
                     RegistrationNumber = regNoFormat.Replace("%VALUE%", entries.FirstOrDefault()?.StudentContact?.RegistrationNumber),
                     Position = "",
                     TotalSubjects = entries.Count(),
@@ -45,7 +45,7 @@ namespace SMP.Contracts.ResultModels
             if (student != null)
             {
                 var s = new StudentResultDetail();
-                s.StudentName = student.User?.FirstName + " " + student.User?.LastName;
+                s.StudentName = student?.FirstName + " " + student?.LastName;
                 s.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                 s.Position = "";
                 var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
@@ -77,7 +77,7 @@ namespace SMP.Contracts.ResultModels
         public StudentResultDetail() { }
         public StudentResultDetail(IGrouping<Guid, ScoreEntry> entries, string regNoFormat)
         {
-            StudentName = entries.FirstOrDefault()?.StudentContact.User?.FirstName + " " + entries.FirstOrDefault()?.StudentContact.User?.LastName;
+            StudentName = entries.FirstOrDefault()?.StudentContact?.FirstName + " " + entries.FirstOrDefault()?.StudentContact?.LastName;
             StudentContactId = entries.FirstOrDefault()?.StudentContact.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", entries.FirstOrDefault()?.StudentContact?.RegistrationNumber);
             Position = "";
@@ -89,7 +89,7 @@ namespace SMP.Contracts.ResultModels
         }
         public StudentResultDetail(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {
-            StudentName = student.User?.FirstName + " " + student.User?.LastName;
+            StudentName = student?.FirstName + " " + student?.LastName;
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             Position = "1";
@@ -124,7 +124,7 @@ namespace SMP.Contracts.ResultModels
         {
             if(student != null)
             {
-                StudentName = student.User?.FirstName + " " + student.User?.LastName;
+                StudentName = student?.FirstName + " " + student?.LastName;
                 StudentContactId = student.StudentContactId.ToString();
                 RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                 //IsPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
@@ -139,7 +139,7 @@ namespace SMP.Contracts.ResultModels
 
         public StudentCoreEntry(StudentContact student, string regNoFormat)
         {
-            StudentName = student.User?.FirstName + " " + student.User?.LastName;
+            StudentName = student?.FirstName + " " + student?.LastName;
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             //SessionClassName = student.SessionClass.Class.Name;
@@ -237,7 +237,7 @@ namespace SMP.Contracts.ResultModels
             studentSubjectEntries = se.Select(e => new StudentSubjectEntry(e, sse.ClassScoreEntry.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
             gradeSetting = sse.ClassScoreEntry.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
             totalScores = se.Count() * 100;
-            studentName = se.FirstOrDefault().StudentContact.User.FirstName + " " + se.FirstOrDefault().StudentContact.User.LastName;
+            studentName = se.FirstOrDefault().StudentContact.FirstName + " " + se.FirstOrDefault().StudentContact.LastName;
             cognitiveBehaviour = new List<CognitiveBehaviour>
             {
                 new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
@@ -356,7 +356,7 @@ namespace SMP.Contracts.ResultModels
                 position = "1";
                 registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
                 session = clas.Session.StartDate + " / " + clas.Session.EndDate;
-                studentName = std.User?.FirstName + " " + std.User?.LastName;
+                studentName = std?.FirstName + " " + std?.LastName;
                 studentContactId = std.StudentContactId;
                 sessionClassName = clas.Class.Name;
                 studentSubjectEntries = ScoreEntries.Select(e => new StudentSubjectEntry(e, clas.Class.GradeLevel, clas.SessionClassId)).ToList();
@@ -388,7 +388,7 @@ namespace SMP.Contracts.ResultModels
             position = "1";
             registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
             session = clas.Session.StartDate + " / " + clas.Session.EndDate;
-            studentName = std.User?.FirstName + " " + std.User?.LastName;
+            studentName = std?.FirstName + " " + std?.LastName;
             studentContactId = std.StudentContactId;
             sessionClassName = clas.Class.Name;
             studentSubjectEntries = ScoreEntries.Select(e => new StudentSubjectEntry(e, clas.Class.GradeLevel, clas.SessionClassId)).ToList();
@@ -414,7 +414,7 @@ namespace SMP.Contracts.ResultModels
         public BatchPrintStudents(StudentContact student, string status, string regNoFormat)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
-            StudentName = student.User.FirstName + " " + student.User.LastName;
+            StudentName = student.FirstName + " " + student.LastName;
             Position = status;
         }
     }

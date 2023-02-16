@@ -360,7 +360,7 @@ namespace SMP.BLL.Services.PinManagementService
             var res = new APIResponse<PinDetail>();
             res.Result = context.UsedPin.Where(x=>x.ClientId == smsClientId)
             .Include(x => x.UploadedPin)
-            .Include(x => x.Student).ThenInclude(d => d.User)
+            .Include(x => x.Student)
             .Include(x => x.Sessionterm)
             .Include(x => x.SessionClass).ThenInclude(x => x.Session)
             .Where(x => x.UploadedPin.Pin == pin).AsEnumerable()

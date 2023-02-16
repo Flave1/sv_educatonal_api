@@ -35,7 +35,6 @@ namespace BLL.AuthenticationServices
         private readonly DataContext context;
         private readonly IIdentityService identityService;
         private readonly SchoolSettings schoolSettings;
-        private readonly IFileUploadService uploadService;
         private readonly EmailConfiguration emailConfiguration;
         private readonly FwsConfigSettings fwsConfig;
         private readonly IPinManagementService pinService;
@@ -43,7 +42,7 @@ namespace BLL.AuthenticationServices
         private readonly string smsClientId;
         public readonly IHttpContextAccessor accessor;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
-            IIdentityService identityService, IOptions<SchoolSettings> options, IFileUploadService uploadService, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, 
+            IIdentityService identityService, IOptions<SchoolSettings> options, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, 
             IPinManagementService pinService, IUtilitiesService utilitiesService, IHttpContextAccessor accessor)
         {
             this.manager = manager;
@@ -53,7 +52,6 @@ namespace BLL.AuthenticationServices
             this.identityService = identityService;
             this.schoolSettings = options.Value;
             this.accessor = accessor;
-            this.uploadService = uploadService;
             emailConfiguration = emailOptions.Value;
             fwsConfig = fwsOptions.Value;
             this.pinService = pinService;
@@ -100,7 +98,7 @@ namespace BLL.AuthenticationServices
             try
             {
                 var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
-                var filePath = uploadService.UploadProfileImage(student.ProfileImage);
+           
                 var user = new AppUser
                 {
                     UserName = email,
@@ -109,14 +107,7 @@ namespace BLL.AuthenticationServices
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
                     Email = email,
-                    UserType = (int)UserTypes.Student,
-                    LastName = student.LastName,
-                    DOB = student.DOB,
-                    FirstName = student.FirstName,
-                    MiddleName = student.MiddleName,
-                    Phone = student.Phone,
-                    Photo = filePath,
-                    ClientId = smsClientId,
+                    UserType = (int)UserTypes.Student
                 };
                 var result = await manager.CreateAsync(user, regNoFormat);
                 if (!result.Succeeded)
@@ -153,13 +144,7 @@ namespace BLL.AuthenticationServices
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
                     Email = email,
-                    UserType = (int)UserTypes.Student,
-                    LastName = student.LastName,
-                    DOB = student.DOB,
-                    FirstName = student.FirstName,
-                    MiddleName = student.MiddleName,
-                    Phone = student.Phone,
-
+                    UserType = (int)UserTypes.Student
                 };
                 var result = await manager.CreateAsync(user, regNoFormat);
                 if (!result.Succeeded)
@@ -193,17 +178,9 @@ namespace BLL.AuthenticationServices
                     throw new ArgumentException("Account not found");
                 }
 
-                var filePath = uploadService.UpdateProfileImage(student.ProfileImage, account.Photo);
                 account.UserName = student.Email;
                 account.Email = student.Email;
                 account.UserType = (int)UserTypes.Student;
-                account.LastName = student.LastName;
-                account.DOB = student.DOB;
-                account.FirstName = student.FirstName;
-                account.MiddleName = student.MiddleName;
-                account.Phone = student.Phone;
-                account.Photo = filePath;
-                account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -229,12 +206,6 @@ namespace BLL.AuthenticationServices
                 account.UserName = student.Email;
                 account.Email = student.Email;
                 account.UserType = (int)UserTypes.Student;
-                account.LastName = student.LastName;
-                account.DOB = student.DOB;
-                account.FirstName = student.FirstName;
-                account.MiddleName = student.MiddleName;
-                account.Phone = student.Phone;
-                account.ClientId = smsClientId;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -259,9 +230,7 @@ namespace BLL.AuthenticationServices
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
                     Email = email,
-                    UserType = (int)UserTypes.Parent,
-                    Phone = phone,
-                    ClientId = smsClientId,
+                    UserType = (int)UserTypes.Parent
                 };
                 var result = await manager.CreateAsync(user, "000000");
                 if (!result.Succeeded)
@@ -298,16 +267,7 @@ namespace BLL.AuthenticationServices
                 account.UserName = email;
                 account.Email = email;
                 account.UserType = (int)UserTypes.Parent;
-                if (!string.IsNullOrEmpty(account.ClientId))
-                {
-                    var clientIds = account.ClientId.Split("||").ToList();
-                    if(!clientIds.Any(x => x == smsClientId))
-                    {
-                        clientIds.Add(smsClientId);
-                        account.ClientId = String.Join("||", clientIds);
-                    }
-                } else
-                    account.ClientId = smsClientId;
+                
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -321,50 +281,46 @@ namespace BLL.AuthenticationServices
 
         }
 
-        async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
-        {
-            try
-            {
-                var account = await manager.FindByIdAsync(studentId);
-                if (account == null)
-                {
-                    throw new ArgumentException("Account not found");
-                }
+        //async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
+        //{
+        //    try
+        //    {
+        //        var account = await manager.FindByIdAsync(studentId);
+        //        if (account == null)
+        //        {
+        //            throw new ArgumentException("Account not found");
+        //        }
 
-                var filePath = uploadService.UpdateProfileImage(file, account.Photo);
-              
-                account.Photo = filePath;
-                var result = await manager.UpdateAsync(account);
-                if (!result.Succeeded)
-                {
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
+        //        var result = await manager.UpdateAsync(account);
+        //        if (!result.Succeeded)
+        //        {
+        //            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+        //        }
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        throw new ArgumentException(ex.Message);
+        //    }
 
-        }
+        //}
 
-        async Task IUserService.UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account)
-        {
-            try
-            {
-                var filePath = await Task.Run(() => uploadService.UpdateProfileImage(file, account.Photo));
-                account.Photo = filePath;
-                var result = await manager.UpdateAsync(account);
-                if (!result.Succeeded)
-                {
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
+        //async Task IUserService.UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account)
+        //{
+        //    try
+        //    {
+                
+        //        var result = await manager.UpdateAsync(account);
+        //        if (!result.Succeeded)
+        //        {
+        //            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+        //        }
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        throw new ArgumentException(ex.Message);
+        //    }
 
-        }
+        //}
         void IUserService.ValidateResetOption(ResetPassword request)
         {
             if (request.ResetOption == "email")
@@ -400,16 +356,18 @@ namespace BLL.AuthenticationServices
 
         async Task IUserService.GenerateResetLinkAndSendToUserEmail(ResetPassword request)
         {
+            var appsetting = context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl.ToLower() == request.SchoolUrl.ToLower());
+            if(appsetting is null)
+                throw new ArgumentException("Invalid Request");
             if (int.Parse(request.UserType) == (int)UserTypes.Student)
             {
                 var user = await manager.Users.FirstOrDefaultAsync(d => d.UserType == (int)UserTypes.Student && d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
                 if (user == null)
                     throw new ArgumentException("Student account with this email address is not registered");
 
-                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == user.ClientId); 
 
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var link = appSettings.schoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                var link = appsetting.schoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link, "Account Verification");
             }
@@ -522,7 +480,7 @@ namespace BLL.AuthenticationServices
                 {
 
                     var rgNo = utilitiesService.GetStudentRegNumberValue(request.UsernameOrRegNumber);
-                    var student = context.StudentContact.Include(x => x.User).FirstOrDefault(x => x.RegistrationNumber == rgNo);
+                    var student = context.StudentContact.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.RegistrationNumber == rgNo);
                     if (student is null)
                     {
                         res.Result.Status = "failed";
@@ -540,7 +498,7 @@ namespace BLL.AuthenticationServices
                         else
                         {
                             res.Result.Status = "success";
-                            res.Result.FullName = student.User.FirstName + " " + student.User.LastName;
+                            res.Result.FullName = student.FirstName + " " + student.LastName;
                             res.Result.RegistrationNumber = student.RegistrationNumber;
                             res.Result.UserName = student.User.UserName;
                             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -561,7 +519,7 @@ namespace BLL.AuthenticationServices
                     else
                     {
                         res.Result.Status = "success";
-                        res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                        //res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
                         res.Result.RegistrationNumber = "";
                         res.Result.UserName = teacher.UserName;
                         res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
@@ -581,7 +539,7 @@ namespace BLL.AuthenticationServices
                     else
                     {
                         res.Result.Status = "success";
-                        res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
+                        //res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
                         res.Result.UserName = teacher.UserName;
                         res.Result.RegistrationNumber = "";
                         res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -605,6 +563,7 @@ namespace BLL.AuthenticationServices
             var res = new APIResponse<bool>();
             try
             {
+                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == request.SchoolUrl);
                 var user = await manager.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Trim() == request.Email.ToLower().Trim() && x.Deleted != true);
                 if (user == null)
                 {
@@ -614,7 +573,7 @@ namespace BLL.AuthenticationServices
                 }
 
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.ClientId == user.ClientId);
+
                 var link = appSettings.schoolUrl + "/PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 await SendResetLinkToEmailToUserAsync(user, link, "Password Reset");

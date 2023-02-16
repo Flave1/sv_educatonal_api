@@ -8,12 +8,7 @@ namespace DAL.Authentication
     {
         public int UserType { get; set; } 
         public bool Active { get; set; } 
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string MiddleName { get; set; }
-        public string Phone { get; set; } 
-        public string DOB { get; set; }
-        public string Photo { get; set; }
+        
         /// <summary>
         //GENERAL
         /// </summary>
@@ -24,6 +19,6 @@ namespace DAL.Authentication
         public string UpdatedBy { get; set; }
 
         public Teacher Teacher { get; set; }
-        public string ClientId { get; set; }
+        //public string ClientId { get; set; }
     }
 }

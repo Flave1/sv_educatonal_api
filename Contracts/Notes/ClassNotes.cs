@@ -87,7 +87,7 @@ namespace SMP.Contracts.Notes
             DateCreated = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
             NoteContent = isSingle ? db.ClassNote.NoteContent : "" ;
             Author = db.ClassNote.Author.ToString();
-            AuthorName = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
+            AuthorName = db.Teacher.FirstName + " " + db.Teacher.LastName;
             ApprovalStatus = db.ClassNote.AprrovalStatus;
 
             if(ApprovalStatus == 1)
@@ -105,22 +105,22 @@ namespace SMP.Contracts.Notes
             DateSentForApproval = db.ClassNote?.DateSentForApproval is not null ? db.ClassNote.DateSentForApproval.Value.ToString("dd-MM-yyy hh:mm") : "";
             NoteAuthordetail = isSingle ? new NoteAuthordetail
             {
-                FullName = db.ClassNote.AuthorDetail.FirstName + " " + db.ClassNote.AuthorDetail.LastName,
-                FirstName = db.ClassNote.AuthorDetail.FirstName,
-                LastName = db.ClassNote.AuthorDetail.LastName,
-                MiddleName = db.ClassNote.AuthorDetail.MiddleName,
-                Photo = db.ClassNote.AuthorDetail.Photo,
+                FullName = db.Teacher.FirstName + " " + db.Teacher.LastName,
+                FirstName = db.Teacher.FirstName,
+                LastName = db.Teacher.LastName,
+                MiddleName = db.Teacher.MiddleName,
+                Photo = db.Teacher.Photo,
                 ShortBio = db.ClassNote.AuthorDetail?.Teacher?.ShortBiography
             } : null;
         }
-        public GetClassNotes(ClassNote db)
+        public GetClassNotes(ClassNote db, Teacher teacher)
         {
             ClassNoteId = db.ClassNoteId.ToString(); 
             NoteTitle = db.NoteTitle;
             DateCreated = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
             NoteContent = db.NoteContent;
             Author = db.Author.ToString();
-            AuthorName = db.AuthorDetail.FirstName + " " + db.AuthorDetail.LastName;
+            AuthorName = teacher?.FirstName + " " + teacher?.LastName;
 
             ApprovalStatus = db.AprrovalStatus;
 
@@ -139,11 +139,11 @@ namespace SMP.Contracts.Notes
             DateSentForApproval = db.DateSentForApproval.Value.ToString("dd-MM-yyy hh:mm");
             NoteAuthordetail = new NoteAuthordetail
             {
-                FullName = db.AuthorDetail.FirstName + " " + db.AuthorDetail.LastName,
-                FirstName = db.AuthorDetail.FirstName,
-                LastName = db.AuthorDetail.LastName,
-                MiddleName = db.AuthorDetail.MiddleName,
-                Photo = db.AuthorDetail.Photo,
+                FullName = teacher.FirstName + " " + teacher.LastName,
+                FirstName = teacher.FirstName,
+                LastName = teacher.LastName,
+                MiddleName = teacher.MiddleName,
+                Photo = teacher.Photo,
             };
         }
     }
@@ -179,10 +179,10 @@ namespace SMP.Contracts.Notes
         {
             TeacherAccountId = db.TeacherId.ToString();
             TeacherUserAccountId = db.User.Id;
-            FullName = db.User.FirstName + " " + db.User.LastName;
-            FirstName = db.User.FirstName;
-            LastName = db.User.LastName;
-            MiddleName = db.User.MiddleName;
+            FullName = db.FirstName + " " + db.LastName;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
             isShared = isShare;
         }
 
@@ -190,10 +190,10 @@ namespace SMP.Contracts.Notes
         {
             TeacherAccountId = db.TeacherId.ToString();
             TeacherUserAccountId = db.User.Id;
-            FullName = db.User.FirstName + " " + db.User.LastName;
-            FirstName = db.User.FirstName;
-            LastName = db.User.LastName;
-            MiddleName = db.User.MiddleName;
+            FullName = db.FirstName + " " + db.LastName;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
             isShared = true;
         }
     }
@@ -209,7 +209,7 @@ namespace SMP.Contracts.Notes
         public string Name { get; set; }
         public List<ClassNoteComment> RepliedComments { get; set; }
         public ClassNoteComment() { }
-        public ClassNoteComment(TeacherClassNoteComment db)
+        public ClassNoteComment(TeacherClassNoteComment db, Teacher teacher)
         {
             CommentId = db.TeacherClassNoteCommentId;
             Comment = db.Comment;
@@ -217,10 +217,10 @@ namespace SMP.Contracts.Notes
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
             TeacherId = db.UserId;
-            Name = db?.AppUser?.FirstName + " " + db?.AppUser?.LastName;
+            Name = teacher?.FirstName + " " + teacher?.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
-                RepliedComments = db.Replies.Select(x => new ClassNoteComment(x)).ToList();
+                RepliedComments = db.Replies.Select(x => new ClassNoteComment(x, teacher)).ToList();
             }
         }
     }

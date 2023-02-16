@@ -39,7 +39,7 @@ namespace SMP.BLL.Services.ParentServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
-        async Task<Guid> IParentService.SaveParentDetail(string email, string name, string relationship, string number, Guid id)
+        async Task<Guid> IParentService.SaveParentDetail(string email, string firstName, string lastName, string relationship, string number, Guid id)
         {
             string userid = string.Empty;
             var parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Email.ToLower() == email.Trim().ToLower()) ?? null;
@@ -50,7 +50,8 @@ namespace SMP.BLL.Services.ParentServices
             {
                 userid = await userService.CreateParentUserAccountAsync(email, number);
                 parent = new Parents();
-                parent.Name = name;
+                parent.FirstName = firstName;
+                parent.LastName = lastName;
                 parent.Relationship = relationship;
                 parent.Number = number;
                 parent.Email = email.Trim();
@@ -59,7 +60,8 @@ namespace SMP.BLL.Services.ParentServices
             }
             else
             {
-                parent.Name = name;
+                parent.FirstName = firstName;
+                parent.LastName = lastName;
                 parent.Relationship = relationship;
                 parent.Number = number;
                 parent.Email = email.Trim();
@@ -80,9 +82,8 @@ namespace SMP.BLL.Services.ParentServices
                 var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
                     .Include(x => x.Parent)
                     .Where(x => x.Parent.Email == userName)
-                        .Include(d => d.User)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Class)
-                        .OrderByDescending(d => d.User.FirstName)
+                        .OrderByDescending(d => d.FirstName)
                         .Where(d => d.Deleted == false);
 
                 var totaltRecord = query.Count();
@@ -201,7 +202,7 @@ namespace SMP.BLL.Services.ParentServices
             try
             {
                 var query = context.Parents.Where(x => x.ClientId == smsClientId)
-                    .OrderBy(d => d.Name);
+                    .OrderBy(d => d.FirstName);
 
                 var totaltRecord = query.Count();
                 var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetParents(x)).ToListAsync();
@@ -231,9 +232,8 @@ namespace SMP.BLL.Services.ParentServices
                 var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
                         .Include(x => x.Parent)
                         .Where(x => x.ParentId == Guid.Parse(parentId))
-                        .Include(d => d.User)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Class)
-                        .OrderByDescending(d => d.User.FirstName)
+                        .OrderByDescending(d => d.FirstName)
                         .Where(d => d.Deleted == false);
 
                 var totaltRecord = query.Count();
@@ -316,6 +316,13 @@ namespace SMP.BLL.Services.ParentServices
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
+        }
+
+        Parents IParentService.GetParentByUserId(string userId) => context.Parents.FirstOrDefault(x => x.UserId == userId);
+
+        public Task SaveParentDetail(string parentOrGuardianEmail, string parentOrGuardianFirstName, object parentOrGuardianLastName, string parentOrGuardianRelationship, string parentOrGuardianPhone, Guid empty)
+        {
+            throw new NotImplementedException();
         }
     }
 }

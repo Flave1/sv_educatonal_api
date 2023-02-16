@@ -29,13 +29,13 @@ namespace Contracts.Authentication
         public string UserAccountId { get; set; }
         public bool IsFirstTimeLogin { get; set; }
         public UserDetail() { }
-        public UserDetail(SchoolSetting db, AppUser user, Guid id)
+        public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id)
         {
             Id = id.ToString();
             SchoolAbbreviation = db.SchoolAbbreviation;
             SchoolLogo = db.Photo;
             SchoolName = db.SchoolName;
-            UserName = user.FirstName + " " + user.LastName;
+            UserName = FirstName + " " + LastName;
             UserAccountId = user.Id;
             IsFirstTimeLogin = !user.EmailConfirmed;
             if (user.UserType == -1)

@@ -66,7 +66,7 @@ namespace SMP.Contracts.PromotionModels
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             StudentContactId = student.StudentContactId.ToString();
-            StudentName = student.User.FirstName +" "+ student.User.LastName;
+            StudentName = student.FirstName +" "+ student.LastName;
             ClassName = student.SessionClass.Class.Name;
             SessionClassId = student.SessionClassId.ToString();
             Status = status;

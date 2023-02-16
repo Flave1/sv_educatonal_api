@@ -73,16 +73,7 @@ namespace SMP.BLL.Services.TeacherServices
                     CreatedBy = "",
                     Email = request.Email,
                     UserType = (int)UserTypes.Teacher,
-                    EmailConfirmed = false,
-                    DOB = request.DOB,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    MiddleName = request.MiddleName,
-                    Phone = request.Phone,
-                    PhoneNumber = request.Phone,
-                    PhoneNumberConfirmed = false,
-                    Photo = uploadProfile,
-                    ClientId = smsClientId
+                    EmailConfirmed = false
                 };
                 var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
                 if (!result.Succeeded)
@@ -97,10 +88,8 @@ namespace SMP.BLL.Services.TeacherServices
                     return res;
                 }
 
-                context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
-                await context.SaveChangesAsync();
+                CreateUpdateAdminTeacherProfile(request, user.Id);
 
-                //await SendEmailToTeacherOnCreateAsync(user);
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
                 res.Result = request;
@@ -147,17 +136,9 @@ namespace SMP.BLL.Services.TeacherServices
             var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
             if (teacherAct != null)
             {
+                CreateUpdateAdminTeacherProfile(userDetail, user.Id);
                 user.Email = userDetail.Email;
                 user.UserName = userDetail.Email;
-                user.UpdateOn = DateTime.Now;
-                user.FirstName = userDetail.FirstName;
-                user.LastName = userDetail.LastName;
-                user.MiddleName = userDetail.MiddleName;
-                user.Phone = userDetail.Phone;
-                user.DOB = userDetail.DOB;
-                user.Photo = uploadProfile;
-                user.EmailConfirmed = true;
-                user.ClientId = smsClientId;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
                 await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
@@ -177,7 +158,9 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<PagedResponse<List<ApplicationUser>>>> ITeacherService.GetAllTeachersAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<ApplicationUser>>>();
-            var query = context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher).Include(s => s.User).OrderBy(d => d.User.FirstName);
+            var query = context.Teacher
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher)
+                .Include(s => s.User).OrderBy(d => d.FirstName);
 
             var totaltRecord = query.Count();
             var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).ToListAsync();
@@ -192,7 +175,9 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<List<ApplicationUser>>();
 
-            var result = await context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active).OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+            var result = await context.Teacher
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active)
+                .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).ToListAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -205,7 +190,7 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<ApplicationUser>();
             var result = await context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
-                .OrderByDescending(d => d.CreatedOn).Include(s => s.User)
+                .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;
@@ -260,24 +245,21 @@ namespace SMP.BLL.Services.TeacherServices
                 res.Message.FriendlyMessage = "Teacher user account does not exist";
                 return res;
             }
-            var uploadProfile = userService.UpdateTeacherUserProfileImageAsync(userDetail.ProfileImage, user);
+
             var teacherAct = context.Teacher.FirstOrDefault(d => d.ClientId == smsClientId && d.UserId == user.Id);
+
             if (teacherAct != null)
             {
                 user.Email = userDetail.Email;
                 user.UserName = userDetail.Email;
-                user.UpdateOn = DateTime.Now;
-                user.FirstName = userDetail.FirstName;
-                user.LastName = userDetail.LastName;
-                user.MiddleName = userDetail.MiddleName;
-                user.Phone = userDetail.Phone;
-                user.DOB = userDetail.DOB; 
                 user.EmailConfirmed = true;
                 teacherAct.Hobbies = string.Join(',', userDetail.Hobbies);
                 teacherAct.ShortBiography = userDetail.ShortBiography;
                 teacherAct.Address = userDetail.Address;
                 teacherAct.Gender = userDetail.Gender;
                 teacherAct.MaritalStatus = userDetail.MaritalStatus;
+                var filePath = await Task.Run(() => upload.UpdateProfileImage(userDetail.ProfileImage, teacherAct.Photo));
+                teacherAct.Photo = filePath;
 
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
@@ -341,27 +323,18 @@ namespace SMP.BLL.Services.TeacherServices
                     res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
                     return res;
                 }
-                var user = new AppUser
-                {
-                    UserName = request.Email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = request.Email,
-                    UserType = (int)UserTypes.Admin,
-                    EmailConfirmed = false,
-                    DOB = request.DOB,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    MiddleName = request.MiddleName,
-                    Phone = request.Phone,
-                    PhoneNumber = request.Phone,
-                    PhoneNumberConfirmed = false,
-                    Photo = "",
-                    ClientId = request.ClientId,
-                    PasswordHash = request.PasswordHash
-                };
+                var user = new AppUser();
+
+                user.UserName = request.Email;
+                user.Active = true;
+                user.Deleted = false;
+                user.CreatedOn = DateTime.UtcNow;
+                user.CreatedBy = "";
+                user.Email = request.Email;
+                user.UserType = (int)UserTypes.Admin;
+                user.EmailConfirmed = false;
+                user.PasswordHash = request.PasswordHash;
+
                 var result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
@@ -377,11 +350,11 @@ namespace SMP.BLL.Services.TeacherServices
                     return res;
                 }
 
-                context.Teacher.Add(new Teacher { UserId = user.Id, Status = (int)TeacherStatus.Active });
+                CreateUpdateAdminTeacherProfile(request, user.Id);
 
                 var schooSetting = new SMSSMPAccountSetting(request.SchoolName, request.Country, request.State, request.Address, request.SchoolLogo, request.ClientId);
 
-                await portalSettingService.CreateSchollSettingsAsync(schooSetting, user.Email);
+                await portalSettingService.CreateSchoolSettingsAsync(schooSetting, user.Email);
 
                 portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
@@ -400,6 +373,36 @@ namespace SMP.BLL.Services.TeacherServices
         }
 
 
+        void CreateUpdateAdminTeacherProfile(UserCommand request, string userId)
+        {
+            try
+            {
+                var isNew = false;
+                var teacher = context.Teacher.FirstOrDefault(x => x.ClientId == smsClientId);
+                if (teacher is null)
+                {
+                    isNew = true;
+                    teacher = new Teacher();
+                }
+                teacher.DOB = request.DOB;
+                teacher.FirstName = request.FirstName;
+                teacher.LastName = request.LastName;
+                teacher.MiddleName = request.MiddleName;
+                teacher.Phone = request.Phone;
+                teacher.Photo = "";
+                teacher.UserId = userId;
+                teacher.ClientId = request.ClientId;
+                if (isNew) context.Teacher.Add(teacher);
+                context.SaveChanges();
+            }
+            catch (Exception x)
+            {
+
+                throw new ArgumentException(x?.Message ?? x?.InnerException.Message);
+            }
+        }
+
+        Teacher ITeacherService.GetTeacherByUserId(string userId) => context.Teacher.FirstOrDefault(x => x.UserId == userId);
 
     }
 }

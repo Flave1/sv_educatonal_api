@@ -39,15 +39,15 @@ namespace SMP.Contracts.Students
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
             UserType = db.User.UserType;
             Active = db.User.Active;
-            FirstName = db.User.FirstName;
-            LastName = db.User.LastName;
-            MiddleName = db.User.MiddleName;
-            Phone = db.User.Phone;
-            DOB = db.User.DOB;
-            Photo = db.User.Photo;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
+            Phone = db.Phone;
+            DOB = db.DOB;
+            Photo = db.Photo;
             HomePhone = db.HomePhone;
             EmergencyPhone = db.EmergencyPhone;
-            ParentOrGuardianName = db.Parent?.Name;
+            ParentOrGuardianName = db.Parent?.FirstName + " "+ db.Parent?.LastName;
             ParentOrGuardianRelationship = db.Parent?.Relationship;
             ParentOrGuardianPhone = db.Parent?.Number;
             ParentOrGuardianEmail = db.Parent?.Email;
@@ -60,7 +60,7 @@ namespace SMP.Contracts.Students
             StudentAccountId = db.StudentContactId.ToString();
             UserName = db.User.UserName;
             Email = db.User.Email;
-            Photo = db.User.Photo;
+            Photo = db.Photo;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using SMP.DAL.Models.NoteEntities;
+﻿using DAL.StudentInformation;
+using DAL.TeachersInfor;
+using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,7 +55,7 @@ namespace SMP.Contracts.Notes
         public Guid? RepliedToId { get; set; }
         public List<StudentNoteComments> RepliedComments { get; set; }
         public StudentNoteComments() { }
-        public StudentNoteComments(StudentNoteComment db)
+        public StudentNoteComments(StudentNoteComment db, dynamic account = null)
         {
             CommentId = db.StudentNoteCommentId;
             Comment = db.Comment;
@@ -61,10 +63,12 @@ namespace SMP.Contracts.Notes
             StudentNoteId = db.StudentNoteId;
             RepliedToId = db.RepliedToId;
             StudentId = db.StudentNote.StudentContactId;
-            Name = db.User?.FirstName + "  " + db.User?.LastName;
+
+            Name = account?.FirstName + "  " + account?.LastName;
+
             if (db.Replies is not null && db.Replies.Any())
             {
-                RepliedComments = db.Replies.Select(x => new StudentNoteComments(x)).ToList();
+                RepliedComments = db.Replies.Select(x => new StudentNoteComments(x, account)).ToList();
             }
         }
     }
@@ -99,7 +103,7 @@ namespace SMP.Contracts.Notes
             NoteContent = db.NoteContent;
             SubjectId = db.SubjectId.ToString();
             TeacherId = db.TeacherId;
-            StudentName = db.Student.User.FirstName + " " + db.Student.User.LastName;
+            StudentName = db.Student.FirstName + " " + db.Student.LastName;
             SessionClassId = db.SessionClassId;
             SubjectName = db.Subject.Name.ToString();
             ApprovalStatus = db.AprrovalStatus;

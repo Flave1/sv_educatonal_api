@@ -87,6 +87,9 @@ namespace SMP.BLL.Services.AdmissionServices
                         res.Message.FriendlyMessage = "Candidate already admitted";
                     }
 
+                   
+
+
                     var student = new StudentContactCommand
                     {
                         FirstName = admission.Firstname,
@@ -97,7 +100,7 @@ namespace SMP.BLL.Services.AdmissionServices
                         Email = admission.Email,
                         HomePhone = admission.PhoneNumber,
                         EmergencyPhone = admission.ParentPhoneNumber,
-                        ParentOrGuardianName = admission.ParentName,
+                        ParentOrGuardianFirstName = admission.ParentName,
                         ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
                         HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
                         CityId = admission.StateOfOrigin,
@@ -107,10 +110,20 @@ namespace SMP.BLL.Services.AdmissionServices
                         Photo = admission.Photo,
                     };
 
-                    var result = await utilitiesService.GenerateForStudents();
+                    var result = await utilitiesService.GenerateStudentRegNo();
 
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
+
+                    var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", admissionFileName);
+
+                    string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "ProfileImage", admissionFileName);
+
+                    fileUploadService.CopyFile(admissionPath, profilePhotoPath);
+
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/ProfileImage/{admissionFileName}";
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
@@ -126,7 +139,13 @@ namespace SMP.BLL.Services.AdmissionServices
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
                         SessionClassId = Guid.Parse(student.SessionClassId),
-                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
+                        LastName = student.LastName,
+                        DOB = student.DOB,
+                        FirstName = student.FirstName,
+                        MiddleName = student.MiddleName,
+                        Phone = student.Phone,
+                        Photo = photoUrl
                     };
                     context.StudentContact.Add(item);
 
@@ -191,7 +210,7 @@ namespace SMP.BLL.Services.AdmissionServices
                             Email = admission.Email,
                             HomePhone = admission.PhoneNumber,
                             EmergencyPhone = admission.ParentPhoneNumber,
-                            ParentOrGuardianName = admission.ParentName,
+                            ParentOrGuardianFirstName = admission.ParentName,
                             ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
                             HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
                             CityId = admission.StateOfOrigin,
@@ -208,10 +227,10 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 foreach (var student in studentContactList)
                 {
-                    var result = await utilitiesService.GenerateForStudents();
+                    var result = await utilitiesService.GenerateStudentRegNo();
 
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
@@ -263,17 +282,7 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
 
-                string admissionFileName = photoPath.Split("AdmissionPassport/")[1];
-
-                var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", admissionFileName);
-
-                string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "ProfileImage", admissionFileName);
-
-                fileUploadService.CopyFile(admissionPath, profilePhotoPath);
-
-                var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/ProfileImage/{admissionFileName}";
-
+              
                 var user = new AppUser
                 {
                     UserName = email,
@@ -282,14 +291,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     CreatedOn = DateTime.UtcNow,
                     CreatedBy = "",
                     Email = email,
-                    UserType = (int)UserTypes.Student,
-                    LastName = student.LastName,
-                    DOB = student.DOB,
-                    FirstName = student.FirstName,
-                    MiddleName = student.MiddleName,
-                    Phone = student.Phone,
-                    Photo = photoUrl
-
+                    UserType = (int)UserTypes.Student
                 };
                 var result = await manager.CreateAsync(user, regNoFormat);
                 if (!result.Succeeded)

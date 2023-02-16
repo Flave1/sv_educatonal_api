@@ -295,7 +295,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             if(result is not null)
             {
-                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
+                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).FirstOrDefault(x => x.TeacherId == result.TeacherId);
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -318,7 +318,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             var studentsInClass = context.StudentContact
                 .Where(f => f.ClientId == smsClientId && f.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && f.SessionClassId == Guid.Parse(sessionClasId))
-                .Include(s => s.User)
+                
                 .ToList();
             var ds = context.HomeAssessment;
 
@@ -334,7 +334,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             if (result is not null)
             {
-                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == result.TeacherId).User;
+                var teacher = context.Teacher.Where(x=>x.ClientId == smsClientId).FirstOrDefault(x => x.TeacherId == result.TeacherId);
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -580,7 +580,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
                 result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
 
-                var teacher = context.Teacher.Where(x=> x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
+                var teacher = context.Teacher.Where(x=> x.ClientId == smsClientId).FirstOrDefault(x => x.TeacherId == assessment.TeacherId);
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -625,7 +625,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     .FirstOrDefault(x => x.HomeAssessmentId == result.HomeAssessmentId);
                 result.Assessment = new GetHomeAssessmentRequest(assessment, 0);
 
-                var teacher = context.Teacher.Where(x => x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(x => x.TeacherId == assessment.TeacherId).User;
+                var teacher = context.Teacher.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.TeacherId == assessment.TeacherId);
                 result.TeacherName = teacher.FirstName + " " + teacher.LastName;
             }
 
@@ -743,7 +743,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var assessment = await context.HomeAssessment
                 .Where(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId) && x.ClientId == smsClientId)
                 .Include(x => x.HomeAssessmentFeedBacks)
-                .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Students)
                 .Include(x => x.SessionClassSubject)
                 .FirstOrDefaultAsync();
 
@@ -766,7 +766,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Score = assessment.HomeAssessmentFeedBacks.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.Mark??0, 
                         StudentId = x.StudentContactId, 
                         SubjectId = assessment.SessionClassSubject.SubjectId,
-                        Name = x.User.FirstName + " " + x.User.LastName,
+                        Name = x.FirstName + " " + x.LastName,
                         FeedBackId = assessment.HomeAssessmentFeedBacks.FirstOrDefault(s => s.StudentContactId == x.StudentContactId)?.HomeAssessmentFeedBackId
                 }
                 ).ToList();

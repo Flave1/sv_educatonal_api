@@ -24,7 +24,7 @@ namespace SMP.Contracts.ResultModels
         {
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
-            FormTeacher = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
+            FormTeacher = db.Teacher.FirstName + " " + db.Teacher.LastName;
             TermName = term.TermName;
             //if (db.Students.Any())
             //{
@@ -50,7 +50,7 @@ namespace SMP.Contracts.ResultModels
         public MasterListResult(IGrouping<Guid, ScoreEntry> se, string regNoFormat)
         {
             var std = se.FirstOrDefault().StudentContact;
-            StudentName = std.User.FirstName + " " + std.User.LastName + " " + std.User.MiddleName;
+            StudentName = std.FirstName + " " + std.LastName + " " + std.MiddleName;
             RegistrationNumber = regNoFormat?.Replace("%VALUE%", std?.RegistrationNumber);
             Position = "1";
             TotalSubjects = se?.Where(d => d.IsOffered == true)?.Count(d => d.IsOffered == true)??0;
@@ -98,7 +98,7 @@ namespace SMP.Contracts.ResultModels
         {
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
-            FormTeacher = db.Teacher.User.FirstName + " " + db.Teacher.User.LastName;
+            FormTeacher = db.Teacher.FirstName + " " + db.Teacher.LastName;
             //if (db.Students.Any())
             //    ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
 
@@ -122,7 +122,7 @@ namespace SMP.Contracts.ResultModels
         {
             var user = se.FirstOrDefault().StudentContact;
             var entries = se.Where(d => d.IsOffered == true);
-            StudentName = user?.User?.FirstName + " " + user?.User?.LastName + " " + user?.User?.MiddleName;
+            StudentName = user?.FirstName + " " + user?.LastName + " " + user?.MiddleName;
             RegistrationNumber = regNoFormat?.Replace("%VALUE%", user?.RegistrationNumber);
             Position = "1";
             TotalSubjects = entries?.Count() ?? 0;

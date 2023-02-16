@@ -44,7 +44,6 @@ namespace SMP.BLL.Services.EnrollmentServices
 
 
             var query = (from a in context.StudentContact
-                                .Include(x => x.User)
                                 .Include(s => s.SessionClass)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                           where a.ClientId == smsClientId && a.Status == status && a.SessionClassId == sessionClassId select a);
@@ -69,7 +68,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                                 {
                                     Status = "unenrrolled",
                                     StudentContactId = a.StudentContactId.ToString(),
-                                    StudentName = a.User.FirstName + " " + a.User.MiddleName + " " + a.User.LastName,
+                                    StudentName = a.FirstName + " " + a.MiddleName + " " + a.LastName,
                                     StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
                                     Class = a.SessionClass.Class.Name
                                 });

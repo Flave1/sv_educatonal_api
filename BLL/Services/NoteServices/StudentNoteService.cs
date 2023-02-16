@@ -135,9 +135,9 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<List<GetStudentNotes>>();
 
             var query = context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
-                        .Include(s => s.Student).ThenInclude(s => s.User)
+                        .Include(s => s.Student)
                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                        .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(d => d.Teacher)
                         .Include(d => d.Subject).Where(u => u.SessionClassId == Guid.Parse(classId) && u.SessionClass.Session.IsActive == true && u.AprrovalStatus != (int)NoteApprovalStatus.Saved);
 
             if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
@@ -168,7 +168,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<List<GetStudentNotes>>();
             var noteList = await context.StudentNote.Where(x=> x.ClientId == smsClientId && x.Deleted == false)
                     .Include(e => e.Subject)
-                    .Include(e => e.Student).ThenInclude(e => e.User)
+                    .Include(e => e.Student)
                     .Include(e => e.SessionClass).ThenInclude(s => s.Session)
                     .Where(u => u.SessionClass.Session.IsActive == true
                     && u.AprrovalStatus == (int)NoteApprovalStatus.InProgress)
@@ -285,7 +285,7 @@ namespace SMP.BLL.Services.NoteServices
             var res = new APIResponse<GetStudentNotes>();
             res.Result = await context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                 .Include(e => e.Subject)
-                .Include(e => e.Student).ThenInclude(e => e.User)
+                .Include(e => e.Student)
                 .Include(e => e.SessionClass)
                 .Where(u => u.StudentNoteId == studentNoteId) 
                 .Select(x => new GetStudentNotes(x)).FirstOrDefaultAsync();
@@ -301,9 +301,9 @@ namespace SMP.BLL.Services.NoteServices
             if (!string.IsNullOrEmpty(studentContactId))
             {
                 var query = context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
-                         .Include(s => s.Student).ThenInclude(s => s.User)
+                         .Include(s => s.Student)
                          .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                         .Include(d => d.Teacher).ThenInclude(d => d.User)
+                         .Include(d => d.Teacher)
                          .Include(d => d.Subject)
                          .OrderByDescending(x => x.CreatedOn)
                           .Where(u => u.SessionClass.Session.IsActive == true
@@ -471,15 +471,17 @@ namespace SMP.BLL.Services.NoteServices
                 .Include(s => s.StudentNote)
                 .Include(s => s.User)
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(s => s.User)
-                .Include(d => d.Replies).ThenInclude(s => s.User)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(s => s.User)
+                .Include(d => d.Replies)
+                .Include(d => d.Replies)
+                .Include(d => d.Replies).ThenInclude(d => d.Replies)
                 .Where(u => u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
-                .Select(x => new StudentNoteComments(x)).ToListAsync();
+                .Select(x => new StudentNoteComments(x, 
+                    context.Teacher.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault() ??
+                    context.StudentContact.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault())).ToListAsync();
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
+            return res; 
         }
 
  
@@ -560,9 +562,9 @@ namespace SMP.BLL.Services.NoteServices
         {
             var res = new APIResponse<GetStudentNotes>();
             res.Result = await context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
-                        .Include(s => s.Student).ThenInclude(s => s.User)
+                        .Include(s => s.Student)
                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                        .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(d => d.Teacher)
                         .Include(d => d.Subject)
                          .Where(u => u.SessionClass.Session.IsActive == true
                          && u.StudentNoteId == Guid.Parse(studentNoteId))
@@ -717,9 +719,9 @@ namespace SMP.BLL.Services.NoteServices
                 // 
                 var query = context.StudentNote
                          .Where(u => u.ClientId == smsClientId && u.Deleted == false && u.StudentContactId == Guid.Parse(studentContactId) && u.SessionClassId == Guid.Parse(classId))
-                         .Include(s => s.Student).ThenInclude(s => s.User)
+                         .Include(s => s.Student)
                          .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                         .Include(d => d.Teacher).ThenInclude(d => d.User)
+                         .Include(d => d.Teacher)
                          .Include(d => d.Subject)
                          .OrderByDescending(x => x.CreatedOn)
                          .Where(u => u.SessionClass.Session.IsActive == true && u.AprrovalStatus == (int)NoteApprovalStatus.Approved);
@@ -746,9 +748,9 @@ namespace SMP.BLL.Services.NoteServices
 
             var query = context.StudentNote
                         .Where(u => u.ClientId == smsClientId && u.StudentNoteId == StudentNoteId && u.Deleted == false)
-                        .Include(s => s.Student).ThenInclude(s => s.User)
+                        .Include(s => s.Student)
                         .Include(s => s.SessionClass).ThenInclude(s => s.Session)
-                        .Include(d => d.Teacher).ThenInclude(d => d.User)
+                        .Include(d => d.Teacher)
                         .Include(d => d.Subject)
                         .OrderByDescending(x => x.CreatedOn)
                         .Where(u => u.SessionClass.Session.IsActive == true && u.AprrovalStatus == (int)NoteApprovalStatus.Approved);

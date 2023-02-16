@@ -24,6 +24,12 @@ namespace DAL.StudentInformation
         public string CountryId { get; set; }
         public string ZipCode { get; set; }  
         public string RegistrationNumber { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string Phone { get; set; }
+        public string DOB { get; set; }
+        public string Photo { get; set; }
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
