@@ -18,7 +18,7 @@ namespace SMP.Contracts.ParentModels
         public GetParents(Parents parent)
         {
             ParentId = parent.Parentid.ToString();
-            Name = parent.Name;
+            Name = parent.FirstName +""+ parent.LastName;
             Number = parent.Number;
             Relationship = parent.Relationship;
             Email = parent.Email;

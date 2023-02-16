@@ -1,5 +1,6 @@
 ﻿using BLL.Constants;
 using BLL.LoggerService;
+using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Options;
 using DAL;
@@ -13,6 +14,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
 using SMP.BLL.Services;
+using SMP.BLL.Services.ParentServices;
+using SMP.BLL.Services.TeacherServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
@@ -31,11 +34,9 @@ namespace BLL.AuthenticationServices
 {
     public class IdentityService : IIdentityService
     {
-
-
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, ITeacherService teacherService, IStudentService studentService, IParentService parentService)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -46,6 +47,9 @@ namespace BLL.AuthenticationServices
             this.accessor = accessor;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
+            this.teacherService = teacherService;
+            this.studentService = studentService;
+            this.parentService = parentService;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -57,14 +61,20 @@ namespace BLL.AuthenticationServices
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
+        private readonly ITeacherService teacherService;
+        private readonly IStudentService studentService;
+        private readonly IParentService parentService;
 
         async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
         {
             var res = new APIResponse<LoginSuccessResponse>();
             res.Result = new LoginSuccessResponse();
+            string firstName = String.Empty;
+            string lastName = String.Empty;
             try
             {
                 var id = Guid.NewGuid();
+                var clientId = ClientId(loginRequest.SchoolUrl);
                 var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
                 if (userAccount == null)
@@ -82,6 +92,9 @@ namespace BLL.AuthenticationServices
                 if(userAccount.UserType == (int)UserTypes.Admin)
                 {
                     permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    firstName = teacher.FirstName;
+                    lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Teacher)
@@ -96,6 +109,10 @@ namespace BLL.AuthenticationServices
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
+
+                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    firstName = teacher.FirstName;
+                    lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
@@ -107,11 +124,17 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
+                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    firstName = student.FirstName;
+                    lastName = student.LastName;
                 }
                 AppLayoutSetting appSettings = null;
 
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
+                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    firstName = parent.FirstName;
+                    lastName = parent.LastName;
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
@@ -120,8 +143,8 @@ namespace BLL.AuthenticationServices
                 var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -136,9 +159,12 @@ namespace BLL.AuthenticationServices
         {
             var res = new APIResponse<MobileLoginSuccessResponse>();
             res.Result = new MobileLoginSuccessResponse();
+            string firstName = String.Empty;
+            string lastName = String.Empty;
             try
             {
                 var id = Guid.NewGuid();
+                var clientId = ClientId(loginRequest.SchoolUrl);
                 var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 if (userAccount == null)
                 {
@@ -152,8 +178,6 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                
-
                 if (userAccount.UserType == (int)UserTypes.Teacher)
                 {
                     var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
@@ -163,7 +187,9 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = techerAccount.TeacherId;
-
+                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    firstName = teacher.FirstName;
+                    lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
@@ -175,11 +201,20 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
+                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    firstName = student.FirstName;
+                    lastName = student.LastName;
                 }
 
+                if (userAccount.UserType == (int)UserTypes.Parent)
+                {
+                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    firstName = parent.FirstName;
+                    lastName = parent.LastName;
+                }
 
                 res.Result = new MobileLoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, null, null, firstName, lastName, clientId);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -323,7 +358,7 @@ namespace BLL.AuthenticationServices
 
 
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, AppLayoutSetting appLayoutSetting = null)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, AppLayoutSetting appLayoutSetting = null, string firstName = "", string lastName = "", string clientId = "")
         {
             try
             {
@@ -338,12 +373,12 @@ namespace BLL.AuthenticationServices
                     new Claim("userId", user.Id),
                     new Claim("userType", user.UserType.ToString()),
                     new Claim("userName",user.UserName),
-                    new Claim("name",user.FirstName + " " + user.LastName),
+                    new Claim("name", firstName + " " + lastName),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) :  new Claim("studentContactId", ID.ToString()),
-                    appLayoutSetting != null ? new Claim("smsClientId", appLayoutSetting.ClientId) : new Claim("smsClientId",user.ClientId),
+                    appLayoutSetting != null ? new Claim("smsClientId", appLayoutSetting.ClientId) : new Claim("smsClientId", clientId),
                 };
-                accessor.HttpContext.Items["smsClientId"] = user.ClientId;
+                accessor.HttpContext.Items["smsClientId"] = clientId;
 
                 var userClaims = await userManager.GetClaimsAsync(user);
 
@@ -423,6 +458,8 @@ namespace BLL.AuthenticationServices
                 var id = Guid.NewGuid();
                 var permisions = new List<string>();
                 AppLayoutSetting appSettings = null;
+                string firstName = String.Empty;
+                string lastName = String.Empty;
 
                 if (!string.IsNullOrEmpty(schoolUrl))
                     appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == schoolUrl.ToLower());
@@ -436,6 +473,10 @@ namespace BLL.AuthenticationServices
                 {
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.AppActivity.Where(d => d.IsActive && d.ClientId == appSettings.ClientId).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+
+                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    firstName = teacher.FirstName;
+                    lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Teacher)
@@ -450,6 +491,10 @@ namespace BLL.AuthenticationServices
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
                     permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == appSettings.ClientId).Select(s => s.Activity.Permission).Distinct().ToList();
+
+                    var teacher = teacherService.GetTeacherByUserId(userAccount.Id);
+                    firstName = teacher.FirstName;
+                    lastName = teacher.LastName;
                 }
 
                 if (userAccount.UserType == (int)UserTypes.Student)
@@ -461,16 +506,28 @@ namespace BLL.AuthenticationServices
                         return res;
                     }
                     id = studentAccount?.StudentContactId ?? new Guid();
+                    var student = studentService.GetStudentByUserId(userAccount.Id);
+                    firstName = student.FirstName;
+                    lastName = student.LastName;
+                }
+                if (userAccount.UserType == (int)UserTypes.Parent)
+                {
+                    var parent = parentService.GetParentByUserId(userAccount.Id);
+                    firstName = parent.FirstName;
+                    lastName = parent.LastName;
                 }
 
-                
+
+
+                if (!string.IsNullOrEmpty(schoolUrl))
+                    appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == schoolUrl.ToLower());
 
                 var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
                 userAccount.EmailConfirmed = true;
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, id);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -511,6 +568,8 @@ namespace BLL.AuthenticationServices
             return res;
 
         }
+
+        string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
     }
 }
 

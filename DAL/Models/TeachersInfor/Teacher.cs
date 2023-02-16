@@ -15,6 +15,20 @@ namespace DAL.TeachersInfor
         public string Hobbies { get; set; }
         public string Gender { get; set; }
         public string MaritalStatus { get; set; }
+        public string HomePhone { get; set; }
+        public string EmergencyPhone { get; set; }
+        public string HomeAddress { get; set; }
+        public string CityId { get; set; }
+        public string StateId { get; set; }
+        public string CountryId { get; set; }
+        public string ZipCode { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string Phone { get; set; }
+        public string DOB { get; set; }
+        public string Photo { get; set; }
         public int Status { get; set; }
         [ForeignKey("UserId")]
         public AppUser User { get; set; }

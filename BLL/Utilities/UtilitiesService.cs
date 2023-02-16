@@ -51,12 +51,12 @@ namespace SMP.BLL.Utilities
                 throw new ArgumentException("Please ensure registeration number is in correct format");
             }
         }
-        public async Task<IDictionary<string, string>> GenerateForStudents()
+        public async Task<IDictionary<string, string>> GenerateStudentRegNo()
         {
             try
             {
                 var dictionary = new Dictionary<string, string>();
-                var lastRegNumber = context.StudentContact.Max(d => d.RegistrationNumber) ?? "1";
+                var lastRegNumber = context.StudentContact.Where(x => x.ClientId == smsClientId).Max(d => d.RegistrationNumber) ?? "1";
                 var newRegNo = (lastRegNumber == "1" ? 1 : long.Parse(lastRegNumber) + 1).ToString();
 
                 var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
@@ -64,7 +64,7 @@ namespace SMP.BLL.Utilities
 
                 var regNo = regNoFormat.Replace("%VALUE%", newRegNo);
                 dictionary.Add(newRegNo, regNo);
-                return dictionary;
+                return await Task.Run(() => dictionary);
             }
             catch (Exception)
             {

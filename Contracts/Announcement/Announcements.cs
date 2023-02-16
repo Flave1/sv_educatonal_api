@@ -51,7 +51,7 @@ namespace Contracts.Annoucements
             Content = db.Content;
             AnnouncementDate = db.AnnouncementDate.ToString("dd-MM-yyy hh:mm");
             IsEdited = db.IsEdited;
-            SenderName = db.Sender.FirstName + " " + db.Sender.LastName;
+            //SenderName = db.Sender.FirstName + " " + db.Sender.LastName;
             IsSeen = !string.IsNullOrEmpty(db.SeenByIds) ? db.SeenByIds.Split(',').ToList().Contains(userId) : false;
         }
     }

@@ -130,7 +130,7 @@ namespace SMP.BLL.Services.AssessmentServices
             foreach(var st in students)
             {
                 var item = new ClassAssessmentStudents();
-                item.StudentName =  st.User.FirstName + " " + st.User.MiddleName + " " + st.User.LastName;
+                item.StudentName =  st.FirstName + " " + st.MiddleName + " " + st.LastName;
                 item.Score = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType == 
                 (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId && d.ClientId == smsClientId)?.Score ?? 0;
                 item.GroupIds = ass.SessionClass.SessionClassSubjects.SelectMany(d => d.SessionClassGroups).Select(d => d.SessionClassGroupId).Distinct().ToArray();

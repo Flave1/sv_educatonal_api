@@ -20,8 +20,8 @@ namespace SMP.Contracts.ParentModels
             Class = x.SessionClass.Class.Name;
             ClassId = x.SessionClassId;
             StudentId = x.StudentContactId.ToString();
-            FullnaName = x.User.FirstName + " " + x.User.LastName;
-            ProfileUrl = x.User.Photo;
+            FullnaName = x.FirstName + " " + x.LastName;
+            ProfileUrl = x.Photo;
             RegistrationNumber = regNoFormat.Replace("%VALUE%", x.RegistrationNumber);
             if (x.Status == 1)
                 Status = "Active";

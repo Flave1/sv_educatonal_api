@@ -19,6 +19,7 @@ namespace Contracts.Options
         public string ResetOption { get; set; }
         public string ResetOptionValue { get; set; }
         public string UserType { get; set; }
+        public string SchoolUrl { get; set; }
     }
     public class ChangePassword {
         public string UserId { get; set; }
@@ -53,7 +54,7 @@ namespace Contracts.Options
 
         public string HomePhone { get; set; }
         public string EmergencyPhone { get; set; }
-        public string ParentOrGuardianName { get; set; }
+        public string ParentOrGuardianFirstName { get; set; }
         public string ParentOrGuardianRelationship { get; set; }
         public string ParentOrGuardianPhone { get; set; }
         public string ParentOrGuardianEmail { get; set; }
@@ -65,6 +66,7 @@ namespace Contracts.Options
         public string Photo { get; set; }
         public string SessionClassId { get; set; } 
         public IFormFile ProfileImage { get; set; }
+        public string ParentOrGuardianLastName { get; set; }
     }
 
     public class GetStudentContacts
@@ -103,15 +105,15 @@ namespace Contracts.Options
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
             UserType = db.User.UserType;
             Active = db.User.Active;
-            FirstName = db.User.FirstName;
-            LastName = db.User.LastName;
-            MiddleName = db.User.MiddleName;
-            Phone = db.User.Phone;
-            DOB = db.User.DOB;
-            Photo = db.User.Photo;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
+            Phone = db.Phone;
+            DOB = db.DOB;
+            Photo = db.Photo;
             HomePhone = db.HomePhone;
             EmergencyPhone = db.EmergencyPhone;
-            ParentOrGuardianName = db.Parent?.Name;
+            ParentOrGuardianName = db.Parent?.FirstName +" "+ db.Parent?.LastName;
             ParentOrGuardianRelationship = db.Parent?.Relationship;
             ParentOrGuardianPhone = db.Parent?.Number;
             ParentOrGuardianEmail = db.Parent?.Email;
@@ -124,7 +126,7 @@ namespace Contracts.Options
             StudentAccountId = db.StudentContactId.ToString();
             UserName = db.User.UserName;
             Email = db.User.Email;
-            Photo = db.User.Photo;
+            Photo = db.Photo;
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
             Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : Array.Empty<string>();
@@ -138,15 +140,15 @@ namespace Contracts.Options
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
             UserType = db.User.UserType;
             Active = db.User.Active;
-            FirstName = db.User.FirstName;
-            LastName = db.User.LastName;
-            MiddleName = db.User.MiddleName;
-            Phone = db.User.Phone;
-            DOB = db.User.DOB;
-            Photo = db.User.Photo;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
+            Phone = db.Phone;
+            DOB = db.DOB;
+            Photo = db.Photo;
             HomePhone = db.HomePhone;
             EmergencyPhone = db.EmergencyPhone;
-            ParentOrGuardianName = db.Parent?.Name;
+            ParentOrGuardianName = db.Parent?.FirstName + " " + db.Parent?.LastName;
             ParentOrGuardianRelationship = db.Parent?.Relationship;
             ParentOrGuardianPhone = db.Parent?.Number;
             ParentOrGuardianEmail = db.Parent?.Email;
@@ -159,7 +161,7 @@ namespace Contracts.Options
             StudentAccountId = db.StudentContactId.ToString();
             UserName = db.User.UserName;
             Email = db.User.Email;
-            Photo = db.User.Photo;
+            Photo = db.Photo;
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
             Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : new string[0];
@@ -203,7 +205,7 @@ namespace Contracts.Options
         public string Email { get; set; }
         public string HomePhone { get; set; }
         public string EmergencyPhone { get; set; }
-        public string ParentOrGuardianName { get; set; }
+        public string ParentOrGuardianFirstName { get; set; }
         public string ParentOrGuardianRelationship { get; set; }
         public string ParentOrGuardianPhone { get; set; }
         public string ParentOrGuardianEmail { get; set; }
@@ -214,6 +216,7 @@ namespace Contracts.Options
         public string ZipCode { get; set; } 
         public string SessionClass { get; set; }
         public int ExcelLineNumber { get; set; }
+        public string ParentOrGuardianLastName { get; set; }
     }
 
 }

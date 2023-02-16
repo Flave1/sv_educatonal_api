@@ -49,14 +49,14 @@ namespace Contracts.AttendanceContract
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             StudentContactId = student.StudentContactId;
             IsPresent = stAtt == null ? false : true;
-            StudentName = $"{ student.User.FirstName } " + $" { student.User.LastName }";
+            StudentName = $"{ student.FirstName } " + $" { student.LastName }";
         }
         public AttendanceList(StudentContact student, string regNoFormat, bool isPresent)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             StudentContactId = student.StudentContactId;
             IsPresent = isPresent;
-            StudentName = $"{ student.User.FirstName }" + $"{ student.User.LastName }";
+            StudentName = $"{ student.FirstName }" + $"{ student.LastName }";
         }
     }
     public class PostStudentAttendance

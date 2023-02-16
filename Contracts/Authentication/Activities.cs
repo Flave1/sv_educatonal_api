@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DAL.Authentication;
+using DAL.StudentInformation;
+using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 
@@ -72,6 +75,19 @@ namespace Contracts.Authentication
     {
         public string UserName { get; set; }
         public string UserId { get; set; }
+        public UserNames(Teacher teacher = null, StudentContact student = null)
+        {
+            if (teacher is not null)
+            {
+                UserId = teacher.UserId;
+                UserName = teacher.FirstName + " " + teacher.LastName;
+            }
+            if (student is not null)
+            {
+                UserId = student.UserId;
+                UserName = student.FirstName + " " + student.LastName;
+            }
+        }
     }
 
     public class GetUsersInRoleRequest

@@ -310,7 +310,7 @@ namespace BLL.ClassServices
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
                    .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId))
-                   .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
+                   .Include(rr => rr.Teacher).Select(g => new GetSessionClass(g)).ToListAsync();
                 return res;
             }
             //GET TEACHER CLASSES
@@ -347,7 +347,7 @@ namespace BLL.ClassServices
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
                    .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId))
-                   .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).ToListAsync();
+                   .Include(rr => rr.Teacher).Select(g => new GetSessionClass(g)).ToListAsync();
                 return res;
             }
             //GET TEACHER CLASSES
@@ -382,7 +382,7 @@ namespace BLL.ClassServices
                    .Include(r => r.Students)
                    .Include(r => r.SessionClassSubjects).ThenInclude(x => x.ClassAssessments)
                     .Include(r => r.SessionClassSubjects).ThenInclude(x => x.HomeAssessments)
-                   .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User)
+                   .Include(rr => rr.Teacher)
                    .Select(g => new GetSessionClass(g, true)).ToListAsync();
                 return res;
             }
@@ -421,11 +421,7 @@ namespace BLL.ClassServices
             var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
-                //.Include(rr => rr.Students)
-                //.Include(r => r.ClassRegisters)
-                //.Include(rr => rr.SessionClassSubjects).ThenInclude(sub => sub.Subject)
-                //.Include(rr => rr.SessionClassSubjects).ThenInclude(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
-                .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
+                .Include(rr => rr.Teacher).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
             res.Result = result;
@@ -439,7 +435,7 @@ namespace BLL.ClassServices
             var result = await context.SessionClass.Where(r => r.InSession && sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(rr => rr.Class)
                 .Include(rr => rr.Session)
-                .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
+                .Include(rr => rr.Teacher).Select(g => new GetSessionClass(g)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
             res.Result = result;
@@ -452,7 +448,7 @@ namespace BLL.ClassServices
 
             var result = await context.SessionClassSubject.Where(r =>  sessionClassId == r.SessionClassId && r.Deleted == false && r.ClientId == smsClientId)
                 .Include(sub => sub.Subject)
-                .Include(ses => ses.SubjectTeacher).ThenInclude(d => d.User)
+                .Include(ses => ses.SubjectTeacher)
                 .Select(g => new ClassSubjects(g)).ToListAsync();
 
             res.IsSuccessful = true;
@@ -467,8 +463,7 @@ namespace BLL.ClassServices
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId)
-                .Include(q => q.User)
-                .OrderByDescending(d => d.User.FirstName)
+                .OrderByDescending(d => d.FirstName)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
                 .Select(f =>  new GetStudentContacts(f, regNoFormat)).ToListAsync();
 
@@ -486,8 +481,8 @@ namespace BLL.ClassServices
             var query = context.SessionClass.Where(s=>s.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn)
              .Include(rr => rr.Class)
              .Include(rr => rr.Session)
-             .Include(rr => rr.Students).ThenInclude(uuu => uuu.User)
-             .Include(rr => rr.Teacher).ThenInclude(uuu => uuu.User).Where(r => r.InSession);
+             .Include(rr => rr.Students)
+             .Include(rr => rr.Teacher).Where(r => r.InSession);
 
             if (!string.IsNullOrEmpty(startDate))
                 query = query.Where(v => v.Session.StartDate.Trim().ToLower() == startDate.Trim().ToLower());

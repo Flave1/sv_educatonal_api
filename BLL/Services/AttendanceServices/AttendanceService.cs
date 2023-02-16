@@ -51,7 +51,7 @@ namespace SMP.BLL.Services.AttendanceServices
             await context.ClassRegister.AddAsync(reg);
             await context.SaveChangesAsync();
 
-            var classAttendance = await context.ClassRegister.Where(c => c.ClientId == smsClientId).Include(s => s.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User).Where(d =>
+            var classAttendance = await context.ClassRegister.Where(c => c.ClientId == smsClientId).Include(s => s.SessionClass).ThenInclude(d => d.Students).Where(d =>
             d.ClassRegisterId == reg.ClassRegisterId)
                 .Select(s => new GetAttendance(s, regNoFormat)).FirstOrDefaultAsync();
 
@@ -144,8 +144,9 @@ namespace SMP.BLL.Services.AttendanceServices
             var res = new APIResponse<List<AttendanceList>> ();
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
-            var classRegister = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
-                .Include(s => s.StudentAttendances).ThenInclude(q => q.StudentContact).ThenInclude(x => x.User).FirstOrDefaultAsync();
+            var classRegister = await context.ClassRegister
+                .Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
+                .Include(s => s.StudentAttendances).ThenInclude(q => q.StudentContact).FirstOrDefaultAsync();
             
             if (classRegister == null)
             {

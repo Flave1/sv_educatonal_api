@@ -181,7 +181,7 @@ namespace BLL.SessionServices
         {
             var res = new APIResponse<PagedResponse<List<GetSession>>>();
             var query =  context.Session.Where(x => x.ClientId == smsClientId)
-                .Include(er => er.HeadTeacher).ThenInclude(er => er.User)
+                .Include(er => er.HeadTeacher)
                 .OrderByDescending(d => d.StartDate).Where(d => d.Deleted == false);
 
 
@@ -193,7 +193,7 @@ namespace BLL.SessionServices
                 StartDate = e.StartDate,
                 IsActive = e.IsActive,
                 HeadTeacherId = e.HeadTeacherId,
-                HeadTeacherName = e.HeadTeacher.User.FirstName + " " + e.HeadTeacher.User.LastName,
+                HeadTeacherName = e.HeadTeacher.FirstName + " " + e.HeadTeacher.LastName,
                 Terms = e.Terms.OrderBy(s => s.TermName).Select(t => new Terms
                 {
                     IsActive = t.IsActive,
@@ -214,7 +214,7 @@ namespace BLL.SessionServices
             var result = await context.Session.Where(x => x.ClientId == smsClientId && x.Deleted == false && Guid.Parse(sessionId) == x.SessionId)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Students)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(d => d.User)
-                .Include(er => er.HeadTeacher).ThenInclude(er => er.User)
+                .Include(er => er.HeadTeacher)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(e => new GetSession
                 {
@@ -223,7 +223,7 @@ namespace BLL.SessionServices
                     StartDate = e.StartDate,
                     IsActive = e.IsActive,
                     HeadTeacherId = e.HeadTeacherId,
-                    HeadTeacherName = e.HeadTeacher.User.FirstName + " " + e.HeadTeacher.User.LastName,
+                    HeadTeacherName = e.HeadTeacher.FirstName + " " + e.HeadTeacher.LastName,
                     Terms = e.Terms.OrderByDescending(s => s.TermName).Select(t => new Terms
                     {
                         IsActive = t.IsActive,
@@ -232,7 +232,7 @@ namespace BLL.SessionServices
                     }).ToArray(),
                     SessionClasses = e.SessionClass.Select(d => new GetSessionClass
                     {
-                        FormTeacher = d.Teacher.User.FirstName + " " + d.Teacher.User.LastName,
+                        FormTeacher = d.Teacher.FirstName + " " + d.Teacher.LastName,
                         SessionClass = d.Class.Name,
                         SessionClassId = d.SessionClassId
                     }).ToArray(),

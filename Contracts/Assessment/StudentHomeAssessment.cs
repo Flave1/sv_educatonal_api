@@ -107,7 +107,7 @@ namespace SMP.Contracts.Assessment
             Score = db.Mark;
             Included = db.Included;
             Content = db.Content;
-            StudentName = db.StudentContact.User.FirstName + " " + db.StudentContact.User.LastName;
+            StudentName = db.StudentContact.FirstName + " " + db.StudentContact.LastName;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
             HomeAssessmentId = db.HomeAssessmentId;
             Files = (!string.IsNullOrEmpty(db.AttachmentUrls) ? db.AttachmentUrls.Split(',').ToList() : new List<string>()); 

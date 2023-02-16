@@ -253,10 +253,10 @@ namespace SMP.BLL.Services.ResultServices
                 var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive && d.ClientId == smsClientId);
                 if (result != null)
                 {
-                    var query = context.StudentContact.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Include(x => x.User);
+                    var query = context.StudentContact.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
-                    var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                    var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -267,7 +267,7 @@ namespace SMP.BLL.Services.ResultServices
                         scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                         scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
-                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.StudentName = student.FirstName + " " + student.LastName + " " + student.MiddleName;
                         scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                         scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                         scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
@@ -285,12 +285,12 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     var sessiontermId = context.SessionClassArchive.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId).Select(c => c.SessionTermId).FirstOrDefault();
                     var query = context.SessionClassArchive.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
-                        .Include(x => x.StudentContact).ThenInclude(x => x.User)
+                        .Include(x => x.StudentContact)
                         .Select(x => x.StudentContact);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
 
-                    var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                    var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).FirstOrDefault();
+                    result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
 
                     foreach (var student in sts)
                     {
@@ -302,7 +302,7 @@ namespace SMP.BLL.Services.ResultServices
                         scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                         scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
-                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.StudentName = student.FirstName + " " + student.LastName + " " + student.MiddleName;
                         scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                         scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                         scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
@@ -338,11 +338,11 @@ namespace SMP.BLL.Services.ResultServices
                 var classGrades = context.GradeGroup.Where(x=>x.ClientId == smsClientId).Include(x => x.Grades).Where(x => x.Classes.Select(s => s.ClassLookupId).Contains(result.ClassLookupId)).FirstOrDefault();
 
                 var query = context.ScoreEntry.Where(x=> x.ClientId == smsClientId && x.ClassScoreEntryId == result.ClassScoreEntryId)
-                    .Include(s => s.StudentContact).ThenInclude(d => d.User)
+                    .Include(s => s.StudentContact)
                     .Where(d => d.SessionTerm.IsActive == true).Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
-                var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).FirstOrDefault();
+                result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
                 var totaltRecord = query.Count();
@@ -491,14 +491,14 @@ namespace SMP.BLL.Services.ResultServices
             var clas = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                 .Include(x => x.Session)
                 .Include(x => x.Class)
-                .Include(x => x.Teacher).ThenInclude(r => r.User)
+                .Include(x => x.Teacher)
                 .FirstOrDefaultAsync();
 
             var mlist = new MasterList(clas, term);
 
            var result = context.ScoreEntry.Where(x=>x.ClientId == smsClientId)
                     .Include(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
-                    .Include(r => r.StudentContact).ThenInclude(d => d.User)
+                    .Include(r => r.StudentContact)
                     .Include(r => r.ClassScoreEntry).ThenInclude(x => x.SessionClass).ThenInclude(x => x.Class)
                     .Where(r => r.ClassScoreEntry.SessionClassId == sessionClassId && r.SessionTermId == termId).AsEnumerable().GroupBy(x => x.StudentContactId)
                     .Select(g => new MasterListResult(g, regNoFormat)).ToList();
@@ -569,7 +569,7 @@ namespace SMP.BLL.Services.ResultServices
                     var query = context.ScoreEntry
                     .Where(rr => rr.ClientId == smsClientId && rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId)
                     .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
-                    .Include(d => d.StudentContact).ThenInclude(d => d.User).AsEnumerable().GroupBy(s => s.StudentContactId).AsQueryable();
+                    .Include(d => d.StudentContact).AsEnumerable().GroupBy(s => s.StudentContactId).AsQueryable();
 
                     var result = paginationService.GetPagedResult(query, filter).Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList() ?? null;
 
@@ -657,10 +657,10 @@ namespace SMP.BLL.Services.ResultServices
                 var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive && d.ClientId == smsClientId);
                 if (result != null)
                 {
-                    var query = context.StudentContact.Where(d => d.ClientId == smsClientId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.SessionClassId == sessionClassId).Include(x => x.User);
+                    var query = context.StudentContact.Where(d => d.ClientId == smsClientId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.SessionClassId == sessionClassId);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
                     var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                    result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -671,7 +671,7 @@ namespace SMP.BLL.Services.ResultServices
                         scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                         scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
-                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.StudentName = student.FirstName + " " + student.LastName + " " + student.MiddleName;
                         scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                         scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                         scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
@@ -690,11 +690,11 @@ namespace SMP.BLL.Services.ResultServices
                     var sessiontermId = context.SessionClassArchive.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId && x.SessionTermId == sessionTermId).Select(c => c.SessionTermId).FirstOrDefault();
                     var query = context.SessionClassArchive
                         .Where(d => d.ClientId == smsClientId && d.SessionClassId == sessionClassId)
-                        .Include(x => x.StudentContact).ThenInclude(x => x.User)
+                        .Include(x => x.StudentContact)
                         .Select(x => x.StudentContact);
                     var sts = await paginationService.GetPagedResult(query, filter).ToListAsync();
                     var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                    result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                    result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
                     foreach (var student in sts)
                     {
                         var scoreEntrySheet = new ScoreEntrySheet();
@@ -705,7 +705,7 @@ namespace SMP.BLL.Services.ResultServices
                         scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                         scoreEntrySheet.StudentContactId = student.StudentContactId.ToString();
-                        scoreEntrySheet.StudentName = student.User.FirstName + " " + student.User.LastName + " " + student.User.MiddleName;
+                        scoreEntrySheet.StudentName = student.FirstName + " " + student.LastName + " " + student.MiddleName;
                         scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                         scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                         scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
@@ -718,43 +718,6 @@ namespace SMP.BLL.Services.ResultServices
 
             }
 
-
-
-
-
-
-
-
-
-
-
-
-            //if (clas.Session.IsActive)
-            //{
-            //    var term = clas.Session.Terms.FirstOrDefault(x => x.IsActive == true);
-            //    res.Result = await context.ClassScoreEntry
-            //       .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-            //       .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-            //       .Include(d => d.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-            //       .Include(d => d.Subject)
-            //       .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-            //       .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
-            //       .Select(s => new GetClassScoreEntry(s, regNoFormat, term)).FirstOrDefaultAsync();
-            //}
-            //else
-            //{
-            //    res.Result = await context.ClassScoreEntry
-            //      .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(e => e.User)
-            //      .Include(d => d.SessionClass).ThenInclude(d => d.Class)
-            //      .Include(d => d.Subject)
-            //      .Include(d => d.ScoreEntries).ThenInclude(s => s.StudentContact).ThenInclude(d => d.User)
-            //      .Where(e => e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
-            //      .Select(s => new GetClassScoreEntry(s, regNoFormat, sessionTermId)).FirstOrDefaultAsync();
-
-            //}
-
-
-           
 
 
 
@@ -877,11 +840,11 @@ namespace SMP.BLL.Services.ResultServices
                 var classGrades = context.GradeGroup.Where(x => x.ClientId == smsClientId && x.Classes.Select(s => s.ClassLookupId).Contains(result.ClassLookupId)).Include(x => x.Grades).FirstOrDefault();
 
                 var query = context.ScoreEntry.Where(d => d.ClientId == smsClientId && d.SessionTermId == sessionTermId && d.ClassScoreEntryId == result.ClassScoreEntryId)
-                    .Include(s => s.StudentContact).ThenInclude(d => d.User)
+                    .Include(s => s.StudentContact)
                     .Select(d => new ScoreEntrySheet(d, regNoFormat, classGrades));
 
                 var teacher = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SubjectId == subjectId && x.SessionClassId == sessionClassId).Include(x => x.SubjectTeacher).ThenInclude(x => x.User).FirstOrDefault();
-                result.SubjectTeacher = teacher.SubjectTeacher.User.FirstName + " " + teacher.SubjectTeacher.User.LastName;
+                result.SubjectTeacher = teacher.SubjectTeacher.FirstName + " " + teacher.SubjectTeacher.LastName;
 
                 result.ClassScoreEntries = await paginationService.GetPagedResult(query, filter).ToListAsync();
                 var totaltRecord = query.Count();
@@ -905,7 +868,7 @@ namespace SMP.BLL.Services.ResultServices
 
             var result =  context.ScoreEntry.Where(x => x.ClientId == smsClientId)
                      .Include(s => s.SessionTerm)
-                     .Include(r => r.StudentContact).ThenInclude(d => d.User)
+                     .Include(r => r.StudentContact)
                      .Include(d => d.ClassScoreEntry).ThenInclude(r => r.SessionClass).ThenInclude(r => r.ClassScoreEntries).ThenInclude(d => d.Subject)
                      .Where(r => r.ClassScoreEntry.SessionClassId == sessionClassId && r.ClassScoreEntry.Subject.Deleted == false).AsEnumerable().GroupBy(s => s.StudentContactId)
                      .Select(g => new CumulativeMasterListResult(g, regNoFormat)).ToList();
@@ -938,7 +901,7 @@ namespace SMP.BLL.Services.ResultServices
                 res.Result = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(x => x.SessionTerm)
-                 .Include(r => r.Students).ThenInclude(d => d.User)
+                 .Include(r => r.Students)
                  .Include(r => r.Students).ThenInclude(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
                  .Select(g => new StudentCoreEntry(g.Students.FirstOrDefault(x => x.StudentContactId == studentContactId), regNoFormat, termId)).FirstOrDefaultAsync();
 
@@ -947,7 +910,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             else
             {
-                var student = context.StudentContact.Where(x=>x.ClientId == smsClientId).Include(x => x.User).FirstOrDefault(s => s.StudentContactId == studentContactId);
+                var student = context.StudentContact.Where(x=>x.ClientId == smsClientId).FirstOrDefault(s => s.StudentContactId == studentContactId);
                 var studentResult = new StudentCoreEntry(student, regNoFormat);
                 studentResult.SessionClassName = clas.Class.Name;
                 var result = await context.ScoreEntry.Where(x => x.ClientId == smsClientId)
@@ -1055,7 +1018,7 @@ namespace SMP.BLL.Services.ResultServices
                 }
 
                 var results =  context.ScoreEntry.Where(x => x.ClientId == smsClientId)
-                   .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                   .Include(d => d.StudentContact)
                    .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
                     .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(s => s.GradeLevel).ThenInclude(x => x.Grades)
                    .Include(r => r.ClassScoreEntry).ThenInclude(s => s.Subject)
@@ -1100,7 +1063,7 @@ namespace SMP.BLL.Services.ResultServices
                 }
 
                 var results = context.ScoreEntry.Where(x => x.ClientId == smsClientId)
-                   .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                   .Include(d => d.StudentContact)
                    .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
                     .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(s => s.GradeLevel).ThenInclude(x => x.Grades)
                    .Include(r => r.ClassScoreEntry).ThenInclude(s => s.Subject)
@@ -1142,7 +1105,7 @@ namespace SMP.BLL.Services.ResultServices
             }
 
             var result = context.ScoreEntry.Where(x=>x.ClientId == smsClientId)
-                .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                .Include(d => d.StudentContact)
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Session)
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
                 .Include(d => d.ClassScoreEntry).ThenInclude(d => d.Subject)
@@ -1233,7 +1196,7 @@ namespace SMP.BLL.Services.ResultServices
 
                     var result = context.ScoreEntry.Where(x=>x.ClientId == smsClientId)
                     .Include(e => e.ClassScoreEntry).ThenInclude(x => x.SessionClass)
-                    .Include(d => d.StudentContact).ThenInclude(d => d.User)
+                    .Include(d => d.StudentContact)
                     .Where(rr => rr.ClassScoreEntry.SessionClassId == sessionClassId && termId == rr.SessionTermId && rr.IsOffered).AsEnumerable().GroupBy(s => s.StudentContactId)
                     .Select(entries => new StudentResultDetail(entries, regNoFormat)).ToList();
 

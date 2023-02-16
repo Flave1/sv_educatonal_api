@@ -68,10 +68,11 @@ namespace BLL.StudentServices
                 
                 try
                 { 
-                    var result = await utilitiesService.GenerateForStudents();
+                    var result = await utilitiesService.GenerateStudentRegNo();
 
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    var filePath = upload.UploadProfileImage(student.ProfileImage);
                     var item = new StudentContact
                     {
                         CityId = student.CityId,
@@ -87,7 +88,14 @@ namespace BLL.StudentServices
                         StudentContactId = Guid.NewGuid(),
                         Status = (int)StudentStatus.Active,
                         SessionClassId = Guid.Parse(student.SessionClassId),
-                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled  
+                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
+                        LastName = student.LastName,
+                        DOB = student.DOB,
+                        FirstName = student.FirstName,
+                        MiddleName = student.MiddleName,
+                        Phone = student.Phone,
+                        Photo = filePath,
+                        ClientId = smsClientId,
                     };
                     context.StudentContact.Add(item);
                     await context.SaveChangesAsync();
@@ -146,10 +154,11 @@ namespace BLL.StudentServices
                         res.Message.FriendlyMessage = "Student Account not found";
                         return res;
                     }
-                    var parentid = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, studentInfor?.ParentId?? Guid.Empty);
+                    var parentid = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, studentInfor?.ParentId?? Guid.Empty);
 
                     await userService.UpdateStudentUserAccountAsync(student);
 
+                    var filePath = upload.UpdateProfileImage(student.ProfileImage, studentInfor.Photo);
                     studentInfor.CityId = student.CityId;
                     studentInfor.CountryId = student.CountryId;
                     studentInfor.EmergencyPhone = student.EmergencyPhone;
@@ -157,6 +166,14 @@ namespace BLL.StudentServices
                     studentInfor.StateId = student.StateId;
                     studentInfor.ZipCode = student.ZipCode;
                     studentInfor.ParentId = parentid;
+
+                    studentInfor.LastName = student.LastName;
+                    studentInfor.DOB = student.DOB;
+                    studentInfor.FirstName = student.FirstName;
+                    studentInfor.MiddleName = student.MiddleName;
+                    studentInfor.Phone = student.Phone;
+                    studentInfor.Photo = filePath;
+                    studentInfor.ClientId = smsClientId;
                     studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
                     await context.SaveChangesAsync();
 
@@ -199,10 +216,11 @@ namespace BLL.StudentServices
                     return res;
                 }
 
-                await userService.UpdateStudentUserProfileImageAsync(request.File, studentInfor.UserId);
 
                 studentInfor.Hobbies = string.Join(',', request.Hobbies);
                 studentInfor.BestSubjectIds = string.Join(',', request.BestSubjectIds);
+                var filePath = upload.UpdateProfileImage(request.File, studentInfor.Photo);
+                studentInfor.Photo = filePath;
                 await context.SaveChangesAsync();
 
                 res.Message.FriendlyMessage = Messages.Updated;
@@ -226,8 +244,7 @@ namespace BLL.StudentServices
 
             var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.User.UserType == (int)UserTypes.Student)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
-                .Include(q => q.User) 
-                .OrderBy(s => s.User.FirstName);
+                .OrderBy(s => s.FirstName);
 
              var totaltRecord = query.Count();
              var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetStudentContacts(f, regNoFormat)).ToListAsync();
@@ -366,7 +383,7 @@ namespace BLL.StudentServices
                                     Email = workSheet.Cells[i, 8].Value != null ? workSheet.Cells[i, 8].Value.ToString() : null,
                                     HomePhone = workSheet.Cells[i, 9].Value != null ? workSheet.Cells[i, 9].Value.ToString() : null,
                                     EmergencyPhone = workSheet.Cells[i, 10].Value != null ? workSheet.Cells[i, 10].Value.ToString() : null,
-                                    ParentOrGuardianName = workSheet.Cells[i, 11].Value != null ? workSheet.Cells[i, 11].Value.ToString() : null,
+                                    ParentOrGuardianFirstName = workSheet.Cells[i, 11].Value != null ? workSheet.Cells[i, 11].Value.ToString() : null,
                                     ParentOrGuardianRelationship = workSheet.Cells[i, 12].Value != null ? workSheet.Cells[i, 12].Value.ToString() : null,
                                     ParentOrGuardianPhone = workSheet.Cells[i, 13].Value != null ? workSheet.Cells[i, 13].Value.ToString() : null,
                                     ParentOrGuardianEmail = workSheet.Cells[i, 14].Value != null ? workSheet.Cells[i, 14].Value.ToString() : null,
@@ -407,7 +424,7 @@ namespace BLL.StudentServices
                             }
                             if (string.IsNullOrEmpty(item.RegistrationNumber))
                             {
-                                var regNo = await utilitiesService.GenerateForStudents();
+                                var regNo = await utilitiesService.GenerateStudentRegNo();
                                 item.RegistrationNumber = regNo.FirstOrDefault().Key;
                             }
                             else
@@ -436,7 +453,7 @@ namespace BLL.StudentServices
                             }
                             else
                             {
-                                parentid = await parentService.SaveParentDetail(item.ParentOrGuardianEmail, item.ParentOrGuardianName, item.ParentOrGuardianRelationship, item.ParentOrGuardianPhone, Guid.Empty);
+                                parentid = await parentService.SaveParentDetail(item.ParentOrGuardianEmail, item.ParentOrGuardianFirstName, item.ParentOrGuardianLastName, item.ParentOrGuardianRelationship, item.ParentOrGuardianPhone, Guid.Empty);
                             }
                             try
                             {
@@ -460,6 +477,11 @@ namespace BLL.StudentServices
                                     std.Status = (int)StudentStatus.Active;
                                     std.SessionClassId = Guid.Parse(item.SessionClass);
                                     std.EnrollmentStatus = (int)EnrollmentStatus.Enrolled;
+                                    std.LastName = item.LastName;
+                                    std.DOB = item.DOB;
+                                    std.FirstName = item.FirstName;
+                                    std.MiddleName = item.MiddleName;
+                                    std.Phone = item.Phone;
 
                                     context.StudentContact.Add(std);
                                     await context.SaveChangesAsync();
@@ -477,6 +499,13 @@ namespace BLL.StudentServices
                                     std.HomePhone = item.HomePhone;
                                     std.StateId = item.StateId;
                                     std.ZipCode = item.ZipCode;
+
+                                    std.LastName = item.LastName;
+                                    std.DOB = item.DOB;
+                                    std.FirstName = item.FirstName;
+                                    std.MiddleName = item.MiddleName;
+                                    std.Phone = item.Phone;
+                                    std.ClientId = smsClientId;
                                     std.SessionClassId = Guid.Parse(item.SessionClass);
                                     await context.SaveChangesAsync();
                                 }
@@ -525,7 +554,6 @@ namespace BLL.StudentServices
                     .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == smsClientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
-                    .Include(q => q.User)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
 
                 res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -554,7 +582,6 @@ namespace BLL.StudentServices
                 var totaltRecord = query.Count();
                 var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
-                    .Include(q => q.User)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
 
                 res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
@@ -580,7 +607,6 @@ namespace BLL.StudentServices
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
-                    .Include(q => q.User)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
 
                 res.Result = result;
@@ -645,6 +671,8 @@ namespace BLL.StudentServices
                 return res;
             }
         }
+
+        StudentContact IStudentService.GetStudentByUserId(string userId) => context.StudentContact.FirstOrDefault(x => x.UserId == userId);
     }
 
 

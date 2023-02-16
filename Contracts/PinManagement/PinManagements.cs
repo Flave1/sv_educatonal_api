@@ -97,7 +97,7 @@ namespace SMP.Contracts.PinManagement
             Pin = db.FirstOrDefault().UploadedPin.Pin;
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
             NumberOfTimesUsed = db.Count();
-            StudentName = db.FirstOrDefault().Student.User.FirstName + " " + db.FirstOrDefault().Student.User.LastName;
+            StudentName = db.FirstOrDefault().Student.FirstName + " " + db.FirstOrDefault().Student.LastName;
             Session = db.FirstOrDefault().SessionClass.Session.StartDate + " / " + db.FirstOrDefault().SessionClass.Session.EndDate;
             Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
             PinStatus = "used";
@@ -134,7 +134,7 @@ namespace SMP.Contracts.PinManagement
             Pin = db.FirstOrDefault().UploadedPin.Pin;
             SerialNumber = db.FirstOrDefault().UploadedPin.Serial;
             NumberOfTimesUsed = db.Count();
-            StudentName = db.FirstOrDefault().Student.User.FirstName + " " + db.FirstOrDefault().Student.User.LastName;
+            StudentName = db.FirstOrDefault().Student.FirstName + " " + db.FirstOrDefault().Student.LastName;
             Session = db.FirstOrDefault().SessionClass.Session.StartDate + " / " + db.FirstOrDefault().SessionClass.Session.EndDate;
             Term = db.FirstOrDefault().Sessionterm.TermName + " Term";
             PinStatus = "used";

@@ -188,8 +188,8 @@ namespace SMP.BLL.Services.PortalService
                 var session = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
                 if(session is not null)
                 {
-                    var user = context.Teacher.Where(x => x.ClientId == smsClientId && x.TeacherId == session.HeadTeacherId).Include(c => c.User).Select(x => x.User).FirstOrDefault();
-                    result.Headteacher = user?.FirstName + " " + user?.LastName;
+                    var teacher = context.Teacher.Where(x => x.ClientId == smsClientId && x.TeacherId == session.HeadTeacherId).FirstOrDefault();
+                    result.Headteacher = teacher?.FirstName + " " + teacher?.LastName;
                 }
                
             }
@@ -381,7 +381,7 @@ namespace SMP.BLL.Services.PortalService
             return teacherRegNoFormat;
         }
 
-        async Task IPortalSettingService.CreateSchollSettingsAsync(SMSSMPAccountSetting request, string email)
+        async Task IPortalSettingService.CreateSchoolSettingsAsync(SMSSMPAccountSetting request, string email)
         {
             try
             {

@@ -22,6 +22,6 @@ namespace SMP.BLL.Services.PortalService
         void CreateAppLayoutSettingsAsync(string clientId, string schoolUrl);
         Task<APIResponse<CreateRegNoSetting>> CreateUpdateRegNoSettingsAsync(CreateRegNoSetting request);
         Task<APIResponse<RegNoSetting>> GetRegNoSettingsAsync();
-        Task CreateSchollSettingsAsync(SMSSMPAccountSetting request, string email);
+        Task CreateSchoolSettingsAsync(SMSSMPAccountSetting request, string email);
     }
 }

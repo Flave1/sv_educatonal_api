@@ -84,7 +84,7 @@ namespace SMP.Contracts.ResultModels
             ClassScoreEntryId = db.ClassScoreEntryId;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
 
         }
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid term)
@@ -97,7 +97,7 @@ namespace SMP.Contracts.ResultModels
             ClassScoreEntryId = db.ClassScoreEntryId;
             AssessmentScore = db.SessionClass.AssessmentScore;
             ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = subject?.SubjectTeacher?.User?.FirstName + " " + subject?.SubjectTeacher?.User?.LastName;
+            SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
             if (db.ScoreEntries.Any())
             {
 
@@ -109,7 +109,7 @@ namespace SMP.Contracts.ResultModels
                     scoreEntrySheet.ExamsScore = scoreEntrySheet1?.ExamScore ?? 0;
                     scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", entry.StudentContact.RegistrationNumber);
                     scoreEntrySheet.StudentContactId = entry.StudentContactId.ToString();
-                    scoreEntrySheet.StudentName = entry.StudentContact.User.FirstName + " " + entry.StudentContact.User.LastName + " " + entry.StudentContact.User.MiddleName;
+                    scoreEntrySheet.StudentName = entry.StudentContact.FirstName + " " + entry.StudentContact.LastName + " " + entry.StudentContact.MiddleName;
                     scoreEntrySheet.IsOffered = scoreEntrySheet1?.IsOffered ?? false;
                     scoreEntrySheet.IsSaved = scoreEntrySheet1?.IsSaved ?? false;
                     scoreEntrySheet.TotalScore = scoreEntrySheet1?.ExamScore ?? 0 + scoreEntrySheet1?.AssessmentScore ?? 0;
@@ -164,7 +164,7 @@ namespace SMP.Contracts.ResultModels
             ExamsScore = d.ExamScore;
             RegistrationNumber = regNoFormat.Replace("%VALUE%", d.StudentContact.RegistrationNumber);
             StudentContactId = d.StudentContactId.ToString();
-            StudentName = d.StudentContact.User.FirstName + " " + d.StudentContact.User.LastName + " " + d.StudentContact.User.MiddleName;
+            StudentName = d.StudentContact.FirstName + " " + d.StudentContact.LastName + " " + d.StudentContact.MiddleName;
             IsOffered = d.IsOffered;
             IsSaved = d.IsSaved;
             TotalScore = ExamsScore + AssessmentScore;
