@@ -101,31 +101,35 @@ namespace BLL.AuthenticationServices
             try
             {
                 var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
-           
-                var user = new AppUser
+                var user = await manager.FindByEmailAsync(email);
+                if(user == null)
                 {
-                    UserName = email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = email,
-                    UserType = (int)UserTypes.Student
-                };
-                var result = await manager.CreateAsync(user, regNoFormat);
-                if (!result.Succeeded)
-                {
-                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    user = new AppUser
                     {
-                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                        UserName = email,
+                        Active = true,
+                        Deleted = false,
+                        CreatedOn = DateTime.UtcNow,
+                        CreatedBy = "",
+                        Email = email,
+                        UserType = (int)UserTypes.Student
+                    };
+                    var result = await manager.CreateAsync(user, regNoFormat);
+                    if (!result.Succeeded)
+                    {
+                        if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                        {
+                            if (await StudentAccountByEmailExist(user.Email))
+                                throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                        }
+                        else
+                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                    else
-                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
+                    if (!addTorole.Succeeded)
+                        if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
+                            throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
                 }
-                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
-                if (!addTorole.Succeeded)
-                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
-
                 return user.Id;
             }
             catch (ArgumentException ex)
@@ -134,6 +138,7 @@ namespace BLL.AuthenticationServices
             }
         }
 
+        
         async Task<string> IUserService.CreateStudentUserAccountAsync(UploadStudentExcel student, string regNo, string regNoFormat)
         {
             try
@@ -154,14 +159,16 @@ namespace BLL.AuthenticationServices
                 {
                     if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
                     {
-                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                        if (await StudentAccountByEmailExist(user.Email))
+                            throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
                     }
                     else
                         throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
                 var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
                 if (!addTorole.Succeeded)
-                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+                    if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
+                        throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
 
                 return user.Id;
             }
@@ -187,6 +194,11 @@ namespace BLL.AuthenticationServices
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        if (await StudentAccountByEmailOnExistOnUpdate(account.Email, Guid.Parse(student.StudentAccountId)))
+                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                    }
                     throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
             }
@@ -197,7 +209,7 @@ namespace BLL.AuthenticationServices
 
         }
 
-        async Task IUserService.UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId)
+        async Task IUserService.UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId, string studentId)
         {
             try
             {
@@ -212,6 +224,11 @@ namespace BLL.AuthenticationServices
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        if (await StudentAccountByEmailOnExistOnUpdate(account.Email, Guid.Parse(studentId)))
+                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                    }
                     throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
             }
@@ -225,39 +242,52 @@ namespace BLL.AuthenticationServices
         {
             try
             {
-                var user = new AppUser
+                var user = await context.Users.FirstOrDefaultAsync(x => x.Email == email);
+                if (user == null)
                 {
-                    UserName = email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = email,
-                    UserType = (int)UserTypes.Parent
-                };
-                var result = await manager.CreateAsync(user, "000000");
-                if (!result.Succeeded)
-                {
-                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    user = new AppUser
                     {
-                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                        UserName = email,
+                        Active = true,
+                        Deleted = false,
+                        CreatedOn = DateTime.UtcNow,
+                        CreatedBy = "",
+                        Email = email,
+                        UserType = (int)UserTypes.Parent
+                    };
+                    var result = await manager.CreateAsync(user, "000000");
+                    if (!result.Succeeded)
+                    {
+                        if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                        {
+                            if (await ParentAccountByEmailExist(user.Email))
+                                throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                        }
+                        else
+                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                    else
-                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-                }
-                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.PARENTS);
-                if (!addTorole.Succeeded)
-                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.PARENTS);
+                    if (!addTorole.Succeeded)
+                    {
+                        if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
+                            throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
 
+                    }
+                }
                 return user.Id;
+
             }
             catch (ArgumentException ex)
             {
                 throw new ArgumentException(ex.Message);
             }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
 
-        async Task IUserService.UpdateParentUserAccountAsync(string email, string phone, string id)
+        async Task IUserService.UpdateParentUserAccountAsync(string email, string phone, string id, Guid parentId)
         {
             try
             {
@@ -274,14 +304,21 @@ namespace BLL.AuthenticationServices
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
-                    throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                    {
+                        if (await ParentAccountByEmailExistOnUpdate(account.Email, parentId))
+                            throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                    }
                 }
             }
             catch (ArgumentException ex)
             {
                 throw new ArgumentException(ex.Message);
             }
-
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
 
         //async Task IUserService.UpdateStudentUserProfileImageAsync(IFormFile file, string studentId)
@@ -639,5 +676,48 @@ namespace BLL.AuthenticationServices
 
         string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
 
+        public async Task<bool> TeacherAccountByEmailExist(string email)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.Teacher.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId))
+                return true;
+            return false;
+        }
+
+        public async Task<bool> TeacherAccountByEmailExistOnUpdate(string email, Guid teacherId)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.Teacher.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId && e.TeacherId != teacherId))
+                return true;
+            return false;
+        }
+        private async Task<bool> StudentAccountByEmailExist(string email)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.StudentContact.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId))
+                return true;
+            return false;
+        }
+        private async Task<bool> StudentAccountByEmailOnExistOnUpdate(string email, Guid studentId)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.StudentContact.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId && e.StudentContactId != studentId))
+                return true;
+            return false;
+        }
+        private async Task<bool> ParentAccountByEmailExist(string email)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.Parents.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId))
+                return true;
+            return false;
+        }
+        private async Task<bool> ParentAccountByEmailExistOnUpdate(string email, Guid parentId)
+        {
+            var userAccount = await manager.FindByEmailAsync(email);
+            if (context.Parents.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId && e.Parentid != parentId))
+                return true;
+            return false;
+        }
     }
 }

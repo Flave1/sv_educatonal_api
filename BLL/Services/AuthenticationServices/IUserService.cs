@@ -25,11 +25,12 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<LoginSuccessResponse>> ChangePasswordAsync(ChangePassword request);
         Task<APIResponse<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync(UserInformationFromMobileRequest request);
         Task<string> CreateStudentUserAccountAsync(UploadStudentExcel student, string regNo, string regNoFormat);
-        Task UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId);
+        Task UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId, string studentId);
         Task<string> CreateParentUserAccountAsync(string email, string phone);
-        Task UpdateParentUserAccountAsync(string email, string phone, string id);
+        Task UpdateParentUserAccountAsync(string email, string phone, string id, Guid parentId);
         Task<APIResponse<bool>> ForgotPassword(ForgotPassword request);
         Task<APIResponse<bool>> ResetPassword(ResetAccount request);
-      
+        Task<bool> TeacherAccountByEmailExist(string email);
+        Task<bool> TeacherAccountByEmailExistOnUpdate(string email, Guid teacherId);
     }
 }

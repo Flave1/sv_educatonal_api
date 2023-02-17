@@ -91,6 +91,11 @@ namespace BLL.AuthenticationServices
                 {
                     permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
+                    if(teacher is null)
+                    {
+                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
+                        return res;
+                    }
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                     id = teacher.TeacherId;
@@ -99,6 +104,11 @@ namespace BLL.AuthenticationServices
                 if (userAccount.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
+                    if (teacher is null)
+                    {
+                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
+                        return res;
+                    }
                     if (teacher != null && teacher.Status == (int)TeacherStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
@@ -116,6 +126,11 @@ namespace BLL.AuthenticationServices
                 if (userAccount.UserType == (int)UserTypes.Student)
                 {
                     var student = GetStudentByUserId(userAccount.Id, clientId);
+                    if (student is null)
+                    {
+                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
+                        return res;
+                    }
                     if (student != null && student.Status == (int)StudentStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
@@ -130,6 +145,11 @@ namespace BLL.AuthenticationServices
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
                     var parent = GetParentByUserId(userAccount.Id, clientId);
+                    if (parent is null)
+                    {
+                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
+                        return res;
+                    }
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                 }

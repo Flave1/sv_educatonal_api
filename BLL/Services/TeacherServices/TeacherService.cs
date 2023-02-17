@@ -59,11 +59,7 @@ namespace SMP.BLL.Services.TeacherServices
             try
             {
                 var uploadProfile = upload.UploadProfileImage(request.ProfileImage);
-                if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
-                {
-                    res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
-                    return res;
-                }
+                
                 var user = new AppUser
                 {
                     UserName = request.Email,
@@ -78,6 +74,16 @@ namespace SMP.BLL.Services.TeacherServices
                 var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
                 if (!result.Succeeded)
                 {
+                    if(result.Errors.Any(x => x.Code == "DuplicateUserName"))
+                    {
+                        var userAccount = await userManager.FindByEmailAsync(request.Email);
+                        if (context.Teacher.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId))
+                        {
+                            res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                            return res;
+                        }
+                    }
+                    
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
@@ -88,7 +94,7 @@ namespace SMP.BLL.Services.TeacherServices
                     return res;
                 }
 
-                CreateUpdateAdminTeacherProfile(request, user.Id);
+                CreateUpdateTeacherProfile(request, user.Id);
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
@@ -136,7 +142,7 @@ namespace SMP.BLL.Services.TeacherServices
             var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
             if (teacherAct != null)
             {
-                CreateUpdateAdminTeacherProfile(userDetail, user.Id);
+                CreateUpdateTeacherProfile(userDetail, user.Id);
                 user.Email = userDetail.Email;
                 user.UserName = userDetail.Email;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
@@ -145,6 +151,15 @@ namespace SMP.BLL.Services.TeacherServices
                 var result = await userManager.UpdateAsync(user);
                 if (!result.Succeeded)
                 {
+                    if (result.Errors.Any(x => x.Code == "DuplicateUserName"))
+                    {
+                        var userAccount = await userManager.FindByEmailAsync(user.Email);
+                        if (context.Teacher.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId && e.TeacherId != teacherAct.TeacherId))
+                        {
+                            res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                            return res;
+                        }
+                    }
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
@@ -176,7 +191,7 @@ namespace SMP.BLL.Services.TeacherServices
             var res = new APIResponse<List<ApplicationUser>>();
 
             var result = await context.Teacher
-                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false &&  d.Status == (int)TeacherStatus.Active)
                 .Include(x => x.User)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).ToListAsync();
@@ -353,7 +368,7 @@ namespace SMP.BLL.Services.TeacherServices
                     return res;
                 }
 
-                CreateUpdateAdminTeacherProfile(request, user.Id);
+                CreateUpdateTeacherProfile(request, user.Id);
 
                 var schooSetting = new SMSSMPAccountSetting(request.SchoolName, request.Country, request.State, request.Address, request.SchoolLogo, request.ClientId);
 
@@ -376,7 +391,7 @@ namespace SMP.BLL.Services.TeacherServices
         }
 
 
-        void CreateUpdateAdminTeacherProfile(UserCommand request, string userId)
+        void CreateUpdateTeacherProfile(UserCommand request, string userId)
         {
             try
             {
@@ -394,6 +409,7 @@ namespace SMP.BLL.Services.TeacherServices
                 teacher.Phone = request.Phone;
                 teacher.Photo = "";
                 teacher.UserId = userId;
+                teacher.Status = (int)TeacherStatus.Active;
                 teacher.ClientId = request.ClientId;
                 if (isNew) context.Teacher.Add(teacher);
                 context.SaveChanges();

@@ -65,7 +65,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<StudentContact>();
             using (var transaction = await context.Database.BeginTransactionAsync())
             {
-                
+
                 try
                 { 
                     var result = await utilitiesService.GenerateStudentRegNo();
@@ -124,7 +124,7 @@ namespace BLL.StudentServices
                     return res;
                 }
 
-               
+
                 finally { await transaction.DisposeAsync(); }
             }
         }
@@ -491,7 +491,7 @@ namespace BLL.StudentServices
                                 }
                                 else
                                 {
-                                    await userService.UpdateStudentUserAccountAsync(item, std.UserId);
+                                    await userService.UpdateStudentUserAccountAsync(item, std.UserId, std.StudentContactId.ToString());
                                     std.CityId = item.CityId;
                                     std.CountryId = item.CountryId;
                                     std.EmergencyPhone = item.EmergencyPhone;

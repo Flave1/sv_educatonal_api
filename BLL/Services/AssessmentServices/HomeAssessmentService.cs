@@ -180,6 +180,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var teacherId = accessor?.HttpContext?.User?.FindFirst(x => x.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
             var activeTerm = context.SessionTerm.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive);
+            
             var query = context.HomeAssessment.Where(d => d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)

@@ -103,10 +103,10 @@ namespace API.Installers
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000", "http://localhost:3001")
+                    builder.AllowAnyOrigin()
                     .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                    .AllowAnyMethod();
+                    //.AllowCredentials();
                 });
             });
 

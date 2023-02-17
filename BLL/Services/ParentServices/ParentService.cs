@@ -41,34 +41,44 @@ namespace SMP.BLL.Services.ParentServices
 
         async Task<Guid> IParentService.SaveParentDetail(string email, string firstName, string lastName, string relationship, string number, Guid id)
         {
-            string userid = string.Empty;
-            var parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Email.ToLower() == email.Trim().ToLower()) ?? null;
-            if (parent == null)
-                parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Parentid == id) ?? null;
+            try
+            {
+                string userid = string.Empty;
+                var parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Email.ToLower() == email.Trim().ToLower()) ?? null;
+                if (parent == null)
+                    parent = context.Parents.FirstOrDefault(x => x.ClientId == smsClientId && x.Parentid == id) ?? null;
 
-            if (parent == null)
-            {
-                userid = await userService.CreateParentUserAccountAsync(email, number);
-                parent = new Parents();
-                parent.FirstName = firstName;
-                parent.LastName = lastName;
-                parent.Relationship = relationship;
-                parent.Number = number;
-                parent.Email = email.Trim();
-                parent.UserId = userid;
-                context.Parents.Add(parent);
+                if (parent == null)
+                {
+                    userid = await userService.CreateParentUserAccountAsync(email, number);
+                    parent = new Parents();
+                    parent.FirstName = firstName;
+                    parent.LastName = lastName;
+                    parent.Relationship = relationship;
+                    parent.Number = number;
+                    parent.Email = email.Trim();
+                    parent.UserId = userid;
+                    context.Parents.Add(parent);
+                    context.SaveChanges();
+                }
+                else
+                {
+                    parent.FirstName = firstName;
+                    parent.LastName = lastName;
+                    parent.Relationship = relationship;
+                    parent.Number = number;
+                    parent.Email = email.Trim();
+                    context.SaveChanges();
+                    await userService.UpdateParentUserAccountAsync(email, number, parent.UserId, parent.Parentid);
+                }
+
+                return parent.Parentid;
+
             }
-            else
+            catch (Exception ex)
             {
-                parent.FirstName = firstName;
-                parent.LastName = lastName;
-                parent.Relationship = relationship;
-                parent.Number = number;
-                parent.Email = email.Trim();
-                await userService.UpdateParentUserAccountAsync(email, number, parent.UserId);
+                throw new ArgumentException(ex.Message);
             }
-            context.SaveChanges();
-            return parent.Parentid;
         }
 
         async Task<APIResponse<PagedResponse<List<MyWards>>>> IParentService.GetMyWardsAsync(PaginationFilter filter)

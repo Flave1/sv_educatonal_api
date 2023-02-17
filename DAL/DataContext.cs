@@ -45,6 +45,7 @@ namespace DAL
         {
         }
 
+
         public DbSet<UserRole> UserRole { get; set; }
         public DbSet<Session> Session { get; set; }
         public DbSet<ClassLookup> ClassLookUp { get; set; }
