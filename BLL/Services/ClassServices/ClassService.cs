@@ -463,6 +463,7 @@ namespace BLL.ClassServices
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId)
+                .Include(x => x.User)
                 .OrderByDescending(d => d.FirstName)
                 .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
                 .Select(f =>  new GetStudentContacts(f, regNoFormat)).ToListAsync();

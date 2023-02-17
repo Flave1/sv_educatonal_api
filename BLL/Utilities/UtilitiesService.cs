@@ -28,7 +28,7 @@ namespace SMP.BLL.Utilities
         {
             try
             {
-                var schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId);
+                var schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId && x.ClientId == smsClientId);
 
                 var splited = regNo.Split(schoolSettings.RegNoSeperator);
                 if (schoolSettings.RegNoPosition == 3)

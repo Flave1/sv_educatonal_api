@@ -113,6 +113,10 @@ namespace DAL
         {
             var loggedInUserId =  accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
+            if (string.IsNullOrEmpty(smsClientId))
+            {
+                throw new ArgumentNullException(nameof(smsClientId));
+            }
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)
@@ -136,7 +140,10 @@ namespace DAL
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
-
+            if (string.IsNullOrEmpty(smsClientId))
+            {
+                throw new ArgumentNullException(nameof(smsClientId));
+            }
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)

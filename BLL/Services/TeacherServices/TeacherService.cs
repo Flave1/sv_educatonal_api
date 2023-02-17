@@ -177,6 +177,7 @@ namespace SMP.BLL.Services.TeacherServices
 
             var result = await context.Teacher
                 .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.Status == (int)TeacherStatus.Active)
+                .Include(x => x.User)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).ToListAsync();
 
@@ -189,7 +190,9 @@ namespace SMP.BLL.Services.TeacherServices
         async Task<APIResponse<ApplicationUser>> ITeacherService.GetSingleTeacherAsync(Guid teacherId)
         {
             var res = new APIResponse<ApplicationUser>();
-            var result = await context.Teacher.Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+            var result = await context.Teacher
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+                .Include(x => x.User)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -378,7 +381,7 @@ namespace SMP.BLL.Services.TeacherServices
             try
             {
                 var isNew = false;
-                var teacher = context.Teacher.FirstOrDefault(x => x.ClientId == smsClientId);
+                var teacher = context.Teacher.FirstOrDefault(x => x.ClientId == smsClientId && userId == x.UserId);
                 if (teacher is null)
                 {
                     isNew = true;

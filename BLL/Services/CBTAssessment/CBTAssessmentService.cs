@@ -4,6 +4,7 @@ using DAL;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Assessment;
@@ -27,10 +28,11 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         private readonly IUtilitiesService utilitiesService;
         private readonly FwsClientInformation fwsClientInformations;
         private readonly string smsClientId;
+        private readonly IScoreEntryHistoryService scoreEntryService;
 
-        public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context, 
+        public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context,
             IUtilitiesService utilitiesService, FwsClientInformation fwsClientInformations,
-            IHttpContextAccessor accessor)
+            IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService)
         {
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
@@ -38,6 +40,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             this.utilitiesService = utilitiesService;
             this.fwsClientInformations = fwsClientInformations;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.scoreEntryService = scoreEntryService;
         }
 
         async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId, int pageNumber)
@@ -81,8 +84,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student =  context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
-                    var scoreEntry = context.ScoreEntry.Where(s => s.SessionTermId == termId && s.StudentContactId == student.StudentContactId && s.ClassScoreEntry.SubjectId == Guid.Parse(subjectId)).FirstOrDefault();
-                    var scoreHistory = context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == sessionClassId && x.Subjectid == subjectId && x.SessionTermId == termId.ToString() && x.StudentId == student.StudentContactId.ToString());
+                    
                    
                     var clientDetails = new Dictionary<string, string>();
                     clientDetails.Add("examinationId", examId);
@@ -90,48 +92,35 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     clientDetails.Add("userId", fwsClientInformations.UserId);
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if(studentResult.Result == null)
-                    {
                         continue;
-                    }
-                    var score = 0;
-                    if(scoreHistory is null)
+
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString());
+
+                    float score = 0;
+                    if (scoreHistory is null)
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include);
+                    else
                     {
-                        await CreateNewScoreEntryHistory(scoreHistory, studentResult.Result, student, sessionClassId, subjectId, termId, Include);
-                        score = +studentResult.Result.TotalScore;
+                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
+                    }
+                    var scoreEntry = scoreEntryService.GetScoreEntry(termId, student.StudentContactId, Guid.Parse(subjectId));
+
+                    if (scoreHistory is null)
+                    {
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId, termId, Include);
                     }
                     else
                     {
-                        if (Include)
-                        {
-                            scoreHistory.Score = scoreHistory.Score + '|' + studentResult.Result.TotalScore;
-                            score = +studentResult.Result.TotalScore;
-                        }
-                        else
-                        {
-                            var list = scoreHistory.Score.Split('|').ToList();
-                            var filtered = list.Remove(studentResult.Result.TotalScore.ToString());
-                            scoreHistory.Score = string.Join('|', list);
-                            score = -studentResult.Result.TotalScore;
-                        }
-                        await context.SaveChangesAsync();
+                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
                     }
                     if (scoreEntry is null)
                     {
-                        scoreEntry = new ScoreEntry();
-                        scoreEntry.SessionTermId = termId;
-                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId) && x.ClientId == smsClientId).ClassScoreEntryId;
-                        scoreEntry.AssessmentScore = score;
-                        scoreEntry.IsOffered = true;
-                        scoreEntry.IsSaved = true;
-                        scoreEntry.StudentContactId = student.StudentContactId;
-                        context.ScoreEntry.Add(scoreEntry);
+                        scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
                         await context.SaveChangesAsync();
                     }
                     else
                     {
-                        scoreEntry.AssessmentScore = scoreEntry.AssessmentScore + score;
-                        scoreEntry.IsOffered = true;
-                        scoreEntry.IsSaved = true;
+                        scoreEntryService.UpdateScoreEntryForAssessment(scoreEntry, score);
                         await context.SaveChangesAsync();
                     }
 
@@ -159,8 +148,6 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student = context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
-                    var scoreEntry = context.ScoreEntry.Where(s => s.SessionTermId == termId && s.StudentContactId == student.StudentContactId && s.ClassScoreEntry.SubjectId == Guid.Parse(subjectId)).FirstOrDefault();
-                    var scoreHistory = context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == sessionClassId && x.Subjectid == subjectId && x.SessionTermId == termId.ToString() && x.StudentId == student.StudentContactId.ToString());
 
                     var clientDetails = new Dictionary<string, string>();
                     clientDetails.Add("examinationId", examId);
@@ -171,45 +158,33 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     {
                         continue;
                     }
-                    var score = 0;
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString());
+
+                    float score = 0;
+                    if (scoreHistory is null)
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include);
+                    else
+                    {
+                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
+                    }
+                    var scoreEntry = scoreEntryService.GetScoreEntry(termId, student.StudentContactId, Guid.Parse(subjectId));
+
                     if (scoreHistory is null)
                     {
-                        await CreateNewScoreEntryHistory(scoreHistory, studentResult.Result, student, sessionClassId, subjectId, termId, Include);
-                        score = +studentResult.Result.TotalScore;
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId, termId, Include);
                     }
                     else
                     {
-                        if (Include)
-                        {
-                            scoreHistory.Score = scoreHistory.Score + '|' + studentResult.Result.TotalScore;
-                            score = +studentResult.Result.TotalScore;
-                        }
-                        else
-                        {
-                            var list = scoreHistory.Score.Split('|').ToList();
-                            var filtered = list.Remove(studentResult.Result.TotalScore.ToString());
-                            scoreHistory.Score = string.Join('|', list);
-                            score = -studentResult.Result.TotalScore;
-                        }
-                        await context.SaveChangesAsync();
+                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
                     }
                     if (scoreEntry is null)
                     {
-                        scoreEntry = new ScoreEntry();
-                        scoreEntry.SessionTermId = termId;
-                        scoreEntry.ClassScoreEntryId = context.ClassScoreEntry.FirstOrDefault(x => x.SubjectId == Guid.Parse(subjectId) && x.SessionClassId == Guid.Parse(sessionClassId) && x.ClientId == smsClientId).ClassScoreEntryId;
-                        scoreEntry.ExamScore = score;
-                        scoreEntry.IsOffered = true;
-                        scoreEntry.IsSaved = true;
-                        scoreEntry.StudentContactId = student.StudentContactId;
-                        context.ScoreEntry.Add(scoreEntry);
+                        scoreEntryService.CreateNewScoreEntryForExam(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
                         await context.SaveChangesAsync();
                     }
                     else
                     {
-                        scoreEntry.ExamScore = scoreEntry.ExamScore + score;
-                        scoreEntry.IsOffered = true;
-                        scoreEntry.IsSaved = true;
+                        scoreEntryService.UpdateScoreEntryForExam(scoreEntry, score);
                         await context.SaveChangesAsync();
                     }
 
@@ -225,19 +200,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             return res;
         }
 
-        private async Task CreateNewScoreEntryHistory(ScoreEntryHistory scoreHistory, SelectResult studentResult, StudentContact student, string sessionClassId, string subjectId, Guid termId, bool Include)
-        {
-            scoreHistory = new ScoreEntryHistory();
-            scoreHistory.StudentId = student.StudentContactId.ToString();
-            scoreHistory.SessionClassId = sessionClassId;
-            scoreHistory.Subjectid = subjectId;
-            scoreHistory.SessionTermId = termId.ToString();
-            if (Include)
-                scoreHistory.Score = scoreHistory.Score + '|' + studentResult.TotalScore;
-
-            context.ScoreEntryHistory.Add(scoreHistory);
-            await context.SaveChangesAsync();
-        }
+      
 
         void CopyClientInformation(SmsClientInformation fwsClientInformation)
         {

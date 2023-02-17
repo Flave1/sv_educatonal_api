@@ -435,6 +435,10 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<LoginSuccessResponse>> IUserService.ChangePasswordAsync(ChangePassword request)
         {
             var res = new APIResponse<LoginSuccessResponse>();
+
+            var clientId = ClientId(request.SchoolUrl);
+            accessor.HttpContext.Items["smsClientId"] = clientId;
+
             var user = await manager.FindByIdAsync(request.UserId);
             if (user == null)
             {
@@ -448,6 +452,7 @@ namespace BLL.AuthenticationServices
                 res.Message.FriendlyMessage = "Old Password incorrect";
                 return res;
             }
+
 
             var token = await manager.GeneratePasswordResetTokenAsync(user);
             var changePassword = await manager.ResetPasswordAsync(user, token, request.NewPassword);
@@ -631,6 +636,8 @@ namespace BLL.AuthenticationServices
                 return res;
             }
         }
+
+        string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
 
     }
 }

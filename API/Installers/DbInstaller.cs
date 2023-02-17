@@ -79,6 +79,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IParentService, ParentService>();
             services.AddScoped<ICBTAssessmentService, CBTAssessmentService>();
+            services.AddScoped<IScoreEntryHistoryService, ScoreEntryHistoryService>();
         }
     }
 }
