@@ -22,10 +22,12 @@ namespace SMP.BLL.Services.FileUploadService
         private static string LessonNotePath = "LessonNotePath";
         private static string AdmissionCredentialsPath = "AdmissionCredentials";
         private static string AdmissionPassportPath = "AdmissionPassport";
-        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext)
+        private readonly string smsClientId;
+        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext, IHttpContextAccessor accessor)
         {
             this.environment = environment;
             accessor = httpContext;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         string IFileUploadService.UploadProfileImage(IFormFile file)
         {
@@ -48,7 +50,7 @@ namespace SMP.BLL.Services.FileUploadService
                 string extension = Path.GetExtension(file.FileName);
                 string fileName = Guid.NewGuid().ToString() + extension;
 
-                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + ProfileImagePath, fileName);
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/"+ smsClientId + "/" + ProfileImagePath, fileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -59,7 +61,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{ProfileImagePath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid Profile Image");
@@ -100,7 +102,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
                 else
                 {
-                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + ProfileImagePath, fileName);
+                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + ProfileImagePath, fileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -111,7 +113,7 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                 }
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{ProfileImagePath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid Profile Image");
@@ -138,7 +140,7 @@ namespace SMP.BLL.Services.FileUploadService
                 string extension = Path.GetExtension(file.FileName);
                 string fileName = Guid.NewGuid().ToString() + extension;
 
-                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath, fileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -149,7 +151,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid Principal Stamp");
@@ -188,7 +190,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
                 else
                 {
-                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath, fileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -199,7 +201,7 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                 }
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid Principal Stamp");
@@ -227,7 +229,7 @@ namespace SMP.BLL.Services.FileUploadService
                 string extension = Path.GetExtension(file.FileName);
                 string fileName = Guid.NewGuid().ToString() + extension;
 
-                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + SchoolLogoPath, fileName);
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + SchoolLogoPath, fileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -238,7 +240,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{SchoolLogoPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{SchoolLogoPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid School Logo");
@@ -279,7 +281,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
                 else
                 {
-                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + SchoolLogoPath, fileName);
+                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + SchoolLogoPath, fileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -290,7 +292,7 @@ namespace SMP.BLL.Services.FileUploadService
                     }
                 }
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{SchoolLogoPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{SchoolLogoPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Invalid School Logo");
@@ -311,7 +313,7 @@ namespace SMP.BLL.Services.FileUploadService
                     string extension = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString() + extension;
 
-                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + PrincipalStampPath, fileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -322,7 +324,7 @@ namespace SMP.BLL.Services.FileUploadService
                     }
 
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
                     fileUrls.Add(url);
 
                 }
@@ -363,7 +365,7 @@ namespace SMP.BLL.Services.FileUploadService
                     string ext = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString() + ext;
 
-                    var newfilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + PrincipalStampPath, fileName);
+                    var newfilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + PrincipalStampPath, fileName);
 
                     using (var fileStream = new FileStream(newfilePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -373,7 +375,7 @@ namespace SMP.BLL.Services.FileUploadService
                         fileStream.Close();
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{PrincipalStampPath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
                     fileUrls.Add(url);
                 }
             }
@@ -384,7 +386,7 @@ namespace SMP.BLL.Services.FileUploadService
         {
             string extension = Path.GetExtension(file.FileName);
             string fileName = Guid.NewGuid().ToString() + extension;
-            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + ProfileImagePath, fileName);
+            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + ProfileImagePath, fileName);
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -404,7 +406,7 @@ namespace SMP.BLL.Services.FileUploadService
                         fileStream.Close();
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{ProfileImagePath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{ProfileImagePath}/{fileName}";
                     var content = (this as IFileUploadService).ReadFileAsync(url);
                     (this as IFileUploadService).DeleteFile(filePath);
                     return content;
@@ -464,7 +466,7 @@ namespace SMP.BLL.Services.FileUploadService
                 string extension = Path.GetExtension(file.FileName);
                 string fileName = Guid.NewGuid().ToString() + extension;
 
-                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AdmissionCredentialsPath, fileName);
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionCredentialsPath, fileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -475,7 +477,7 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AdmissionCredentialsPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{AdmissionCredentialsPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Error uploading admission credentials");
@@ -501,7 +503,7 @@ namespace SMP.BLL.Services.FileUploadService
                 string extension = Path.GetExtension(file.FileName);
                 string fileName = Guid.NewGuid().ToString() + extension;
 
-                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + AdmissionPassportPath, fileName);
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionPassportPath, fileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -512,10 +514,19 @@ namespace SMP.BLL.Services.FileUploadService
                 }
 
                 var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{AdmissionPassportPath}/{fileName}";
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{AdmissionPassportPath}/{fileName}";
                 return url;
             }
             throw new ArgumentException("Error uploading admission passport");
+        }
+
+        public void CreateClientDirectory()
+        {
+            var clientPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId);
+            if(!Directory.Exists(clientPath))
+            {
+                Directory.CreateDirectory(clientPath);
+            }
         }
     } 
 }
