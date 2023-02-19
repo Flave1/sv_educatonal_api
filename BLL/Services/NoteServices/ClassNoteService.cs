@@ -48,7 +48,7 @@ namespace SMP.BLL.Services.NoteServices
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termid = context.SessionTerm.Where(x => x.IsActive == true && x.ClientId == smsClientId).FirstOrDefault().SessionTermId;
             var res = new APIResponse<ClassNotes>();
 
             var newClassNote = new ClassNote()
@@ -66,7 +66,6 @@ namespace SMP.BLL.Services.NoteServices
                 await context.ClassNote.AddAsync(newClassNote);
                 await context.SaveChangesAsync();
 
-                
                 var teacherClassNote = new TeacherClassNote
                 {
                     ClassNoteId = newClassNote.ClassNoteId,

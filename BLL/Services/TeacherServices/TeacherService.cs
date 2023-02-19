@@ -352,6 +352,7 @@ namespace SMP.BLL.Services.TeacherServices
                 user.UserType = (int)UserTypes.Admin;
                 user.EmailConfirmed = false;
                 user.PasswordHash = request.PasswordHash;
+                user.EmailConfirmed = true;
 
                 var result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)

@@ -108,7 +108,7 @@ namespace SMP.BLL.Services.PinManagementService
                     {
                         var fwsPayload = new FwsPinValidationRequest
                         {
-                            ClientId = fwsOptions.ClientId,
+                            ClientId = smsClientId,
                             Pin = request.Pin,
                             StudentRegNo = regNo,
                         };
@@ -494,10 +494,10 @@ namespace SMP.BLL.Services.PinManagementService
             {
                Pin = p.Pin,
                StudentRegNo = regNoFormat.Replace("%VALUE%", s),
-               ClientId = fwsOptions.ClientId,
+               ClientId = smsClientId
            }).ToList();
         
-            return await webRequestService.PostAsync<FwsMultiPinValResponse, List<FwsPinValidationRequest>>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validateMultiPins}", stdsAndPins);
+            return await webRequestService.PostAsync<FwsMultiPinValResponse, List<FwsPinValidationRequest>>($"{fwsRoutes.validateMultiPins}", stdsAndPins);
 
         }
 
@@ -505,11 +505,11 @@ namespace SMP.BLL.Services.PinManagementService
         {
             var request = new PinsValOnUplaodRequest
             {
-                ClientId = fwsOptions.ClientId,
+                ClientId = smsClientId,
                 Pins = pins.Select(x => new PinObject { Pin = x.Pin, ExcelLine = x.ExcelLineNumber }).ToList()
             };
 
-            return await webRequestService.PostAsync<FwsMultiPinOnUploadValResponse, PinsValOnUplaodRequest>($"{fwsOptions.FwsBaseUrl}{fwsRoutes.validateMultiPinsOnUpload}", request);
+            return await webRequestService.PostAsync<FwsMultiPinOnUploadValResponse, PinsValOnUplaodRequest>($"{fwsRoutes.validateMultiPinsOnUpload}", request);
 
         }
     }

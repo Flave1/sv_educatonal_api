@@ -2,14 +2,11 @@
 using BLL.Constants;
 using BLL.Filter;
 using BLL.Wrappers;
-using Contracts.Class;
 using Contracts.Common;
 using DAL;
-using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using SMP.API.Hubs;
 using SMP.BLL.Constants;
 using SMP.BLL.Hubs;
@@ -18,19 +15,11 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
 using SMP.BLL.Services.ResultServices;
-using SMP.BLL.Services.WebRequestServices;
-using SMP.BLL.Utilities;
 using SMP.Contracts.Assessment;
-using SMP.Contracts.Authentication;
 using SMP.Contracts.NotificationModels;
-using SMP.Contracts.Routes;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.AssessmentEntities;
-using SMP.DAL.Models.ClassEntities;
-using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -956,11 +945,19 @@ namespace SMP.BLL.Services.AssessmentServices
 
         APIResponse<string> IHomeAssessmentService.ReadFileContent(IFormFile file)
         {
-            var res = new APIResponse<string>();
-            res.Result = uploadService.RetunFileContent(file);
-            res.Message.FriendlyMessage = "Successfully read";
-            res.IsSuccessful = true;
-            return res;
+                var res = new APIResponse<string>();
+            try
+            {
+                res.Result = uploadService.RetunFileContent(file);
+                res.Message.FriendlyMessage = "Successfully read";
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (ArgumentException ex)
+            {
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         async Task<APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>> IHomeAssessmentService.FilterHomeAssessmentsByParentAsync(Guid sessionClassSubjectId, int status, string studentContactid, PaginationFilter filter)

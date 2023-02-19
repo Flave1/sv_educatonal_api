@@ -23,10 +23,10 @@ namespace SMP.BLL.Services.FileUploadService
         private static string AdmissionCredentialsPath = "AdmissionCredentials";
         private static string AdmissionPassportPath = "AdmissionPassport";
         private readonly string smsClientId;
-        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor httpContext, IHttpContextAccessor accessor)
+        public FileUploadService(IWebHostEnvironment environment, IHttpContextAccessor accessor)
         {
             this.environment = environment;
-            accessor = httpContext;
+            this.accessor = accessor;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         string IFileUploadService.UploadProfileImage(IFormFile file)
@@ -299,37 +299,52 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UploadFeedbackFiles()
         {
-            var files = accessor.HttpContext.Request.Form.Files;
-            var fileUrls = new List<string>();
-            if (files is not null)
+            var files = accessor.HttpContext?.Request?.Form?.Files;
+            if(files != null)
             {
-                foreach (var file in files)
+                var fileUrls = new List<string>();
+                try
                 {
-                    if (file == null || file.Length == 0)
+                    if (files is not null)
                     {
-                        continue;
+                        foreach (var file in files)
+                        {
+                            if (file == null || file.Length == 0)
+                            {
+                                continue;
+                            }
+
+                            string extension = Path.GetExtension(file.FileName);
+                            string fileName = Guid.NewGuid().ToString() + extension;
+
+                            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath, fileName);
+
+                            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                fileStream.Position = 0;
+                                file.CopyTo(fileStream);
+                                fileStream.Flush();
+                                fileStream.Close();
+                            }
+
+                            var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                            var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
+                            fileUrls.Add(url);
+
+                        }
                     }
 
-                    string extension = Path.GetExtension(file.FileName);
-                    string fileName = Guid.NewGuid().ToString() + extension;
-
-                    var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + PrincipalStampPath, fileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
-                    {
-                        fileStream.Position = 0;
-                        file.CopyTo(fileStream);
-                        fileStream.Flush();
-                        fileStream.Close();
-                    }
-
-                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
-                    fileUrls.Add(url);
-
+                    return fileUrls.Any() ? string.Join(',', fileUrls) : "";
                 }
+                catch (Exception)
+                {
+                    return "";
+                }
+
             }
-            return fileUrls.Any() ? string.Join(',', fileUrls) : "";
+
+            return "";
+           
         }
         string IFileUploadService.UpdateFeedbackFiles(string filePath)
         {
