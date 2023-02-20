@@ -249,8 +249,8 @@ namespace SMP.BLL.Services.ResultServices
                  .AsQueryable().Select(s => new GetClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
 
             if (clas.Session.IsActive)
-            {
-                var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive && d.ClientId == smsClientId);
+            {//.FirstOrDefaultAsync(d => d.IsActive && d.ClientId == smsClientId)
+                var currentTerm = await context.SessionTerm.Where(xx => xx.ClientId == smsClientId && xx.IsActive == true).FirstOrDefaultAsync();
                 if (result != null)
                 {
                     var query = context.StudentContact.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
