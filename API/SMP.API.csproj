@@ -31,6 +31,7 @@
     <Folder Include="Controllers\MobileControllers\" />
     <Folder Include="wwwroot\AdmissionCredentials\" />
     <Folder Include="wwwroot\AdmissionPassport\" />
+    <Folder Include="wwwroot\e5ac5134-5dbe-4bcb-7b47-08db1360bf1a\" />
     <Folder Include="wwwroot\StudentFeedbackFilesPath\" />
     <Folder Include="wwwroot\PrincipalStamp\" />
     <Folder Include="wwwroot\SchoolLogo\" />

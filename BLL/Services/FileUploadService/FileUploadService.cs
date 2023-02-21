@@ -535,9 +535,9 @@ namespace SMP.BLL.Services.FileUploadService
             throw new ArgumentException("Error uploading admission passport");
         }
 
-        public void CreateClientDirectory()
+        public void CreateClientDirectory(string clientId)
         {
-            var clientPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId);
+            var clientPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + clientId);
             if(!Directory.Exists(clientPath))
             {
                 Directory.CreateDirectory(clientPath);

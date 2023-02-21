@@ -177,9 +177,9 @@ namespace SMP.Contracts.PortalSettings
     }
     public class SidebarType
     {
-        public string Mini { get; set; }
-        public string Hover { get; set; }
-        public string Boxed { get; set; }
+        public string Mini { get; set; } = "";
+        public string Hover { get; set; } = "";
+        public string Boxed { get; set; } = "";
     }
     public class SMSSMPAccountSetting
     {
