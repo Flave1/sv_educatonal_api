@@ -91,27 +91,27 @@ namespace API.Controllers
         }
         [AllowAnonymous]
         [HttpGet("get-student-contact-cbt")]
-        public async Task<IActionResult> GetSingleStudentByRegNoCbt(string studentRegNo)
+        public async Task<IActionResult> GetSingleStudentByRegNoCbt(string studentRegNo, string clientId)
         {
-            var response = await service.GetSingleStudentByRegNoCbtAsync(studentRegNo);
+            var response = await service.GetSingleStudentByRegNoCbtAsync(studentRegNo, clientId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
         [AllowAnonymous]
         [HttpGet("getall-student-contact-cbt")]
-        public async Task<IActionResult> GetStudentBySessionClassCbt(PaginationFilter filter, string sessionClassId)
+        public async Task<IActionResult> GetStudentBySessionClassCbt(PaginationFilter filter, string sessionClassId, string clientId)
         {
-            var response = await service.GetStudentBySessionClassCbtAsync(filter, sessionClassId);
+            var response = await service.GetStudentBySessionClassCbtAsync(filter, sessionClassId, clientId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
         [AllowAnonymous]
         [HttpGet("getall-students-cbt")]
-        public async Task<IActionResult> GetAllStudentBySessionClassCbt(string sessionClassId)
+        public async Task<IActionResult> GetAllStudentBySessionClassCbt(string sessionClassId, string clientId)
         {
-            var response = await service.GetAllStudentBySessionClassCbtAsync(sessionClassId);
+            var response = await service.GetAllStudentBySessionClassCbtAsync(sessionClassId, clientId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

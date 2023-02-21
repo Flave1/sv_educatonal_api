@@ -86,9 +86,9 @@ namespace API.Controllers
         }
         [AllowAnonymous]
         [HttpGet("get-active-cbt")]
-        public async Task<IActionResult> GetActiveSessionsCbtAsync([Required]int examScore, bool asExamScore, bool asAssessmentScore)
+        public async Task<IActionResult> GetActiveSessionsCbtAsync([Required]int examScore, bool asExamScore, bool asAssessmentScore, string clientId)
         {
-            var response = await sessionService.GetActiveSessionsCbtAsync(examScore, asExamScore, asAssessmentScore);
+            var response = await sessionService.GetActiveSessionsCbtAsync(examScore, asExamScore, asAssessmentScore, clientId);
             return Ok(response);
         }
 

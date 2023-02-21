@@ -208,11 +208,11 @@ namespace BLL.ClassServices
             return res;
         }
 
-        public async Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsCbtAsync(Guid sessionClassId)
+        public async Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsCbtAsync(Guid sessionClassId, string clientId)
         {
             var res = new APIResponse<List<SessionClassSubjects>>();
            
-            res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
+            res.Result = await context.SessionClassSubject.Where(x => x.ClientId == clientId)
             .Include(s => s.Subject)
             .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.Subject.Deleted == false && d.Subject.IsActive == true).Select(a =>
             new SessionClassSubjects(a)).ToListAsync();
