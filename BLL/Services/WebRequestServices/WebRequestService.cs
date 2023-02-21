@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using SMP.Contracts.Options;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,13 @@ namespace SMP.BLL.Services.WebRequestServices
     {
         private readonly HttpClient client;
         private readonly FwsConfigSettings fwsOptions;
-        public WebRequestService(HttpClient httpClient, IOptions<FwsConfigSettings> options)
+        private readonly string smsClientId;
+        public WebRequestService(HttpClient httpClient, IHttpContextAccessor accessor, IOptions<FwsConfigSettings> options)
         {
             //client = clientFactory.CreateClient();
             client = httpClient;
             fwsOptions = options.Value;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
    
         public async Task<T> PostAsync<T, Y>(string url, Y data, Dictionary<string, string> credentials) where Y : class
@@ -34,7 +37,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                     client.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactoryExample");
                     client.DefaultRequestHeaders.Add("Apikey", fwsOptions.Apikey);
-                    client.DefaultRequestHeaders.Add("ClientId", fwsOptions.ClientId);
+                    client.DefaultRequestHeaders.Add("ClientId", smsClientId);
                     if (credentials is not null)
                     {
                         foreach (var pair in credentials)
