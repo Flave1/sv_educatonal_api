@@ -380,7 +380,7 @@ namespace SMP.BLL.Services.FileUploadService
                     string ext = Path.GetExtension(file.FileName);
                     string fileName = Guid.NewGuid().ToString() + ext;
 
-                    var newfilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + PrincipalStampPath, fileName);
+                    var newfilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/"  + StudentFeedbackFilesPath, fileName);
 
                     using (var fileStream = new FileStream(newfilePath, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -390,7 +390,7 @@ namespace SMP.BLL.Services.FileUploadService
                         fileStream.Close();
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{StudentFeedbackFilesPath}/{fileName}";
                     fileUrls.Add(url);
                 }
             }
@@ -541,7 +541,33 @@ namespace SMP.BLL.Services.FileUploadService
             if(!Directory.Exists(clientPath))
             {
                 Directory.CreateDirectory(clientPath);
+                CreateSubFolder(clientId);
             }
+        }
+        private void CreateSubFolder(string smsClientId)
+        {
+
+            var profilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + ProfileImagePath);
+            Directory.CreateDirectory(profilePath);
+
+            var schoolLogoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + SchoolLogoPath);
+            Directory.CreateDirectory(schoolLogoPath);
+
+            var principalStampPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath);
+            Directory.CreateDirectory(principalStampPath);
+            
+            var feedbackFilesPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + StudentFeedbackFilesPath);
+            Directory.CreateDirectory(feedbackFilesPath);
+
+            var lessonNotePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + LessonNotePath);
+            Directory.CreateDirectory(lessonNotePath);
+
+            var admissionCredentialsPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionCredentialsPath);
+            Directory.CreateDirectory(admissionCredentialsPath);
+
+            var admissionPassportPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionPassportPath);
+            Directory.CreateDirectory(admissionPassportPath);
+
         }
     } 
 }
