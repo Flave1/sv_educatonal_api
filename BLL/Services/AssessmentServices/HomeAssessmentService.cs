@@ -537,7 +537,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     reg.StudentContactId = Guid.Parse(studentContactid);
                     reg.Content = request.Content;
                     reg.Status = request.ShouldSubmit ? (int)HomeAssessmentStatus.Submitted : (int)HomeAssessmentStatus.Saved;
-                    reg.AttachmentUrls = "";
+                    reg.AttachmentUrls = files;
                     reg.HomeAssessmentId = Guid.Parse(request.HomeAssessmentId);
                     await context.HomeAssessmentFeedBack.AddAsync(reg);
                 }

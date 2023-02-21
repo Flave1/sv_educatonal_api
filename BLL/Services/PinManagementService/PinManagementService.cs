@@ -52,7 +52,7 @@ namespace SMP.BLL.Services.PinManagementService
             try
             {
                 var regNo = utilitiesService.GetStudentRegNumberValue(request.RegistractionNumber);
-                var studentInfo = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber.ToLower() == regNo.ToLower() && x.ClientId == smsClientId);
+                var studentInfo = await utilitiesService.GetStudentContactByRegNo(regNo);
                 if (studentInfo == null)
                 {
                     res.Message.FriendlyMessage = "Invalid student registration number";
@@ -420,7 +420,7 @@ namespace SMP.BLL.Services.PinManagementService
                                                        .Include(d => d.Sessionterm).ThenInclude(d => d.Session).Where(x => x.UploadedPin.Pin == pinResult.pin).ToListAsync();
 
                             var regNo = utilitiesService.GetStudentRegNumberValue(pinResult.studentRegNo);
-                            var studentInfor = context.StudentContact.FirstOrDefault(x => x.RegistrationNumber == regNo);
+                            var studentInfor = await utilitiesService.GetStudentContactByRegNo(regNo);
                             if (pin.Any())
                             {
                                 if (pin.Count >= 3)

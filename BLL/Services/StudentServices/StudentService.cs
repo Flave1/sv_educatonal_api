@@ -431,7 +431,7 @@ namespace BLL.StudentServices
                             else
                             {
                                 var regNo = utilitiesService.GetStudentRegNumberValue(item.RegistrationNumber);
-                                std = context.StudentContact.FirstOrDefault(x => x.ClientId == smsClientId && x.RegistrationNumber == regNo);
+                                std = await utilitiesService.GetStudentContactByRegNo(regNo);
                                 if (std == null)
                                 {
                                     res.Message.FriendlyMessage = $"No Student found with registration number {item.RegistrationNumber} detected on line {item.ExcelLineNumber}";
@@ -531,6 +531,12 @@ namespace BLL.StudentServices
                     }
                 }
             }
+
+            catch (ArgumentException ex)
+            {
+                res.Message.FriendlyMessage = $" {ex?.Message}";
+                return res;
+            }
             catch (Exception ex)
             {
                 res.Message.FriendlyMessage = $" {ex?.Message}";
@@ -543,16 +549,16 @@ namespace BLL.StudentServices
             return res;
         }
 
-        public async Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo)
+        public async Task<APIResponse<GetStudentContactCbt>> GetSingleStudentByRegNoCbtAsync(string studentRegNo, string clientId)
         {
             var res = new APIResponse<GetStudentContactCbt>();
             try
             {
                 string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo);
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
 
                 var result = await context.StudentContact
-                    .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == smsClientId)
+                    .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == clientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
@@ -570,15 +576,15 @@ namespace BLL.StudentServices
             }
         }
 
-        public async Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId)
+        public async Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId, string clientId)
         {
             var res = new APIResponse<PagedResponse<List<GetStudentContactCbt>>>();
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
 
                 var query = context.StudentContact
-                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId);
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId);
 
                 var totaltRecord = query.Count();
                 var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
@@ -598,14 +604,14 @@ namespace BLL.StudentServices
             }
         }
 
-        public async Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId)
+        public async Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId, string clientId)
         {
             var res = new APIResponse<List<GetStudentContactCbt>>();
             try
             {
                 var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
                 var result = await context.StudentContact
-                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == smsClientId)
+                    .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();

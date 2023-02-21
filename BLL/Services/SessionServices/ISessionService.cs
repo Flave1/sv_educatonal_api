@@ -22,6 +22,6 @@ namespace BLL.SessionServices
         Task<APIResponse<List<Terms>>> GetSessionTermsAsync(Guid sessionId);
         Task<APIResponse<List<GetSessionClass>>> GetSessionClassesAsync(Guid sessionId);
         SessionTerm GetPreviousSessionLastTermAsync(Guid sessionId);
-        Task<APIResponse<ActiveSessionCbt>> GetActiveSessionsCbtAsync(int examScore, bool asExamScore, bool asAssessmentScore);
+        Task<APIResponse<ActiveSessionCbt>> GetActiveSessionsCbtAsync(int examScore, bool asExamScore, bool asAssessmentScore, string clientId);
     }
 }

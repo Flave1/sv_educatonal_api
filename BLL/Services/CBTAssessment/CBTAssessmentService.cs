@@ -83,7 +83,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 foreach (var stdRegNumber in students)
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
-                    var student =  context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
+                    var student =  await utilitiesService.GetStudentContactByRegNo(studentRegNo);
                     
                    
                     var clientDetails = new Dictionary<string, string>();
@@ -147,7 +147,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 foreach (var stdRegNumber in students)
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
-                    var student = context.StudentContact.Where(x => x.RegistrationNumber == studentRegNo && x.ClientId == smsClientId).FirstOrDefault();
+                    var student = await utilitiesService.GetStudentContactByRegNo(studentRegNo);
 
                     var clientDetails = new Dictionary<string, string>();
                     clientDetails.Add("examinationId", examId);

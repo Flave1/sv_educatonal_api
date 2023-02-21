@@ -372,12 +372,12 @@ namespace BLL.SessionServices
                                 .OrderBy(d => d.TermName).LastOrDefault();
         }
 
-        public async Task<APIResponse<ActiveSessionCbt>> GetActiveSessionsCbtAsync(int examScore, bool asExamScore, bool asAssessmentScore)
+        public async Task<APIResponse<ActiveSessionCbt>> GetActiveSessionsCbtAsync(int examScore, bool asExamScore, bool asAssessmentScore, string clientId)
         {
             var res = new APIResponse<ActiveSessionCbt>();
             try
             {
-                var result = await context.Session.Where(x => x.ClientId == smsClientId).Include(d => d.Terms).Where(d => d.Deleted == false && d.IsActive == true).Select(d => new ActiveSessionCbt
+                var result = await context.Session.Where(x => x.ClientId == clientId).Include(d => d.Terms).Where(d => d.Deleted == false && d.IsActive == true).Select(d => new ActiveSessionCbt
                 {
                     SessionId = d.SessionId.ToString(),
                     Session = d.StartDate + " / " + d.EndDate,
