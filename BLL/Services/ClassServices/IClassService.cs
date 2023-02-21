@@ -19,8 +19,8 @@ namespace BLL.ClassServices
         Task<APIResponse<List<GetStudentContacts>>> GetClassStudentsClassesAsync(Guid sessionClassId);
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses2Async();
         Task<APIResponse<List<GetSessionClass>>> GetSessionClasses1Async(string sessionId);
-        Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync();
-        Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo);
+        Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync(string clientId);
+        Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo, string clientId);
         Task<APIResponse<SessionClassCommand>> CreateSessionClassSubjectsAsync(ClassSubjectcommand request);
         Task<APIResponse<SessionClassCommand2>> CreateSessionClass2Async(SessionClassCommand2 sClass);
         Task<APIResponse<SessionClassCommand>> UpdateSessionClass2Async(SessionClassCommand2 request);

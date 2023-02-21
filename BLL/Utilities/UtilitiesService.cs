@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using DAL.StudentInformation;
+using SMP.Contracts.Options;
+using SMP.DAL.Models.PortalSettings;
 
 namespace SMP.BLL.Utilities
 {
@@ -24,11 +27,19 @@ namespace SMP.BLL.Utilities
             this.config = config;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
-        public string GetStudentRegNumberValue(string regNo)
+        public string GetStudentRegNumberValue(string regNo, string clientId)
         {
             try
             {
-                var schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId && x.ClientId == smsClientId);
+                var schoolSettings = new SchoolSetting();
+                if (!string.IsNullOrEmpty(clientId))
+                {
+                    schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId);
+                }
+                else
+                {
+                    schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId);
+                }
 
                 var splited = regNo.Split(schoolSettings.RegNoSeperator);
                 if (schoolSettings.RegNoPosition == 3)
@@ -44,6 +55,27 @@ namespace SMP.BLL.Utilities
                     return splited[0];
                 }
                 return regNo;
+            }
+            catch (Exception)
+            {
+
+                throw new ArgumentException("Please ensure registeration number is in correct format");
+            }
+        }
+        public async Task<StudentContact> GetStudentContactByRegNo(string studentRegNoValue, string clientId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(clientId))
+                {
+                    var student = await context.StudentContact.FirstOrDefaultAsync(x => x.Deleted == false && x.ClientId == clientId && x.RegistrationNumber == studentRegNoValue);
+                    return student;
+                }
+                else
+                {
+                    var student = await context.StudentContact.FirstOrDefaultAsync(x => x.Deleted == false && x.ClientId == smsClientId && x.RegistrationNumber == studentRegNoValue);
+                    return student;
+                }
             }
             catch (Exception)
             {

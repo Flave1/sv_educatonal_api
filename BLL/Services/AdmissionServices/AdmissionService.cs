@@ -87,9 +87,6 @@ namespace SMP.BLL.Services.AdmissionServices
                         res.Message.FriendlyMessage = "Candidate already admitted";
                     }
 
-                   
-
-
                     var student = new StudentContactCommand
                     {
                         FirstName = admission.Firstname,
@@ -115,14 +112,14 @@ namespace SMP.BLL.Services.AdmissionServices
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
                     string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
 
-                    var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", admissionFileName);
+                    var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/AdmissionPassport", admissionFileName);
 
-                    string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "ProfileImage", admissionFileName);
+                    string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/"+ smsClientId + "/ProfileImage", admissionFileName);
 
                     fileUploadService.CopyFile(admissionPath, profilePhotoPath);
 
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/ProfileImage/{admissionFileName}";
+                    var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/ProfileImage/{admissionFileName}";
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
@@ -341,9 +338,9 @@ namespace SMP.BLL.Services.AdmissionServices
                 var apiCredentials = new SmsClientInformationRequest
                 {
                     ApiKey = fwsOptions.Apikey,
-                    ClientId = fwsOptions.ClientId
+                    ClientId = smsClientId,
                 };
-                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={smsClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
                 var clientDetails = new Dictionary<string, string>();
                 clientDetails.Add("userId", fwsRequest.Result.UserId);
@@ -416,7 +413,7 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 if(string.IsNullOrEmpty(admissionSettingsId))
                 {
-                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true);
+                    var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.AdmissionStatus == true && x.ClientId == smsClientId);
 
                     if (string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                     {
@@ -542,9 +539,9 @@ namespace SMP.BLL.Services.AdmissionServices
                 var apiCredentials = new SmsClientInformationRequest
                 {
                     ApiKey = fwsOptions.Apikey,
-                    ClientId = fwsOptions.ClientId
+                    ClientId = smsClientId,
                 };
-                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+                var fwsRequest = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={smsClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
                 var clientDetails = new Dictionary<string, string>();
                 clientDetails.Add("userId", fwsRequest.Result.UserId);

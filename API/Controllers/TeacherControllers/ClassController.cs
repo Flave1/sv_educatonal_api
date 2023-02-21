@@ -123,16 +123,16 @@ namespace API.Controllers
 
         [AllowAnonymous]
         [HttpGet("get-all/session-classes-cbt")]
-        public async Task<IActionResult> GetSessionClassesCbtAsync()
+        public async Task<IActionResult> GetSessionClassesCbtAsync(string clientId)
         {
-            var response = await service.GetSessionClassesCbtAsync();
+            var response = await service.GetSessionClassesCbtAsync(clientId);
             return Ok(response);
         }
         [AllowAnonymous]
         [HttpGet("get/session-class-by-reg-no-cbt")]
-        public async Task<IActionResult> GetSessionClassesCbtByRegNoAsync(string regNo)
+        public async Task<IActionResult> GetSessionClassesCbtByRegNoAsync(string regNo, string clientId)
         {
-            var response = await service.GetSessionClassesCbtByRegNoAsync(regNo);
+            var response = await service.GetSessionClassesCbtByRegNoAsync(regNo, clientId);
             return Ok(response);
         }
 
@@ -234,9 +234,9 @@ namespace API.Controllers
         }
         [AllowAnonymous]
         [HttpGet("getall/class-subjects-cbt")]
-        public async Task<IActionResult> GetSessionClassSubjectsCbtAsync(string sessionClassId)
+        public async Task<IActionResult> GetSessionClassSubjectsCbtAsync(string sessionClassId, string clientId)
         {
-            var response = await classGoupService.GetSessionClassSubjectsCbtAsync(Guid.Parse(sessionClassId));
+            var response = await classGoupService.GetSessionClassSubjectsCbtAsync(Guid.Parse(sessionClassId), clientId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

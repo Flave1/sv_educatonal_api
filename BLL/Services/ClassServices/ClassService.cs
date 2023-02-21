@@ -523,10 +523,10 @@ namespace BLL.ClassServices
             return res;
         }
 
-        public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync()
+        public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync(string clientId)
         {
             var res = new APIResponse<List<GetSessionClassCbt>>();
-            var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionId;
+            var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == clientId).SessionId;
 
             res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                 .Include(rr => rr.Session)
@@ -540,13 +540,13 @@ namespace BLL.ClassServices
             return res;
         }
 
-        public async Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo)
+        public async Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo, string clientId)
         {
             var res = new APIResponse<GetSessionClassCbt>();
             try
             {
-                string regNo = utilitiesService.GetStudentRegNumberValue(registrationNo);
-                var student = await context.StudentContact.FirstOrDefaultAsync( x => x.Deleted == false && x.RegistrationNumber == regNo && x.ClientId == smsClientId);
+                string regNo = utilitiesService.GetStudentRegNumberValue(registrationNo, clientId);
+                var student = await utilitiesService.GetStudentContactByRegNo(regNo, clientId);
                 if (student == null)
                 {
                     res.IsSuccessful = false;
@@ -554,7 +554,7 @@ namespace BLL.ClassServices
                     return res;
                 }
 
-                var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.ClientId == smsClientId)
+                var studentClass = await context.SessionClass.Where(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.ClientId == clientId)
                     .Include(c => c.Session)
                     .Include(c => c.Class).Where(x=>x.Session.IsActive)
                     .Select(g => new GetSessionClassCbt(g)).FirstOrDefaultAsync();

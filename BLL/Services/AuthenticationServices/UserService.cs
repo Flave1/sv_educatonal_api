@@ -525,7 +525,7 @@ namespace BLL.AuthenticationServices
                 {
 
                     var rgNo = utilitiesService.GetStudentRegNumberValue(request.UsernameOrRegNumber);
-                    var student = context.StudentContact.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.RegistrationNumber == rgNo);
+                    var student = await utilitiesService.GetStudentContactByRegNo(rgNo);
                     if (student is null)
                     {
                         res.Result.Status = "failed";
