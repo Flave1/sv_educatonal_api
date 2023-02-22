@@ -378,8 +378,6 @@ namespace SMP.BLL.Services.TeacherServices
                 portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 
-                upload.CreateClientDirectory(request.ClientId);
-
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
                 res.Result = "success";

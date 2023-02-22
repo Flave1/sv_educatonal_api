@@ -31,6 +31,8 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UploadProfileImage(IFormFile file)
         {
+            CreateClientDirectory(ProfileImagePath);
+
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -68,6 +70,7 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UpdateProfileImage(IFormFile file, string filePath)
         {
+            CreateClientDirectory(ProfileImagePath);
 
             if (file == null || file.Length == 0)
             {
@@ -120,6 +123,7 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UploadPrincipalStamp(IFormFile file)
         {
+            CreateClientDirectory(PrincipalStampPath);
 
             if (file == null || file.Length == 0)
             {
@@ -158,6 +162,7 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UpdatePrincipalStamp(IFormFile file, string filePath)
         {
+            CreateClientDirectory(PrincipalStampPath);
 
             if (file == null || file.Length == 0)
             {
@@ -208,6 +213,7 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UploadSchoolLogo(IFormFile file)
         {
+            CreateClientDirectory(SchoolLogoPath);
 
             if (file == null || file.Length == 0)
             {
@@ -247,6 +253,8 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UpdateSchoolLogo(IFormFile file, string filePath)
         {
+            CreateClientDirectory(SchoolLogoPath);
+
             if (file == null || file.Length == 0)
             {
                 return filePath;
@@ -299,6 +307,8 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UploadFeedbackFiles()
         {
+            CreateClientDirectory(StudentFeedbackFilesPath);
+
             var files = accessor.HttpContext?.Request?.Form?.Files;
             if(files != null)
             {
@@ -317,7 +327,7 @@ namespace SMP.BLL.Services.FileUploadService
                             string extension = Path.GetExtension(file.FileName);
                             string fileName = Guid.NewGuid().ToString() + extension;
 
-                            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath, fileName);
+                            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + StudentFeedbackFilesPath, fileName);
 
                             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
                             {
@@ -328,7 +338,7 @@ namespace SMP.BLL.Services.FileUploadService
                             }
 
                             var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                            var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{PrincipalStampPath}/{fileName}";
+                            var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{StudentFeedbackFilesPath}/{fileName}";
                             fileUrls.Add(url);
 
                         }
@@ -348,6 +358,8 @@ namespace SMP.BLL.Services.FileUploadService
         }
         string IFileUploadService.UpdateFeedbackFiles(string filePath)
         {
+            CreateClientDirectory(StudentFeedbackFilesPath);
+
             var files = accessor.HttpContext.Request.Form.Files;
             var fileUrls = new List<string>();
             var prevFileUrls = new List<string>();
@@ -399,9 +411,11 @@ namespace SMP.BLL.Services.FileUploadService
 
         string IFileUploadService.RetunFileContent(IFormFile file)
         {
+            CreateClientDirectory(StudentFeedbackFilesPath);
+
             string extension = Path.GetExtension(file.FileName);
             string fileName = Guid.NewGuid().ToString() + extension;
-            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + ProfileImagePath, fileName);
+            var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + StudentFeedbackFilesPath, fileName);
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -462,6 +476,8 @@ namespace SMP.BLL.Services.FileUploadService
 
         public string UploadAdmissionCredentials(IFormFile file)
         {
+            CreateClientDirectory(AdmissionCredentialsPath);
+
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -499,6 +515,8 @@ namespace SMP.BLL.Services.FileUploadService
         }
         public string UploadAdmissionPassport(IFormFile file)
         {
+            CreateClientDirectory(AdmissionPassportPath);
+
             if (file == null || file.Length == 0)
             {
                 return "";
@@ -535,38 +553,24 @@ namespace SMP.BLL.Services.FileUploadService
             throw new ArgumentException("Error uploading admission passport");
         }
 
-        public void CreateClientDirectory(string clientId)
+        private void CreateClientDirectory(string folderName)
         {
-            var clientPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + clientId);
+            if (string.IsNullOrEmpty(smsClientId))
+            {
+                throw new ArgumentNullException(nameof(smsClientId));
+            }
+
+            var clientPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId);
             if(!Directory.Exists(clientPath))
             {
                 Directory.CreateDirectory(clientPath);
-                CreateSubFolder(clientId);
             }
-        }
-        private void CreateSubFolder(string smsClientId)
-        {
 
-            var profilePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + ProfileImagePath);
-            Directory.CreateDirectory(profilePath);
-
-            var schoolLogoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + SchoolLogoPath);
-            Directory.CreateDirectory(schoolLogoPath);
-
-            var principalStampPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + PrincipalStampPath);
-            Directory.CreateDirectory(principalStampPath);
-            
-            var feedbackFilesPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + StudentFeedbackFilesPath);
-            Directory.CreateDirectory(feedbackFilesPath);
-
-            var lessonNotePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + LessonNotePath);
-            Directory.CreateDirectory(lessonNotePath);
-
-            var admissionCredentialsPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionCredentialsPath);
-            Directory.CreateDirectory(admissionCredentialsPath);
-
-            var admissionPassportPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionPassportPath);
-            Directory.CreateDirectory(admissionPassportPath);
+            var folderPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + folderName);
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
 
         }
     } 
