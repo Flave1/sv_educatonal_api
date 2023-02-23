@@ -70,6 +70,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     res.IsSuccessful = false;
                     return res;
                 }
+                accessor.HttpContext.Items["smsClientId"] = notification.ClientId;
                 if (notification.IsConfirmed)
                 {
                     res.Message.FriendlyMessage = "Your email has already been confirmed. Please proceed to login.";
