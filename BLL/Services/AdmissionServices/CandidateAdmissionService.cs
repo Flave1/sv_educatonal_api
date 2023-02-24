@@ -293,6 +293,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 var result = await context.Admissions
                     .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.AdmissionNotificationId == admissionNotificationId)
                     .Include(c => c.AdmissionNotification)
+                    .Include(x => x.AdmissionSettings)
                     .Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)

@@ -50,6 +50,8 @@ namespace BLL.AuthenticationServices
             this.accessor = accessor;
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -61,6 +63,7 @@ namespace BLL.AuthenticationServices
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
+        private static string smsClientId { get; set; }
 
 
         async Task<APIResponse<LoginSuccessResponse>> IIdentityService.WebLoginAsync(LoginCommand loginRequest)
@@ -571,7 +574,7 @@ namespace BLL.AuthenticationServices
             var apiCredentials = new SmsClientInformationRequest
             {
                 ApiKey = fwsOptions.Apikey,
-                ClientId = fwsOptions.ClientId
+                ClientId = smsClientId
             };
             var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 

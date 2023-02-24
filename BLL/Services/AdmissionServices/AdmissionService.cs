@@ -319,7 +319,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 var admission = context.Admissions.Where(x => x.ClientId == smsClientId && x.Deleted != true && x.ClassId == Guid.Parse(request.ClassId));
                 if (!admission.Any())
                 {
-                    res.Message.FriendlyMessage = "Ops! No Candidate available for export";
+                    res.Message.FriendlyMessage = "Ooops! No Candidate available for export";
                     return res;
                 }
                 var candidates = new CreateAdmissionCandidateCbt
