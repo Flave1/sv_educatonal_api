@@ -116,6 +116,13 @@ namespace BLL.StudentServices
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
                 }
+                catch (ArgumentException ex)
+                {
+                    await transaction.RollbackAsync();
+                    res.Message.FriendlyMessage = ex.Message;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    return res;
+                }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
