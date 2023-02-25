@@ -510,12 +510,12 @@ namespace BLL.AuthenticationServices
             var res = new APIResponse<SmpStudentValidationResponse>();
             res.Result = new SmpStudentValidationResponse();
             res.IsSuccessful = true;
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
 
-            if (request.ClientId.ToLower() != fwsConfig.ClientId.ToLower())
+            var appLayout = context.AppLayoutSetting.FirstOrDefault(x=>x.ClientId == request.ClientId);
+            if(appLayout is null)
             {
                 res.Result.Status = "failed";
-                res.Message.FriendlyMessage = "Invalid credentials";
+                res.Message.FriendlyMessage = "Selected School not found";
                 return res;
             }
 
@@ -523,6 +523,15 @@ namespace BLL.AuthenticationServices
             {
                 if (request.UserType == (int)UserTypes.Student)
                 {
+
+                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+
+                    if (regNoFormat is null)
+                    {
+                        res.Result.Status = "failed";
+                        res.Message.FriendlyMessage = "Invalid request";
+                        return res;
+                    }
 
                     var rgNo = utilitiesService.GetStudentRegNumberValue(request.UsernameOrRegNumber);
                     var student = await utilitiesService.GetStudentContactByRegNo(rgNo);
