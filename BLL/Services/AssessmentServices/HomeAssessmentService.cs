@@ -949,7 +949,7 @@ namespace SMP.BLL.Services.AssessmentServices
             try
             {
                 res.Result = uploadService.RetunFileContent(file);
-                res.Message.FriendlyMessage = "Successfully read";
+                res.Message.FriendlyMessage = "Successfully Read";
                 res.IsSuccessful = true;
                 return res;
             }
