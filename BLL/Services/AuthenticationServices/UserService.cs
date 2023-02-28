@@ -524,7 +524,7 @@ namespace BLL.AuthenticationServices
                 if (request.UserType == (int)UserTypes.Student)
                 {
 
-                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == request.ClientId).StudentRegNoFormat;
 
                     if (regNoFormat is null)
                     {

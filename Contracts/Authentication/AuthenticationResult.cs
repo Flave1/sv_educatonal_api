@@ -9,6 +9,7 @@ namespace Contracts.Authentication
     {
         public string Token { get; set; }
         public string RefreshToken { get; set; }
+        public string SchoolUrl { get; set; }
     }
 
     public class LoginCommand
