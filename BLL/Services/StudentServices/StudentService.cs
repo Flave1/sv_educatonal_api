@@ -566,6 +566,7 @@ namespace BLL.StudentServices
 
                 var result = await context.StudentContact
                     .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == clientId)
+                    .Include(x => x.User)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).FirstOrDefaultAsync();
@@ -594,7 +595,9 @@ namespace BLL.StudentServices
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId);
 
                 var totaltRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).OrderByDescending(d => d.CreatedOn)
+                var result = await paginationService.GetPagedResult(query, filter)
+                    .Include(d => d.User)
+                    .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
 
@@ -616,9 +619,10 @@ namespace BLL.StudentServices
             var res = new APIResponse<List<GetStudentContactCbt>>();
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
                 var result = await context.StudentContact
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId)
+                    .Include(x => x.User)
                     .OrderByDescending(d => d.CreatedOn)
                     .OrderByDescending(s => s.RegistrationNumber)
                     .Select(f => new GetStudentContactCbt(f, regNoFormat)).ToListAsync();
