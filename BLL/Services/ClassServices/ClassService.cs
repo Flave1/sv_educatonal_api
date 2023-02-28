@@ -528,7 +528,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetSessionClassCbt>>();
             var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == clientId).SessionId;
 
-            res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
+            res.Result = await context.SessionClass.Where(c => c.ClientId == clientId)
                 .Include(rr => rr.Session)
                 .Include(rr => rr.Class)
                 .OrderBy(d => d.Class.Name)
