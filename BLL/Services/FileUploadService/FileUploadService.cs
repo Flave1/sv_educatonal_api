@@ -435,7 +435,7 @@ namespace SMP.BLL.Services.FileUploadService
                         fileStream.Close();
                     }
                     var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{ProfileImagePath}/{fileName}";
+                    var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{StudentFeedbackFilesPath}/{fileName}";
                     var content = (this as IFileUploadService).ReadFileAsync(url);
                     (this as IFileUploadService).DeleteFile(filePath);
                     return content;
