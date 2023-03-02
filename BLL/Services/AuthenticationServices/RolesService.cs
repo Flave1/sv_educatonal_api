@@ -1,4 +1,5 @@
 ﻿using BLL.Constants;
+using BLL.LoggerService;
 using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Common;
@@ -24,8 +25,10 @@ namespace BLL.AuthenticationServices
         private readonly string smsClientId;
         private readonly ITeacherService teacherService;
         private readonly IStudentService studentService;
+        private readonly ILoggerService loggerService;
 
-        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor, ITeacherService teacherService, IStudentService studentService)
+        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor, 
+            ITeacherService teacherService, IStudentService studentService, ILoggerService loggerService)
         {
             this.manager = manager;
             this.userManager = userManager;
@@ -33,6 +36,7 @@ namespace BLL.AuthenticationServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.teacherService = teacherService;
             this.studentService = studentService;
+            this.loggerService = loggerService;
         }
         async Task<APIResponse<UserRole>> IRolesService.CreateRoleAsync(CreateRoleActivity request)
         {
@@ -65,6 +69,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
                 return res;
             }

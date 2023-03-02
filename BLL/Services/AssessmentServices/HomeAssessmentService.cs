@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
@@ -35,8 +36,10 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly INotificationService notificationService;
         private readonly string smsClientId;
         private readonly IScoreEntryHistoryService scoreEntryService;
+        private readonly ILoggerService loggerService;
 
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub, INotificationService notificationService, IScoreEntryHistoryService scoreEntryHistoryService)
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub, 
+            INotificationService notificationService, IScoreEntryHistoryService scoreEntryHistoryService, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -46,6 +49,7 @@ namespace SMP.BLL.Services.AssessmentServices
             this.notificationService = notificationService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.scoreEntryService = scoreEntryHistoryService;
+            this.loggerService = loggerService;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -107,8 +111,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
         }
@@ -159,6 +164,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -254,8 +260,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Result = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
         }
@@ -550,6 +557,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
         }
@@ -683,8 +691,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Saved;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
         }

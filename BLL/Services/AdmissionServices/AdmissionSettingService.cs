@@ -1,5 +1,6 @@
 ﻿using BLL;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
@@ -25,11 +26,13 @@ namespace SMP.BLL.Services.AdmissionServices
     {
         private readonly DataContext context;
         private readonly IPaginationService paginationService;
+        private readonly ILoggerService loggerService;
 
-        public AdmissionSettingService(DataContext context, IPaginationService paginationService)
+        public AdmissionSettingService(DataContext context, IPaginationService paginationService, ILoggerService loggerService)
         {
             this.context = context;
             this.paginationService = paginationService;
+            this.loggerService = loggerService;
         }
         public async Task<APIResponse<CreateAdmissionSettings>> CreateSettings(CreateAdmissionSettings request)
         {
@@ -68,6 +71,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred on CreateSettings() || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -114,6 +118,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error($"Error occurred on CreateSettings() || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -144,6 +149,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -170,6 +176,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -203,6 +210,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

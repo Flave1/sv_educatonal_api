@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.EmailServices;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Email;
@@ -40,12 +41,13 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IFileUploadService fileUpload;
         private readonly IPaginationService paginationService;
         private readonly IWebHostEnvironment environment;
+        private readonly ILoggerService loggerService;
         private readonly EmailConfiguration emailConfiguration;
         private readonly string smsClientId;
 
         public CandidateAdmissionService(DataContext context, IConfiguration config, IEmailService emailService, IOptions<EmailConfiguration> emailOptions,
             IHttpContextAccessor accessor, IFileUploadService fileUpload, IPaginationService paginationService,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment, ILoggerService loggerService)
         {
             this.context = context;
             this.config = config;
@@ -54,6 +56,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.fileUpload = fileUpload;
             this.paginationService = paginationService;
             this.environment = environment;
+            this.loggerService = loggerService;
             emailConfiguration = emailOptions.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
@@ -202,6 +205,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -277,6 +281,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -311,6 +316,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -341,6 +347,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -419,6 +426,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -476,6 +484,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -509,6 +518,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

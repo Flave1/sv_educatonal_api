@@ -1,4 +1,5 @@
 ﻿using BLL.Constants;
+using BLL.LoggerService;
 using Contracts.Class;
 using Contracts.Options;
 using DAL;
@@ -22,14 +23,16 @@ namespace BLL.ClassServices
         private readonly IResultsService resultsService;
         private readonly IHttpContextAccessor accessor;
         private readonly IUtilitiesService utilitiesService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
 
-        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService)
+        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService, ILoggerService loggerService)
         {
             this.context = context;
             this.resultsService = resultsService;
             this.accessor = accessor;
             this.utilitiesService = utilitiesService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 

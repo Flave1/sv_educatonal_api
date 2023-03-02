@@ -39,7 +39,7 @@ namespace BLL.AuthenticationServices
     {
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, ILoggerService loggerService)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -49,6 +49,7 @@ namespace BLL.AuthenticationServices
             this.context = context;
             this.accessor = accessor;
             this.webRequestService = webRequestService;
+            this.loggerService = loggerService;
             fwsOptions = options.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
 
@@ -62,6 +63,7 @@ namespace BLL.AuthenticationServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
+        private readonly ILoggerService loggerService;
         private readonly FwsConfigSettings fwsOptions;
         private static string smsClientId { get; set; }
 
@@ -302,8 +304,9 @@ namespace BLL.AuthenticationServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
         }
@@ -372,7 +375,6 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
-                logger.Error($"Ex: {ex?.Message ?? ex?.InnerException?.Message} ErrorStack : {ex?.StackTrace}");
                 return null;
             }
         }
@@ -466,6 +468,8 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+
+                await loggerService.Error($"Error occurred || {ex}");
                 throw new ArgumentException($"Something went wrong: {ex.InnerException.Message}");
             }
 

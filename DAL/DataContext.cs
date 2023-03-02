@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.Admission;
 using System.Linq;
+using SMP.DAL.Models.Logger;
 
 namespace DAL
 {
@@ -94,6 +95,7 @@ namespace DAL
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
         public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
+        public DbSet<Log> Log { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

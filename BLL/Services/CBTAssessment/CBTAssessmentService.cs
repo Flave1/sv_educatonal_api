@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using DAL;
 using DAL.StudentInformation;
@@ -29,10 +30,11 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         private readonly FwsClientInformation fwsClientInformations;
         private readonly string smsClientId;
         private readonly IScoreEntryHistoryService scoreEntryService;
+        private readonly ILoggerService loggerService;
 
         public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context,
             IUtilitiesService utilitiesService, FwsClientInformation fwsClientInformations,
-            IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService)
+            IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService, ILoggerService loggerService)
         {
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
@@ -41,6 +43,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             this.fwsClientInformations = fwsClientInformations;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.scoreEntryService = scoreEntryService;
+            this.loggerService = loggerService;
         }
 
         async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId, int pageNumber)
@@ -126,8 +129,9 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
 
@@ -190,8 +194,9 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error($"Error occurred || {ex}");
                 throw;
             }
 
