@@ -164,7 +164,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (DuplicateNameException ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error($"Error occurred on EnrollCandidate() || {ex}");
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -172,7 +172,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error($"Error occurred on EnrollCandidate() || {ex}");
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -265,7 +265,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on EnrollMultipleCandidates() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = "Error Occurred trying to enroll student account!! Please contact system administrator";
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -374,7 +374,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on ExportCandidateToCbt() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -407,7 +407,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on GetAdmission() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -519,7 +519,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on GetAllAdmission() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -589,7 +589,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on ImportCbtResult() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

@@ -440,7 +440,7 @@ namespace SMP.BLL.Services.FileUploadService
                     (this as IFileUploadService).DeleteFile(filePath);
                     return content;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     (this as IFileUploadService).DeleteFile(filePath);
                 }

@@ -43,7 +43,7 @@ namespace App.CustomError
                 if (parseCode == HttpStatusCode.NotFound)
                 {
                     error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyNOTFOUND);
-                    _logger.Error($"ErrorsController {error.Technical_Message}");
+                    _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
                     return new ObjectResult (new APIResponse<APIResponseMessage>
                     {
                         Message = new APIResponseMessage
@@ -56,7 +56,7 @@ namespace App.CustomError
                 if (parseCode == HttpStatusCode.InternalServerError)
                 {
                     error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyException, result);
-                    _logger.Error($"ErrorsController {error.Technical_Message}");
+                    _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
                     return new ObjectResult(new APIResponse<APIResponseMessage>
                     {
                         Message = new APIResponseMessage
@@ -70,7 +70,7 @@ namespace App.CustomError
                 if (parseCode == HttpStatusCode.Forbidden)
                 {
                     error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyForbidden, result);
-                    _logger.Error($"ErrorsController {error.Technical_Message}");
+                    _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
                     return new ObjectResult(new APIResponse<APIResponseMessage>
                     {
                         Message = new APIResponseMessage
@@ -82,7 +82,7 @@ namespace App.CustomError
                 }
 
                 error = new BaseApiError(code ?? 0, parseCode.ToString(), result);
-                _logger.Error($"ErrorsController {error.Technical_Message}");
+                _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
                 return new ObjectResult(new APIResponse<APIResponseMessage>
                 {
                     Message = new APIResponseMessage
@@ -95,7 +95,7 @@ namespace App.CustomError
             if (parseCode == HttpStatusCode.NotFound)
             {
                 error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyNOTFOUND);
-                _logger.Error($"ErrorsController {error.Technical_Message}");
+                _logger.Information($"ErrorsController {error.Technical_Message}");
                 return new ObjectResult(new APIResponse<APIResponseMessage>
                 {
                     Message = new APIResponseMessage

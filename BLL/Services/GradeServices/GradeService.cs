@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.LoggerService;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
@@ -17,11 +18,13 @@ namespace SMP.BLL.Services.GradeServices
     public class GradeService : IGradeService
     {
         private readonly DataContext context;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
 
-        public GradeService(DataContext context, IHttpContextAccessor accessor)
+        public GradeService(DataContext context, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -69,6 +72,7 @@ namespace SMP.BLL.Services.GradeServices
                 {
                     await transaction.RollbackAsync();
                     await context.SaveChangesAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;
@@ -123,6 +127,7 @@ namespace SMP.BLL.Services.GradeServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;
@@ -229,6 +234,7 @@ namespace SMP.BLL.Services.GradeServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;

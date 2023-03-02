@@ -7,6 +7,6 @@ namespace BLL.LoggerService
         Task Information(string message);
         Task Warning(string message);
         Task Debug(string message);
-        Task Error(string message);
+        Task Error(string message, string stackTrace, string innerException, string innerExceptionMessage);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Options;
@@ -36,6 +37,7 @@ namespace BLL.StudentServices
         private readonly DataContext context;
         private readonly IUserService userService;
         private readonly IUtilitiesService utilitiesService;
+        private readonly ILoggerService loggerService;
         private readonly UserManager<AppUser> userManager;
         private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
@@ -45,7 +47,7 @@ namespace BLL.StudentServices
         private readonly IParentService parentService;
         private readonly string smsClientId;
         public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentServices,
-            IUtilitiesService utilitiesService)
+            IUtilitiesService utilitiesService, ILoggerService loggerService)
         {
             this.context = context;
             this.userManager = userManager;
@@ -56,6 +58,7 @@ namespace BLL.StudentServices
             this.paginationService = paginationService;
             this.userService = userService;
             this.utilitiesService = utilitiesService;
+            this.loggerService = loggerService;
             this.parentService = parentServices;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
@@ -112,6 +115,7 @@ namespace BLL.StudentServices
                 catch (DuplicateNameException ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -119,6 +123,7 @@ namespace BLL.StudentServices
                 catch (ArgumentException ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -126,6 +131,7 @@ namespace BLL.StudentServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -193,6 +199,7 @@ namespace BLL.StudentServices
                 catch (DuplicateNameException ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -200,6 +207,7 @@ namespace BLL.StudentServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -237,6 +245,7 @@ namespace BLL.StudentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -522,6 +531,7 @@ namespace BLL.StudentServices
                             catch (DuplicateNameException ex)
                             {
                                 await transaction.RollbackAsync();
+                                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                                 res.Message.FriendlyMessage = ex.Message;
                                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                                 return res;
@@ -529,6 +539,7 @@ namespace BLL.StudentServices
                             catch (Exception ex)
                             {
                                 await transaction.RollbackAsync();
+                                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                                 res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                                 return res;
@@ -578,6 +589,7 @@ namespace BLL.StudentServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -608,6 +620,7 @@ namespace BLL.StudentServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -634,6 +647,7 @@ namespace BLL.StudentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -683,6 +697,7 @@ namespace BLL.StudentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

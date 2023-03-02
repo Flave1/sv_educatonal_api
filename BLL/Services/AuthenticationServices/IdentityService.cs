@@ -306,7 +306,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -469,7 +469,7 @@ namespace BLL.AuthenticationServices
             catch (Exception ex)
             {
 
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException($"Something went wrong: {ex.InnerException.Message}");
             }
 

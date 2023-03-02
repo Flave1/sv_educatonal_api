@@ -1,4 +1,5 @@
 ﻿using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Session;
 using DAL;
@@ -23,13 +24,15 @@ namespace BLL.SessionServices
         private readonly DataContext context;
         private readonly IResultsService resultsService;
         private readonly IPaginationService paginationService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
 
-        public SessionService(DataContext context, IResultsService resultsService, IPaginationService paginationService, IHttpContextAccessor accessor)
+        public SessionService(DataContext context, IResultsService resultsService, IPaginationService paginationService, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.resultsService = resultsService;
             this.paginationService = paginationService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
@@ -102,6 +105,7 @@ namespace BLL.SessionServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred!! Please contact administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
                     return res;
@@ -324,6 +328,7 @@ namespace BLL.SessionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.Updated;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -414,6 +419,7 @@ namespace BLL.SessionServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;

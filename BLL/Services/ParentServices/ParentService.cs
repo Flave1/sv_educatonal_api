@@ -2,6 +2,7 @@
 using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using Contracts.Session;
@@ -28,14 +29,16 @@ namespace SMP.BLL.Services.ParentServices
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         private readonly IUserService userService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
 
-        public ParentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IUserService userService)
+        public ParentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IUserService userService, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.userService = userService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -77,6 +80,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -130,6 +134,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -158,6 +163,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -199,6 +205,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -224,6 +231,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -256,6 +264,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -278,6 +287,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -321,6 +331,7 @@ namespace SMP.BLL.Services.ParentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

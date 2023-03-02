@@ -131,7 +131,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
 
@@ -196,7 +196,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
 

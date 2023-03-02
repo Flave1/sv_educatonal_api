@@ -71,7 +71,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred on CreateSettings() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -118,7 +118,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error($"Error occurred on CreateSettings() || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -149,7 +149,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -176,7 +176,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -210,7 +210,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error($"Error occurred || {ex}");
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

@@ -3,6 +3,7 @@ using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
@@ -37,9 +38,11 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IPaginationService paginationService;
         private readonly string smsClientId;
         private readonly IPortalSettingService portalSettingService;
+        private readonly ILoggerService loggerService;
         private readonly IHttpContextAccessor contextaccessor;
         public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
-            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, IPortalSettingService portalSettingService)
+            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, 
+            IPortalSettingService portalSettingService, ILoggerService loggerService)
         {
             this.userManager = userManager;
             this.context = context;
@@ -50,6 +53,7 @@ namespace SMP.BLL.Services.TeacherServices
             this.paginationService = paginationService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.portalSettingService = portalSettingService;
+            this.loggerService = loggerService;
             contextaccessor = accessor;
         }
 
@@ -104,6 +108,7 @@ namespace SMP.BLL.Services.TeacherServices
             }
             catch (ArgumentException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -417,7 +422,6 @@ namespace SMP.BLL.Services.TeacherServices
             }
             catch (Exception x)
             {
-
                 throw new ArgumentException(x?.Message ?? x?.InnerException.Message);
             }
         }

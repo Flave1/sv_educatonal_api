@@ -15,5 +15,8 @@ namespace SMP.DAL.Models.Logger
         public Guid Id { get; set; }
         public int LogType { get; set; }
         public string Message { get; set; }
+        public string StackTrace { get; set; }
+        public string InnerException { get; set; }
+        public string InnerExceptionMessage { get; set; }
     }
 }

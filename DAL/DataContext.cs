@@ -165,6 +165,29 @@ namespace DAL
             }
             return base.SaveChangesAsync(cancellationToken);
         }
+        public Task<int> SaveChangesNoClientAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
+            var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
+           
+            foreach (var entry in ChangeTracker.Entries<CommonEntity>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.Deleted = false;
+                    entry.Entity.CreatedOn = GetCurrentLocalDateTime();
+                    entry.Entity.CreatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
+                }
+                else
+                {
+                    entry.Entity.UpdatedOn = GetCurrentLocalDateTime();
+                    entry.Entity.UpdatedBy = loggedInUserId;
+                    entry.Entity.ClientId = smsClientId;
+                }
+            }
+            return base.SaveChangesAsync(cancellationToken);
+        }
 
         private static DateTimeOffset GetServerDate()
         {

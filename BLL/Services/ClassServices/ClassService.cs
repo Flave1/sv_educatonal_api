@@ -130,6 +130,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -206,6 +207,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -246,8 +248,9 @@ namespace BLL.ClassServices
                 }
                 await context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ;
             }
         }
@@ -270,8 +273,9 @@ namespace BLL.ClassServices
                 await context.SessionClassSubject.AddRangeAsync(subs);
                 await context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -297,6 +301,7 @@ namespace BLL.ClassServices
             }
             catch (DbUpdateException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Please confirm home and class assessments are not in the deselected subjects");
             }
         }
@@ -528,19 +533,31 @@ namespace BLL.ClassServices
 
         public async Task<APIResponse<List<GetSessionClassCbt>>> GetSessionClassesCbtAsync(string clientId)
         {
-            var res = new APIResponse<List<GetSessionClassCbt>>();
-            var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == clientId).SessionId;
 
-            res.Result = await context.SessionClass.Where(c => c.ClientId == clientId)
-                .Include(rr => rr.Session)
-                .Include(rr => rr.Class)
-                .OrderBy(d => d.Class.Name)
-                .Where(r => r.Deleted == false && r.SessionId == sessionId)
-                .Select(g => new GetSessionClassCbt(g)).ToListAsync();
-            
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return res;
+            var res = new APIResponse<List<GetSessionClassCbt>>();
+            try
+            {
+                var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == clientId).SessionId;
+
+                res.Result = await context.SessionClass.Where(c => c.ClientId == clientId)
+                    .Include(rr => rr.Session)
+                    .Include(rr => rr.Class)
+                    .OrderBy(d => d.Class.Name)
+                    .Where(r => r.Deleted == false && r.SessionId == sessionId)
+                    .Select(g => new GetSessionClassCbt(g)).ToListAsync();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.Message;
+                res.IsSuccessful = true;
+                return res;
+            }
         }
 
         public async Task<APIResponse<GetSessionClassCbt>> GetSessionClassesCbtByRegNoAsync(string registrationNo, string clientId)
@@ -576,6 +593,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;

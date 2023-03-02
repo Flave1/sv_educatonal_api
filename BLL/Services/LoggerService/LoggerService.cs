@@ -25,7 +25,7 @@ namespace BLL.LoggerService
                 Message = message
             };
             context.Add(log);
-            await context.SaveChangesAsync();
+            await context.SaveChangesNoClientAsync();
             logger.Info(message);
         }
 
@@ -37,7 +37,7 @@ namespace BLL.LoggerService
                 Message = message
             };
             context.Add(log);
-            await context.SaveChangesAsync();
+            await context.SaveChangesNoClientAsync();
             logger.Warn(message);
         }
 
@@ -49,19 +49,22 @@ namespace BLL.LoggerService
                 Message = message
             };
             context.Add(log);
-            await context.SaveChangesAsync();
+            await context.SaveChangesNoClientAsync();
             logger.Debug(message);
         }
 
-        public async Task Error(string message)
+        public async Task Error(string message, string stackTrace, string innerException, string innerExceptionMessage)
         {
             var log = new Log
             {
                 LogType = (int)LogType.Error,
-                Message = message
+                Message = message,
+                StackTrace = stackTrace,
+                InnerException = innerException,
+                InnerExceptionMessage = innerExceptionMessage
             };
             context.Add(log);
-            await context.SaveChangesAsync();
+            await context.SaveChangesNoClientAsync();
             logger.Error(message);
         }
     }

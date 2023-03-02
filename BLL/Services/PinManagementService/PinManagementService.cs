@@ -1,5 +1,6 @@
 ﻿using BLL;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using DAL;
 using Microsoft.AspNetCore.Http;
@@ -34,8 +35,10 @@ namespace SMP.BLL.Services.PinManagementService
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
         private readonly IUtilitiesService utilitiesService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IHttpContextAccessor accessor, IPaginationService paginationService, IUtilitiesService utilitiesService)
+        public PinManagementService(DataContext context, IResultsService resultService, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, 
+            IHttpContextAccessor accessor, IPaginationService paginationService, IUtilitiesService utilitiesService, ILoggerService loggerService)
         {
             this.context = context;
             this.resultService = resultService;
@@ -44,6 +47,7 @@ namespace SMP.BLL.Services.PinManagementService
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.utilitiesService = utilitiesService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<PrintResult>> IPinManagementService.PrintResultAsync(PrintResultRequest request)
@@ -144,6 +148,7 @@ namespace SMP.BLL.Services.PinManagementService
             }
             catch (ArgumentException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -162,8 +167,9 @@ namespace SMP.BLL.Services.PinManagementService
                 await context.UsedPin.AddAsync(newPin);
                 await context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -180,8 +186,9 @@ namespace SMP.BLL.Services.PinManagementService
                 await context.UsedPin.AddAsync(newPin);
                 await context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -291,6 +298,7 @@ namespace SMP.BLL.Services.PinManagementService
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = $" {ex?.Message}";
                 return res;
             }
@@ -470,6 +478,7 @@ namespace SMP.BLL.Services.PinManagementService
                 }
                 catch (ArgumentException ex)
                 {
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     await trans.DisposeAsync();
                     res.Message.FriendlyMessage = ex.Message;
                     return res;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BLL.LoggerService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using SMP.Contracts.Options;
 using System;
@@ -14,12 +15,14 @@ namespace SMP.BLL.Services.WebRequestServices
     public class WebRequestService: IWebRequestService
     {
         private readonly HttpClient client;
+        private readonly ILoggerService loggerService;
         private readonly FwsConfigSettings fwsOptions;
         private readonly string smsClientId;
-        public WebRequestService(HttpClient httpClient, IHttpContextAccessor accessor, IOptions<FwsConfigSettings> options)
+        public WebRequestService(HttpClient httpClient, IHttpContextAccessor accessor, IOptions<FwsConfigSettings> options, ILoggerService loggerService)
         {
             //client = clientFactory.CreateClient();
             client = httpClient;
+            this.loggerService = loggerService;
             fwsOptions = options.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
@@ -72,6 +75,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     }
                 }catch(Exception ex)
                 {
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     throw new ArgumentException(ex.Message ?? ex.InnerException.Message);
                 }
 
@@ -119,12 +123,12 @@ namespace SMP.BLL.Services.WebRequestServices
                         return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
                     }
                 }
-                catch (HttpRequestException)
+                catch (HttpRequestException ex)
                 {
                     if (retries >= (maxRetries - 1))
                     {
                         //log error
-
+                        await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                         throw;
                     }
                 }
