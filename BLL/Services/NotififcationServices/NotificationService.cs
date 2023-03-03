@@ -2,6 +2,7 @@
 using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Email;
 using DAL;
@@ -27,14 +28,17 @@ namespace SMP.BLL.Services.NotififcationServices
         private readonly IPaginationService paginationService;
         private readonly IHttpContextAccessor accessor;
         protected readonly IHubContext<NotificationHub> hub;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public NotificationService(DataContext context, IEmailService emailService, IPaginationService paginationService, IHttpContextAccessor accessor, IHubContext<NotificationHub> hub)
+        public NotificationService(DataContext context, IEmailService emailService, IPaginationService paginationService, IHttpContextAccessor accessor, 
+            IHubContext<NotificationHub> hub, ILoggerService loggerService)
         {
             this.context = context;
             this.emailService = emailService;
             this.paginationService = paginationService;
             this.accessor = accessor;
             this.hub = hub;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -66,8 +70,9 @@ namespace SMP.BLL.Services.NotififcationServices
                 //if (bySms)
                     //SendNotificationByEmail(item);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -125,8 +130,9 @@ namespace SMP.BLL.Services.NotififcationServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -162,8 +168,9 @@ namespace SMP.BLL.Services.NotififcationServices
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }

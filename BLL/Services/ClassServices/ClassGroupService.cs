@@ -1,4 +1,5 @@
 ﻿using BLL.Constants;
+using BLL.LoggerService;
 using Contracts.Class;
 using Contracts.Common;
 using DAL;
@@ -22,11 +23,13 @@ namespace BLL.ClassServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ClassGroupService(DataContext context, IHttpContextAccessor accessor)
+        public ClassGroupService(DataContext context, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -53,6 +56,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -90,6 +94,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

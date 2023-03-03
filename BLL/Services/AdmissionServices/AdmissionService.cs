@@ -2,6 +2,7 @@
 using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Options;
 using DAL;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
@@ -44,13 +46,14 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IFileUploadService fileUploadService;
         private readonly IHttpContextAccessor accessor;
         private readonly IUtilitiesService utilitiesService;
+        private readonly ILoggerService loggerService;
         private readonly FwsConfigSettings fwsOptions;
         private readonly IParentService parentService;
         private readonly string smsClientId;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
-            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService)
+            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService, ILoggerService loggerService)
         {
             this.context = context;
             this.paginationService = paginationService;
@@ -60,6 +63,7 @@ namespace SMP.BLL.Services.AdmissionServices
             this.fileUploadService = fileUploadService;
             this.accessor = httpContext;
             this.utilitiesService = utilitiesService;
+            this.loggerService = loggerService;
             fwsOptions = options.Value;
             this.parentService = parentService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
@@ -160,6 +164,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (DuplicateNameException ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -167,6 +172,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -259,6 +265,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = "Error Occurred trying to enroll student account!! Please contact system administrator";
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -367,6 +374,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -399,6 +407,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -510,6 +519,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -579,6 +589,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

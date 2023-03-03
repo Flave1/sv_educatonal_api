@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.LoggerService;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,13 @@ namespace SMP.BLL.Services.PortalService
     {
         private readonly DataContext context;
         private readonly IFileUploadService upload;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public PortalSettingService(DataContext context, IFileUploadService upload, IHttpContextAccessor accessor)
+        public PortalSettingService(DataContext context, IFileUploadService upload, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.upload = upload;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         async Task<APIResponse<PostSchoolSetting>> IPortalSettingService.CreateUpdateSchollSettingsAsync(PostSchoolSetting request)
@@ -76,6 +79,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (System.ArgumentException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -119,7 +123,8 @@ namespace SMP.BLL.Services.PortalService
 
             }
             catch (System.ArgumentException ex)
-            { 
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -347,6 +352,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (System.ArgumentException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -363,6 +369,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch(Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -419,8 +426,9 @@ namespace SMP.BLL.Services.PortalService
 
                 if (isNew) await context.SchoolSettings.AddAsync(schoolSetting);
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
