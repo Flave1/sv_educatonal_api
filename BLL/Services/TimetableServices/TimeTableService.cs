@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.LoggerService;
 using Contracts.Class;
 using Contracts.Common;
 using DAL;
@@ -18,11 +19,13 @@ namespace SMP.BLL.Services.TimetableServices
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public TimeTableService(DataContext context, IHttpContextAccessor accessor)
+        public TimeTableService(DataContext context, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -112,6 +115,7 @@ namespace SMP.BLL.Services.TimetableServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ex;
             }
         }
@@ -154,6 +158,7 @@ namespace SMP.BLL.Services.TimetableServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ex;
             }
         }
@@ -176,8 +181,9 @@ namespace SMP.BLL.Services.TimetableServices
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -204,8 +210,9 @@ namespace SMP.BLL.Services.TimetableServices
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -234,8 +241,9 @@ namespace SMP.BLL.Services.TimetableServices
                 res.Message.FriendlyMessage = Messages.Updated;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -286,8 +294,9 @@ namespace SMP.BLL.Services.TimetableServices
                 res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -314,6 +323,7 @@ namespace SMP.BLL.Services.TimetableServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ex;
             }
         }

@@ -1,5 +1,6 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.LoggerService;
 using BLL.SessionServices;
 using BLL.StudentServices;
 using DAL;
@@ -27,16 +28,18 @@ namespace SMP.BLL.Services.PromorionServices
         private readonly IResultsService resultsService;
         private readonly ISessionService sessionService;
         private readonly IEnrollmentService enrollmentService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
 
         public PromotionService(DataContext context, IStudentService studentService, IResultsService resultsService, ISessionService sessionService, 
-            IEnrollmentService enrollmentService, IHttpContextAccessor accessor)
+            IEnrollmentService enrollmentService, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.studentService = studentService;
             this.resultsService = resultsService;
             this.sessionService = sessionService;
             this.enrollmentService = enrollmentService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -123,6 +126,7 @@ namespace SMP.BLL.Services.PromorionServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.ClassTransitionException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;

@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
@@ -33,14 +34,17 @@ namespace SMP.BLL.Services.NoteServices
         private readonly IPaginationService paginationService;
         private readonly IHubContext<NotificationHub> hub;
         private readonly INotificationService notificationService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService)
+        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, 
+            IHubContext<NotificationHub> hub, INotificationService notificationService, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.hub = hub;
             this.notificationService = notificationService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -89,6 +93,7 @@ namespace SMP.BLL.Services.NoteServices
                     context.ClassNote.Remove(newClassNote);
                     await context.SaveChangesAsync();
                 }
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -328,6 +333,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -693,6 +699,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;

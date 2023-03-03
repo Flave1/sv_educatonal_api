@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230301220900_Logger")]
+    partial class Logger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1513,19 +1515,10 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("InnerException")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InnerExceptionMessage")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("LogType")
                         .HasColumnType("int");
 
                     b.Property<string>("Message")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StackTrace")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UpdatedBy")

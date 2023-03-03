@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using DAL.StudentInformation;
 using SMP.Contracts.Options;
 using SMP.DAL.Models.PortalSettings;
+using BLL.LoggerService;
 
 namespace SMP.BLL.Utilities
 {
@@ -20,11 +21,13 @@ namespace SMP.BLL.Utilities
     {
         private readonly DataContext context;
         private readonly IConfiguration config;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public UtilitiesService(DataContext context, IConfiguration config, IHttpContextAccessor accessor)
+        public UtilitiesService(DataContext context, IConfiguration config, IHttpContextAccessor accessor, ILoggerService loggerService)
         {
             this.context = context;
             this.config = config;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
         public string GetStudentRegNumberValue(string regNo, string clientId)
@@ -56,9 +59,8 @@ namespace SMP.BLL.Utilities
                 }
                 return regNo;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
                 throw new ArgumentException("Please ensure registeration number is in correct format");
             }
         }
@@ -77,9 +79,9 @@ namespace SMP.BLL.Utilities
                     return student;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Please ensure registeration number is in correct format");
             }
         }
@@ -98,8 +100,9 @@ namespace SMP.BLL.Utilities
                 dictionary.Add(newRegNo, regNo);
                 return await Task.Run(() => dictionary);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Unable to Generate Registration Number");
             }
         }

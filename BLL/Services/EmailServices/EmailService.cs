@@ -100,20 +100,20 @@ namespace BLL.EmailServices
             catch (HttpRequestException ex)
             {
                 // var errorId = ErrorID.Generate(4);
-                logger.Information($"Error Message{ ex?.Message}");
+                await logger.Information($"Error Message{ ex?.Message}");
                 // throw ex;
             }
             catch(ParseException ex)
             {
-                logger.Information($"Error Message{ ex?.Message}");
+                await logger.Information($"Error Message{ ex?.Message}");
             }
             catch(SmtpCommandException ex)
             { 
-                logger.Information($"Error Message{ ex?.Message}");
+                await logger.Information($"Error Message{ ex?.Message}");
             }
             catch(AuthenticationException ex)
             {
-                logger.Information($"Error Message{ ex?.Message}");
+                await logger.Information($"Error Message{ ex?.Message}");
             } 
         } 
     }

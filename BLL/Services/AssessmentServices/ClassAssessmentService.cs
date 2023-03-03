@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
@@ -23,12 +24,14 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IPaginationService paginationService;
+        private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService)
+        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
+            this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
@@ -104,6 +107,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -189,8 +193,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Saved;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -215,8 +220,9 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = Messages.Saved;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -265,6 +271,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
