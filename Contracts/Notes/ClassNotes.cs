@@ -1,4 +1,5 @@
 ﻿using DAL.ClassEntities;
+using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using SMP.DAL.Models.NoteEntities;
 using System;
@@ -178,7 +179,7 @@ namespace SMP.Contracts.Notes
         public ClassNoteTeachers(Teacher db, bool isShare)
         {
             TeacherAccountId = db.TeacherId.ToString();
-            TeacherUserAccountId = db.User.Id;
+            TeacherUserAccountId = db.UserId;
             FullName = db.FirstName + " " + db.LastName;
             FirstName = db.FirstName;
             LastName = db.LastName;
@@ -189,7 +190,7 @@ namespace SMP.Contracts.Notes
         public ClassNoteTeachers(Teacher db)
         {
             TeacherAccountId = db.TeacherId.ToString();
-            TeacherUserAccountId = db.User.Id;
+            TeacherUserAccountId = db.UserId;
             FullName = db.FirstName + " " + db.LastName;
             FirstName = db.FirstName;
             LastName = db.LastName;
@@ -209,7 +210,7 @@ namespace SMP.Contracts.Notes
         public string Name { get; set; }
         public List<ClassNoteComment> RepliedComments { get; set; }
         public ClassNoteComment() { }
-        public ClassNoteComment(TeacherClassNoteComment db, Teacher teacher)
+        public ClassNoteComment(TeacherClassNoteComment db, Teacher teacher, StudentContact student)
         {
             CommentId = db.TeacherClassNoteCommentId;
             Comment = db.Comment;
@@ -217,10 +218,13 @@ namespace SMP.Contracts.Notes
             ClassNoteId = db.ClassNoteId;
             RepliedToId = db.RepliedToId;
             TeacherId = db.UserId;
-            Name = teacher?.FirstName + " " + teacher?.LastName;
+            if(teacher is not null)
+                Name = teacher?.FirstName + " " + teacher?.LastName;
+            else
+                Name = student?.FirstName + " " + student?.LastName;
             if (db.Replies is not null && db.Replies.Any())
             {
-                RepliedComments = db.Replies.Select(x => new ClassNoteComment(x, teacher)).ToList();
+                RepliedComments = db.Replies.Select(x => new ClassNoteComment(x, teacher, student)).ToList();
             }
         }
     }

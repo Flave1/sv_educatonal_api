@@ -14,7 +14,7 @@ namespace API.Controllers
 
     [PortalAuthorize]
     [Route("class/api/v1/")]
-    public class ClassController : BaseController
+    public class ClassController : Controller
     { 
         private readonly IClassService service;
         private readonly IClassGroupService classGoupService;

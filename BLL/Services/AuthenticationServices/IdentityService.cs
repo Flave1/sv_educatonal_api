@@ -23,6 +23,7 @@ using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.Routes;
+using SMP.DAL.Models;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.PortalSettings;
 using System;
@@ -39,7 +40,7 @@ namespace BLL.AuthenticationServices
     {
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, FwsClientInformation fwsClientInformations)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -51,7 +52,7 @@ namespace BLL.AuthenticationServices
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
-
+            this.fwsClientInformations = fwsClientInformations;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -63,6 +64,7 @@ namespace BLL.AuthenticationServices
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly FwsConfigSettings fwsOptions;
+        private readonly FwsClientInformation fwsClientInformations;
         private static string smsClientId { get; set; }
 
 
@@ -166,6 +168,7 @@ namespace BLL.AuthenticationServices
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
+                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception ex)
@@ -275,6 +278,7 @@ namespace BLL.AuthenticationServices
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
+                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception)
@@ -591,6 +595,8 @@ namespace BLL.AuthenticationServices
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
+
+                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception ex)

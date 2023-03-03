@@ -174,8 +174,9 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<PagedResponse<List<ApplicationUser>>>();
             var query = context.Teacher
-                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher)
-                .Include(s => s.User).OrderBy(d => d.FirstName);
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false)
+                .Include(x => x.User)
+                .OrderBy(d => d.FirstName);
 
             var totaltRecord = query.Count();
             var result = await paginationService.GetPagedResult(query, filter).Select(a => new ApplicationUser(a)).ToListAsync();
@@ -206,7 +207,7 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<ApplicationUser>();
             var result = await context.Teacher
-                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.User.UserType == (int)UserTypes.Teacher && d.TeacherId == teacherId)
+                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.TeacherId == teacherId)
                 .Include(x => x.User)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(a => new ApplicationUser(a)).FirstOrDefaultAsync();

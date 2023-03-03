@@ -13,7 +13,7 @@ namespace API.Controllers
 {
     [PortalAuthorize]
     [Route("api/v1/result/")]
-    public class ResultsController : BaseController
+    public class ResultsController : Controller
     {
         private readonly IResultsService service;
         private readonly IPinManagementService pinService;

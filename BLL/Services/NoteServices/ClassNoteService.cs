@@ -608,7 +608,10 @@ namespace SMP.BLL.Services.NoteServices
                 .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
                 .Include(d => d.Replies).ThenInclude(s => s.AppUser)
                 .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.AppUser)
-                .Select(x => new ClassNoteComment(x, context.Teacher.FirstOrDefault(x => x.UserId == x.UserId))).ToListAsync();
+                .Select(d => new ClassNoteComment(d, 
+                context.Teacher.FirstOrDefault(x => x.UserId == d.UserId && x.ClientId == smsClientId), 
+                context.StudentContact.FirstOrDefault(x => x.UserId == d.UserId && x.ClientId == smsClientId))
+                ).ToListAsync();
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;

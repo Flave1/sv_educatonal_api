@@ -53,7 +53,7 @@ namespace Contracts.Authentication
             FullName = db.FirstName + " " + db.LastName;
             FirstName = db.FirstName;
             LastName = db.LastName;
-            Phone = db.User.PhoneNumber;
+            Phone = db.Phone;
             MiddleName = db.MiddleName;
             dob = db.DOB;
             Photo = db.Photo;

@@ -1,11 +1,7 @@
-﻿using BLL.AuthenticationServices;
-using BLL.Constants;
-using BLL.Filter;
+﻿using BLL.Filter;
 using BLL.MiddleWares;
-using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Common;
-using Contracts.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.TeacherServices;

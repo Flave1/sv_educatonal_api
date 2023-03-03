@@ -7,6 +7,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Linq;
@@ -129,16 +130,28 @@ namespace SMP.BLL.Services.PortalService
             var res = new APIResponse<UpdateResultSetting>();
             var result = await context.ResultSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
             if (result == null)
-            { 
-                res.Message.FriendlyMessage = "Result Settings Not Found";
-
+            {
+                var setting = new ResultSetting()
+                {
+                    PromoteAll = true,
+                    ShowPositionOnResult = false,
+                    ShowNewsletter = false,
+                    CumulativeResult = true,
+                    BatchPrinting = true,
+                    PrincipalStample = "",
+                    SelectedTemplate = request.SelectedTemplate
+                };
+                context.Add(setting);
+                await context.SaveChangesAsync();
+                res.Message.FriendlyMessage = "Template selected successfully";
+                res.IsSuccessful = true;
                 return res;
             }
             else
             {
                 result.SelectedTemplate = request.SelectedTemplate;
                 await context.SaveChangesAsync();
-                res.Message.FriendlyMessage = "Updated Successfully";
+                res.Message.FriendlyMessage = "Template selected Successfully";
                 res.IsSuccessful = true;
                 res.Result = request;
 
