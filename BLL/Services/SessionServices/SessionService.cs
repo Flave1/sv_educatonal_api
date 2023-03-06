@@ -390,7 +390,7 @@ namespace BLL.SessionServices
                     SessionTerm = d.Terms.FirstOrDefault(er => er.IsActive == true).TermName,
                 }).FirstOrDefaultAsync() ?? null;
 
-                var sessionClass = await context.SessionClass.FirstOrDefaultAsync(x => x.SessionId == Guid.Parse(result.SessionId) && x.ClientId == smsClientId);
+                var sessionClass = await context.SessionClass.FirstOrDefaultAsync(x => x.SessionId == Guid.Parse(result.SessionId) && x.ClientId == clientId);
 
                 if(asExamScore)
                 {
