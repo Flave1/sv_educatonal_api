@@ -26,7 +26,7 @@ namespace SMP.DAL.Models.NoteEntities
         public Guid? RepliedToId { get; set; }
         [ForeignKey("RepliedToId")]
         public TeacherClassNoteComment RepliedTo { get; set; }
-        public virtual ICollection<TeacherClassNoteComment> Replies { get; set; }
+        //public virtual ICollection<TeacherClassNoteComment> Replies { get; set; }
 
     }
 }

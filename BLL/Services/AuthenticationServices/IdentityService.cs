@@ -39,13 +39,12 @@ namespace BLL.AuthenticationServices
     public class IdentityService : IIdentityService
     {
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
-            RoleManager<UserRole> roleManager, ILoggerService logger, IOptions<JwtSettings> jwtSettings,
+            RoleManager<UserRole> roleManager, ILoggerService loggerService, IOptions<JwtSettings> jwtSettings,
             DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
             this.roleManager = roleManager;
-            this.logger = logger;
             this.jwtSettings = jwtSettings.Value;
             this.context = context;
             this.accessor = accessor;
@@ -53,20 +52,17 @@ namespace BLL.AuthenticationServices
             this.loggerService = loggerService;
             fwsOptions = options.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
-            this.fwsClientInformations = fwsClientInformations;
         }
 
         private readonly UserManager<AppUser> userManager;
         private readonly JwtSettings jwtSettings;
         private readonly TokenValidationParameters tokenValidationParameters;
         private readonly RoleManager<UserRole> roleManager;
-        private readonly ILoggerService logger;
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly IWebRequestService webRequestService;
         private readonly ILoggerService loggerService;
         private readonly FwsConfigSettings fwsOptions;
-        private readonly FwsClientInformation fwsClientInformations;
         private static string smsClientId { get; set; }
 
 
@@ -170,7 +166,6 @@ namespace BLL.AuthenticationServices
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
-                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception ex)
@@ -280,7 +275,6 @@ namespace BLL.AuthenticationServices
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
-                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception)
@@ -600,12 +594,12 @@ namespace BLL.AuthenticationServices
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
 
-                fwsClientInformations.ClientId = clientId;
                 return res;
             }
             catch (Exception ex)
             {
-                throw ex;
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
             }
         }
 

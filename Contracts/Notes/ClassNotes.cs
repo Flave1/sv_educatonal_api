@@ -208,7 +208,7 @@ namespace SMP.Contracts.Notes
         public string TeacherId { get; set; }
         public Guid? RepliedToId { get; set; }
         public string Name { get; set; }
-        public List<ClassNoteComment> RepliedComments { get; set; }
+        public List<ClassNoteComment> RepliedComments { get; set; } = new List<ClassNoteComment>();
         public ClassNoteComment() { }
         public ClassNoteComment(TeacherClassNoteComment db, Teacher teacher, StudentContact student)
         {
@@ -222,10 +222,7 @@ namespace SMP.Contracts.Notes
                 Name = teacher?.FirstName + " " + teacher?.LastName;
             else
                 Name = student?.FirstName + " " + student?.LastName;
-            if (db.Replies is not null && db.Replies.Any())
-            {
-                RepliedComments = db.Replies.Select(x => new ClassNoteComment(x, teacher, student)).ToList();
-            }
+           
         }
     }
 

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DAL;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using SMP.DAL.Models.Logger;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,10 +35,29 @@ namespace Contracts.Options
                         continue;
                     break;
                 }
+                LogError(errorResponse.ToString());
                 context.Result = new BadRequestObjectResult(errorResponse);
                 return;
             }
             await next();
+        }
+
+        private void LogError(string message)
+        {
+            var log = new Log
+            {
+                LogType = 1,
+                Message = message,
+                StackTrace = message,
+                InnerException = message,
+                InnerExceptionMessage = message
+            };
+            using(DataContext ctx = new DataContext())
+            {
+                ctx.Add(log);
+                ctx.SaveChangesNoClientAsync();
+            }
+            
         }
     }
 }

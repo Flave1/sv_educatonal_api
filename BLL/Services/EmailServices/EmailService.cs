@@ -85,13 +85,13 @@ namespace BLL.EmailServices
                     client.Connect(emailConfiguration.SmtpServer, emailConfiguration.SmtpPort);
 
                     client.AuthenticationMechanisms.Remove("XOAUTH2");
-                    logger.Information($"Removed Auth'{mimeMsg.Subject}'");
+                    await logger.Information($"Removed Auth'{mimeMsg.Subject}'");
 
                     client.Authenticate(emailConfiguration.SmtpUsername, emailConfiguration.SmtpPassword);
-                    logger.Information($"About to send'{mimeMsg.Subject}'");
+                    await logger.Information($"About to send'{mimeMsg.Subject}'");
                     await client.SendAsync(mimeMsg);
 
-                    logger.Information($"Email Sent '{mimeMsg.Subject}'");
+                    await logger.Information($"Email Sent '{mimeMsg.Subject}'");
                     await client.DisconnectAsync(true);
 
                 }

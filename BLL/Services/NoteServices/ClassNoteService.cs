@@ -10,6 +10,7 @@ using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Owin.Security.Provider;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Ocsp;
 using SMP.API.Hubs;
@@ -24,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace SMP.BLL.Services.NoteServices
 {
@@ -608,22 +610,69 @@ namespace SMP.BLL.Services.NoteServices
         async Task<APIResponse<List<ClassNoteComment>>> IClassNoteService.GetClassNoteCommentsAsync(string classNoteId)
         {
             var res = new APIResponse<List<ClassNoteComment>>();
-            res.Result = await context.TeacherClassNoteComment
-                .Where(u => u.ClientId == smsClientId && u.Deleted == false && u.ClassNoteId == Guid.Parse(classNoteId) && u.IsParent == true)
-                .Include(x => x.AppUser)
-                .Include(d => d.Replies).ThenInclude(d => d.RepliedTo)
-                .Include(d => d.Replies).ThenInclude(s => s.AppUser)
-                .Include(d => d.Replies).ThenInclude(d => d.Replies).ThenInclude(x => x.AppUser)
-                .Select(d => new ClassNoteComment(d, 
-                context.Teacher.FirstOrDefault(x => x.UserId == d.UserId && x.ClientId == smsClientId), 
-                context.StudentContact.FirstOrDefault(x => x.UserId == d.UserId && x.ClientId == smsClientId))
-                ).ToListAsync();
+            var parentComments = await context.TeacherClassNoteComment
+                .Where(u => u.ClientId == smsClientId 
+                && u.Deleted == false
+                && u.ClassNoteId == Guid.Parse(classNoteId) 
+                && u.IsParent == true).ToListAsync();
 
+
+            var response = new List<ClassNoteComment>();
+            for(var i = 0; i < parentComments.Count; i++)
+            {
+                var comment = parentComments[i];
+                var teacher = context.Teacher.FirstOrDefault(x => x.UserId == comment.UserId && x.ClientId == smsClientId);
+                var student = context.StudentContact.FirstOrDefault(x => x.UserId == comment.UserId && x.ClientId == smsClientId);
+
+                var result = new ClassNoteComment(comment, teacher, student);
+                var commentIsAparentComment = context.TeacherClassNoteComment.Any(x => x.RepliedToId ==  comment.TeacherClassNoteCommentId);
+                if (commentIsAparentComment)
+                {
+                    result.RepliedComments = await GetChildCommentAsync(comment.TeacherClassNoteCommentId);
+                }
+                response.Add(result);
+            }
+
+            res.Result = response;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
 
+        private async Task<List<ClassNoteComment>> GetChildCommentAsync(Guid? commentId)
+        {
+            var query = await context.TeacherClassNoteComment.Where(x => x.TeacherClassNoteCommentId == commentId).ToListAsync();
+            var response = new List<ClassNoteComment>();
+            foreach (var item in query)
+            {
+                var teacher = await context.Teacher.FirstOrDefaultAsync(x => x.UserId == item.UserId && x.ClientId == smsClientId);
+                var student = await context.StudentContact.FirstOrDefaultAsync(x => x.UserId == item.UserId && x.ClientId == smsClientId);
+                var result = new ClassNoteComment(item, teacher, student);
+                if (item.RepliedToId is not null)
+                {
+                    result.RepliedComments = await GetGrandChildCommentsAsync(item.RepliedToId);
+                }
+                response.Add(result);
+            }
+            return response;
+        }
+        private async Task<List<ClassNoteComment>> GetGrandChildCommentsAsync(Guid? commentId)
+        {
+            var query = await context.TeacherClassNoteComment.Where(x => x.TeacherClassNoteCommentId == commentId).ToListAsync();
+            var response = new List<ClassNoteComment>();
+            foreach (var item in query)
+            {
+                var teacher = await context.Teacher.FirstOrDefaultAsync(x => x.UserId == item.UserId && x.ClientId == smsClientId);
+                var student = await context.StudentContact.FirstOrDefaultAsync(x => x.UserId == item.UserId && x.ClientId == smsClientId);
+                var result = new ClassNoteComment(item, teacher, student);
+                if (item.RepliedToId is not null)
+                {
+                    result.RepliedComments = await GetChildCommentAsync(item.RepliedToId);
+                }
+                response.Add(result);
+            }
+            return response;
+        }
         async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetRelatedClassNoteAsync(Guid classNoteId)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
