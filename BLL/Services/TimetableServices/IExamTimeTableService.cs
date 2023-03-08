@@ -15,7 +15,7 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<CreateExamTimeTableDay>> CreateExamTimeTableDayAsync(CreateExamTimeTableDay request);
         Task<APIResponse<CreateExamTimeTableTime>> CreateExamTimeTableTimeAsync(CreateExamTimeTableTime request);
         Task<APIResponse<UpdateExamTimeTableTimeActivity>> UpdateExamTimeTableTimeActivityAsync(UpdateExamTimeTableTimeActivity request);
-        Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassesAsync();
+        Task<APIResponse<List<GetActiveTimetableClasses>>> GetAllActiveClassesAsync();
         Task<APIResponse<GetExamTimeActivity>> GetExamTimeTableAsync(Guid classId);
         Task<APIResponse<List<GetExamTimeActivityByDay>>> GetExamTimeActivityByDayAsync(string day);
         Task<APIResponse<SingleDelete>> DeleteExamTimeTableDayAsync(SingleDelete request);
