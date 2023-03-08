@@ -30,22 +30,16 @@ namespace SMP.BLL.Services.TimetableServices
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
-        public async Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveClassesAsync()
+        public async Task<APIResponse<List<GetActiveTimetableClasses>>> GetAllActiveClassesAsync()
         {
-            var res = new APIResponse<List<GetApplicationLookups>>();
+            var res = new APIResponse<List<GetActiveTimetableClasses>>();
             try
             {
                 var activeClasses = context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
 
                 if (activeClasses.Count() == context.ExamTimeTable.Where(x => x.ClientId == smsClientId).Count())
                 {
-                    res.Result = await activeClasses.Select(a => new GetApplicationLookups
-                    {
-                        LookupId = a.ClassLookupId.ToString().ToLower(),
-                        Name = a.Name,
-                        IsActive = a.IsActive,
-                        GradeLevelId = a.GradeGroupId.ToString(),
-                    }).ToListAsync();
+                    res.Result = await activeClasses.Select(a => new GetActiveTimetableClasses(a, context.SessionClass.FirstOrDefault(x=>x.ClassId == a.ClassLookupId))).ToListAsync();
 
                     res.IsSuccessful = true;
                     return res;
@@ -65,13 +59,7 @@ namespace SMP.BLL.Services.TimetableServices
                     }
                     await context.SaveChangesAsync();
                 }
-                res.Result = await activeClasses.Select(a => new GetApplicationLookups
-                {
-                    LookupId = a.ClassLookupId.ToString().ToLower(),
-                    Name = a.Name,
-                    IsActive = a.IsActive,
-                    GradeLevelId = a.GradeGroupId.ToString(),
-                }).ToListAsync();
+                res.Result = await activeClasses.Select(a => new GetActiveTimetableClasses(a, context.SessionClass.FirstOrDefault(x=>x.ClassId == a.ClassLookupId))).ToListAsync();
 
                 res.IsSuccessful = true;
                 return res;
