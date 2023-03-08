@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230307033448_ExamTimeTableTermId")]
-    partial class ExamTimeTableTermId
+    [Migration("20230308043756_ExamTimeTable")]
+    partial class ExamTimeTable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -2755,9 +2755,6 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("SessionTermId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2767,8 +2764,6 @@ namespace SMP.DAL.Migrations
                     b.HasKey("ExamTimeTableId");
 
                     b.HasIndex("ClassId");
-
-                    b.HasIndex("SessionTermId");
 
                     b.ToTable("ExamTimeTable");
                 });
@@ -3648,15 +3643,7 @@ namespace SMP.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
-                        .WithMany()
-                        .HasForeignKey("SessionTermId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Class");
-
-                    b.Navigation("SessionTerm");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableDay", b =>

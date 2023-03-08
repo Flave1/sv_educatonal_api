@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.TimetableServices
 {
-    public interface IExamTimetableService
+    public interface IExamTimeTableService
     {
         Task<APIResponse<CreateExamTimeTableDay>> CreateExamTimeTableDayAsync(CreateExamTimeTableDay request);
         Task<APIResponse<CreateExamTimeTableTime>> CreateExamTimeTableTimeAsync(CreateExamTimeTableTime request);

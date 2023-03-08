@@ -44,13 +44,13 @@ namespace SMP.Contracts.Timetable
     public class GetExamTimeActivity
     {
         public string ClassName { get; set; }
-        public string ClassTimeTableId { get; set; }
+        public string ExamTimeTableId { get; set; }
         public ExamTimetable Timetable { get; set; }
 
         public GetExamTimeActivity(ExamTimeTable db)
         {
             ClassName = db.Class.Name;
-            ClassTimeTableId = db.ExamTimeTableId.ToString();
+            ExamTimeTableId = db.ExamTimeTableId.ToString();
             Timetable = new ExamTimetable(db.Days, db.Times);
         }
     }

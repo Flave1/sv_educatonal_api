@@ -13,7 +13,6 @@ namespace SMP.DAL.Migrations
                 {
                     ExamTimeTableId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClassId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SessionTermId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Deleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedOn = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UpdatedOn = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
@@ -29,12 +28,6 @@ namespace SMP.DAL.Migrations
                         column: x => x.ClassId,
                         principalTable: "ClassLookUp",
                         principalColumn: "ClassLookupId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ExamTimeTable_SessionTerm_SessionTermId",
-                        column: x => x.SessionTermId,
-                        principalTable: "SessionTerm",
-                        principalColumn: "SessionTermId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -125,11 +118,6 @@ namespace SMP.DAL.Migrations
                 name: "IX_ExamTimeTable_ClassId",
                 table: "ExamTimeTable",
                 column: "ClassId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ExamTimeTable_SessionTermId",
-                table: "ExamTimeTable",
-                column: "SessionTermId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ExamTimeTableDay_ExamTimeTableId",

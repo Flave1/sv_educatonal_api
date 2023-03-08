@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.TimetableServices
 {
-    public class ExamTimeTableService : IExamTimetableService
+    public class ExamTimeTableService : IExamTimeTableService
     {
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
@@ -37,8 +37,6 @@ namespace SMP.BLL.Services.TimetableServices
             {
                 var activeClasses = context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
 
-                var activeSessionTerm = await context.SessionTerm.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true).FirstOrDefaultAsync();
-
                 if (activeClasses.Count() == context.ExamTimeTable.Where(x => x.ClientId == smsClientId).Count())
                 {
                     res.Result = await activeClasses.Select(a => new GetApplicationLookups
@@ -52,7 +50,7 @@ namespace SMP.BLL.Services.TimetableServices
                     res.IsSuccessful = true;
                     return res;
                 }
-                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ExamTimeTable.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
                 && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
                 if (noneAddedClassIds.Any())
@@ -61,8 +59,7 @@ namespace SMP.BLL.Services.TimetableServices
                     {
                         var req = new ExamTimeTable
                         {
-                            ClassId = id,
-                            SessionTermId = activeSessionTerm.SessionTermId
+                            ClassId = id
                         };
                         await context.ExamTimeTable.AddAsync(req);
                     }
@@ -265,7 +262,6 @@ namespace SMP.BLL.Services.TimetableServices
                 var result = await context.ExamTimeTable
                     .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.ClassId == classId)
                     .Include(s => s.Class)
-                    .Include(s => s.SessionTerm).Where(x=> x.SessionTerm.IsActive)
                     .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                      .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
                     .Select(f => new GetExamTimeActivity(f)).FirstOrDefaultAsync();
@@ -365,7 +361,6 @@ namespace SMP.BLL.Services.TimetableServices
             {
                 var result = await context.ExamTimeTable.Where(x => x.ClientId == smsClientId)
                   .Include(s => s.Class)
-                  .Include(s=>s.SessionTerm).Where(s=>s.SessionTerm.IsActive)
                   .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                    .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
                   .Where(d => d.Deleted == false && d.ClassId == classlkpId)
@@ -397,7 +392,6 @@ namespace SMP.BLL.Services.TimetableServices
                     var studentAct = context.StudentContact.Where(x => x.ClientId == smsClientId).Include(s => s.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
                     var result = await context.ExamTimeTable.Where(x => x.ClientId == smsClientId)
                       .Include(s => s.Class)
-                      .Include(s => s.SessionTerm).Where(s => s.SessionTerm.IsActive)
                       .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                        .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
                       .Where(d => d.Deleted == false && d.ClassId == studentAct.SessionClass.ClassId)
