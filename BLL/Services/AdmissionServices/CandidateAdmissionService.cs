@@ -251,11 +251,18 @@ namespace SMP.BLL.Services.AdmissionServices
                 if(string.IsNullOrEmpty(admissionSettingsId))
                 {
                     var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.AdmissionStatus == true);
-                    var query = context.Admissions
-                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == admissionSettings.AdmissionSettingId)
+                    
+                    if(admissionSettings is null)
+                    {
+                        res.Message.FriendlyMessage = "Our school admission is yet open";
+                        return res;
+                    }
+                        var query = context.Admissions
+                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId )
                         .Include(c => c.AdmissionNotification)
                         .Include(c => c.AdmissionSettings)
-                        .OrderByDescending(c => c.CreatedOn);
+                        .OrderByDescending(c => c.CreatedOn)
+                        .Where(c => c.AdmissionSettingId == admissionSettings.AdmissionSettingId);
 
                     var totalRecord = query.Count();
                     var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
@@ -264,10 +271,11 @@ namespace SMP.BLL.Services.AdmissionServices
                 else
                 {
                     var query = context.Admissions
-                        .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                        .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId)
                         .Include(c => c.AdmissionNotification)
                         .Include(c => c.AdmissionSettings)
-                        .OrderByDescending(c => c.CreatedOn);
+                        .OrderByDescending(c => c.CreatedOn)
+                        .Where(c => c.AdmissionSettingId == Guid.Parse(admissionSettingsId));
 
                     var totalRecord = query.Count();
                     var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
@@ -403,7 +411,7 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
-                if(classes != null)
+                if (classes != null)
                 {
 
                     var result = await context.ClassLookUp
@@ -420,6 +428,8 @@ namespace SMP.BLL.Services.AdmissionServices
                     }
                     res.Result = result;
                 }
+                else
+                    res.Result = new List<AdmissionClasses>();
 
                 res.IsSuccessful = true;
                 return res;
@@ -497,23 +507,30 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectAdmissionSettings>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
-                var result = await context.AdmissionSettings
+                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
+
+                if (classes is not null)
+                {
+                    var result = await context.AdmissionSettings
                     .Where(d => d.ClientId == smsClientId && d.Deleted != true && d.AdmissionStatus == true)
                     .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 
-                if (result == null)
-                {
-                    res.Message.FriendlyMessage = "No admission in progress.";
-                }
-                else
-                {
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    if (result == null)
+                    {
+                        res.Message.FriendlyMessage = "No admission in progress.";
+                    }
+                    else
+                    {
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                    }
+
+                    res.Result = result;
                 }
 
+                
+
                 res.IsSuccessful = true;
-                res.Result = result;
                 return res;
             }
             catch (Exception ex)

@@ -4,6 +4,7 @@ using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
 using DAL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NLog.Filters;
 using Org.BouncyCastle.Asn1.IsisMtt.X509;
@@ -27,12 +28,16 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly DataContext context;
         private readonly IPaginationService paginationService;
         private readonly ILoggerService loggerService;
+        private readonly string smsClientId;
+        private readonly IHttpContextAccessor accessor;
 
-        public AdmissionSettingService(DataContext context, IPaginationService paginationService, ILoggerService loggerService)
+        public AdmissionSettingService(DataContext context, IPaginationService paginationService, ILoggerService loggerService, IHttpContextAccessor accessor)
         {
             this.context = context;
             this.paginationService = paginationService;
             this.loggerService = loggerService;
+            smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.accessor = accessor;
         }
         public async Task<APIResponse<CreateAdmissionSettings>> CreateSettings(CreateAdmissionSettings request)
         {
@@ -41,7 +46,7 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
                 var setting = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true && d.AdmissionStatus == true).FirstOrDefaultAsync();
+                    .Where(d => d.Deleted != true && d.AdmissionStatus == true && smsClientId == d.ClientId).FirstOrDefaultAsync();
 
                 if(setting != null && request.AdmissionStatus == true)
                 {
@@ -84,7 +89,9 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<UpdateAdmissionSettings>();
             try
             {
-                var admissionSettings = await context.AdmissionSettings.Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(request.AdmissionSettingsId)).FirstOrDefaultAsync();
+                var admissionSettings = await context.AdmissionSettings
+                    .Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(request.AdmissionSettingsId) 
+                    && smsClientId == d.ClientId).FirstOrDefaultAsync();
                 if (admissionSettings == null)
                 {
                     res.Message.FriendlyMessage = "Admission Settings Id does not exist";
@@ -93,7 +100,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
 
                 var setting = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true && d.AdmissionStatus == true).FirstOrDefaultAsync();
+                    .Where(d => d.Deleted != true && d.AdmissionStatus == true && smsClientId == d.ClientId).FirstOrDefaultAsync();
 
                 if (setting != null && request.AdmissionStatus == true)
                 {
@@ -162,9 +169,26 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<PagedResponse<List<SelectAdmissionSettings>>>();
             try
             {
-                var classes =  context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes =  context.AdmissionSettings?
+                    .Where(d => d.Deleted != true && d.ClientId == smsClientId)?
+                    .FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
+
+                if (classes is null)
+                {
+                    res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
+                    res.IsSuccessful = true;
+                    return res;
+                }
+
                 var query = context.AdmissionSettings
-                    .Where(d => d.Deleted != true);
+                    .Where(d => d.Deleted != true && smsClientId == d.ClientId);
+
+                if(query is null)
+                {
+                    res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
+                    res.IsSuccessful = true;
+                    return res;
+                }
 
                 var totalRecord = query.Count();
                 var result = await paginationService.GetPagedResult(query, filter).Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList())).ToListAsync();
@@ -189,9 +213,9 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectAdmissionSettings>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes = context.AdmissionSettings?.Where(d => d.Deleted != true && smsClientId == d.ClientId)?.FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
                 var result = await context.AdmissionSettings
-                    .Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(admissionSettingsId))
+                    .Where(d => d.Deleted != true && smsClientId == d.ClientId && d.AdmissionSettingId == Guid.Parse(admissionSettingsId))
                     .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
                     .FirstOrDefaultAsync();
 

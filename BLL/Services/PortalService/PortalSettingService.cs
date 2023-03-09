@@ -225,6 +225,7 @@ namespace SMP.BLL.Services.PortalService
 
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync(string url)
         {
+            //await loggerService.Error("settings", url, "settings", "settings");
             var res = new APIResponse<AppLayoutSettings>();
             res.Result = new AppLayoutSettings();
             var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == url.ToLower());
