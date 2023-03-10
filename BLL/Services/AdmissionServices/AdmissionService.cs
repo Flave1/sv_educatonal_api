@@ -351,8 +351,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 var clientDetails = new Dictionary<string, string>();
                 clientDetails.Add("userId", fwsRequest.Result.UserId);
-                clientDetails.Add("smsClientId", "");
-                clientDetails.Add("productBaseurlSuffix", fwsRequest.Result.BaseUrlAppendix);
+                clientDetails.Add("smsClientId", fwsRequest.Result.ClientId);
 
                 var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
                 if (result.Result == null)
