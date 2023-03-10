@@ -331,7 +331,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(q => q.SessionTerm)
                 .Include(q => q.HomeAssessmentFeedBacks)
                 .OrderByDescending(d => d.CreatedOn)
-                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass, true)).FirstOrDefaultAsync();
+                .Select(f => new GetHomeAssessmentRequest(f, studentsInClass, true, true)).FirstOrDefaultAsync();
 
             if (result is not null)
             {

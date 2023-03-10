@@ -120,7 +120,7 @@ namespace SMP.Contracts.Assessment
                 StudentList = studentIds.OrderByDescending(x =>  db.HomeAssessmentFeedBacks.Select(s => s.StudentContactId.ToString()).Contains(x)).Select(id => new SubmittedAndUnsubmittedStudents(id, db.HomeAssessmentFeedBacks, classtudents)).ToList();
         }
 
-        public GetHomeAssessmentRequest(HomeAssessment db, ICollection<StudentContact> classtudents, bool isMobile = true)
+        public GetHomeAssessmentRequest(HomeAssessment db, ICollection<StudentContact> classtudents, bool isMobile = true, bool isSingle = true)
         {
             var studentIds = !string.IsNullOrEmpty(db.SessionClassGroup.ListOfStudentContactIds) ?
                 db.SessionClassGroup.ListOfStudentContactIds.Split(',').ToList() : new List<string>();
@@ -146,6 +146,7 @@ namespace SMP.Contracts.Assessment
             SessionTermId = db.SessionTermId.ToString();
             SessionTermName = db.SessionTerm.TermName;
             Comment = db.Comment;
+            Content = db.Content;
             TeacherId = db.TeacherId;
             NumberOfStudentsSubmitted = db.HomeAssessmentFeedBacks.Count(d => d.Status == 3); //3 of HomeAssessmentStatus;
             NumberOfStudentsNotSubmitted = Convert.ToInt32((NumberOfStudentsSubmitted - studentIds.Count()).ToString().TrimStart('-'));
