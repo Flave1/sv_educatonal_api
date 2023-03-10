@@ -24,5 +24,6 @@ namespace SMP.BLL.Services.TimetableServices
         Task<APIResponse<UpdateExamTimeTableDay>> UpdateExamTimeTableDayAsync(UpdateExamTimeTableDay request);
         Task<APIResponse<GetExamTimeActivity>> GetExamTimeTableByStudentAsync();
         Task<APIResponse<GetExamTimeActivity>> GetExamTimeTableByParentsAsync(Guid classlkpId);
+        Task<APIResponse<List<GetExamTimeActivity>>> GetAllExamTimeTableAsync();
     }
 }

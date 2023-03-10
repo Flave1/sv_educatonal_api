@@ -106,5 +106,12 @@ namespace SMP.API.Controllers.TeacherControllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+        [HttpGet("get-all/exam-time-table")]
+        public async Task<IActionResult> GetAllExamTimeTableAsync()
+        {
+            var response = await service.GetAllExamTimeTableAsync();
+            return Ok(response);
+        }
     }
 }

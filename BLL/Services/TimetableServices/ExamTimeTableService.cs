@@ -400,5 +400,32 @@ namespace SMP.BLL.Services.TimetableServices
                 return res;
             }
         }
+
+        public async Task<APIResponse<List<GetExamTimeActivity>>> GetAllExamTimeTableAsync()
+        {
+            var res = new APIResponse<List<GetExamTimeActivity>>();
+            try
+            {
+                var result = await context.ExamTimeTable
+                    .Where(d => d.ClientId == smsClientId && d.Deleted == false)
+                    .Include(s => s.Class)
+                    .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
+                     .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
+                    .Select(f => new GetExamTimeActivity(f)).ToListAsync();
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.Result = result;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
     }
 }
