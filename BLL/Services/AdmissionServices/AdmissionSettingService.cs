@@ -138,7 +138,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var settings = await context.AdmissionSettings.Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(request.Item)).FirstOrDefaultAsync();
+                var settings = await context.AdmissionSettings.Where(d => d.Deleted != true && d.AdmissionSettingId == Guid.Parse(request.Item) && d.ClientId == smsClientId).FirstOrDefaultAsync();
                 if (settings == null)
                 {
                     res.Message.FriendlyMessage = "Admission Settings Id does not exist";
