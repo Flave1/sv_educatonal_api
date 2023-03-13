@@ -34,7 +34,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<List<GetApplicationLookups>>();
             var activeClasses =  context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
 
-            if (activeClasses.Count() == context.ClassTimeTable.Where(x => x.ClientId == smsClientId).Count())
+            if (activeClasses.Count() == context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable).Count())
             {
                res.Result = await activeClasses.Select(a => new GetApplicationLookups
                 {
@@ -47,7 +47,7 @@ namespace SMP.BLL.Services.TimetableServices
                 res.IsSuccessful = true;
                 return res;
             }
-            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Where(x=>x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable).Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
             && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
             if (noneAddedClassIds.Any())
@@ -56,7 +56,8 @@ namespace SMP.BLL.Services.TimetableServices
                 {
                     var req = new ClassTimeTable
                     {
-                        ClassId = id
+                        ClassId = id,
+                        TimetableType = (int)TimetableType.ActivityTimetable
                     };
                     await context.ClassTimeTable.AddAsync(req);
                 }
@@ -253,7 +254,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<GetClassTimeActivity>();
 
             var result = await context.ClassTimeTable
-                .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.ClassId == classId)
+                .Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ActivityTimetable && d.Deleted == false && d.ClassId == classId)
                 .Include(s => s.Class)
                 .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                  .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -268,9 +269,9 @@ namespace SMP.BLL.Services.TimetableServices
         public async Task<APIResponse<List<GetClassTimeActivityByDay>>> GetClassTimeActivityByDayAsync(string day)
         {
             var res = new APIResponse<List<GetClassTimeActivityByDay>>();
-            var classList = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.Deleted == false).Include(d => d.Class).ToList();
+            var classList = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable && x.Deleted == false).Include(d => d.Class).ToList();
 
-            var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId)
+            var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable)
                 .Include(s => s.Days)
                  .Include(s => s.Times).ThenInclude(d => d.Activities)
                 .Where(d => d.Deleted == false && d.Days.Select(d => d.Day).Contains(day))
@@ -343,7 +344,7 @@ namespace SMP.BLL.Services.TimetableServices
             if (!string.IsNullOrEmpty(studentContactId))
             {
                 var studentAct = context.StudentContact.Where(x => x.ClientId == smsClientId).Include(s => s.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
-                var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId)
+                var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable)
                   .Include(s => s.Class)
                   .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                    .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -360,7 +361,7 @@ namespace SMP.BLL.Services.TimetableServices
         async Task<APIResponse<GetClassTimeActivity>> ITimeTableService.GetClassTimeTableByParentsAsync(Guid classlkpId)
         {
             var res = new APIResponse<GetClassTimeActivity>();
-            var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId)
+            var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable)
               .Include(s => s.Class)
               .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)

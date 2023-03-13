@@ -11,6 +11,7 @@ namespace SMP.DAL.Models.Timetable
     {
         [Key]
         public Guid ClassTimeTableId { get; set; }
+        public int TimetableType { get; set; }
         public Guid ClassId { get; set; }
         [ForeignKey("ClassId")]
         public ClassLookup Class { get; set; }
