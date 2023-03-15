@@ -17,6 +17,7 @@ using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.CBTAssessmentServices
@@ -27,20 +28,19 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         private readonly FwsConfigSettings fwsOptions;
         private readonly DataContext context;
         private readonly IUtilitiesService utilitiesService;
-        private readonly FwsClientInformation fwsClientInformations;
+        //private readonly FwsClientInformation fwsClientInformations;
         private readonly string smsClientId;
         private readonly IScoreEntryHistoryService scoreEntryService;
         private readonly ILoggerService loggerService;
 
         public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context,
-            IUtilitiesService utilitiesService, FwsClientInformation fwsClientInformations,
+            IUtilitiesService utilitiesService,
             IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService, ILoggerService loggerService)
         {
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
             this.context = context;
             this.utilitiesService = utilitiesService;
-            this.fwsClientInformations = fwsClientInformations;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.scoreEntryService = scoreEntryService;
             this.loggerService = loggerService;
@@ -53,15 +53,13 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             var apiCredentials = new SmsClientInformationRequest
             {
                 ApiKey = fwsOptions.Apikey,
-                ClientId = fwsOptions.ClientId
+                ClientId = smsClientId
             };
             var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
-            CopyClientInformation(fwsClientInformation);
 
             var clientDetails = new Dictionary<string, string>();
             clientDetails.Add("userId", fwsClientInformation.Result.UserId);
-            clientDetails.Add("smsClientId", "");
-            clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
+            clientDetails.Add("smsClientId", smsClientId);
 
             res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}", clientDetails);
 
@@ -87,12 +85,14 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student =  await utilitiesService.GetStudentContactByRegNo(studentRegNo);
-                    
-                   
+
+
+                    var fwsClientInformation = await GetClientInformationAsync();
+
                     var clientDetails = new Dictionary<string, string>();
                     clientDetails.Add("examinationId", examId);
                     clientDetails.Add("candidateId_regNo", stdRegNumber);
-                    clientDetails.Add("userId", fwsClientInformations.UserId);
+                    clientDetails.Add("userId", fwsClientInformation.Result.UserId);
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if(studentResult.Result == null)
                         continue;
@@ -147,16 +147,24 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
             try
             {
+
+                if (string.IsNullOrEmpty(studentRegNos))
+                {
+                    res.Message.FriendlyMessage = "No student has taken this examination";
+                    return res;
+                }
                 var students = studentRegNos.Split(',').ToArray();
                 foreach (var stdRegNumber in students)
                 {
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student = await utilitiesService.GetStudentContactByRegNo(studentRegNo);
 
+                    var fwsClientInformation = await GetClientInformationAsync();
+
                     var clientDetails = new Dictionary<string, string>();
                     clientDetails.Add("examinationId", examId);
                     clientDetails.Add("candidateId_regNo", stdRegNumber);
-                    clientDetails.Add("userId", fwsClientInformations.UserId);
+                    clientDetails.Add("userId", fwsClientInformation.Result.UserId);
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if (studentResult.Result == null)
                     {
@@ -206,20 +214,16 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         }
 
       
-
-        void CopyClientInformation(SmsClientInformation fwsClientInformation)
+        private async Task<SmsClientInformation> GetClientInformationAsync()
         {
-            fwsClientInformations.ClientId = fwsClientInformation.Result.ClientId;
-            fwsClientInformations.Address = fwsClientInformation.Result.Address;
-            fwsClientInformations.BaseUrlAppendix = fwsClientInformation.Result.BaseUrlAppendix;
-            fwsClientInformations.Country = fwsClientInformation.Result.Country;
-            fwsClientInformations.IpAddress = fwsClientInformation.Result.IpAddress;
-            fwsClientInformations.PasswordHash = fwsClientInformation.Result.PasswordHash;
-            fwsClientInformations.SchoolName = fwsClientInformation.Result.SchoolName;
-            fwsClientInformations.SmsapI_KEY = fwsClientInformation.Result.SmsapI_KEY;
-            fwsClientInformations.State = fwsClientInformation.Result.State;
-            fwsClientInformations.UserId = fwsClientInformation.Result.UserId;
-            fwsClientInformations.UserName = fwsClientInformation.Result.UserName;
+            var apiCredentials = new SmsClientInformationRequest
+            {
+                ApiKey = fwsOptions.Apikey,
+                ClientId = smsClientId
+            };
+            return await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+
         }
+
     }
 }

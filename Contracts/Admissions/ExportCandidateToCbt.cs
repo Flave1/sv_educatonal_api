@@ -10,5 +10,6 @@ namespace SMP.Contracts.Admissions
     {
         public string ClassId { get; set; }
         public string CategoryName { get; set; }
+        public string CandidateCategory { get; set; }
     }
 }

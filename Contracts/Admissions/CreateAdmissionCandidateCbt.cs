@@ -9,6 +9,7 @@ namespace SMP.Contracts.Admissions
     public class CreateAdmissionCandidateCbt
     {
         public string CandidateCategory { get; set; }
+        public string CategoryName { get; set; }
         public List<AdmissionCandidateList> AdmissionCandidateList { get; set; }
     }
     public class AdmissionCandidateList
@@ -18,5 +19,11 @@ namespace SMP.Contracts.Admissions
         public string OtherName { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
+    }
+
+    public class SMPCbtCreateCandidateResponse
+    {
+        public string CategoryName { get; set; }
+        public string CategoryId { get; set; }
     }
 }

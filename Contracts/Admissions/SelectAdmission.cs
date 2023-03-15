@@ -29,6 +29,7 @@ namespace SMP.Contracts.Admissions
         public int CandidateAdmissionStatus { get; set; }
         public string ExaminationId { get; set; }
         public string CandidateCategory { get; set; }
+        public string CandidateCategoryName { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
         public SelectAdmission(Admission admission, ClassLookup classLookup)
@@ -55,6 +56,7 @@ namespace SMP.Contracts.Admissions
             CandidateCategory = admission.CandidateCategory;
             ClassId = admission.ClassId.ToString();
             ClassName = classLookup.Name;
+            CandidateCategoryName = string.IsNullOrEmpty(admission.CandidateCategoryName) ? $"{classLookup.Name} Candidates Examination ({DateTime.UtcNow.ToString("yyyy-MM-dd hh:mm")})" : admission.CandidateCategoryName;
         }
     }
 }
