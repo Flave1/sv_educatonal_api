@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230313205725_TimetableType")]
+    partial class TimetableType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -814,9 +816,6 @@ namespace SMP.DAL.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("CandidateCategory")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CandidateCategoryName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ClassId")
