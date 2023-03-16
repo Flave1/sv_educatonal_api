@@ -136,15 +136,15 @@ namespace SMP.BLL.Services.PortalService
             var result = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
             if (result == null)
             {
-                var setting = new ResultSetting()
+                var setting = new SchoolSetting()
                 {
-                    PromoteAll = true,
-                    ShowPositionOnResult = false,
-                    ShowNewsletter = false,
-                    CumulativeResult = true,
-                    BatchPrinting = true,
-                    PrincipalStample = "",
-                    SelectedTemplate = request.SelectedTemplate
+                    RESULTSETTINGS_PromoteAll = true,
+                    RESULTSETTINGS_ShowPositionOnResult = false,
+                    RESULTSETTINGS_ShowNewsletter = false,
+                    RESULTSETTINGS_CumulativeResult = true,
+                    RESULTSETTINGS_BatchPrinting = true,
+                    RESULTSETTINGS_PrincipalStample = "",
+                    RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate
                 };
                 context.Add(setting);
                 await context.SaveChangesAsync();
@@ -242,7 +242,8 @@ namespace SMP.BLL.Services.PortalService
                 res.Result.loginTemplate = setting.APPLAYOUTSETTINGS_loginTemplate;
                 res.Result.sidebarActiveStyle = setting.APPLAYOUTSETTINGS_SidebarActiveStyle;
                 res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
-                res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
+                if(setting.APPLAYOUTSETTINGS_SidebarType is not null)
+                    res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
             }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -267,7 +268,7 @@ namespace SMP.BLL.Services.PortalService
                 setting.APPLAYOUTSETTINGS_SidebarType = JsonConvert.SerializeObject(request.sidebarType);
                 setting.APPLAYOUTSETTINGS_loginTemplate = request.loginTemplate;
                 setting.APPLAYOUTSETTINGS_SidebarActiveStyle = request.sidebarActiveStyle;
-                //setting.schoolUrl = request.schoolUrl;
+                setting.APPLAYOUTSETTINGS_SchoolUrl = request.schoolUrl;
                 setting.ClientId = smsClientId;
                 await context.SaveChangesAsync();
             }
