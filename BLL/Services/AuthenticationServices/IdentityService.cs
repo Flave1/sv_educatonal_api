@@ -143,7 +143,7 @@ namespace BLL.AuthenticationServices
                     firstName = student.FirstName;
                     lastName = student.LastName;
                 }
-                AppLayoutSetting appSettings = null;
+                SchoolSetting schoolSettings = null;
 
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
@@ -158,13 +158,11 @@ namespace BLL.AuthenticationServices
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
-                    appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
-
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
+                    schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -252,7 +250,7 @@ namespace BLL.AuthenticationServices
                     firstName = student.FirstName;
                     lastName = student.LastName;
                 }
-                AppLayoutSetting appSettings = null;
+                SchoolSetting appSettings = null;
 
                 if (userAccount.UserType == (int)UserTypes.Parent)
                 {
@@ -267,7 +265,7 @@ namespace BLL.AuthenticationServices
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
-                    appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
+                    appSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
 
@@ -415,7 +413,7 @@ namespace BLL.AuthenticationServices
                             StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, AppLayoutSetting appLayoutSetting = null, string firstName = "", string lastName = "", string clientId = "")
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "")
         {
             try
             {
@@ -436,7 +434,7 @@ namespace BLL.AuthenticationServices
                     user.UserType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : null,
                     user.UserType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : null,
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
-                    appLayoutSetting != null ? new Claim("smsClientId", appLayoutSetting.ClientId) : new Claim("smsClientId", clientId),
+                    schoolSetting != null ? new Claim("smsClientId", schoolSetting.ClientId) : new Claim("smsClientId", clientId),
                 };
                 accessor.HttpContext.Items["smsClientId"] = clientId;
 
@@ -493,7 +491,7 @@ namespace BLL.AuthenticationServices
                 {
                     Token = tokenHandler.WriteToken(token),
                     RefreshToken = refreshToken.JwtId,
-                    SchoolUrl = appLayoutSetting.schoolUrl
+                    SchoolUrl = schoolSetting.APPLAYOUTSETTINGS_SchoolUrl
                 };
             }
             catch (Exception ex)
@@ -519,13 +517,13 @@ namespace BLL.AuthenticationServices
             {
                 var id = Guid.NewGuid();
                 var permisions = new List<string>();
-                AppLayoutSetting appSettings = null;
+                SchoolSetting schoolSettings = null;
                 string firstName = String.Empty;
                 string lastName = String.Empty;
 
                 var clientId = ClientId(schoolUrl);
                 if (!string.IsNullOrEmpty(schoolUrl))
-                    appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == schoolUrl.ToLower());
+                    schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == schoolUrl.ToLower());
                 else
                 {
                     res.Message.FriendlyMessage = $"Invalid request on login";
@@ -535,7 +533,7 @@ namespace BLL.AuthenticationServices
                 if (userAccount.UserType == (int)UserTypes.Admin)
                 {
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.AppActivity.Where(d => d.IsActive && d.ClientId == appSettings.ClientId).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
+                    permisions = context.AppActivity.Where(d => d.IsActive && d.ClientId == schoolSettings.ClientId).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
 
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     firstName = teacher.FirstName;
@@ -555,7 +553,7 @@ namespace BLL.AuthenticationServices
                     id = teacher.TeacherId;
 
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == appSettings.ClientId).Select(s => s.Activity.Permission).Distinct().ToList();
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == schoolSettings.ClientId).Select(s => s.Activity.Permission).Distinct().ToList();
 
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
@@ -584,13 +582,13 @@ namespace BLL.AuthenticationServices
 
 
                 if (!string.IsNullOrEmpty(schoolUrl))
-                    appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == schoolUrl.ToLower());
+                    schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == schoolUrl.ToLower());
 
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
+                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == schoolSettings.ClientId) ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
                 userAccount.EmailConfirmed = true;
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
                 res.IsSuccessful = true;
 
@@ -635,7 +633,7 @@ namespace BLL.AuthenticationServices
 
         }
 
-        string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
+        string ClientId(string url) => context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == url).ClientId;
 
         StudentContact GetStudentByUserId(string userId, string clientId) => context.StudentContact.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
 

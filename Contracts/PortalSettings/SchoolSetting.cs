@@ -43,16 +43,16 @@ namespace SMP.Contracts.PortalSettings
         public SchoolSettingContract(SchoolSetting db)
         {
             SchoolSettingsId = db.SchoolSettingsId;
-            SchoolName = db?.SchoolName??"";
-            SchoolAddress = db?.SchoolAddress ?? "";
-            SchoolAbbreviation = db?.SchoolAbbreviation ?? "";
-            Country = db?.Country ?? "";
-            State = db?.State ?? "";
-            PhoneNo1 = db?.PhoneNo1 ?? "";
-            PhoneNo2 = db?.PhoneNo2 ?? "";
-            SchoolType = db?.SchoolType ?? "";
-            Filepath = db.Photo;
-            Email = db?.Email ?? "";
+            SchoolName = db?.SCHOOLSETTINGS_SchoolName??"";
+            SchoolAddress = db?.SCHOOLSETTINGS_SchoolAddress ?? "";
+            SchoolAbbreviation = db?.SCHOOLSETTINGS_SchoolAbbreviation ?? "";
+            Country = db?.SCHOOLSETTINGS_Country ?? "";
+            State = db?.SCHOOLSETTINGS_State ?? "";
+            PhoneNo1 = db?.SCHOOLSETTINGS_PhoneNo1 ?? "";
+            PhoneNo2 = db?.SCHOOLSETTINGS_PhoneNo2 ?? "";
+            SchoolType = db?.SCHOOLSETTINGS_SchoolType ?? "";
+            Filepath = db.SCHOOLSETTINGS_Photo;
+            Email = db?.SCHOOLSETTINGS_Email ?? "";
         }
     }
 }

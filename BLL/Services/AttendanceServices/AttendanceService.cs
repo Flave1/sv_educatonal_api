@@ -37,7 +37,7 @@ namespace SMP.BLL.Services.AttendanceServices
         {
             var res = new APIResponse<GetAttendance>();
 
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
 
             var datTimeNote = DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
@@ -92,7 +92,7 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<GetAttendance>> IAttendanceService.ContinueAttendanceAsync(Guid ClassRegisterId)
         {
             var res = new APIResponse<GetAttendance>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var register = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == ClassRegisterId)
                 .Include(d => d.StudentAttendances)
@@ -142,7 +142,7 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<List<AttendanceList>>> IAttendanceService.GetAllStudentPresentAsync(Guid classRegisterId)
         {
             var res = new APIResponse<List<AttendanceList>> ();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var classRegister = await context.ClassRegister
                 .Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
@@ -165,7 +165,7 @@ namespace SMP.BLL.Services.AttendanceServices
         async Task<APIResponse<List<AttendanceList>>> IAttendanceService.GetAllAbsentStudents(Guid classRegisterId)
         {
             var res = new APIResponse<List<AttendanceList>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var classRegister = await context.ClassRegister.Where(c => c.ClientId == smsClientId && c.ClassRegisterId == classRegisterId)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Students).ThenInclude(e => e.User)

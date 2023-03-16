@@ -243,7 +243,7 @@ namespace SMP.BLL.Services.ResultServices
             filter.PageSize = 50;
             var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
             var clas = context.SessionClass.Include(x => x.Session).FirstOrDefault(x => x.SessionClassId == sessionClassId);
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var result = await context.ClassScoreEntry
                   .Where(e => e.ClientId == smsClientId && e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
@@ -327,7 +327,7 @@ namespace SMP.BLL.Services.ResultServices
         {
             filter.PageSize = 50;
             var res = new APIResponse<PagedResponse<PreviewClassScoreEntry>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var result = await context.ClassScoreEntry
                 .Where(e => e.ClientId == smsClientId && e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
@@ -489,7 +489,7 @@ namespace SMP.BLL.Services.ResultServices
        
         async Task<APIResponse<MasterList>> IResultsService.GetMasterListAsync(Guid sessionClassId, Guid termId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var term = context.SessionTerm.Where(e => e.ClientId == smsClientId && e.SessionTermId == termId).FirstOrDefault();
             var res = new APIResponse<MasterList>();
@@ -529,7 +529,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<PagedResponse<StudentResult>>> IResultsService.GetClassResultListAsync(Guid sessionClassId, Guid termId, PaginationFilter filter)//bb
         {
             var res = new APIResponse<PagedResponse<StudentResult>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             try
             {
@@ -651,7 +651,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<PagedResponse<GetClassScoreEntry>>> IResultsService.GetPreviousTermsClassSubjectScoreEntriesAsync(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var clas = context.SessionClass.Include(s => s.Session).ThenInclude(x => x.Terms).FirstOrDefault(x => x.SessionClassId == sessionClassId);
 
             var result = await context.ClassScoreEntry
@@ -836,7 +836,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<PagedResponse<PreviewClassScoreEntry>>> IResultsService.PreviewPreviousTermsClassScoreEntry(Guid sessionClassId, Guid subjectId, Guid sessionTermId, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<PreviewClassScoreEntry>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var result = await context.ClassScoreEntry
                .Where(e => e.ClientId == smsClientId && e.SessionClassId == sessionClassId && e.SubjectId == subjectId)
@@ -868,7 +868,7 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<CumulativeMasterList>> IResultsService.GetCumulativeMasterListAsync(Guid sessionClassId, Guid termId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var res = new APIResponse<CumulativeMasterList>();
             var clas = await context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(r => r.Class)
                 .Include(x => x.Session)
@@ -901,7 +901,7 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<StudentCoreEntry>> IResultsService.GetSingleStudentScoreEntryAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var res = new APIResponse<StudentCoreEntry>();
 
@@ -1015,7 +1015,7 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<List<PrintResult>>> IResultsService.GetStudentResultForBatchPrintingAsync(Guid sessionClassId, Guid termId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var res = new APIResponse<List<PrintResult>>();
             try
@@ -1061,7 +1061,7 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<PrintResult>> IResultsService.GetStudentResultForPrintingAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var res = new APIResponse<PrintResult>();
             try
@@ -1106,7 +1106,7 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<APIResponse<PreviewResult>> IResultsService.GetStudentResultForPreviewAsync(Guid sessionClassId, Guid termId, Guid studentContactId)
         {
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var res = new APIResponse<PreviewResult>();
             var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
@@ -1168,7 +1168,7 @@ namespace SMP.BLL.Services.ResultServices
             res.Result = new BatchPrintDetail();
             res.Result.Students = new List<StudentResultDetail>();
            
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             try
             {

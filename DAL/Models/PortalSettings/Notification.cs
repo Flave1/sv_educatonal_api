@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SMP.DAL.Models.PortalSettings
 {
-    public class Notification: CommonEntity
+    public class Notification : CommonEntity
     {
         [Key]
         public Guid NotificationId { get; set; }

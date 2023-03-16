@@ -44,16 +44,16 @@ namespace SMP.BLL.Utilities
                     schoolSettings = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId);
                 }
 
-                var splited = regNo.Split(schoolSettings.RegNoSeperator);
-                if (schoolSettings.RegNoPosition == 3)
+                var splited = regNo.Split(schoolSettings.SCHOOLSETTINGS_RegNoSeperator);
+                if (schoolSettings.SCHOOLSETTINGS_RegNoPosition == 3)
                 {
                     return splited[2];
                 }
-                if (schoolSettings.RegNoPosition == 2)
+                if (schoolSettings.SCHOOLSETTINGS_RegNoPosition == 2)
                 {
                     return splited[1];
                 }
-                if (schoolSettings.RegNoPosition == 1)
+                if (schoolSettings.SCHOOLSETTINGS_RegNoPosition == 1)
                 {
                     return splited[0];
                 }
@@ -93,7 +93,7 @@ namespace SMP.BLL.Utilities
                 var lastRegNumber = context.StudentContact.Where(x => x.ClientId == smsClientId).Max(d => d.RegistrationNumber) ?? "1";
                 var newRegNo = (lastRegNumber == "1" ? 1 : long.Parse(lastRegNumber) + 1).ToString();
 
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
                 newRegNo = number(newRegNo);
 
                 var regNo = regNoFormat.Replace("%VALUE%", newRegNo);

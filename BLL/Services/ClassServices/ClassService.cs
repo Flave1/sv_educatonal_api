@@ -468,7 +468,7 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetStudentContacts>>> IClassService.GetClassStudentsClassesAsync(Guid sessionClassId)
         {
             var res = new APIResponse<List<GetStudentContacts>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId)
                 .Include(x => x.User)
