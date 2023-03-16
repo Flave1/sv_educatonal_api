@@ -146,17 +146,17 @@ namespace SMP.Contracts.PortalSettings
         {
 
         }
-        public PostNotificationSetting(NotificationSetting st)
+        public PostNotificationSetting(SchoolSetting st)
         {
-            RecoverPassword = new RecoverPassword(st.RecoverPassword);
-            Announcement = new Announcement(st.Announcement);
-            Assessment = new Assessment(st.Assessment);
-            Permission = new Permission(st.Permission);
-            Session = new Session(st.Session);
-            ClassManagement = new ClassManagement(st.ClassManagement);
-            Staff = new Staff(st.Staff);
-            Enrollment = new Enrollment(st.Enrollment);
-            PublishResult = new PublishResult(st.PublishResult, st.ShouldSendToParentsOnResultPublish);
+            RecoverPassword = new RecoverPassword(st.NOTIFICATIONSETTINGS_RecoverPassword);
+            Announcement = new Announcement(st.NOTIFICATIONSETTINGS_Announcement);
+            Assessment = new Assessment(st.NOTIFICATIONSETTINGS_Assessment);
+            Permission = new Permission(st.NOTIFICATIONSETTINGS_Permission);
+            Session = new Session(st.NOTIFICATIONSETTINGS_Session);
+            ClassManagement = new ClassManagement(st.NOTIFICATIONSETTINGS_ClassManagement);
+            Staff = new Staff(st.NOTIFICATIONSETTINGS_Staff);
+            Enrollment = new Enrollment(st.NOTIFICATIONSETTINGS_Enrollment);
+            PublishResult = new PublishResult(st.NOTIFICATIONSETTINGS_PublishResult, st.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish);
         }
     }
 

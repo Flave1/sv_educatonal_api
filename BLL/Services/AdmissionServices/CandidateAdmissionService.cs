@@ -104,7 +104,7 @@ namespace SMP.BLL.Services.AdmissionServices
             try
             {
 
-                var clientId = context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == request.SchoolUrl)?.ClientId?? string.Empty;
+                var clientId = context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl)?.ClientId?? string.Empty;
 
                 if (!string.IsNullOrEmpty(clientId))
                 {
@@ -122,7 +122,8 @@ namespace SMP.BLL.Services.AdmissionServices
                         context.AdmissionNotifications.Add(notification);
                         await context.SaveChangesAsync();
 
-                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl);
+                        var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == clientId);
+                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl, schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
 
                         res.Result = new AdmissionLoginDetails(null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
 
@@ -218,13 +219,14 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var notificationEmail = await context.AdmissionNotifications.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.ParentEmail.ToLower() == request.Item.ToLower()).FirstOrDefaultAsync();
+                var notificationEmail = await context.AdmissionNotifications.Where(d => d.ParentEmail.ToLower() == request.Item.ToLower()).FirstOrDefaultAsync();
                 if (notificationEmail == null)
                 {
                     res.Message.FriendlyMessage = "Email does not exist";
                     res.IsSuccessful = false;
                     return res;
                 }
+                accessor.HttpContext.Items["smsClientId"] = notificationEmail.ClientId;
                 context.AdmissionNotifications.Remove(notificationEmail);
                 await context.SaveChangesAsync();
 
@@ -387,16 +389,18 @@ namespace SMP.BLL.Services.AdmissionServices
 
             return new AdmissionAuth { Token = tokenHandler.WriteToken(token), Expires = tokenDescriptor.Expires.ToString() };
         }
-        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL)
+        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL, string schoolAbbreviation)
         {
             var toEmail = new List<EmailAddress>();
             var frmEmail = new List<EmailAddress>();
             toEmail.Add(new EmailAddress { Address = receiver, Name = receiver });
-            frmEmail.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
+            frmEmail.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolAbbreviation });
             var host = accessor.HttpContext.Request.Host.ToUriComponent();
+            string body = $"You've Successfully registered. Kindly click the link below to confirm your email address.<br /> {schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}";
+            var content = await emailService.GetMailBody(receiver, body, schoolAbbreviation);
             var email = new EmailMessage
             {
-                Content = $"Hello, you've Successfully registered. Kindly click the link below to confirm your email address.<br /> {schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}",
+                Content = content,
                 Subject = "Admission Registration Notice",
                 ToAddresses = toEmail,
                 FromAddresses = frmEmail,

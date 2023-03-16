@@ -68,8 +68,9 @@ namespace DAL
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
-        public DbSet<ResultSetting> ResultSetting { get; set; }
-        public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        //public DbSet<ResultSetting> ResultSetting { get; set; }
+        ////public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        //public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         public DbSet<Notification> Notification { get; set; }
         public DbSet<UploadedPin> UploadedPin { get; set; }
         public DbSet<UsedPin> UsedPin { get; set; }
@@ -94,7 +95,6 @@ namespace DAL
         public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
-        public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         public DbSet<Log> Log { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

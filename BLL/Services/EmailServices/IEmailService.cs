@@ -11,5 +11,6 @@ namespace BLL.EmailServices
     {
         List<EmailMessage> ReceiveEmail(int maxCount = 10);
         Task Send(EmailMessage emailMessage);
+        Task<string> GetMailBody(string name, string body, string schoolAbbreviation);
     }
 }

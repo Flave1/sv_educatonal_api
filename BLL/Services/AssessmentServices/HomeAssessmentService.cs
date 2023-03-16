@@ -123,7 +123,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<UpdateHomeAssessmentRequest>();
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
                 var assessment = await context.HomeAssessment.FirstOrDefaultAsync(d => d.HomeAssessmentId == Guid.Parse(request.HomeAssessmentId) && d.ClientId == smsClientId);
                 if (assessment is null)
                 {

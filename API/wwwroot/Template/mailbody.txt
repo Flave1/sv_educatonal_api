@@ -1,0 +1,9 @@
+<html>
+<p>Dear <b>{name}</b>,</p>
+<p>{body}</p>
+<br />
+<p>
+Regards, <br />
+<b>{schoolAbbreviation}.</b>.
+</p>
+</html>

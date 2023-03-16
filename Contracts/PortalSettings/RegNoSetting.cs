@@ -21,10 +21,10 @@ namespace SMP.Contracts.PortalSettings
         public RegNoSetting(SchoolSetting schoolSetting)
         {
             SchoolSettingsId = schoolSetting.SchoolSettingsId.ToString();
-            StudentRegNoFormat = schoolSetting?.StudentRegNoFormat ?? "";
-            TeacherRegNoFormat = schoolSetting?.TeacherRegNoFormat ?? "";
-            RegNoPosition = schoolSetting?.RegNoPosition.ToString() ?? "";
-            RegNoSeperator = schoolSetting?.RegNoSeperator ?? "";
+            StudentRegNoFormat = schoolSetting?.SCHOOLSETTINGS_StudentRegNoFormat ?? "";
+            TeacherRegNoFormat = schoolSetting?.SCHOOLSETTINGS_TeacherRegNoFormat ?? "";
+            RegNoPosition = schoolSetting?.SCHOOLSETTINGS_RegNoPosition.ToString() ?? "";
+            RegNoSeperator = schoolSetting?.SCHOOLSETTINGS_RegNoSeperator ?? "";
         }
     }
 }

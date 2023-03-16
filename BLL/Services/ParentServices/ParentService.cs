@@ -90,7 +90,7 @@ namespace SMP.BLL.Services.ParentServices
             var res = new APIResponse<PagedResponse<List<MyWards>>>();
             var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             if (!string.IsNullOrEmpty(userName))
             {
                 var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
@@ -246,7 +246,7 @@ namespace SMP.BLL.Services.ParentServices
 
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
                 var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
                         .Include(x => x.Parent)
                         .Where(x => x.ParentId == Guid.Parse(parentId))

@@ -69,7 +69,7 @@ namespace SMP.BLL.Services.PromorionServices
                         cl.TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
                         cl.TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
                         cl.TotalStudentsInClass = cl.TotalStudentsPassed + cl.TotalStudentsFailed;
-                        cl.StudentsToBePromoted = context.ResultSetting.Where(x => x.ClientId == smsClientId).FirstOrDefault().PromoteAll == false ? cl.TotalStudentsInClass - cl.TotalStudentsFailed : cl.TotalStudentsInClass;
+                        cl.StudentsToBePromoted = context.SchoolSettings.Where(x => x.ClientId == smsClientId).FirstOrDefault().RESULTSETTINGS_PromoteAll == false ? cl.TotalStudentsInClass - cl.TotalStudentsFailed : cl.TotalStudentsInClass;
                     }
                 }
                 res.Result = classes.ToList();
@@ -87,7 +87,7 @@ namespace SMP.BLL.Services.PromorionServices
 
             try
             {
-                var resultSettings = context.ResultSetting.Where(x => x.ClientId == smsClientId).FirstOrDefault();
+                var resultSettings = context.SchoolSettings.Where(x => x.ClientId == smsClientId).FirstOrDefault();
                 if (resultSettings == null)
                 {
                     res.Message.FriendlyMessage = "Result settings not found";
@@ -96,7 +96,7 @@ namespace SMP.BLL.Services.PromorionServices
 
                 Guid session = context.SessionClass.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.SessionClassId == Guid.Parse(request.ClassToBePromoted)).SessionId;
 
-                if (resultSettings.PromoteAll)
+                if (resultSettings.RESULTSETTINGS_PromoteAll)
                 {
                     var allStudents = passedStudents.Concat(failedStudents).ToList();
                     foreach (var studentId in allStudents)
@@ -138,7 +138,7 @@ namespace SMP.BLL.Services.PromorionServices
         async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllPassedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && ids.Contains(x.StudentContactId.ToString()))
                 .OrderByDescending(d => d.CreatedOn)
@@ -156,7 +156,7 @@ namespace SMP.BLL.Services.PromorionServices
         async Task<APIResponse<List<GetStudents>>> IPromotionService.GetAllFailedStudentsAsync(FetchPassedOrFailedStudents request)
         {
             var res = new APIResponse<List<GetStudents>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var ids = request.StudentIds.Split(',').ToArray();
             var result = await context.StudentContact.Where(x=>x.ClientId == smsClientId && x.Deleted == false && ids.Contains(x.StudentContactId.ToString()))
                 .OrderByDescending(d => d.CreatedOn)

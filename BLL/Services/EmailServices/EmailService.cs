@@ -3,16 +3,20 @@ using Contracts.Email;
 using MailKit.Net.Pop3;
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Polly;
 using Polly.Retry;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BLL.EmailServices
@@ -23,7 +27,9 @@ namespace BLL.EmailServices
         private readonly AsyncRetryPolicy asyncRetryPolicy;
         private const int maxRetryTimes = 1;
         private readonly ILoggerService logger;
-        public EmailService(IOptions<EmailConfiguration> options, ILoggerService logger)
+        private readonly IWebHostEnvironment environment;
+
+        public EmailService(IOptions<EmailConfiguration> options, ILoggerService logger, IWebHostEnvironment environment)
         {
             this.emailConfiguration = options.Value;
             this.asyncRetryPolicy = Policy.Handle<SocketException>()
@@ -32,6 +38,7 @@ namespace BLL.EmailServices
 
                 TimeSpan.FromSeconds(times * 2));
             this.logger = logger;
+            this.environment = environment;
             emailConfiguration = options.Value;
         }
 
@@ -115,6 +122,36 @@ namespace BLL.EmailServices
             {
                 await logger.Information($"Error Message{ ex?.Message}");
             } 
-        } 
+        }
+
+        public async Task<string> GetMailBody(string name, string body, string schoolAbbreviation)
+        {
+            try
+            {
+                var filePath = Path.Combine(environment.ContentRootPath, "wwwroot/Template/", "mailbody.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException("Could not find file", filePath);
+                }
+
+                string wordDocument;
+                FileStream fileStream = new FileStream(filePath, FileMode.Open);
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                     wordDocument = reader.ReadToEnd();
+                }
+                var content = wordDocument.Replace("{name}", name);
+                content = content.Replace("{body}", body);
+                content = content.Replace("{schoolAbbreviation}", schoolAbbreviation);
+
+                return content;
+            }
+            catch(Exception ex)
+            {
+                await logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                return string.Empty;
+            }
+        }
     }
 }

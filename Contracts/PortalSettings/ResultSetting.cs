@@ -40,16 +40,16 @@ namespace SMP.Contracts.PortalSettings
         {
 
         }
-        public ResultSettingContract( ResultSetting db)
+        public ResultSettingContract( SchoolSetting db)
         {
-            ResultSettingId = db.ResultSettingId.ToString();
-            PromoteAll = db.PromoteAll;
-            ShowPositionOnResult = db.ShowPositionOnResult;
-            CumulativeResult = db.CumulativeResult;
-            ShowNewsletter = db.ShowNewsletter;
-            BatchPrinting = db.BatchPrinting;
-            Filepath = db.PrincipalStample;
-            SelectedTemplate = db.SelectedTemplate;
+            ResultSettingId = db.SchoolSettingsId.ToString();
+            PromoteAll = db.RESULTSETTINGS_PromoteAll;
+            ShowPositionOnResult = db.RESULTSETTINGS_ShowPositionOnResult;
+            CumulativeResult = db.RESULTSETTINGS_CumulativeResult;
+            ShowNewsletter = db.RESULTSETTINGS_ShowNewsletter;
+            BatchPrinting = db.RESULTSETTINGS_BatchPrinting;
+            Filepath = db.RESULTSETTINGS_PrincipalStample;
+            SelectedTemplate = db.RESULTSETTINGS_SelectedTemplate;
         }
     }
 }
