@@ -41,16 +41,16 @@ namespace SMP.BLL.Services.PortalService
                     var filePath = upload.UploadSchoolLogo(request.Photo);
                     schoolSetting = new SchoolSetting()
                     {
-                        SchoolName = request.SchoolName,
-                        SchoolAddress = request.SchoolAddress,
-                        SchoolAbbreviation = request.SchoolAbbreviation,
-                        PhoneNo1 = request.PhoneNo1,
-                        PhoneNo2 = request.PhoneNo2,
-                        SchoolType = request.SchoolType,
-                        Country = request.Country,
-                        State = request.State,
-                        Photo = filePath,
-                        Email = request.Email
+                        SCHOOLSETTINGS_SchoolName = request.SchoolName,
+                        SCHOOLSETTINGS_SchoolAddress = request.SchoolAddress,
+                        SCHOOLSETTINGS_SchoolAbbreviation = request.SchoolAbbreviation,
+                        SCHOOLSETTINGS_PhoneNo1 = request.PhoneNo1,
+                        SCHOOLSETTINGS_PhoneNo2 = request.PhoneNo2,
+                        SCHOOLSETTINGS_SchoolType = request.SchoolType,
+                        SCHOOLSETTINGS_Country = request.Country,
+                        SCHOOLSETTINGS_State = request.State,
+                        SCHOOLSETTINGS_Photo = filePath,
+                        SCHOOLSETTINGS_Email = request.Email
 
                     };
                     await context.SchoolSettings.AddAsync(schoolSetting);
@@ -59,16 +59,16 @@ namespace SMP.BLL.Services.PortalService
                 else
                 {
                     var filePath = upload.UpdateSchoolLogo(request.Photo, request.Filepath);
-                    schoolSetting.SchoolName = request.SchoolName;
-                    schoolSetting.SchoolAddress = request.SchoolAddress;
-                    schoolSetting.SchoolAbbreviation = request.SchoolAbbreviation;
-                    schoolSetting.PhoneNo1 = request.PhoneNo1;
-                    schoolSetting.PhoneNo2 = request.PhoneNo2;
-                    schoolSetting.SchoolType = request.SchoolType;
-                    schoolSetting.Country = request.Country;
-                    schoolSetting.State = request.State;
-                    schoolSetting.Photo = filePath;
-                    schoolSetting.Email = request.Email;
+                    schoolSetting.SCHOOLSETTINGS_SchoolName = request.SchoolName;
+                    schoolSetting.SCHOOLSETTINGS_SchoolAddress = request.SchoolAddress;
+                    schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation = request.SchoolAbbreviation;
+                    schoolSetting.SCHOOLSETTINGS_PhoneNo1 = request.PhoneNo1;
+                    schoolSetting.SCHOOLSETTINGS_PhoneNo2 = request.PhoneNo2;
+                    schoolSetting.SCHOOLSETTINGS_SchoolType = request.SchoolType;
+                    schoolSetting.SCHOOLSETTINGS_Country = request.Country;
+                    schoolSetting.SCHOOLSETTINGS_State = request.State;
+                    schoolSetting.SCHOOLSETTINGS_Photo = filePath;
+                    schoolSetting.SCHOOLSETTINGS_Email = request.Email;
                 }
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = Messages.Saved;
@@ -90,30 +90,30 @@ namespace SMP.BLL.Services.PortalService
             var res = new APIResponse<PostResultSetting>();
             try
             {
-                var setting = await context.ResultSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
+                var setting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
                 if (setting == null)
                 {
                     var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
-                    setting = new ResultSetting()
+                    setting = new SchoolSetting()
                     {
-                        PromoteAll = request.PromoteAll,
-                        ShowPositionOnResult = request.ShowPositionOnResult,
-                        ShowNewsletter = request.ShowNewsletter,
-                        CumulativeResult = request.CumulativeResult,
-                        BatchPrinting = request.BatchPrinting,
-                        PrincipalStample = filePath
+                        RESULTSETTINGS_PromoteAll = request.PromoteAll,
+                        RESULTSETTINGS_ShowPositionOnResult = request.ShowPositionOnResult,
+                        RESULTSETTINGS_ShowNewsletter = request.ShowNewsletter,
+                        RESULTSETTINGS_CumulativeResult = request.CumulativeResult,
+                        RESULTSETTINGS_BatchPrinting = request.BatchPrinting,
+                        RESULTSETTINGS_PrincipalStample = filePath
                     };
-                    await context.ResultSetting.AddAsync(setting);
+                    await context.SchoolSettings.AddAsync(setting);
                 }
                 else
                 {
                     var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
-                    setting.PromoteAll = request.PromoteAll;
-                    setting.ShowPositionOnResult = request.ShowPositionOnResult;
-                    setting.ShowNewsletter = request.ShowNewsletter;
-                    setting.CumulativeResult = request.CumulativeResult;
-                    setting.BatchPrinting = request.BatchPrinting;
-                    setting.PrincipalStample = filePath;
+                    setting.RESULTSETTINGS_PromoteAll = request.PromoteAll;
+                    setting.RESULTSETTINGS_ShowPositionOnResult = request.ShowPositionOnResult;
+                    setting.RESULTSETTINGS_ShowNewsletter = request.ShowNewsletter;
+                    setting.RESULTSETTINGS_CumulativeResult = request.CumulativeResult;
+                    setting.RESULTSETTINGS_BatchPrinting = request.BatchPrinting;
+                    setting.RESULTSETTINGS_PrincipalStample = filePath;
                 }
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = Messages.Saved;
@@ -133,7 +133,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<UpdateResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(UpdateResultSetting request)
         {
             var res = new APIResponse<UpdateResultSetting>();
-            var result = await context.ResultSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
+            var result = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
             if (result == null)
             {
                 var setting = new ResultSetting()
@@ -154,7 +154,7 @@ namespace SMP.BLL.Services.PortalService
             }
             else
             {
-                result.SelectedTemplate = request.SelectedTemplate;
+                result.RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate;
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = "Template selected Successfully";
                 res.IsSuccessful = true;
@@ -166,20 +166,20 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
             var res = new APIResponse<PostNotificationSetting>();
-            var setting = await context.NotificationSetting.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
+            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
 
             if (setting is not null)
             {
-                setting.Announcement = request.Announcement.media +"/"+ request.Announcement.send;
-                setting.Assessment = request.Assessment.media + "/" + request.Assessment.send;
-                setting.ClassManagement = request.ClassManagement.media + "/" + request.ClassManagement.send;
-                setting.Enrollment = request.Enrollment.media + "/" + request.Enrollment.send;
-                setting.Permission = request.Permission.media + "/" + request.Permission.send;
-                setting.PublishResult = request.PublishResult.media + "/" + request.PublishResult.send;
-                setting.RecoverPassword = request.RecoverPassword.media + "/" + request.RecoverPassword.send;
-                setting.Session = request.Session.media + "/" + request.Session.send;
-                setting.ShouldSendToParentsOnResultPublish = request.PublishResult.ShouldSendToParentsOnResultPublish;
-                setting.Staff = request.Staff.media + "/" + request.Staff.send;
+                setting.NOTIFICATIONSETTINGS_Announcement = request.Announcement.media +"/"+ request.Announcement.send;
+                setting.NOTIFICATIONSETTINGS_Assessment = request.Assessment.media + "/" + request.Assessment.send;
+                setting.NOTIFICATIONSETTINGS_ClassManagement = request.ClassManagement.media + "/" + request.ClassManagement.send;
+                setting.NOTIFICATIONSETTINGS_Enrollment = request.Enrollment.media + "/" + request.Enrollment.send;
+                setting.NOTIFICATIONSETTINGS_Permission = request.Permission.media + "/" + request.Permission.send;
+                setting.NOTIFICATIONSETTINGS_PublishResult = request.PublishResult.media + "/" + request.PublishResult.send;
+                setting.NOTIFICATIONSETTINGS_RecoverPassword = request.RecoverPassword.media + "/" + request.RecoverPassword.send;
+                setting.NOTIFICATIONSETTINGS_Session = request.Session.media + "/" + request.Session.send;
+                setting.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = request.PublishResult.ShouldSendToParentsOnResultPublish;
+                setting.NOTIFICATIONSETTINGS_Staff = request.Staff.media + "/" + request.Staff.send;
                 await context.SaveChangesAsync();
             }
 
@@ -200,7 +200,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            var result = await context.ResultSetting.Where(x=>x.ClientId == smsClientId).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
+            var result = await context.SchoolSettings.Where(x=>x.ClientId == smsClientId).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
             if (result != null)
             {
                 var session = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
@@ -218,7 +218,7 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<PostNotificationSetting>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<PostNotificationSetting>();
-            res.Result = await context.NotificationSetting.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync() ?? new PostNotificationSetting();
+            res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync() ?? new PostNotificationSetting();
             res.IsSuccessful = true;
             return res;
         }
@@ -228,21 +228,21 @@ namespace SMP.BLL.Services.PortalService
             //await loggerService.Error("settings", url, "settings", "settings");
             var res = new APIResponse<AppLayoutSettings>();
             res.Result = new AppLayoutSettings();
-            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl.ToLower() == url.ToLower());
+            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == url.ToLower());
 
             if (setting is not null)
             {
-                res.Result.scheme = setting.scheme;
-                res.Result.schemeDir = setting.schemeDir;
-                res.Result.colorprimary = setting.colorprimary;
-                res.Result.navbarstyle = setting.navbarstyle;
-                res.Result.sidebarcolor = setting.sidebarcolor;
-                res.Result.colorcustomizer = setting.colorcustomizer;
-                res.Result.colorinfo = setting.colorinfo;
-                res.Result.loginTemplate = setting.loginTemplate;
-                res.Result.sidebarActiveStyle = setting.sidebarActiveStyle;
-                res.Result.schoolUrl = setting.schoolUrl;
-                res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.sidebarType);
+                res.Result.scheme = setting.APPLAYOUTSETTINGS_Scheme;
+                res.Result.schemeDir = setting.APPLAYOUTSETTINGS_SchemeDir;
+                res.Result.colorprimary = setting.APPLAYOUTSETTINGS_Colorprimary;
+                res.Result.navbarstyle = setting.APPLAYOUTSETTINGS_Navbarstyle;
+                res.Result.sidebarcolor = setting.APPLAYOUTSETTINGS_Sidebarcolor;
+                res.Result.colorcustomizer = setting.APPLAYOUTSETTINGS_Colorcustomizer;
+                res.Result.colorinfo = setting.APPLAYOUTSETTINGS_Colorinfo;
+                res.Result.loginTemplate = setting.APPLAYOUTSETTINGS_loginTemplate;
+                res.Result.sidebarActiveStyle = setting.APPLAYOUTSETTINGS_SidebarActiveStyle;
+                res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
+                res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
             }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -253,20 +253,20 @@ namespace SMP.BLL.Services.PortalService
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.UpdateAppLayoutSettingsAsync(AppLayoutSettings request)
         {
             var res = new APIResponse<AppLayoutSettings>();
-            var setting = await context.AppLayoutSetting.FirstOrDefaultAsync(x => request.schoolUrl == x.schoolUrl);
+            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => request.schoolUrl == x.APPLAYOUTSETTINGS_SchoolUrl);
 
             if (setting is not null)
             {
-                setting.scheme = request.scheme;
-                setting.schemeDir = request.schemeDir;
-                setting.colorprimary = request.colorprimary;
-                setting.navbarstyle = request.navbarstyle;
-                setting.sidebarcolor = request.sidebarcolor;
-                setting.colorcustomizer = request.colorcustomizer;
-                setting.colorinfo = request.colorinfo;
-                setting.sidebarType = JsonConvert.SerializeObject(request.sidebarType);
-                setting.loginTemplate = request.loginTemplate;
-                setting.sidebarActiveStyle = request.sidebarActiveStyle;
+                setting.APPLAYOUTSETTINGS_Scheme = request.scheme;
+                setting.APPLAYOUTSETTINGS_SchemeDir = request.schemeDir;
+                setting.APPLAYOUTSETTINGS_Colorprimary = request.colorprimary;
+                setting.APPLAYOUTSETTINGS_Navbarstyle = request.navbarstyle;
+                setting.APPLAYOUTSETTINGS_Sidebarcolor = request.sidebarcolor;
+                setting.APPLAYOUTSETTINGS_Colorcustomizer = request.colorcustomizer;
+                setting.APPLAYOUTSETTINGS_Colorinfo = request.colorinfo;
+                setting.APPLAYOUTSETTINGS_SidebarType = JsonConvert.SerializeObject(request.sidebarType);
+                setting.APPLAYOUTSETTINGS_loginTemplate = request.loginTemplate;
+                setting.APPLAYOUTSETTINGS_SidebarActiveStyle = request.sidebarActiveStyle;
                 //setting.schoolUrl = request.schoolUrl;
                 setting.ClientId = smsClientId;
                 await context.SaveChangesAsync();
@@ -284,26 +284,26 @@ namespace SMP.BLL.Services.PortalService
             try
             {
                 var isNew = false;
-                var setting = context.AppLayoutSetting.Where(x => x.ClientId == clientId).FirstOrDefault();
+                var setting = context.SchoolSettings.Where(x => x.ClientId == clientId).FirstOrDefault();
                 if(setting == null)
                 {
-                    setting = new AppLayoutSetting();
+                    setting = new SchoolSetting();
                     isNew = true;
                 }
                     
-                setting.scheme = "light";
-                setting.schemeDir = "ltr";
-                setting.colorprimary = "#3a57e8";
-                setting.navbarstyle = "sticky";
-                setting.sidebarcolor = "white";
-                setting.colorcustomizer = "default";
-                setting.colorinfo = "#4bc7d2";
-                setting.sidebarType = JsonConvert.SerializeObject(new SidebarType());
-                setting.loginTemplate = "default-login-template";
-                setting.schoolUrl = schoolUrl;
-                setting.sidebarActiveStyle = "roundedAllSide";
+                setting.APPLAYOUTSETTINGS_Scheme = "light";
+                setting.APPLAYOUTSETTINGS_SchemeDir = "ltr";
+                setting.APPLAYOUTSETTINGS_Colorprimary = "#3a57e8";
+                setting.APPLAYOUTSETTINGS_Navbarstyle = "sticky";
+                setting.APPLAYOUTSETTINGS_Sidebarcolor = "white";
+                setting.APPLAYOUTSETTINGS_Colorcustomizer = "default";
+                setting.APPLAYOUTSETTINGS_Colorinfo = "#4bc7d2";
+                setting.APPLAYOUTSETTINGS_SidebarType = JsonConvert.SerializeObject(new SidebarType());
+                setting.APPLAYOUTSETTINGS_loginTemplate = "default-login-template";
+                setting.APPLAYOUTSETTINGS_SchoolUrl = schoolUrl;
+                setting.APPLAYOUTSETTINGS_SidebarActiveStyle = "roundedAllSide";
                 setting.ClientId = clientId;
-                if(isNew) context.AppLayoutSetting.Add(setting);
+                if(isNew) context.SchoolSettings.Add(setting);
             }
             catch (Exception)
             {
@@ -325,10 +325,10 @@ namespace SMP.BLL.Services.PortalService
 
                     schoolSetting = new SchoolSetting()
                     {
-                        StudentRegNoFormat = studentRegNoFormat,
-                        RegNoPosition = request.RegNoPosition,
-                        TeacherRegNoFormat = teacherRegNoFormat,
-                        RegNoSeperator = request.RegNoSeperator
+                        SCHOOLSETTINGS_StudentRegNoFormat = studentRegNoFormat,
+                        SCHOOLSETTINGS_RegNoPosition = request.RegNoPosition,
+                        RESULTSETTINGS_SelectedTemplate = teacherRegNoFormat,
+                        SCHOOLSETTINGS_RegNoSeperator = request.RegNoSeperator
                     };
                     await context.SchoolSettings.AddAsync(schoolSetting);
 
@@ -338,10 +338,10 @@ namespace SMP.BLL.Services.PortalService
                     string studentRegNoFormat = GenerateStudentRegNoFormat(request);
                     string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);
 
-                    schoolSetting.StudentRegNoFormat = studentRegNoFormat;
-                    schoolSetting.RegNoPosition = request.RegNoPosition;
-                    schoolSetting.TeacherRegNoFormat = teacherRegNoFormat;
-                    schoolSetting.RegNoSeperator = request.RegNoSeperator;
+                    schoolSetting.SCHOOLSETTINGS_StudentRegNoFormat = studentRegNoFormat;
+                    schoolSetting.SCHOOLSETTINGS_RegNoPosition = request.RegNoPosition;
+                    schoolSetting.SCHOOLSETTINGS_TeacherRegNoFormat = teacherRegNoFormat;
+                    schoolSetting.SCHOOLSETTINGS_RegNoSeperator = request.RegNoSeperator;
                 }
 
                 await context.SaveChangesAsync();
@@ -416,13 +416,13 @@ namespace SMP.BLL.Services.PortalService
                     isNew = true;
                 }
 
-                schoolSetting.SchoolName = request.SchoolName;
-                schoolSetting.SchoolAddress = request.Address;
+                schoolSetting.SCHOOLSETTINGS_SchoolName = request.SchoolName;
+                schoolSetting.SCHOOLSETTINGS_SchoolAddress = request.Address;
                 for(int i = 0; i < splittedWords.Length; i++)
-                    schoolSetting.SchoolAbbreviation += " " + splittedWords[i].Substring(0, 1).ToUpper();
-                schoolSetting.Country = request.Country;
-                schoolSetting.State = request.State;
-                schoolSetting.Email = email;
+                    schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation += " " + splittedWords[i].Substring(0, 1).ToUpper();
+                schoolSetting.SCHOOLSETTINGS_Country = request.Country;
+                schoolSetting.SCHOOLSETTINGS_State = request.State;
+                schoolSetting.SCHOOLSETTINGS_Email = email;
                 schoolSetting.ClientId = request.ClientId;
 
                 if (isNew) await context.SchoolSettings.AddAsync(schoolSetting);

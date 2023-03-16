@@ -14,21 +14,21 @@ namespace SMP.DAL.Initializer
         //DO NOT TOUCH FILE ################################## DO NOT TOUCH FILE
         internal static void SeedNotificationSetting(DataContext context)
         {
-            var parents = new List<NotificationSetting>
+            var parents = new List<SchoolSetting>
                 {
-                    new NotificationSetting
+                    new SchoolSetting
                     {
-                        NotificationSettingId = Guid.Parse("6f30d20a-8383-42f7-a2a6-8cd0ecdd0086"),
-                        Announcement = "email/false",
-                        Assessment = "email/false",
-                        ClassManagement = "email/false",
-                        Enrollment = "email/false",
-                        Permission = "email/false",
-                        PublishResult = "email/false",
-                        RecoverPassword = "email/false",
-                        Session = "email/false",
-                        ShouldSendToParentsOnResultPublish = false,
-                        Staff = "email/false",
+                        SchoolSettingsId = Guid.Parse("6f30d20a-8383-42f7-a2a6-8cd0ecdd0086"),
+                        NOTIFICATIONSETTINGS_Announcement = "email/false",
+                        NOTIFICATIONSETTINGS_Assessment = "email/false",
+                        NOTIFICATIONSETTINGS_ClassManagement = "email/false",
+                        NOTIFICATIONSETTINGS_Enrollment = "email/false",
+                        NOTIFICATIONSETTINGS_Permission = "email/false",
+                        NOTIFICATIONSETTINGS_PublishResult = "email/false",
+                        NOTIFICATIONSETTINGS_RecoverPassword = "email/false",
+                        NOTIFICATIONSETTINGS_Session = "email/false",
+                        NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = false,
+                        NOTIFICATIONSETTINGS_Staff = "email/false",
                         ClientId = "D7F710A5-592F-4390-068C-08DA686DA23E"
                     },
 
@@ -39,7 +39,7 @@ namespace SMP.DAL.Initializer
                 {
                     foreach (var item in parents)
                     {
-                        if (!context.NotificationSetting.Any(w => w.NotificationSettingId == item.NotificationSettingId))
+                        if (!context.SchoolSettings.Any(w => w.SchoolSettingsId == item.SchoolSettingsId))
                         {
                             context.Add(item);
                             context.SaveChanges();

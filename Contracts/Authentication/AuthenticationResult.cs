@@ -33,9 +33,9 @@ namespace Contracts.Authentication
         public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id)
         {
             Id = id.ToString();
-            SchoolAbbreviation = db.SchoolAbbreviation;
-            SchoolLogo = db.Photo;
-            SchoolName = db.SchoolName;
+            SchoolAbbreviation = db.SCHOOLSETTINGS_SchoolAbbreviation;
+            SchoolLogo = db.SCHOOLSETTINGS_Photo;
+            SchoolName = db.SCHOOLSETTINGS_SchoolName;
             UserName = FirstName + " " + LastName;
             UserAccountId = user.Id;
             IsFirstTimeLogin = !user.EmailConfirmed;

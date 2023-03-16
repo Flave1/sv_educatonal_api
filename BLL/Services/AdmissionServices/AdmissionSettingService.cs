@@ -181,7 +181,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
 
                 var query = context.AdmissionSettings
-                    .Where(d => d.Deleted != true && smsClientId == d.ClientId);
+                    .Where(d => d.Deleted != true && smsClientId == d.ClientId).OrderByDescending(x => x.CreatedOn);
 
                 if(query is null)
                 {

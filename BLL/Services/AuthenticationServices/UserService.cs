@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 using DAL.StudentInformation;
 using SMP.DAL.Models.Parents;
 using DAL.TeachersInfor;
+using SMP.DAL.Migrations;
 
 namespace BLL.AuthenticationServices
 {
@@ -396,7 +397,7 @@ namespace BLL.AuthenticationServices
 
         async Task IUserService.GenerateResetLinkAndSendToUserEmail(ResetPassword request)
         {
-            var appsetting = context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl.ToLower() == request.SchoolUrl.ToLower());
+            var appsetting = context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == request.SchoolUrl.ToLower());
             if(appsetting is null)
                 throw new ArgumentException("Invalid Request");
             if (int.Parse(request.UserType) == (int)UserTypes.Student)
@@ -407,22 +408,25 @@ namespace BLL.AuthenticationServices
 
 
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var link = appsetting.schoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                var link = appsetting.APPLAYOUTSETTINGS_SchoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
-                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification");
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appsetting.ClientId);
+                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification", schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
             }
 
         }
 
-        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link, string subject)
+        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link, string subject, string schoolAbbreviation)
         {
             var to = new List<EmailAddress>();
             var frm = new List<EmailAddress>();
             to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
-            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolAbbreviation });
+            var body = $"Click  <a href='{link}'>here</a> to reset password";
+            var content = await emailService.GetMailBody(obj.UserName, body, schoolAbbreviation);
             var emMsg = new EmailMessage
             {
-                Content = $"Click  <a href='{link}'>here</a> to reset password",
+                Content = content,
                 SentBy = "Flavetechs",
                 Subject = subject,
                 ToAddresses = to,
@@ -511,7 +515,7 @@ namespace BLL.AuthenticationServices
             res.Result = new SmpStudentValidationResponse();
             res.IsSuccessful = true;
 
-            var appLayout = context.AppLayoutSetting.FirstOrDefault(x=>x.ClientId == request.ClientId);
+            var appLayout = context.SchoolSettings.FirstOrDefault(x=>x.ClientId == request.ClientId);
             if(appLayout is null)
             {
                 res.Result.Status = "failed";
@@ -524,7 +528,7 @@ namespace BLL.AuthenticationServices
                 if (request.UserType == (int)UserTypes.Student)
                 {
 
-                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == request.ClientId).StudentRegNoFormat;
+                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == request.ClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
                     if (regNoFormat is null)
                     {
@@ -556,7 +560,7 @@ namespace BLL.AuthenticationServices
                             res.Result.RegistrationNumber = student.RegistrationNumber;
                             res.Result.UserName = student.User.UserName;
                             res.Message.FriendlyMessage = Messages.GetSuccess;
-                            res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
+                            res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
                             return res;
                         }
                     }
@@ -576,7 +580,7 @@ namespace BLL.AuthenticationServices
                         //res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
                         res.Result.RegistrationNumber = "";
                         res.Result.UserName = teacher.UserName;
-                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
+                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
                         res.Message.FriendlyMessage = Messages.GetSuccess;
                         return res;
                     }
@@ -597,7 +601,7 @@ namespace BLL.AuthenticationServices
                         res.Result.UserName = teacher.UserName;
                         res.Result.RegistrationNumber = "";
                         res.Message.FriendlyMessage = Messages.GetSuccess;
-                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().Photo;
+                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
                         return res;
                     }
                 }
@@ -617,7 +621,7 @@ namespace BLL.AuthenticationServices
             var res = new APIResponse<bool>();
             try
             {
-                var appSettings = await context.AppLayoutSetting.FirstOrDefaultAsync(x => x.schoolUrl == request.SchoolUrl);
+                var appSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl);
                 var user = await manager.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Trim() == request.Email.ToLower().Trim() && x.Deleted != true);
                 if (user == null)
                 {
@@ -628,9 +632,10 @@ namespace BLL.AuthenticationServices
 
                 var token = await manager.GeneratePasswordResetTokenAsync(user);
 
-                var link = appSettings.schoolUrl + "/PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                var link = appSettings.APPLAYOUTSETTINGS_SchoolUrl + "/PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
-                await SendResetLinkToEmailToUserAsync(user, link, "Password Reset");
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appSettings.ClientId);
+                await SendResetLinkToEmailToUserAsync(user, link, "Password Reset", schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
 
                 res.IsSuccessful = true;
                 res.Result = true;
@@ -683,7 +688,7 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        string ClientId(string url) => context.AppLayoutSetting.FirstOrDefault(x => x.schoolUrl == url).ClientId;
+        string ClientId(string url) => context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == url).ClientId;
 
         public async Task<bool> TeacherAccountByEmailExist(string email)
         {

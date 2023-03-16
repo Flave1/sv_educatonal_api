@@ -256,7 +256,7 @@ namespace BLL.StudentServices
         async Task<APIResponse<PagedResponse<List<GetStudentContacts>>>> IStudentService.GetAllStudensAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<GetStudentContacts>>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.User.UserType == (int)UserTypes.Student)
                 .Include(x => x.User)
@@ -276,7 +276,7 @@ namespace BLL.StudentServices
         async Task<APIResponse<GetStudentContacts>> IStudentService.GetSingleStudentAsync(Guid studentContactId)
         {
             var res = new APIResponse<GetStudentContacts>();
-            var regNoFormat = context.SchoolSettings.SingleOrDefault(x => x.ClientId == smsClientId)?.StudentRegNoFormat;
+            var regNoFormat = context.SchoolSettings.SingleOrDefault(x => x.ClientId == smsClientId)?.SCHOOLSETTINGS_StudentRegNoFormat;
 
             var result = await context.StudentContact
                 .Where(d => studentContactId == d.StudentContactId && d.ClientId == smsClientId)
@@ -476,7 +476,7 @@ namespace BLL.StudentServices
                             {
                                 if (std is null)
                                 {
-                                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x=> x.ClientId == smsClientId).StudentRegNoFormat;
+                                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x=> x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
                                     var rgNo = regNoFormat.Replace("%VALUE%", item.RegistrationNumber);
                                     var userId = await userService.CreateStudentUserAccountAsync(item, item.RegistrationNumber, rgNo);
                                     std = new StudentContact();
@@ -573,7 +573,7 @@ namespace BLL.StudentServices
             try
             {
                 string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo);
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
                 var result = await context.StudentContact
                     .Where(d => regNo == d.RegistrationNumber && d.Deleted != true && d.ClientId == clientId)
@@ -601,7 +601,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<PagedResponse<List<GetStudentContactCbt>>>();
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
                 var query = context.StudentContact
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId);
@@ -632,7 +632,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<List<GetStudentContactCbt>>();
             try
             {
-                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).StudentRegNoFormat;
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).SCHOOLSETTINGS_StudentRegNoFormat;
                 var result = await context.StudentContact
                     .Where(d => d.SessionClassId == Guid.Parse(sessionClassId) && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled && d.Deleted != true && d.ClientId == clientId)
                     .Include(x => x.User)
