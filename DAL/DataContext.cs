@@ -69,7 +69,7 @@ namespace DAL
         public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
         //public DbSet<ResultSetting> ResultSetting { get; set; }
-        //public DbSet<NotificationSetting> NotificationSetting { get; set; }
+        ////public DbSet<NotificationSetting> NotificationSetting { get; set; }
         //public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         public DbSet<Notification> Notification { get; set; }
         public DbSet<UploadedPin> UploadedPin { get; set; }
