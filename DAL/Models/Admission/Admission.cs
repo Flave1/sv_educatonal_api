@@ -30,6 +30,7 @@ namespace SMP.DAL.Models.Admission
         public string ParentPhoneNumber { get; set; }
         public int CandidateAdmissionStatus { get; set; }
         public string CandidateCategory { get; set; }
+        public string CandidateCategoryName { get; set; }
         public int ExaminationStatus { get; set; }
         public string ExaminationId { get; set; }
         public Guid AdmissionSettingId { get; set; }

@@ -12,10 +12,10 @@ namespace SMP.Contracts.Timetable
         public string ExamDay { get; set; }
         public string ExamTimeTableDayId { get; set; }
 
-        public GetExamDays(ExamTimeTableDay day)
+        public GetExamDays(ClassTimeTableDay day)
         {
             ExamDay = day.Day;
-            ExamTimeTableDayId = day.ExamTimeTableDayId.ToString();
+            ExamTimeTableDayId = day.ClassTimeTableDayId.ToString();
         }
     }
     public class GetExamTimeActivityByDay
@@ -25,10 +25,10 @@ namespace SMP.Contracts.Timetable
         public ExamClassObj[] classes { get; set; } = Array.Empty<ExamClassObj>();
         public ExamTimeObj[] times { get; set; } = Array.Empty<ExamTimeObj>();
 
-        public GetExamTimeActivityByDay(ExamTimeTable examTimeTable, List<ExamTimeTable> tableList)
+        public GetExamTimeActivityByDay(ClassTimeTable examTimeTable, List<ClassTimeTable> tableList)
         {
             Day = examTimeTable.Days.FirstOrDefault().Day;
-            ExamTimeTableDayId = examTimeTable.Days.FirstOrDefault().ExamTimeTableDayId.ToString();
+            ExamTimeTableDayId = examTimeTable.Days.FirstOrDefault().ClassTimeTableDayId.ToString();
             if (tableList.Any())
             {
                 classes = tableList.Select(s => new ExamClassObj(s)).ToArray();
@@ -44,10 +44,10 @@ namespace SMP.Contracts.Timetable
     {
         public string activity { get; set; }
         public string classTimeTableDayId { get; set; }
-        public ExamPeriodActivitiesObj(ExamTimeTableTimeActivity db)
+        public ExamPeriodActivitiesObj(ClassTimeTableTimeActivity db)
         {
             activity = db.Activity;
-            classTimeTableDayId = db.Day.ExamTimeTableDayId.ToString();
+            classTimeTableDayId = db.Day.ClassTimeTableDayId.ToString();
         }
     }
 
@@ -57,10 +57,10 @@ namespace SMP.Contracts.Timetable
         public string period { get; set; }
         public string examTimeTableId { get; set; }
         public ExamPeriodActivitiesObj[] periodActivities { get; set; } = Array.Empty<ExamPeriodActivitiesObj>();
-        public ExamTimeObj(ExamTimeTableTime time)
+        public ExamTimeObj(ClassTimeTableTime time)
         {
-            classId = time.ExamTimeTable.ClassId.ToString();
-            examTimeTableId = time.ExamTimeTableId.ToString();
+            classId = time.TimeTable.ClassId.ToString();
+            examTimeTableId = time.ClassTimeTableId.ToString();
             period = time.Start + " - " + time.End;
             periodActivities = time.Activities.Select(d => new ExamPeriodActivitiesObj(d)).ToArray();
         }
@@ -71,11 +71,11 @@ namespace SMP.Contracts.Timetable
         public string classId { get; set; }
         public string className { get; set; }
         public string ExamTimeTableId { get; set; }
-        public ExamClassObj(ExamTimeTable classs)
+        public ExamClassObj(ClassTimeTable classs)
         {
             classId = classs.ClassId.ToString();
             className = classs.Class.Name.ToString();
-            ExamTimeTableId = classs.ExamTimeTableId.ToString();
+            ExamTimeTableId = classs.ClassTimeTableId.ToString();
         }
     }
 }

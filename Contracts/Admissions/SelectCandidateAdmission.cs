@@ -33,6 +33,8 @@ namespace SMP.Contracts.Admissions
         public string ClassName { get; set; }
         public string AdmissionSettingId { get; set; }
         public string AdmissionSettingName { get; set; }
+        public string CBTCategoryId { get; set; }
+        public string CBTCategoryName { get; set; }
         public SelectCandidateAdmission(Admission admission, ClassLookup classLookup)
         {
             AdmissionId = admission.AdmissionId.ToString();
@@ -57,6 +59,8 @@ namespace SMP.Contracts.Admissions
             ClassName = classLookup.Name;
             AdmissionSettingId = admission.AdmissionSettings.AdmissionSettingId.ToString();
             AdmissionSettingName = admission.AdmissionSettings.AdmissionSettingName;
+            CBTCategoryId = admission.CandidateCategory;
+            CBTCategoryName = admission.CandidateCategoryName;
         }
     }
 }

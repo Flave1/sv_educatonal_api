@@ -331,7 +331,8 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
                 var candidates = new CreateAdmissionCandidateCbt
                 {
-                    CandidateCategory = request.CategoryName,
+                    CandidateCategory = request.CandidateCategory,
+                    CategoryName = request.CategoryName,
                     AdmissionCandidateList = await admission.Select(x => new AdmissionCandidateList
                     {
                         FirstName = x.Firstname,
@@ -353,7 +354,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 clientDetails.Add("userId", fwsRequest.Result.UserId);
                 clientDetails.Add("smsClientId", fwsRequest.Result.ClientId);
 
-                var result = await webRequestService.PostAsync<APIResponse<string>, CreateAdmissionCandidateCbt>($"{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
+                var result = await webRequestService.PostAsync<APIResponse<SMPCbtCreateCandidateResponse>, CreateAdmissionCandidateCbt>($"{cbtRoutes.createCbtCandidate}", candidates, clientDetails);
                 if (result.Result == null)
                 {
                     res.Message.FriendlyMessage = result.Message.FriendlyMessage;
@@ -362,7 +363,8 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 foreach (var item in admission)
                 {
-                    item.CandidateCategory = result.Result;
+                    item.CandidateCategory = result.Result.CategoryId;
+                    item.CandidateCategoryName = result.Result.CategoryName;
                 }
                 await context.SaveChangesAsync();
 

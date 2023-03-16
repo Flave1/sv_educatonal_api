@@ -96,10 +96,6 @@ namespace DAL
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
         //public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         public DbSet<Log> Log { get; set; }
-        public DbSet<ExamTimeTable> ExamTimeTable { get; set; }
-        public DbSet<ExamTimeTableDay> ExamTimeTableDay { get; set; }
-        public DbSet<ExamTimeTableTimeActivity> ExamTimeTableTimeActivity { get; set; }
-        public DbSet<ExamTimeTableTime> ExamTimeTableTime { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

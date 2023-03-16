@@ -37,25 +37,26 @@ namespace SMP.BLL.Services.TimetableServices
             {
                 var activeClasses = context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
 
-                if (activeClasses.Count() == context.ExamTimeTable.Where(x => x.ClientId == smsClientId).Count())
+                if (activeClasses.Count() == context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable).Count())
                 {
                     res.Result = await activeClasses.Select(a => new GetActiveTimetableClasses(a, context.SessionClass.FirstOrDefault(x=>x.ClassId == a.ClassLookupId))).ToListAsync();
 
                     res.IsSuccessful = true;
                     return res;
                 }
-                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ExamTimeTable.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Where(x=>x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable).Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
                 && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
                 if (noneAddedClassIds.Any())
                 {
                     foreach (var id in noneAddedClassIds)
                     {
-                        var req = new ExamTimeTable
+                        var req = new ClassTimeTable
                         {
-                            ClassId = id
+                            ClassId = id,
+                            TimetableType = (int)TimetableType.ExamTimetable
                         };
-                        await context.ExamTimeTable.AddAsync(req);
+                        await context.ClassTimeTable.AddAsync(req);
                     }
                     await context.SaveChangesAsync();
                 }
@@ -81,27 +82,27 @@ namespace SMP.BLL.Services.TimetableServices
             try
             {
 
-                var req = new ExamTimeTableDay
+                var req = new ClassTimeTableDay
                 {
                     Day = request.Day,
-                    ExamTimeTableId = Guid.Parse(request.ExamTimeTableId)
+                    ClassTimeTableId = Guid.Parse(request.ExamTimeTableId)
                 };
 
-                await context.ExamTimeTableDay.AddAsync(req);
+                await context.ClassTimeTableDay.AddAsync(req);
                 await context.SaveChangesAsync();
 
-                var classTimes = context.ExamTimeTableTime.Where(d => d.ClientId == smsClientId && d.ExamTimeTableId == Guid.Parse(request.ExamTimeTableId)).AsEnumerable();
+                var classTimes = context.ClassTimeTableTime.Where(d => d.ClientId == smsClientId && d.ClassTimeTableId == Guid.Parse(request.ExamTimeTableId)).AsEnumerable();
                 if (classTimes.Any())
                 {
                     foreach (var time in classTimes)
                     {
-                        var act = new ExamTimeTableTimeActivity
+                        var act = new ClassTimeTableTimeActivity
                         {
                             Activity = "",
-                            ExamTimeTableTimeId = time.ExamTimeTableTimeId,
-                            ExamTimeTableDayId = req.ExamTimeTableDayId
+                            ClassTimeTableTimeId = time.ClassTimeTableTimeId,
+                            ClassTimeTableDayId = req.ClassTimeTableDayId
                         };
-                        await context.ExamTimeTableTimeActivity.AddAsync(act);
+                        await context.ClassTimeTableTimeActivity.AddAsync(act);
                     }
                     await context.SaveChangesAsync();
                 }
@@ -125,27 +126,27 @@ namespace SMP.BLL.Services.TimetableServices
             try
             {
 
-                var req = new ExamTimeTableTime
+                var req = new ClassTimeTableTime
                 {
                     Start = request.Start,
                     End = request.End,
-                    ExamTimeTableId = Guid.Parse(request.ExamTimeTableId)
+                    ClassTimeTableId = Guid.Parse(request.ExamTimeTableId)
                 };
-                await context.ExamTimeTableTime.AddAsync(req);
+                await context.ClassTimeTableTime.AddAsync(req);
                 await context.SaveChangesAsync();
 
-                var classDays = context.ExamTimeTable.Where(d => d.ClientId == smsClientId && d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
+                var classDays = context.ClassTimeTable.Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ExamTimetable && d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
                 if (classDays.Any())
                 {
                     foreach (var day in classDays)
                     {
-                        var act = new ExamTimeTableTimeActivity
+                        var act = new ClassTimeTableTimeActivity
                         {
                             Activity = "",
-                            ExamTimeTableTimeId = req.ExamTimeTableTimeId,
-                            ExamTimeTableDayId = day.ExamTimeTableDayId
+                            ClassTimeTableTimeId = req.ClassTimeTableTimeId,
+                            ClassTimeTableDayId = day.ClassTimeTableDayId
                         };
-                        await context.ExamTimeTableTimeActivity.AddAsync(act);
+                        await context.ClassTimeTableTimeActivity.AddAsync(act);
                     }
                     await context.SaveChangesAsync();
                 }
@@ -166,7 +167,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<UpdateExamTimeTableTime>();
             try
             {
-                var time = context.ExamTimeTableTime.FirstOrDefault(x => x.ClientId == smsClientId && x.ExamTimeTableTimeId == Guid.Parse(request.ExamTimeTableTimeId));
+                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClientId == smsClientId && x.ClassTimeTableTimeId == Guid.Parse(request.ExamTimeTableTimeId));
 
                 time.Start = request.Start;
                 time.End = request.End;
@@ -190,7 +191,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<UpdateExamTimeTableDay>();
             try
             {
-                var day = context.ExamTimeTableDay.FirstOrDefault(d => d.ClientId == smsClientId && d.ExamTimeTableDayId == Guid.Parse(request.ExamTimeTableDayId));
+                var day = context.ClassTimeTableDay.FirstOrDefault(d => d.ClientId == smsClientId && d.ClassTimeTableDayId == Guid.Parse(request.ExamTimeTableDayId));
                 if (day == null)
                 {
                     res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
@@ -218,7 +219,7 @@ namespace SMP.BLL.Services.TimetableServices
 
             try
             {
-                var req = context.ExamTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId && d.ExamTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
+                var req = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId && d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
                 if (req is not null)
                 {
                     req.Activity = request.Activity;
@@ -247,8 +248,8 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<GetExamTimeActivity>();
             try
             {
-                var result = await context.ExamTimeTable
-                    .Where(d => d.ClientId == smsClientId && d.Deleted == false && d.ClassId == classId)
+                var result = await context.ClassTimeTable
+                    .Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ExamTimetable && d.Deleted == false && d.ClassId == classId)
                     .Include(s => s.Class)
                     .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                      .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -273,8 +274,8 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<SingleDelete>();
             try
             {
-                var classDays = context.ExamTimeTableTime.Where(x => x.ClientId == smsClientId).Include(d => d.Activities).FirstOrDefault(d => d.ExamTimeTableTimeId == Guid.Parse(request.Item));
-                context.ExamTimeTableTime.Remove(classDays);
+                var classDays = context.ClassTimeTableTime.Where(x => x.ClientId == smsClientId).Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableTimeId == Guid.Parse(request.Item));
+                context.ClassTimeTableTime.Remove(classDays);
                 await context.SaveChangesAsync();
                 res.Result = request;
                 res.IsSuccessful = true;
@@ -292,14 +293,14 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<SingleDelete>();
             try
             {
-                var day = context.ExamTimeTableDay.Where(x => x.ClientId == smsClientId).Include(d => d.Activities).FirstOrDefault(d => d.ExamTimeTableDayId == Guid.Parse(request.Item));
+                var day = context.ClassTimeTableDay.Where(x => x.ClientId == smsClientId).Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.Item));
                 if (day is not null)
                 {
                     if (day.Activities.Any())
                     {
-                        context.ExamTimeTableTimeActivity.RemoveRange(day.Activities);
+                        context.ClassTimeTableTimeActivity.RemoveRange(day.Activities);
                     }
-                    context.ExamTimeTableDay.Remove(day);
+                    context.ClassTimeTableDay.Remove(day);
                     await context.SaveChangesAsync();
                 }
                 res.Result = request;
@@ -319,9 +320,9 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<List<GetExamTimeActivityByDay>>();
             try
             {
-                var classList = context.ExamTimeTable.Where(x => x.ClientId == smsClientId && x.Deleted == false).Include(d => d.Class).ToList();
+                var classList = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable && x.Deleted == false).Include(d => d.Class).ToList();
 
-                var result = await context.ExamTimeTable.Where(x => x.ClientId == smsClientId)
+                var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable)
                     .Include(s => s.Days)
                      .Include(s => s.Times).ThenInclude(d => d.Activities)
                     .Where(d => d.Deleted == false && d.Days.Select(d => d.Day).Contains(day))
@@ -347,7 +348,7 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<GetExamTimeActivity>();
             try
             {
-                var result = await context.ExamTimeTable.Where(x => x.ClientId == smsClientId)
+                var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable)
                   .Include(s => s.Class)
                   .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                    .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -378,7 +379,7 @@ namespace SMP.BLL.Services.TimetableServices
                 if (!string.IsNullOrEmpty(studentContactId))
                 {
                     var studentAct = context.StudentContact.Where(x => x.ClientId == smsClientId).Include(s => s.SessionClass).FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId));
-                    var result = await context.ExamTimeTable.Where(x => x.ClientId == smsClientId)
+                    var result = await context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable)
                       .Include(s => s.Class)
                       .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                        .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -406,8 +407,8 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<List<GetExamTimeActivity>>();
             try
             {
-                var result = await context.ExamTimeTable
-                    .Where(d => d.ClientId == smsClientId && d.Deleted == false)
+                var result = await context.ClassTimeTable
+                    .Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ExamTimetable && d.Deleted == false)
                     .Include(s => s.Class)
                     .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                      .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)

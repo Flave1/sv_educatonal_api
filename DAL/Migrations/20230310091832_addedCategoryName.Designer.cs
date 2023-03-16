@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230310091832_addedCategoryName")]
+    partial class addedCategoryName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2603,9 +2605,6 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("TimetableType")
-                        .HasColumnType("int");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2736,6 +2735,159 @@ namespace SMP.DAL.Migrations
                     b.HasIndex("ClassTimeTableTimeId");
 
                     b.ToTable("ClassTimeTableTimeActivity");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTable", b =>
+                {
+                    b.Property<Guid>("ExamTimeTableId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ExamTimeTableId");
+
+                    b.HasIndex("ClassId");
+
+                    b.ToTable("ExamTimeTable");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableDay", b =>
+                {
+                    b.Property<Guid>("ExamTimeTableDayId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Day")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ExamTimeTableId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ExamTimeTableDayId");
+
+                    b.HasIndex("ExamTimeTableId");
+
+                    b.ToTable("ExamTimeTableDay");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableTime", b =>
+                {
+                    b.Property<Guid>("ExamTimeTableTimeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("End")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ExamTimeTableId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Start")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ExamTimeTableTimeId");
+
+                    b.HasIndex("ExamTimeTableId");
+
+                    b.ToTable("ExamTimeTableTime");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableTimeActivity", b =>
+                {
+                    b.Property<Guid>("ExamTimeTableTimeActivityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Activity")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ExamTimeTableDayId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExamTimeTableTimeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ExamTimeTableTimeActivityId");
+
+                    b.HasIndex("ExamTimeTableDayId");
+
+                    b.HasIndex("ExamTimeTableTimeId");
+
+                    b.ToTable("ExamTimeTableTimeActivity");
                 });
 
             modelBuilder.Entity("DAL.Authentication.UserRole", b =>
@@ -3486,6 +3638,56 @@ namespace SMP.DAL.Migrations
                     b.Navigation("Time");
                 });
 
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTable", b =>
+                {
+                    b.HasOne("DAL.ClassEntities.ClassLookup", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableDay", b =>
+                {
+                    b.HasOne("SMP.DAL.Models.Timetable.ExamTimeTable", "ExamTimeTable")
+                        .WithMany("Days")
+                        .HasForeignKey("ExamTimeTableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExamTimeTable");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableTime", b =>
+                {
+                    b.HasOne("SMP.DAL.Models.Timetable.ExamTimeTable", "ExamTimeTable")
+                        .WithMany("Times")
+                        .HasForeignKey("ExamTimeTableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExamTimeTable");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableTimeActivity", b =>
+                {
+                    b.HasOne("SMP.DAL.Models.Timetable.ExamTimeTableDay", "Day")
+                        .WithMany("Activities")
+                        .HasForeignKey("ExamTimeTableDayId");
+
+                    b.HasOne("SMP.DAL.Models.Timetable.ExamTimeTableTime", "Time")
+                        .WithMany("Activities")
+                        .HasForeignKey("ExamTimeTableTimeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Day");
+
+                    b.Navigation("Time");
+                });
+
             modelBuilder.Entity("DAL.Authentication.AppActivityParent", b =>
                 {
                     b.Navigation("Activities");
@@ -3596,6 +3798,23 @@ namespace SMP.DAL.Migrations
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Timetable.ClassTimeTableTime", b =>
+                {
+                    b.Navigation("Activities");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTable", b =>
+                {
+                    b.Navigation("Days");
+
+                    b.Navigation("Times");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableDay", b =>
+                {
+                    b.Navigation("Activities");
+                });
+
+            modelBuilder.Entity("SMP.DAL.Models.Timetable.ExamTimeTableTime", b =>
                 {
                     b.Navigation("Activities");
                 });
