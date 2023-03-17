@@ -20,6 +20,7 @@ using SMP.BLL.Services.FilterService;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
 using SMP.DAL.Models.Admission;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -123,7 +124,7 @@ namespace SMP.BLL.Services.AdmissionServices
                         await context.SaveChangesAsync();
 
                         var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == clientId);
-                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl, schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
+                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl, schoolSettings);
 
                         res.Result = new AdmissionLoginDetails(null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
 
@@ -256,7 +257,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     
                     if(admissionSettings is null)
                     {
-                        res.Message.FriendlyMessage = "Our school admission is yet open";
+                        res.Message.FriendlyMessage = "Our school admission is not yet open";
                         return res;
                     }
                         var query = context.Admissions
@@ -389,15 +390,16 @@ namespace SMP.BLL.Services.AdmissionServices
 
             return new AdmissionAuth { Token = tokenHandler.WriteToken(token), Expires = tokenDescriptor.Expires.ToString() };
         }
-        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL, string schoolAbbreviation)
+        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL, SchoolSetting schoolSetting)
         {
             var toEmail = new List<EmailAddress>();
             var frmEmail = new List<EmailAddress>();
             toEmail.Add(new EmailAddress { Address = receiver, Name = receiver });
-            frmEmail.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolAbbreviation });
+            frmEmail.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolSetting.SCHOOLSETTINGS_SchoolName });
             var host = accessor.HttpContext.Request.Host.ToUriComponent();
-            string body = $"You've Successfully registered. Kindly click the link below to confirm your email address.<br /> {schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}";
-            var content = await emailService.GetMailBody(receiver, body, schoolAbbreviation);
+            string body = $"You've Successfully registered. Kindly click the link below to confirm your email address.<br /> <br />" +
+                $"<a style='text-decoration: none; border: none;border-radius: 3px; color: #FFFFFF; background-color: #008CBA; padding: 10px 18px;margin: 4px 2px;' href='{schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}'>Click Here</a>";
+            var content = await emailService.GetMailBody(receiver, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
             var email = new EmailMessage
             {
                 Content = content,

@@ -28,6 +28,7 @@ using DAL.StudentInformation;
 using SMP.DAL.Models.Parents;
 using DAL.TeachersInfor;
 using SMP.DAL.Migrations;
+using SMP.DAL.Models.PortalSettings;
 
 namespace BLL.AuthenticationServices
 {
@@ -411,19 +412,19 @@ namespace BLL.AuthenticationServices
                 var link = appsetting.APPLAYOUTSETTINGS_SchoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appsetting.ClientId);
-                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification", schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
+                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification", schoolSettings);
             }
 
         }
 
-        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link, string subject, string schoolAbbreviation)
+        private async Task SendResetLinkToEmailToUserAsync(AppUser obj, string link, string subject, SchoolSetting schoolSettings)
         {
             var to = new List<EmailAddress>();
             var frm = new List<EmailAddress>();
             to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
-            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolAbbreviation });
-            var body = $"Click  <a href='{link}'>here</a> to reset password";
-            var content = await emailService.GetMailBody(obj.UserName, body, schoolAbbreviation);
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolSettings.SCHOOLSETTINGS_SchoolName});
+            var body = $"<a style='text-decoration: none; border: none;border-radius: 3px; color: #FFFFFF; background-color: #008CBA; padding: 10px 18px;' href='{link}'>Click Here</a> to reset password";
+            var content = await emailService.GetMailBody(obj.UserName, body, schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
             var emMsg = new EmailMessage
             {
                 Content = content,
@@ -635,7 +636,7 @@ namespace BLL.AuthenticationServices
                 var link = appSettings.APPLAYOUTSETTINGS_SchoolUrl + "/PasswordReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
                 var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appSettings.ClientId);
-                await SendResetLinkToEmailToUserAsync(user, link, "Password Reset", schoolSettings.SCHOOLSETTINGS_SchoolAbbreviation);
+                await SendResetLinkToEmailToUserAsync(user, link, "Password Reset", schoolSettings);
 
                 res.IsSuccessful = true;
                 res.Result = true;
