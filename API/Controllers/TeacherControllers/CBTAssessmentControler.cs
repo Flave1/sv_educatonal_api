@@ -1,6 +1,7 @@
 ﻿
 using BLL.Filter;
 using BLL.MiddleWares;
+using DAL.SubjectModels;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.CBTAssessmentServices;
 using SMP.Contracts.Assessment;
@@ -19,9 +20,9 @@ namespace SMP.API.Controllers.TeacherControllers
         }
 
         [HttpGet("get/assessments")]
-        public async Task<IActionResult> GetCBTAssessmentAsync(PaginationFilter filter, string sessionClassId)
+        public async Task<IActionResult> GetCBTAssessmentAsync(PaginationFilter filter, string sessionClassId, string subjectId)
         {
-            var response = await service.GetCBTAssessmentsAsync(sessionClassId, filter.PageNumber);
+            var response = await service.GetCBTAssessmentsAsync(sessionClassId, subjectId, filter.PageNumber);
             return Ok(response);
         }
 

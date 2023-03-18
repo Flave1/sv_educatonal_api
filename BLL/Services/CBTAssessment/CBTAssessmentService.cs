@@ -3,6 +3,7 @@ using BLL.LoggerService;
 using BLL.Wrappers;
 using DAL;
 using DAL.StudentInformation;
+using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Services.ResultServices;
@@ -46,7 +47,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             this.loggerService = loggerService;
         }
 
-        async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId, int pageNumber)
+        async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId,string subjectId, int pageNumber)
         {
 
             var res = new APIResponse<PagedResponse<List<CBTExamination>>>();
@@ -61,7 +62,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             clientDetails.Add("userId", fwsClientInformation.Result.UserId);
             clientDetails.Add("smsClientId", smsClientId);
 
-            res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}", clientDetails);
+            res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}&subjectId={subjectId}", clientDetails);
 
             if (res.Result == null)
             {
