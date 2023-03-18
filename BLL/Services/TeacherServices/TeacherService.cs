@@ -381,7 +381,7 @@ namespace SMP.BLL.Services.TeacherServices
 
                 await portalSettingService.CreateSchoolSettingsAsync(schooSetting, user.Email);
 
-                portalSettingService.CreateAppLayoutSettingsAsync(request.ClientId, request.SchoolUrl);
+                portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 
                 res.IsSuccessful = true;

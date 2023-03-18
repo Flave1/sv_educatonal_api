@@ -12,9 +12,12 @@ namespace SMP.Contracts.PortalSettings
         }
         public RecoverPassword(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
         }
     }
     public class Announcement : NotificationSesstionMedia
@@ -25,9 +28,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Announcement(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
     public class Assessment : NotificationSesstionMedia
@@ -38,9 +45,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Assessment(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
     public class Permission : NotificationSesstionMedia
@@ -51,9 +62,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Permission(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
     public class Session : NotificationSesstionMedia
@@ -64,9 +79,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Session(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
     public class ClassManagement : NotificationSesstionMedia
@@ -77,9 +96,14 @@ namespace SMP.Contracts.PortalSettings
         }
         public ClassManagement(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+
+            
         }
     }
     public class Staff : NotificationSesstionMedia
@@ -90,9 +114,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Staff(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
     public class Enrollment : NotificationSesstionMedia
@@ -103,9 +131,13 @@ namespace SMP.Contracts.PortalSettings
         }
         public Enrollment(string setting)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+            }
+            
         }
     }
 
@@ -118,10 +150,14 @@ namespace SMP.Contracts.PortalSettings
         public bool ShouldSendToParentsOnResultPublish { get; set; }
         public PublishResult(string setting, bool shouldSendToParentsOnResultPublish)
         {
-            var splitted = setting.Split('/').ToArray();
-            media = splitted[0];
-            send = splitted[1] == "True" ? true : false;
-            ShouldSendToParentsOnResultPublish = shouldSendToParentsOnResultPublish;
+            if (!string.IsNullOrEmpty(setting))
+            {
+                var splitted = setting.Split('/').ToArray();
+                media = splitted[0];
+                send = splitted[1] == "True" ? true : false;
+                ShouldSendToParentsOnResultPublish = shouldSendToParentsOnResultPublish;
+            }
+            
         }
     }
 

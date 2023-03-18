@@ -280,7 +280,7 @@ namespace SMP.BLL.Services.PortalService
             return res;
         }
 
-        void IPortalSettingService.CreateAppLayoutSettingsAsync(string clientId, string schoolUrl)
+        void IPortalSettingService.CreateSchoolSettingsAsync(string clientId, string schoolUrl)
         {
             try
             {
@@ -291,7 +291,8 @@ namespace SMP.BLL.Services.PortalService
                     setting = new SchoolSetting();
                     isNew = true;
                 }
-                    
+
+                //APPLAYOUTSETTINGS
                 setting.APPLAYOUTSETTINGS_Scheme = "light";
                 setting.APPLAYOUTSETTINGS_SchemeDir = "ltr";
                 setting.APPLAYOUTSETTINGS_Colorprimary = "#3a57e8";
@@ -304,7 +305,20 @@ namespace SMP.BLL.Services.PortalService
                 setting.APPLAYOUTSETTINGS_SchoolUrl = schoolUrl;
                 setting.APPLAYOUTSETTINGS_SidebarActiveStyle = "roundedAllSide";
                 setting.ClientId = clientId;
-                if(isNew) context.SchoolSettings.Add(setting);
+
+                //NOTIFICATIONSETTINGS
+                setting.NOTIFICATIONSETTINGS_Announcement = "email/false";
+                setting.NOTIFICATIONSETTINGS_Assessment = "email/false";
+                setting.NOTIFICATIONSETTINGS_ClassManagement = "email/false";
+                setting.NOTIFICATIONSETTINGS_Enrollment = "email/false";
+                setting.NOTIFICATIONSETTINGS_Permission = "email/false";
+                setting.NOTIFICATIONSETTINGS_PublishResult = "email/false";
+                setting.NOTIFICATIONSETTINGS_RecoverPassword = "email/false";
+                setting.NOTIFICATIONSETTINGS_Session = "email/false";
+                setting.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = false;
+                setting.NOTIFICATIONSETTINGS_Staff = "email/false";
+
+                if (isNew) context.SchoolSettings.Add(setting);
             }
             catch (Exception)
             {
