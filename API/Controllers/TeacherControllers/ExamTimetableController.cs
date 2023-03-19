@@ -111,7 +111,25 @@ namespace SMP.API.Controllers.TeacherControllers
         public async Task<IActionResult> GetAllExamTimeTableAsync()
         {
             var response = await service.GetAllExamTimeTableAsync();
-            return Ok(response);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/by-student")]
+        public async Task<IActionResult> GetExamTimeTableByStudentAsync()
+        {
+            var response = await service.GetExamTimeTableByStudentAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/by-parent")]
+        public async Task<IActionResult> GetExamTimeTableByParentAsync(Guid classlkpId)
+        {
+            var response = await service.GetExamTimeTableByParentsAsync(classlkpId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
         }
     }
 }
