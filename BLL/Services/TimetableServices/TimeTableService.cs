@@ -244,7 +244,8 @@ namespace SMP.BLL.Services.TimetableServices
 
             try
             {
-                var activity = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId && d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
+                var activity = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId 
+                && d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
                 if(activity is not null)
                 {
                     activity.Activity = request.Activity;
@@ -274,7 +275,8 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<GetClassTimeActivity>();
 
             var result = await context.ClassTimeTable
-                .Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ActivityTimetable && d.Deleted == false && d.ClassId == classId)
+                .Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ActivityTimetable 
+                && d.Deleted == false && d.ClassId == classId)
                 .Include(s => s.Class)
                 .Include(s => s.Days).ThenInclude(s => s.Activities).ThenInclude(d => d.Day)
                  .Include(s => s.Times).ThenInclude(d => d.Activities).ThenInclude(d => d.Day)
@@ -327,13 +329,12 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<SingleDelete>();
             try
             {
-                var day = context.ClassTimeTableDay.Where(x=>x.ClientId == smsClientId).Include(d => d.Activities).FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.Item));
+                var day = context.ClassTimeTableDay.Where(x=>x.ClientId == smsClientId).Include(d => d.Activities)
+                    .FirstOrDefault(d => d.ClassTimeTableDayId == Guid.Parse(request.Item));
                 if(day is not null)
                 {
                     if(day.Activities.Any())
-                    {
                         context.ClassTimeTableTimeActivity.RemoveRange(day.Activities);
-                    }
                     context.ClassTimeTableDay.Remove(day);
                     await context.SaveChangesAsync();
                 }
@@ -345,7 +346,7 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                throw ex;
+                throw;
             }
         }
         public async Task<APIResponse<List<GetClassDays>>> GetAllClassDaysAsync()
