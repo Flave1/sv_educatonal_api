@@ -15,9 +15,7 @@ namespace SMP.BLL.Services.AdmissionServices
 {
     public interface ICandidateAdmissionService
     {
-        Task<APIResponse<AdmissionLoginDetails>> Login(AdmissionLogin request);
         Task<APIResponse<bool>> ConfirmEmail(ConfirmEmail request);
-        Task<APIResponse<bool>> DeleteEmail(SingleDelete request);
         Task<APIResponse<string>> CreateAdmission(CreateAdmission request);
         Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter, string admissionSettingsId);
         Task<APIResponse<SelectCandidateAdmission>> GetAdmission(string admissionId);
@@ -26,5 +24,6 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<List<AdmissionClasses>>> GetAdmissionClasses();
         Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request);
         Task<APIResponse<SchoolSettingContract>> GetSchollSettingsAsync();
+        Task<APIResponse<string>> RegisterParent(CreateAdmissionParent request);
     }
 }

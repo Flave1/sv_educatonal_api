@@ -1,6 +1,7 @@
 ﻿using DAL.ClassEntities;
 using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Admission;
+using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace SMP.Contracts.Admissions
         public string AdmissionSettingName { get; set; }
         public string CBTCategoryId { get; set; }
         public string CBTCategoryName { get; set; }
-        public SelectCandidateAdmission(Admission admission, ClassLookup classLookup)
+        public SelectCandidateAdmission(Admission admission, ClassLookup classLookup, Parents parents)
         {
             AdmissionId = admission.AdmissionId.ToString();
             Firstname = admission.Firstname;
@@ -47,12 +48,12 @@ namespace SMP.Contracts.Admissions
             CountryOfOrigin = admission.CountryOfOrigin;
             StateOfOrigin = admission.StateOfOrigin;
             LGAOfOrigin = admission.LGAOfOrigin;
-            Credentials = admission.Credentials;
+            Credentials = admission.Credentials; 
             Photo = admission.Photo; 
-            ParentName = admission.ParentName;
-            ParentRelationship = admission.ParentRelationship;
-            ParentPhoneNumber = admission.PhoneNumber;
-            ParentEmail = admission.AdmissionNotification.ParentEmail;
+            ParentName = $"{parents.FirstName} {parents.LastName}";
+            ParentRelationship = parents.Relationship;
+            ParentPhoneNumber = parents.Phone;
+            ParentEmail = parents.Email;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
             ExamStatus = admission.ExaminationStatus;
             ClassId = admission.ClassId.ToString();

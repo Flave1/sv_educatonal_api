@@ -8,6 +8,6 @@ namespace SMP.Contracts.AdmissionSettings
 {
     public class ConfirmEmail
     {
-        public string AdmissionNotificationId { get; set; }
+        public string parentId { get; set; }
     }
 }

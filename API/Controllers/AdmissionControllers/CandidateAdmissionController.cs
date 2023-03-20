@@ -1,4 +1,5 @@
 ﻿using BLL.Filter;
+using BLL.MiddleWares;
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SMP.API.Controllers.AdmissionControllers
 {
-    [AdmissionAuthorize]
+    [PortalAuthorize]
     [Route("smp/api/v1/candidate-admission")]
     public class CandidateAdmissionController: Controller
     {
@@ -80,28 +81,10 @@ namespace SMP.API.Controllers.AdmissionControllers
         }
 
         [AllowAnonymous]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AdmissionLogin request)
-        {
-            var response = await service.Login(request);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
-        }
-        [AllowAnonymous]
         [HttpPost("confirm-email")]
         public async Task<IActionResult> Confirm([FromBody] ConfirmEmail request)
         {
             var response = await service.ConfirmEmail(request);
-            if (response.IsSuccessful)
-                return Ok(response);
-            return BadRequest(response);
-        }
-        [AllowAnonymous]
-        [HttpPost("delete-notification-email")]
-        public async Task<IActionResult> Delete([FromBody] SingleDelete request)
-        {
-            var response = await service.DeleteEmail(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -111,6 +94,16 @@ namespace SMP.API.Controllers.AdmissionControllers
         public async Task<IActionResult> GetSchoolSettings()
         {
             var response = await service.GetSchollSettingsAsync();
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register-parent")]
+        public async Task<IActionResult> RegisterParent([FromBody]CreateAdmissionParent request)
+        {
+            var response = await service.RegisterParent(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
