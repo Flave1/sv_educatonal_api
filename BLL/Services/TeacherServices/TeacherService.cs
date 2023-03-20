@@ -343,6 +343,7 @@ namespace SMP.BLL.Services.TeacherServices
                 contextaccessor.HttpContext.Items["smsClientId"] = request.ClientId;
                 if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
                 {
+                    portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
                     res.Result = "failed";
                     res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
                     return res;

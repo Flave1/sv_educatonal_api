@@ -3,8 +3,11 @@ using BLL.LoggerService;
 using Contracts.Class;
 using Contracts.Common;
 using DAL;
+using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using SMP.BLL.Constants;
 using SMP.Contracts.Timetable;
 using SMP.DAL.Models.Timetable;
@@ -33,8 +36,9 @@ namespace SMP.BLL.Services.TimetableServices
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
             var activeClasses =  context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
+            var timeTableForAddedClasses = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable);
 
-            if (activeClasses.Count() == context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable).Count())
+            if (activeClasses.Count() == timeTableForAddedClasses.Count())
             {
                res.Result = await activeClasses.Select(a => new GetApplicationLookups
                 {
@@ -47,7 +51,7 @@ namespace SMP.BLL.Services.TimetableServices
                 res.IsSuccessful = true;
                 return res;
             }
-            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Where(x=>x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable).Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !timeTableForAddedClasses.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
             && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
             if (noneAddedClassIds.Any())
@@ -78,36 +82,15 @@ namespace SMP.BLL.Services.TimetableServices
         public async Task<APIResponse<CreateClassTimeTableDay>> CreateClassTimeTableDayAsync(CreateClassTimeTableDay request)
         {
             var res = new APIResponse<CreateClassTimeTableDay>();
-
-            
             try
             {
+                var dayId = await CreateDayAsync(request);
 
-                var req = new ClassTimeTableDay
-                {
-                    Day = request.Day,
-                    ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
-                };
+                var classTimes = context.ClassTimeTableTime.Where(d => d.ClientId == smsClientId 
+                && d.ClassTimeTableId == Guid.Parse(request.ClassTimeTableId)).AsEnumerable();
 
-                await context.ClassTimeTableDay.AddAsync(req);
-                await context.SaveChangesAsync();
-
-                var classTimes = context.ClassTimeTableTime.Where(d => d.ClientId == smsClientId && d.ClassTimeTableId == Guid.Parse(request.ClassTimeTableId)).AsEnumerable();
                 if (classTimes.Any())
-                {
-                    foreach (var time in classTimes)
-                    {
-                        var act = new ClassTimeTableTimeActivity
-                        {
-                            Activity = "",
-                            ClassTimeTableTimeId = time.ClassTimeTableTimeId,
-                            ClassTimeTableDayId = req.ClassTimeTableDayId
-                        };
-                        await context.ClassTimeTableTimeActivity.AddAsync(act);
-                    }
-                    await context.SaveChangesAsync();
-                }
-
+                    await CreateTimesActivitySpaceAsync(dayId, classTimes);
 
                 res.Result = request;
                 res.IsSuccessful = true;
@@ -117,8 +100,36 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                throw ex;
+                throw;
             }
+        }
+
+        private async Task<Guid> CreateDayAsync(CreateClassTimeTableDay request)
+        {
+            var req = new ClassTimeTableDay
+            {
+                Day = request.Day,
+                ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
+            };
+
+            await context.ClassTimeTableDay.AddAsync(req);
+            await context.SaveChangesAsync();
+            return req.ClassTimeTableDayId;
+        }
+
+        private async Task CreateTimesActivitySpaceAsync(Guid dayId, IEnumerable<ClassTimeTableTime> classTimes)
+        {
+            foreach (var time in classTimes)
+            {
+                var act = new ClassTimeTableTimeActivity
+                {
+                    Activity = "",
+                    ClassTimeTableTimeId = time.ClassTimeTableTimeId,
+                    ClassTimeTableDayId = dayId
+                };
+                await context.ClassTimeTableTimeActivity.AddAsync(act);
+            }
+            await context.SaveChangesAsync();
         }
 
         public async Task<APIResponse<CreateClassTimeTableTime>> CreateClassTimeTableTimeAsync(CreateClassTimeTableTime request)
@@ -126,31 +137,13 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<CreateClassTimeTableTime>();
             try
             {
-
-                var req = new ClassTimeTableTime
-                {
-                    Start = request.Start,
-                    End = request.End,
-                    ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
-                };
-                await context.ClassTimeTableTime.AddAsync(req);
-                await context.SaveChangesAsync();
-
-                var classDays = context.ClassTimeTable.Where(d => d.ClientId == smsClientId && d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
+                var timeId = await CreateTimeAsync(request);
+                
+                var classDays = context.ClassTimeTable.Where(d => d.ClientId == smsClientId && d.ClassId == Guid.Parse(request.ClassId))
+                    .SelectMany(s => s.Days).AsEnumerable();
+                
                 if (classDays.Any())
-                {
-                    foreach (var day in classDays)
-                    {
-                        var act = new ClassTimeTableTimeActivity
-                        {
-                            Activity = "",
-                            ClassTimeTableTimeId = req.ClassTimeTableTimeId,
-                            ClassTimeTableDayId = day.ClassTimeTableDayId
-                        };
-                        await context.ClassTimeTableTimeActivity.AddAsync(act);
-                    }
-                    await context.SaveChangesAsync();
-                }
+                    await CreateDaysActivitySpaceAsync(classDays, timeId);
 
                 res.Result = request;
                 res.IsSuccessful = true;
@@ -160,8 +153,35 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                throw ex;
+                throw;
             }
+        }
+
+        private async Task CreateDaysActivitySpaceAsync(IEnumerable<ClassTimeTableDay> classDays, Guid timeId)
+        {
+            foreach (var day in classDays)
+            {
+                var act = new ClassTimeTableTimeActivity
+                {
+                    Activity = "",
+                    ClassTimeTableTimeId = timeId,
+                    ClassTimeTableDayId = day.ClassTimeTableDayId
+                };
+                await context.ClassTimeTableTimeActivity.AddAsync(act);
+            }
+            await context.SaveChangesAsync();
+        }
+        private async Task<Guid> CreateTimeAsync(CreateClassTimeTableTime request)
+        {
+            var req = new ClassTimeTableTime
+            {
+                Start = request.Start,
+                End = request.End,
+                ClassTimeTableId = Guid.Parse(request.ClassTimeTableId)
+            };
+            await context.ClassTimeTableTime.AddAsync(req);
+            await context.SaveChangesAsync();
+            return req.ClassTimeTableTimeId;
         }
 
         async Task<APIResponse<UpdateClassTimeTableTime>> ITimeTableService.UpdateClassTimeTableTimeAsync(UpdateClassTimeTableTime request)
@@ -169,14 +189,14 @@ namespace SMP.BLL.Services.TimetableServices
             var res = new APIResponse<UpdateClassTimeTableTime>();
             try
             {
-                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClientId == smsClientId && x.ClassTimeTableTimeId == Guid.Parse(request.ClassTimeTableTimeId));
+                var time = context.ClassTimeTableTime.FirstOrDefault(x => x.ClientId == smsClientId 
+                && x.ClassTimeTableTimeId == Guid.Parse(request.ClassTimeTableTimeId));
 
                 time.Start = request.Start;
                 time.End = request.End;
 
                 await context.SaveChangesAsync();
 
-              
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Created;
@@ -224,10 +244,10 @@ namespace SMP.BLL.Services.TimetableServices
 
             try
             {
-                var req = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId && d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
-                if(req is not null)
+                var activity = context.ClassTimeTableTimeActivity.FirstOrDefault(d => d.ClientId == smsClientId && d.ClassTimeTableTimeActivityId == Guid.Parse(request.ActivityId));
+                if(activity is not null)
                 {
-                    req.Activity = request.Activity;
+                    activity.Activity = request.Activity;
                     await context.SaveChangesAsync();
                 }
                 else

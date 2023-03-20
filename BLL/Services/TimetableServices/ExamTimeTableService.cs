@@ -1,18 +1,15 @@
 ﻿using BLL;
 using BLL.LoggerService;
-using Contracts.Class;
 using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Polly;
 using SMP.BLL.Constants;
 using SMP.Contracts.Timetable;
 using SMP.DAL.Models.Timetable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.TimetableServices
@@ -77,11 +74,8 @@ namespace SMP.BLL.Services.TimetableServices
         public async Task<APIResponse<CreateExamTimeTableDay>> CreateExamTimeTableDayAsync(CreateExamTimeTableDay request)
         {
             var res = new APIResponse<CreateExamTimeTableDay>();
-
-
             try
             {
-
                 var req = new ClassTimeTableDay
                 {
                     Day = request.Day,
@@ -116,7 +110,7 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                throw ex;
+                throw;
             }
         }
 
@@ -159,7 +153,7 @@ namespace SMP.BLL.Services.TimetableServices
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                throw ex;
+                throw;
             }
         }
         public async Task<APIResponse<UpdateExamTimeTableTime>> UpdateExamTimeTableTimeAsync(UpdateExamTimeTableTime request)
