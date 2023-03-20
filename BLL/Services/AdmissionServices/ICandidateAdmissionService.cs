@@ -4,6 +4,7 @@ using BLL.Wrappers;
 using Contracts.Common;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
+using SMP.Contracts.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,5 +25,6 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<bool>> DeleteAdmission(SingleDelete request);
         Task<APIResponse<List<AdmissionClasses>>> GetAdmissionClasses();
         Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request);
+        Task<APIResponse<SchoolSettingContract>> GetSchollSettingsAsync();
     }
 }

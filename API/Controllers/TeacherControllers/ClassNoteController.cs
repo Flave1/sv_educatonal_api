@@ -195,5 +195,14 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("download/{classNoteId}")]
+        public async Task<IActionResult> DownloadClassNoteAsync(string classNoteId)
+        {
+            var response = await service.DownloadClassNotesByAsync(classNoteId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
     }
 }

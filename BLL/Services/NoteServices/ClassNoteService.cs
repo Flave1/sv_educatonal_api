@@ -26,6 +26,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using PdfSharpCore;
+using PdfSharpCore.Pdf;
+using TheArtOfDev.HtmlRenderer.PdfSharp;
+using PdfSharpCore.Pdf.Advanced;
+using System.IO;
 
 namespace SMP.BLL.Services.NoteServices
 {
@@ -863,6 +868,41 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
 
+        public async Task<APIResponse<byte[]>> DownloadClassNotesByAsync(string classnoteId)
+        {
+            var res = new APIResponse<byte[]> ();
+            try
+            {
+                var classNote = await context.ClassNote.FirstOrDefaultAsync(x => x.ClassNoteId == Guid.Parse(classnoteId));
+                if(classNote == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Classnote doesn't exist!";
+                    return res;
+                }
+
+                var document = new PdfDocument();
+                string htmlContent = classNote.NoteContent;
+                PdfGenerator.AddPdfPages(document, htmlContent, PageSize.A4);
+                byte[] response;
+                using(MemoryStream ms = new MemoryStream())
+                {
+                    document.Save(ms);
+                    response = ms.ToArray();
+                }
+                res.Result = response;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
         private async Task SendNotificationToAdminAsync(string userid, Guid classNoteId, Guid subjectId)
         {
             var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id //Can Review Lesson Notes
