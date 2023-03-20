@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.MiddleWares;
 using SMP.BLL.Services.AdmissionServices;
+using SMP.BLL.Services.PortalService;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ namespace SMP.API.Controllers.AdmissionControllers
     public class CandidateAdmissionController: Controller
     {
         private readonly ICandidateAdmissionService service;
-
         public CandidateAdmissionController(ICandidateAdmissionService service)
         {
             this.service = service;
@@ -102,6 +102,15 @@ namespace SMP.API.Controllers.AdmissionControllers
         public async Task<IActionResult> Delete([FromBody] SingleDelete request)
         {
             var response = await service.DeleteEmail(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpGet("get-school-settings")]
+        public async Task<IActionResult> GetSchoolSettings()
+        {
+            var response = await service.GetSchollSettingsAsync();
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

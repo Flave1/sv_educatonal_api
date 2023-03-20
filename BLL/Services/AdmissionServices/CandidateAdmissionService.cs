@@ -17,8 +17,10 @@ using NLog.Filters;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.PortalService;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
+using SMP.Contracts.PortalSettings;
 using SMP.DAL.Models.Admission;
 using SMP.DAL.Models.PortalSettings;
 using System;
@@ -547,6 +549,14 @@ namespace SMP.BLL.Services.AdmissionServices
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
+        }
+
+        public async Task<APIResponse<SchoolSettingContract>> GetSchollSettingsAsync()
+        {
+            var res = new APIResponse<SchoolSettingContract>();
+            res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
+            res.IsSuccessful = true;
+            return res;
         }
     }
 }
