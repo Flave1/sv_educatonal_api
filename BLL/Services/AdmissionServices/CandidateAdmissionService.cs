@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
 using BLL.LoggerService;
@@ -6,8 +7,10 @@ using BLL.Wrappers;
 using Contracts.Common;
 using Contracts.Email;
 using DAL;
+using DAL.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -17,10 +20,12 @@ using NLog.Filters;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.PortalService;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
 using SMP.Contracts.PortalSettings;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.Admission;
 using SMP.DAL.Models.PortalSettings;
 using System;
@@ -30,6 +35,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -45,12 +51,14 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IPaginationService paginationService;
         private readonly IWebHostEnvironment environment;
         private readonly ILoggerService loggerService;
+        private readonly IParentService parentService;
+        private readonly UserManager<AppUser> userManager;
         private readonly EmailConfiguration emailConfiguration;
         private readonly string smsClientId;
 
         public CandidateAdmissionService(DataContext context, IConfiguration config, IEmailService emailService, IOptions<EmailConfiguration> emailOptions,
             IHttpContextAccessor accessor, IFileUploadService fileUpload, IPaginationService paginationService,
-            IWebHostEnvironment environment, ILoggerService loggerService)
+            IWebHostEnvironment environment, ILoggerService loggerService, IParentService parentService, UserManager<AppUser> userManager)
         {
             this.context = context;
             this.config = config;
@@ -60,6 +68,8 @@ namespace SMP.BLL.Services.AdmissionServices
             this.paginationService = paginationService;
             this.environment = environment;
             this.loggerService = loggerService;
+            this.parentService = parentService;
+            this.userManager = userManager;
             emailConfiguration = emailOptions.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
@@ -69,23 +79,30 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var notification = await context.AdmissionNotifications.Where(d => d.Deleted != true && d.AdmissionNotificationId == Guid.Parse(request.AdmissionNotificationId)).FirstOrDefaultAsync();
-                if (notification == null)
+                var parent = await context.Parents.Where(d => d.Deleted != true && d.Parentid == Guid.Parse(request.parentId)).FirstOrDefaultAsync();
+                if (parent == null)
                 {
                     res.Message.FriendlyMessage = "Record does not exist";
                     res.IsSuccessful = false;
                     return res;
                 }
-                accessor.HttpContext.Items["smsClientId"] = notification.ClientId;
-                if (notification.IsConfirmed)
+                accessor.HttpContext.Items["smsClientId"] = parent.ClientId;
+                var user = await userManager.FindByIdAsync(parent.UserId);
+                if (user.EmailConfirmed)
                 {
                     res.Message.FriendlyMessage = "Your email has already been confirmed. Please proceed to login.";
                     res.IsSuccessful = true;
                     return res;
                 }
 
-                notification.IsConfirmed = true;
-                await context.SaveChangesAsync();
+                user.EmailConfirmed = true;
+                var result = await userManager.UpdateAsync(user);
+                if(!result.Succeeded)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Email could not be confirmed";
+                    return res;
+                }
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Email successfully confirmed. Please proceed to login.";
@@ -100,83 +117,18 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-
-        public async Task<APIResponse<AdmissionLoginDetails>> Login(AdmissionLogin request)
-        {
-            var res = new APIResponse<AdmissionLoginDetails>();
-            try
-            {
-
-                var clientId = context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl)?.ClientId?? string.Empty;
-
-                if (!string.IsNullOrEmpty(clientId))
-                {
-                    accessor.HttpContext.Items["smsClientId"] = clientId;
-                    var result = context.AdmissionNotifications.FirstOrDefault(x => x.ClientId == clientId && x.ParentEmail.ToLower() == request.ParentEmail.ToLower());
-
-                    if (result == null)
-                    {
-                        var notification = new AdmissionNotification
-                        {
-                            ParentEmail = request.ParentEmail,
-                            IsConfirmed = false,
-                        };
-
-                        context.AdmissionNotifications.Add(notification);
-                        await context.SaveChangesAsync();
-
-                        var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == clientId);
-                        await SendNotifications(notification.AdmissionNotificationId.ToString(), notification.ParentEmail, request.SchoolUrl, schoolSettings);
-
-                        res.Result = new AdmissionLoginDetails(null, new UserDetails(notification.ParentEmail, notification.AdmissionNotificationId.ToString()));
-
-                        res.IsSuccessful = true;
-                        res.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
-                        return res;
-                    }
-                    if (result.IsConfirmed == false)
-                    {
-                        res.IsSuccessful = false;
-                        res.Message.FriendlyMessage = "Kindly confirm your email address. A confirmation mail was sent to your email.";
-                        return res;
-                    }
-
-                    res.Result = new AdmissionLoginDetails(await GenerateToken(result.ParentEmail, result.AdmissionNotificationId.ToString(), clientId),
-                        new UserDetails(result.ParentEmail, result.AdmissionNotificationId.ToString()));
-                    res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = "Successful";
-                }
-                else
-                {
-                    res.IsSuccessful = false;
-                    res.Message.FriendlyMessage = "Unable to precess request! Try again later";
-                }
-                
-                return res;
-
-
-
-            }
-            catch(Exception ex)
-            {
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = Messages.FriendlyException;
-                res.Message.TechnicalMessage = ex.ToString();
-                return res;
-            }
-        }
         public async Task<APIResponse<string>> CreateAdmission(CreateAdmission request)
         {
             var res = new APIResponse<string>();
 
             try
             {
-                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
+                var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
                 var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId &&  x.AdmissionStatus == true);
 
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
                 var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
-                var admission = new Admission
+                var admission = new DAL.Models.Admission.Admission
                 {
                     Firstname = request.Firstname,
                     Middlename = request.Middlename,
@@ -189,14 +141,11 @@ namespace SMP.BLL.Services.AdmissionServices
                     LGAOfOrigin = request.LGAOfOrigin,
                     Credentials = filePath,
                     Photo = photoPath,
-                    ParentName = request.ParentName,
-                    ParentRelationship = request.ParentRelationship,
-                    ParentPhoneNumber = request.ParentPhoneNumber,
                     CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Pending,
                     CandidateCategory = string.Empty,
                     ExaminationStatus = (int)AdmissionExaminationStatus.Pending,
                     ClassId = Guid.Parse(request.ClassId),
-                    AdmissionNotificationId = admissionNotificationId,
+                    ParentId = parentId,
                     AdmissionSettingId = admissionSettings.AdmissionSettingId
 
                 };
@@ -217,41 +166,12 @@ namespace SMP.BLL.Services.AdmissionServices
             }
         }
 
-        public async Task<APIResponse<bool>> DeleteEmail(SingleDelete request)
-        {
-            var res = new APIResponse<bool>();
-            try
-            {
-                var notificationEmail = await context.AdmissionNotifications.Where(d => d.ParentEmail.ToLower() == request.Item.ToLower()).FirstOrDefaultAsync();
-                if (notificationEmail == null)
-                {
-                    res.Message.FriendlyMessage = "Email does not exist";
-                    res.IsSuccessful = false;
-                    return res;
-                }
-                accessor.HttpContext.Items["smsClientId"] = notificationEmail.ClientId;
-                context.AdmissionNotifications.Remove(notificationEmail);
-                await context.SaveChangesAsync();
-
-                res.IsSuccessful = true;
-                res.Message.FriendlyMessage = Messages.DeletedSuccess;
-                res.Result = true;
-                return res;
-            }
-            catch (Exception ex)
-            {
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = Messages.FriendlyException;
-                res.Message.TechnicalMessage = ex.ToString();
-                return res;
-            }
-        }
         public async Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter, string admissionSettingsId)
         {
             var res = new APIResponse<PagedResponse<List<SelectCandidateAdmission>>>();
             try
             {
-                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
+                var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
 
                 if(string.IsNullOrEmpty(admissionSettingsId))
                 {
@@ -263,27 +183,25 @@ namespace SMP.BLL.Services.AdmissionServices
                         return res;
                     }
                         var query = context.Admissions
-                        .Where(c => c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId )
-                        .Include(c => c.AdmissionNotification)
+                        .Where(c => c.Deleted != true && c.ParentId == parentId )
                         .Include(c => c.AdmissionSettings)
                         .OrderByDescending(c => c.CreatedOn)
                         .Where(c => c.AdmissionSettingId == admissionSettings.AdmissionSettingId);
 
                     var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                     res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                 }
                 else
                 {
                     var query = context.Admissions
-                        .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionNotificationId == admissionNotificationId)
-                        .Include(c => c.AdmissionNotification)
+                        .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.ParentId == parentId)
                         .Include(c => c.AdmissionSettings)
                         .OrderByDescending(c => c.CreatedOn)
                         .Where(c => c.AdmissionSettingId == Guid.Parse(admissionSettingsId));
 
                     var totalRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                     res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                 }
                 
@@ -307,12 +225,11 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<SelectCandidateAdmission>();
             try
             {
-                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
+                var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
                 var result = await context.Admissions
-                    .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.AdmissionNotificationId == admissionNotificationId)
-                    .Include(c => c.AdmissionNotification)
+                    .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.ParentId == parentId)
                     .Include(x => x.AdmissionSettings)
-                    .Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
+                    .Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)
                 {
@@ -341,8 +258,8 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<bool>();
             try
             {
-                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
-                var admission = await context.Admissions.Where(d => d.Deleted != true && d.AdmissionId == Guid.Parse(request.Item) && d.AdmissionNotificationId == admissionNotificationId).FirstOrDefaultAsync();
+                var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
+                var admission = await context.Admissions.Where(d => d.Deleted != true && d.AdmissionId == Guid.Parse(request.Item) && d.ParentId == parentId).FirstOrDefaultAsync();
                 if (admission == null)
                 {
                     res.Message.FriendlyMessage = "Admission Id does not exist";
@@ -367,40 +284,15 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-        private async Task<AdmissionAuth> GenerateToken(string parentEmail, string admissionNotificationId, string smsClientId)
-        {
-            var claims = new List<Claim>
-            {
-               new Claim(JwtRegisteredClaimNames.Sub, parentEmail),
-               new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-               new Claim(JwtRegisteredClaimNames.Email, parentEmail),
-               new Claim("parentEmail", parentEmail),
-               new Claim("admissionNotificationId", admissionNotificationId),
-               new Claim("smsClientId", smsClientId)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection("JwtSettings:Secret").Value));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = credentials
-            };
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return new AdmissionAuth { Token = tokenHandler.WriteToken(token), Expires = tokenDescriptor.Expires.ToString() };
-        }
-        private async Task SendNotifications(string admissionNotificationId, string receiver, string schoolURL, SchoolSetting schoolSetting)
+        private async Task SendNotifications(string parentId, string receiver, string schoolURL, SchoolSetting schoolSetting)
         {
             var toEmail = new List<EmailAddress>();
             var frmEmail = new List<EmailAddress>();
             toEmail.Add(new EmailAddress { Address = receiver, Name = receiver });
             frmEmail.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolSetting.SCHOOLSETTINGS_SchoolName });
             var host = accessor.HttpContext.Request.Host.ToUriComponent();
-            string body = $"You've Successfully registered. Kindly click the link below to confirm your email address.<br /> <br />" +
-                $"<a style='text-decoration: none; border: none;border-radius: 3px; color: #FFFFFF; background-color: #008CBA; padding: 10px 18px;margin: 4px 2px;' href='{schoolURL}/candidate-admission?admissionNotificationId={admissionNotificationId}'>Click Here</a>";
+            string body = $"You've Successfully registered. Kindly click the link below to confirm your email address. <br /> <b>Default Password:</b> 000000 <br /> <br />" +
+                $"<a style='text-decoration: none; border: none;border-radius: 3px; color: #FFFFFF; background-color: #008CBA; padding: 10px 18px;margin: 4px 2px;' href='{schoolURL}/candidate-admission?user={parentId}'>Click Here</a>";
             var content = await emailService.GetMailBody(receiver, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
             var email = new EmailMessage
             {
@@ -457,8 +349,8 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<string>();
             try
             {
-                var admissionNotificationId = Guid.Parse(accessor.HttpContext.Items["admissionNotificationId"].ToString());
-                var admission = await context.Admissions.Where(m => m.AdmissionId == Guid.Parse(request.AdmissionId) && m.AdmissionNotificationId == admissionNotificationId).FirstOrDefaultAsync();
+                var parentId = Guid.Parse(accessor.HttpContext.Items["parentId"].ToString());
+                var admission = await context.Admissions.Where(m => m.AdmissionId == Guid.Parse(request.AdmissionId) && m.ParentId == parentId).FirstOrDefaultAsync();
                 if (admission == null)
                 {
                     res.IsSuccessful = false;
@@ -483,9 +375,6 @@ namespace SMP.BLL.Services.AdmissionServices
                 admission.LGAOfOrigin = request.LGAOfOrigin;
                 admission.Credentials = filePath;
                 admission.Photo = photoPath;
-                admission.ParentName = request.ParentName;
-                admission.ParentRelationship = request.ParentRelationship;
-                admission.ParentPhoneNumber = request.ParentPhoneNumber;
                 admission.ClassId = Guid.Parse(request.ClassId);
                 await context.SaveChangesAsync();
 
@@ -557,6 +446,44 @@ namespace SMP.BLL.Services.AdmissionServices
             res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
             res.IsSuccessful = true;
             return res;
+        }
+
+        public async Task<APIResponse<string>> RegisterParent(CreateAdmissionParent request)
+        {
+            var response = new APIResponse<string>();
+            try
+            {
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl);
+
+                if (schoolSettings != null)
+                {
+                    var parent = await context.Parents.FirstOrDefaultAsync(x=>x.Email.ToLower() == request.Email.ToLower() && x.ClientId == schoolSettings.ClientId);
+                    if(parent != null)
+                    {
+                        response.IsSuccessful = false;
+                        response.Message.FriendlyMessage = "Parent already exists!";
+                        return response;
+                    }
+                    accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;
+                    var parentId = await parentService.SaveParentDetail(request.Email, request.Firstname, request.Lastname, request.Relationship, request.PhoneNumber, Guid.Empty);
+
+                    await SendNotifications(parentId.ToString(), request.Email, request.SchoolUrl, schoolSettings);
+
+                    response.Result = parentId.ToString();
+                    response.IsSuccessful = true;
+                    response.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
+                }
+                return response;
+
+            }
+            catch(Exception ex)
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                response.IsSuccessful = false;
+                response.Message.FriendlyMessage = Messages.FriendlyException;
+                response.Message.TechnicalMessage = ex.ToString();
+                return response;
+            }
         }
     }
 }

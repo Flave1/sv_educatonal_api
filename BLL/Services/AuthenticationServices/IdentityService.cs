@@ -155,6 +155,7 @@ namespace BLL.AuthenticationServices
                     }
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
+                    id = parent.Parentid;
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
@@ -262,6 +263,7 @@ namespace BLL.AuthenticationServices
                     }
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
+                    id = parent.Parentid;
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
@@ -577,6 +579,7 @@ namespace BLL.AuthenticationServices
                     var parent = GetParentByUserId(userAccount.Id, clientId);
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
+                    id = parent.Parentid;
                 }
 
 
