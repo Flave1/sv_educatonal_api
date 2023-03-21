@@ -25,9 +25,6 @@ namespace SMP.DAL.Models.Admission
         public string LGAOfOrigin { get; set; }
         public string Photo { get; set; }
         public string Credentials { get; set; }
-        public string ParentName { get; set; }
-        public string ParentRelationship { get; set; }
-        public string ParentPhoneNumber { get; set; }
         public int CandidateAdmissionStatus { get; set; }
         public string CandidateCategory { get; set; }
         public string CandidateCategoryName { get; set; }
@@ -39,8 +36,6 @@ namespace SMP.DAL.Models.Admission
         public Guid ClassId { get; set; }
         [ForeignKey("ClassId")]
         public ClassLookup Class { get; set; }
-        public Guid AdmissionNotificationId { get; set; }
-        [ForeignKey("AdmissionNotificationId")]
-        public AdmissionNotification AdmissionNotification { get; set; }
+        public Guid? ParentId { get; set; }
     }
 }

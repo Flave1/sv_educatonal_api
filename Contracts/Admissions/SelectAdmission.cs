@@ -1,5 +1,6 @@
 ﻿using DAL.ClassEntities;
 using SMP.DAL.Models.Admission;
+using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace SMP.Contracts.Admissions
         public string CandidateCategoryName { get; set; }
         public string ClassId { get; set; }
         public string ClassName { get; set; }
-        public SelectAdmission(Admission admission, ClassLookup classLookup)
+        public SelectAdmission(Admission admission, ClassLookup classLookup, Parents parent)
         {
             AdmissionId = admission.AdmissionId.ToString();
             Firstname = admission.Firstname;
@@ -46,10 +47,10 @@ namespace SMP.Contracts.Admissions
             LGAOfOrigin = admission.LGAOfOrigin;
             Credentials = admission.Credentials;
             Photo = admission.Photo;
-            ParentName = admission.ParentName;
-            ParentRelationship = admission.ParentRelationship;
-            ParentPhoneNumber = admission.PhoneNumber;
-            ParentEmail = admission.AdmissionNotification.ParentEmail;
+            ParentName = $"{parent.FirstName} {parent.LastName}";
+            ParentRelationship = parent.Relationship;
+            ParentPhoneNumber = parent.Phone;
+            ParentEmail = parent.Email;
             ExamStatus = admission.ExaminationStatus;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
             ExaminationId = !string.IsNullOrEmpty(admission.ExaminationId) ? admission.ExaminationId : "";

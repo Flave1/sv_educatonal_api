@@ -91,7 +91,7 @@ namespace DAL
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
         public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         public DbSet<Parents> Parents { get; set; }
-        public DbSet<AdmissionNotification> AdmissionNotifications { get; set; }
+        //public DbSet<AdmissionNotification> AdmissionNotifications { get; set; }
         public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }

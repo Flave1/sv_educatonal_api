@@ -26,6 +26,7 @@ using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
 using SMP.DAL.Models.Admission;
+using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -77,8 +78,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                 try
                 {
-                    var admission = await context.Admissions.Where(x => x.ClientId == smsClientId && x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true)
-                                    .Include(x => x.AdmissionNotification).FirstOrDefaultAsync();
+                    var admission = await context.Admissions.Where(x => x.ClientId == smsClientId && x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true).FirstOrDefaultAsync();
 
                     if (admission == null)
                     {
@@ -90,7 +90,7 @@ namespace SMP.BLL.Services.AdmissionServices
                         res.IsSuccessful = false;
                         res.Message.FriendlyMessage = "Candidate already admitted";
                     }
-
+                    var parent = await context.Parents.FirstOrDefaultAsync(x => x.Parentid == admission.ParentId);
                     var student = new StudentContactCommand
                     {
                         FirstName = admission.Firstname,
@@ -100,9 +100,9 @@ namespace SMP.BLL.Services.AdmissionServices
                         DOB = admission.DateOfBirth.ToString(),
                         Email = admission.Email,
                         HomePhone = admission.PhoneNumber,
-                        EmergencyPhone = admission.ParentPhoneNumber,
-                        ParentOrGuardianFirstName = admission.ParentName,
-                        ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
+                        EmergencyPhone = parent.Phone,
+                        ParentOrGuardianFirstName = parent.FirstName,
+                        ParentOrGuardianEmail = parent.Email,
                         HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
                         CityId = admission.StateOfOrigin,
                         StateId = admission.StateOfOrigin,
@@ -188,8 +188,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
             try
             {
-                var admissions = context.Admissions.Where(x => x.ClientId == smsClientId && request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true)
-                                .Include(x => x.AdmissionNotification);
+                var admissions = context.Admissions.Where(x => x.ClientId == smsClientId && request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true);
 
                 if (admissions == null)
                 {
@@ -203,6 +202,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 {
                     if (admission.CandidateAdmissionStatus != (int)CandidateAdmissionStatus.Admitted)
                     {
+                        var parent = await context.Parents.FirstOrDefaultAsync(x => x.Parentid == admission.ParentId);
                         var student = new StudentContactCommand
                         {
                             FirstName = admission.Firstname,
@@ -212,9 +212,9 @@ namespace SMP.BLL.Services.AdmissionServices
                             DOB = admission.DateOfBirth.ToString(),
                             Email = admission.Email,
                             HomePhone = admission.PhoneNumber,
-                            EmergencyPhone = admission.ParentPhoneNumber,
-                            ParentOrGuardianFirstName = admission.ParentName,
-                            ParentOrGuardianEmail = admission.AdmissionNotification.ParentEmail,
+                            EmergencyPhone = parent.Phone,
+                            ParentOrGuardianFirstName = parent.FirstName,
+                            ParentOrGuardianEmail = parent.Email,
                             HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
                             CityId = admission.StateOfOrigin,
                             StateId = admission.StateOfOrigin,
@@ -390,8 +390,7 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var result = await context.Admissions
                     .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId))
-                    .Include(c => c.AdmissionNotification)
-                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault())).FirstOrDefaultAsync();
+                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)
                 {
@@ -429,10 +428,9 @@ namespace SMP.BLL.Services.AdmissionServices
                     {
                         var query = context.Admissions
                         .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId)
-                        .Include(c => c.AdmissionNotification)
                         .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
 
@@ -440,30 +438,27 @@ namespace SMP.BLL.Services.AdmissionServices
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                     if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ClassId == Guid.Parse(classId))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                     if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == admissionSettings.AdmissionSettingId && c.ExaminationStatus == int.Parse(examStatus))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                 }
@@ -473,10 +468,9 @@ namespace SMP.BLL.Services.AdmissionServices
                     {
                         var query = context.Admissions
                         .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId))
-                        .Include(c => c.AdmissionNotification)
                         .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
 
@@ -484,30 +478,27 @@ namespace SMP.BLL.Services.AdmissionServices
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ClassId == Guid.Parse(classId) && c.ExaminationStatus == int.Parse(examStatus))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                     if (!string.IsNullOrWhiteSpace(classId) && string.IsNullOrWhiteSpace(examStatus))
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ClassId == Guid.Parse(classId))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                     if (string.IsNullOrWhiteSpace(classId) && !string.IsNullOrWhiteSpace(examStatus))
                     {
                         var query = context.Admissions
                        .Where(c => c.Deleted != true && c.AdmissionSettingId == Guid.Parse(admissionSettingsId) && c.ExaminationStatus == int.Parse(examStatus))
-                       .Include(c => c.AdmissionNotification)
                        .OrderByDescending(c => c.CreatedOn);
                         var totalRecord = query.Count();
-                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault())).ToListAsync();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).ToListAsync();
                         res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
                     }
                 }
