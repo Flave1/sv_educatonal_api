@@ -129,7 +129,8 @@ namespace SMP.BLL.Services.TimetableServices
                 await context.ClassTimeTableTime.AddAsync(req);
                 await context.SaveChangesAsync();
 
-                var classDays = context.ClassTimeTable.Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ExamTimetable && d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
+                var classDays = context.ClassTimeTable.Where(d => d.ClientId == smsClientId && d.TimetableType == (int)TimetableType.ExamTimetable 
+                && d.ClassId == Guid.Parse(request.ClassId)).SelectMany(s => s.Days).AsEnumerable();
                 if (classDays.Any())
                 {
                     foreach (var day in classDays)
