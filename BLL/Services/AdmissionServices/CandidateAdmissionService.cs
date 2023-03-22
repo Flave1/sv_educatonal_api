@@ -359,10 +359,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
 
-                string oldCredentials = admission.Credentials.Split("AdmissionCredentials/")[1];
-
                 var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
-                string oldPhoto = admission.Photo.Split("AdmissionPassport/")[1];
 
                 admission.Firstname = request.Firstname;
                 admission.Lastname = request.Lastname;
@@ -378,11 +375,19 @@ namespace SMP.BLL.Services.AdmissionServices
                 admission.ClassId = Guid.Parse(request.ClassId);
                 await context.SaveChangesAsync();
 
-                var oldCredentialsPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionCredentials", oldCredentials);
-                fileUpload.DeleteFile(oldCredentialsPath);
+                if(!string.IsNullOrEmpty(admission.Credentials))
+                {
+                    string oldCredentials = admission.Credentials.Split("AdmissionCredentials/")[1];
+                    var oldCredentialsPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionCredentials", oldCredentials);
+                    fileUpload.DeleteFile(oldCredentialsPath);
+                }
 
-                var oldPhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", oldPhoto);
-                fileUpload.DeleteFile(oldPhotoPath);
+                if(!string.IsNullOrEmpty(admission.Photo))
+                {
+                    string oldPhoto = admission.Photo.Split("AdmissionPassport/")[1];
+                    var oldPhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + "AdmissionPassport", oldPhoto);
+                    fileUpload.DeleteFile(oldPhotoPath);
+                }
 
                 res.Result = admission.AdmissionId.ToString();
                 res.IsSuccessful = true;
