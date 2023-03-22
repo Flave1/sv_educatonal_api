@@ -349,7 +349,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<string>();
             try
             {
-                var parentId = Guid.Parse(accessor.HttpContext.Items["parentId"].ToString());
+                var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
                 var admission = await context.Admissions.Where(m => m.AdmissionId == Guid.Parse(request.AdmissionId) && m.ParentId == parentId).FirstOrDefaultAsync();
                 if (admission == null)
                 {
