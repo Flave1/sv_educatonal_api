@@ -47,10 +47,10 @@ namespace SMP.Contracts.Admissions
             LGAOfOrigin = admission.LGAOfOrigin;
             Credentials = admission.Credentials;
             Photo = admission.Photo;
-            ParentName = $"{parent.FirstName} {parent.LastName}";
-            ParentRelationship = parent.Relationship;
-            ParentPhoneNumber = parent.Phone;
-            ParentEmail = parent.Email;
+            ParentName = $"{parent?.FirstName} {parent?.LastName}";
+            ParentRelationship = parent?.Relationship;
+            ParentPhoneNumber = parent?.Phone;
+            ParentEmail = parent?.Email;
             ExamStatus = admission.ExaminationStatus;
             CandidateAdmissionStatus = admission.CandidateAdmissionStatus;
             ExaminationId = !string.IsNullOrEmpty(admission.ExaminationId) ? admission.ExaminationId : "";
