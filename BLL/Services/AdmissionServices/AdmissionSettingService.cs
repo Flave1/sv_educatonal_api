@@ -102,7 +102,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 var setting = await context.AdmissionSettings
                     .Where(d => d.Deleted != true && d.AdmissionStatus == true && smsClientId == d.ClientId).FirstOrDefaultAsync();
 
-                if (setting != null && request.AdmissionStatus == true)
+                if (setting != null && request.AdmissionStatus == true && admissionSettings.AdmissionStatus != true)
                 {
                     res.Message.FriendlyMessage = $"New admission cannot be created {setting.AdmissionSettingName} is currently in progress";
                     res.IsSuccessful = false;
