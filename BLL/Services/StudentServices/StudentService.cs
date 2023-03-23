@@ -572,7 +572,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<GetStudentContactCbt>();
             try
             {
-                string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo);
+                string regNo = utilitiesService.GetStudentRegNumberValue(studentRegNo, clientId);
                 var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == clientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
                 var result = await context.StudentContact
