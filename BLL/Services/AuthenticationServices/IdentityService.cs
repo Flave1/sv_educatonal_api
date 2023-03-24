@@ -78,6 +78,8 @@ namespace BLL.AuthenticationServices
                 var clientId = ClientId(loginRequest.SchoolUrl);
                 var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
+
+                await loggerService.Error("SOme log here", "SOme log here", "SOme log here", "SOme log here");
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";

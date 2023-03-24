@@ -35,7 +35,7 @@ namespace Contracts.Options
                         continue;
                     break;
                 }
-                //LogError(errorResponse.ToString());
+                LogError(errorResponse.ToString());
                 context.Result = new BadRequestObjectResult(errorResponse);
                 return;
             }
