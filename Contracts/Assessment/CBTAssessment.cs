@@ -32,7 +32,8 @@ namespace SMP.Contracts.Assessment
         public string CandidateIds { get; set; }
         public string CreatedOn { get; set; }
         public string Percentage { get; set; }
-        
+        public int TotalCandidate { get; set; }
+
     }
 
     public class InCludeAssessmentRequest
