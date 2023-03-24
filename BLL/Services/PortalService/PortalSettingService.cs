@@ -242,6 +242,8 @@ namespace SMP.BLL.Services.PortalService
                 res.Result.loginTemplate = setting.APPLAYOUTSETTINGS_loginTemplate;
                 res.Result.sidebarActiveStyle = setting.APPLAYOUTSETTINGS_SidebarActiveStyle;
                 res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
+                res.Result.schoolName = setting.SCHOOLSETTINGS_SchoolName;
+                res.Result.schoolLogo = setting.SCHOOLSETTINGS_Photo;
                 if(setting.APPLAYOUTSETTINGS_SidebarType is not null)
                     res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
             }

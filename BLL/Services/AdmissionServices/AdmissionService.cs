@@ -114,16 +114,21 @@ namespace SMP.BLL.Services.AdmissionServices
                     var result = await utilitiesService.GenerateStudentRegNo();
 
                     var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
-                    string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
 
-                    var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/AdmissionPassport", admissionFileName);
+                    string photoUrl = "";
 
-                    string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/"+ smsClientId + "/ProfileImage", admissionFileName);
+                    if(!string.IsNullOrEmpty(admission.Photo))
+                    {
+                        string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
+                        var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/AdmissionPassport", admissionFileName);
+                        string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/ProfileImage", admissionFileName);
 
-                    fileUploadService.CopyFile(admissionPath, profilePhotoPath);
+                        fileUploadService.CopyFile(admissionPath, profilePhotoPath);
+                        var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                        photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/ProfileImage/{admissionFileName}";
+                    }
 
-                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                    var photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/ProfileImage/{admissionFileName}";
+                    
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
