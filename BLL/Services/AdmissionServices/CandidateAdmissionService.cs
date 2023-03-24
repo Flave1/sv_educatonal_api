@@ -284,7 +284,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-        private async Task SendNotifications(string parentId, string receiver, string schoolURL, SchoolSetting schoolSetting)
+        private async Task SendNotifications(string parentId, string firstname, string receiver, string schoolURL, SchoolSetting schoolSetting)
         {
             var toEmail = new List<EmailAddress>();
             var frmEmail = new List<EmailAddress>();
@@ -293,7 +293,7 @@ namespace SMP.BLL.Services.AdmissionServices
             var host = accessor.HttpContext.Request.Host.ToUriComponent();
             string body = $"You've Successfully registered. Kindly click the link below to confirm your email address. <br /> <b>Default Password:</b> 000000 <br /> <br />" +
                 $"<a style='text-decoration: none; border: none;border-radius: 3px; color: #FFFFFF; background-color: #008CBA; padding: 10px 18px;margin: 4px 2px;' href='{schoolURL}/candidate-admission?user={parentId}'>Click Here</a>";
-            var content = await emailService.GetMailBody(receiver, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
+            var content = await emailService.GetMailBody(firstname, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
             var email = new EmailMessage
             {
                 Content = content,
@@ -472,7 +472,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;
                     var parentId = await parentService.SaveParentDetail(request.Email, request.Firstname, request.Lastname, request.Relationship, request.PhoneNumber, Guid.Empty);
 
-                    await SendNotifications(parentId.ToString(), request.Email, request.SchoolUrl, schoolSettings);
+                    await SendNotifications(parentId.ToString(), request.Firstname, request.Email, request.SchoolUrl, schoolSettings);
 
                     response.Result = parentId.ToString();
                     response.IsSuccessful = true;

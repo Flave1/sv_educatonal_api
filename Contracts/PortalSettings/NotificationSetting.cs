@@ -209,6 +209,8 @@ namespace SMP.Contracts.PortalSettings
         public string navbarstyle { get; set; }
         public string loginTemplate { get; set; }
         public string schoolUrl { get; set; }
+        public string schoolName { get; set; }
+        public string schoolLogo { get; set; }
 
     }
     public class SidebarType
