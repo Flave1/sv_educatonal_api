@@ -170,7 +170,7 @@ namespace DAL
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
            
-            foreach (var entry in ChangeTracker.Entries<CommonEntity>())
+            foreach (var entry in ChangeTracker.Entries<Log>())
             {
                 if (entry.State == EntityState.Added)
                 {
