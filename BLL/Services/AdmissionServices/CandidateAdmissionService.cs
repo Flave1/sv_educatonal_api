@@ -466,7 +466,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     if(parent != null)
                     {
                         response.IsSuccessful = false;
-                        response.Message.FriendlyMessage = "Parent already exists!";
+                        response.Message.FriendlyMessage = "User already exist. Please login to continue.";
                         return response;
                     }
                     accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;

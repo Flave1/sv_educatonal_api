@@ -161,7 +161,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     await CreateStudentSessionClassHistoryAsync(item);
 
                     await transaction.CommitAsync();
-                    res.Message.FriendlyMessage = Messages.Created;
+                    res.Message.FriendlyMessage = "Successfully Enrolled";
                     res.Result = true;
                     res.IsSuccessful = true;
                     return res;
@@ -193,9 +193,9 @@ namespace SMP.BLL.Services.AdmissionServices
 
             try
             {
-                var admissions = context.Admissions.Where(x => x.ClientId == smsClientId && request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true);
+                var admissions = await context.Admissions.Where(x => x.ClientId == smsClientId && request.AdmissionIds.Contains(x.AdmissionId.ToString()) && x.Deleted != true).ToListAsync();
 
-                if (admissions == null)
+                if (!admissions .Any())
                 {
                     res.IsSuccessful = false;
                     res.Message.FriendlyMessage = "AdmissionIds doesn't exist!";
@@ -263,7 +263,7 @@ namespace SMP.BLL.Services.AdmissionServices
                     await CreateStudentSessionClassHistoryAsync(item);
                 }
 
-                res.Message.FriendlyMessage = Messages.Created;
+                res.Message.FriendlyMessage = "Successfully Enrolled";
                 res.Result = true;
                 res.IsSuccessful = true;
                 return res;
