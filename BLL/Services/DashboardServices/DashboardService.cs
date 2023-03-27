@@ -181,6 +181,11 @@ namespace SMP.BLL.Services.DashboardServices
             IQueryable<SessionClass> classesAsASujectTeacher = null;
             IQueryable<SessionClass> classesAsAFormTeacher = null;
             var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+            if(currentTerm is null)
+            {
+                res.Message.FriendlyMessage = "No active term found";
+                return res;
+            }
             if (!string.IsNullOrEmpty(userId))
             {
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))

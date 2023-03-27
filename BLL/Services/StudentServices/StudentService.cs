@@ -22,6 +22,7 @@ using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Students;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -659,8 +660,8 @@ namespace BLL.StudentServices
             var res = new APIResponse<byte[]>();
             try
             {
-                byte[] templateFile = new byte[0];
-               
+
+                byte[] File = new byte[0];
                 DataTable templateColumn = new DataTable();
                 templateColumn.Columns.Add("Session Class");
                 templateColumn.Columns.Add("Registration Number");
@@ -682,16 +683,19 @@ namespace BLL.StudentServices
                 templateColumn.Columns.Add("Country Id");
                 templateColumn.Columns.Add("Zip Code");
 
+
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                using (ExcelPackage excelPck = new ExcelPackage())
+                using (ExcelPackage pck = new ExcelPackage())
                 {
-                    ExcelWorksheet workSheet = excelPck.Workbook.Worksheets.Add("Student");
-                    workSheet.DefaultColWidth = 20;
-                    workSheet.Cells["A1"].LoadFromDataTable(templateColumn, true, OfficeOpenXml.Table.TableStyles.None);
-                    templateFile = excelPck.GetAsByteArray();
+                    ExcelWorksheet ws = pck.Workbook.Worksheets.Add("PINS");
+                    ws.DefaultColWidth = 20;
+                    ws.Cells["A1"].LoadFromDataTable(templateColumn, true, OfficeOpenXml.Table.TableStyles.None);
+                    File = pck.GetAsByteArray();
                 }
+
+
                 res.IsSuccessful = true;
-                res.Result = templateFile;
+                res.Result = File;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
                 return res;
             }
