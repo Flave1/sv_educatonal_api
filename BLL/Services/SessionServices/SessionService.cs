@@ -215,7 +215,12 @@ namespace BLL.SessionServices
         async Task<APIResponse<GetSession>> ISessionService.GetSingleSessionAsync(string sessionId)
         {
             var res = new APIResponse<GetSession>();
-            var result = await context.Session.Where(x => x.ClientId == smsClientId && x.Deleted == false && Guid.Parse(sessionId) == x.SessionId)
+            var session = context.Session.Where(x => x.ClientId == smsClientId && x.Deleted == false && Guid.Parse(sessionId) == x.SessionId);
+
+
+            if (session.FirstOrDefault().IsActive)
+            {
+               res.Result = await session
                 .Include(d => d.SessionClass).ThenInclude(d => d.Students)
                 .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(d => d.User)
                 .Include(er => er.HeadTeacher)
@@ -245,9 +250,14 @@ namespace BLL.SessionServices
                     NoOfSubjects = e.SessionClass.SelectMany(s => s.SessionClassSubjects).Count(),
                 }
                 ).FirstOrDefaultAsync();
+            }
+            else
+            {
+                //some code from history
+            }
+            
 
             res.IsSuccessful = true;
-            res.Result = result;
             return res;
         }
 

@@ -76,28 +76,28 @@ namespace SMP.Contracts.ResultModels
         public List<ScoreEntrySheet> ClassScoreEntries { get; set; } = new List<ScoreEntrySheet>();
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat)
         {
-            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
+            //var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass?.Class?.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
             ClassScoreEntryId = db.ClassScoreEntryId;
-            AssessmentScore = db.SessionClass.AssessmentScore;
-            ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
+            //AssessmentScore = subject?.AssessmentScore ?? 0;
+            //ExamsScore = subject?.ExamScore ?? 0;
+            //SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
 
         }
         public GetClassScoreEntry(ClassScoreEntry db, string regNoFormat, Guid term)
         {
-            var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
+            //var subject = db?.SessionClass?.SessionClassSubjects?.FirstOrDefault(x => x.SubjectId == db.SubjectId);
             SessionClassName = db.SessionClass.Class.Name;
             SessionClassId = db.SessionClassId.ToString();
             SubjectId = db.SubjectId.ToString();
             SubjectName = db.Subject.Name;
             ClassScoreEntryId = db.ClassScoreEntryId;
-            AssessmentScore = db.SessionClass.AssessmentScore;
-            ExamsScore = db.SessionClass.ExamScore;
-            SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
+            //AssessmentScore = db.SessionClass.AssessmentScore;
+            //ExamsScore = db.SessionClass.ExamScore;
+            //SubjectTeacher = subject?.SubjectTeacher?.FirstName + " " + subject?.SubjectTeacher?.LastName;
             if (db.ScoreEntries.Any())
             {
 
