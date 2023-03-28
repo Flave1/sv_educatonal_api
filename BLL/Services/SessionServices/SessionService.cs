@@ -3,18 +3,25 @@ using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Session;
 using DAL;
+using DAL.ClassEntities;
 using DAL.SessionEntities;
+using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
+using SMP.DAL.Migrations;
+using SMP.DAL.Models.GradeEntities;
+using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BLL.SessionServices
@@ -78,6 +85,9 @@ namespace BLL.SessionServices
                 return res;
             }
 
+            
+            var currentSession = await context.Session.Where(x=>x.ClientId == smsClientId && x.IsActive == true).FirstOrDefaultAsync();
+
             using(var transaction = await context.Database.BeginTransactionAsync())
             {
                 try
@@ -95,6 +105,11 @@ namespace BLL.SessionServices
                     await SetOtherSessionsInactiveAsync(dbSession.SessionId);
 
                     await CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
+
+                    if (session.TransferClasses)
+                    {
+                        await TransferSessionRecord(currentSession, dbSession);
+                    }
 
                     await transaction.CommitAsync();
                     res.IsSuccessful = true;
@@ -424,6 +439,67 @@ namespace BLL.SessionServices
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;
             }
+        }
+
+        private async Task TransferSessionRecord(Session previousSession, Session newSession)
+        {
+            var currentGradeGroup = await context.GradeGroup.Where(x => x.ClientId == smsClientId && x.SessionId == previousSession.SessionId).FirstOrDefaultAsync();
+
+            var newGradeGroup = new GradeGroup()
+            {
+                GradeGroupName = currentGradeGroup.GradeGroupName,
+                SessionId = newSession.SessionId
+            };
+
+            context.GradeGroup.Add(newGradeGroup);
+            await context.SaveChangesAsync();
+
+            var grades = await context.Grade.Where(x => x.GradeGroupId == currentGradeGroup.GradeGroupId).ToListAsync();
+
+            foreach (var grade in grades)
+            {
+                var newGrades = new Grade
+                {
+                    GradeGroupId = newGradeGroup.GradeGroupId,
+                    GradeName = grade.GradeName,
+                    LowerLimit = grade.LowerLimit,
+                    Remark = grade.Remark,
+                    UpperLimit = grade.UpperLimit,
+                };
+                context.Grade.Add(newGrades);
+            }
+            await context.SaveChangesAsync();
+            var classes = await context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.GradeGroupId == currentGradeGroup.GradeGroupId).ToListAsync();
+
+            foreach ( var clazz in classes)
+            {
+                var classLookUp = new ClassLookup
+                {
+                    Name = clazz.Name,
+                    IsActive = clazz.IsActive,
+                    GradeGroupId = newGradeGroup.GradeGroupId
+                };
+                context.ClassLookUp.Add(classLookUp);
+            }
+            await context.SaveChangesAsync();
+
+            var sessionClasses = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.SessionId == previousSession.SessionId).ToListAsync();
+
+            foreach( var sessionClass in sessionClasses)
+            {
+                var newSessionClass = new SessionClass
+                {
+                    ClassId = sessionClass.ClassId,
+                    FormTeacherId = sessionClass.FormTeacherId,
+                    SessionId = newSession.SessionId,
+                    InSession = sessionClass.InSession,
+                    ExamScore = sessionClass.ExamScore,
+                    AssessmentScore = sessionClass.AssessmentScore,
+                    PassMark = sessionClass.PassMark,
+                };
+                context.SessionClass.Add(sessionClass);
+            }
+            await context.SaveChangesAsync();
         }
     }
 }
