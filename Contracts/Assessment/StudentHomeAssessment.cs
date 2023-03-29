@@ -100,6 +100,7 @@ namespace SMP.Contracts.Assessment
         public Guid? TeacherId { get; set; }
         public bool Included { get; set; }
         public string StudentName { get; set; }
+        public string Comment { get; set; }
 
         public GetHomeAssessmentRequest Assessment { get; set; } = new GetHomeAssessmentRequest();
         public GetHomeAssessmentFeedback(HomeAssessmentFeedBack db)
@@ -107,6 +108,7 @@ namespace SMP.Contracts.Assessment
             Score = db.Mark;
             Included = db.Included;
             Content = db.Content;
+            Comment = db.Comment;;
             StudentName = db.StudentContact.FirstName + " " + db.StudentContact.LastName;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
             HomeAssessmentId = db.HomeAssessmentId;
