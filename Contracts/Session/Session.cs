@@ -9,6 +9,7 @@ namespace Contracts.Session
         public string EndDate { get; set; }
         public int Terms { get; set; }
         public string HeadTeacherId { get; set; }
+        public bool TransferClasses { get; set; }
     }
 
     public class GetSession

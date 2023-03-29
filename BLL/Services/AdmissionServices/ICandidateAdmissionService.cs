@@ -19,7 +19,7 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<string>> CreateAdmission(CreateAdmission request);
         Task<APIResponse<PagedResponse<List<SelectCandidateAdmission>>>> GetAllAdmission(PaginationFilter filter, string admissionSettingsId);
         Task<APIResponse<SelectCandidateAdmission>> GetAdmission(string admissionId);
-        Task<APIResponse<SelectAdmissionSettings>> GetSettings();
+        Task<APIResponse<List<SelectAdmissionSettings>>> GetSettings();
         Task<APIResponse<bool>> DeleteAdmission(SingleDelete request);
         Task<APIResponse<List<AdmissionClasses>>> GetAdmissionClasses();
         Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request);

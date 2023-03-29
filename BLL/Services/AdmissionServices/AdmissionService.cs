@@ -241,6 +241,9 @@ namespace SMP.BLL.Services.AdmissionServices
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var item = new StudentContact
                     {
+                        FirstName = student.FirstName,
+                        LastName = student.LastName,
+                        MiddleName = student.MiddleName,
                         CityId = student.CityId,
                         CountryId = student.CountryId,
                         EmergencyPhone = student.EmergencyPhone,
