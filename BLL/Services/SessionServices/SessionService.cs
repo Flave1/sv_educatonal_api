@@ -1,6 +1,7 @@
 ﻿using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
+using Contracts.Class;
 using Contracts.Session;
 using DAL;
 using DAL.ClassEntities;
@@ -15,14 +16,17 @@ using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
 using SMP.DAL.Migrations;
+using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.NoteEntities;
+using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GetSessionClass = Contracts.Session.GetSessionClass;
 
 namespace BLL.SessionServices
 {
@@ -235,10 +239,42 @@ namespace BLL.SessionServices
 
             if (session.FirstOrDefault().IsActive)
             {
-               res.Result = await session
-                .Include(d => d.SessionClass).ThenInclude(d => d.Students)
-                .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(d => d.User)
-                .Include(er => er.HeadTeacher)
+                res.Result = await session
+                 .Include(d => d.SessionClass).ThenInclude(d => d.Students)
+                 .Include(d => d.SessionClass).ThenInclude(d => d.Teacher).ThenInclude(d => d.User)
+                 .Include(er => er.HeadTeacher)
+                 .OrderByDescending(d => d.CreatedOn)
+                 .Select(e => new GetSession
+                 {
+                     EndDate = e.EndDate,
+                     SessionId = e.SessionId.ToString(),
+                     StartDate = e.StartDate,
+                     IsActive = e.IsActive,
+                     HeadTeacherId = e.HeadTeacherId,
+                     HeadTeacherName = e.HeadTeacher.FirstName + " " + e.HeadTeacher.LastName,
+                     Terms = e.Terms.OrderByDescending(s => s.TermName).Select(t => new Terms
+                     {
+                         IsActive = t.IsActive,
+                         SessionTermId = t.SessionTermId,
+                         TermName = t.TermName,
+                     }).ToArray(),
+                     SessionClasses = e.SessionClass.Select(d => new GetSessionClass
+                     {
+                         FormTeacher = d.Teacher.FirstName + " " + d.Teacher.LastName,
+                         SessionClass = d.Class.Name,
+                         SessionClassId = d.SessionClassId
+                     }).ToArray(),
+                     NoOfStudents = e.SessionClass.SelectMany(s => s.Students).Count(),
+                     NoOfClasses = e.SessionClass.Count(),
+                     NoOfSubjects = e.SessionClass.SelectMany(s => s.SessionClassSubjects).Count(),
+                 }
+                 ).FirstOrDefaultAsync();
+            }
+            else
+            {
+
+                res.Result = await session
+                .Include(d => d.SessionClass)
                 .OrderByDescending(d => d.CreatedOn)
                 .Select(e => new GetSession
                 {
@@ -247,28 +283,9 @@ namespace BLL.SessionServices
                     StartDate = e.StartDate,
                     IsActive = e.IsActive,
                     HeadTeacherId = e.HeadTeacherId,
-                    HeadTeacherName = e.HeadTeacher.FirstName + " " + e.HeadTeacher.LastName,
-                    Terms = e.Terms.OrderByDescending(s => s.TermName).Select(t => new Terms
-                    {
-                        IsActive = t.IsActive,
-                        SessionTermId = t.SessionTermId,
-                        TermName = t.TermName,
-                    }).ToArray(),
-                    SessionClasses = e.SessionClass.Select(d => new GetSessionClass
-                    {
-                        FormTeacher = d.Teacher.FirstName + " " + d.Teacher.LastName,
-                        SessionClass = d.Class.Name,
-                        SessionClassId = d.SessionClassId
-                    }).ToArray(),
-                    NoOfStudents = e.SessionClass.SelectMany(s => s.Students).Count(),
-                    NoOfClasses = e.SessionClass.Count(),
-                    NoOfSubjects = e.SessionClass.SelectMany(s => s.SessionClassSubjects).Count(),
+                    HeadTeacherName = e.HeadTeacher.FirstName + " " + e.HeadTeacher.LastName
                 }
                 ).FirstOrDefaultAsync();
-            }
-            else
-            {
-                //some code from history
             }
             
 
@@ -453,63 +470,62 @@ namespace BLL.SessionServices
 
         private async Task TransferSessionRecord(Session previousSession, Session newSession)
         {
-            var currentGradeGroup = await context.GradeGroup.Where(x => x.ClientId == smsClientId && x.SessionId == previousSession.SessionId).FirstOrDefaultAsync();
+            var sessionClass = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.SessionId == previousSession.SessionId).FirstOrDefaultAsync();
 
-            var newGradeGroup = new GradeGroup()
+            var newSessionClass = new SessionClass
             {
-                GradeGroupName = currentGradeGroup.GradeGroupName,
-                SessionId = newSession.SessionId
+                ClassId = sessionClass.ClassId,
+                FormTeacherId = sessionClass.FormTeacherId,
+                SessionId = newSession.SessionId,
+                InSession = sessionClass.InSession,
+                ExamScore = sessionClass.ExamScore,
+                AssessmentScore = sessionClass.AssessmentScore,
+                PassMark = sessionClass.PassMark,
             };
-
-            context.GradeGroup.Add(newGradeGroup);
+            context.SessionClass.Add(sessionClass);
             await context.SaveChangesAsync();
 
-            var grades = await context.Grade.Where(x => x.GradeGroupId == currentGradeGroup.GradeGroupId).ToListAsync();
+            await TransferSessionClassSubject(sessionClass.SessionClassId, newSessionClass.SessionClassId);
+        }
 
-            foreach (var grade in grades)
+        private async Task TransferSessionClassSubject(Guid previousSessionClassId, Guid newSessionClassId)
+        {
+            var res = new APIResponse<SessionClassCommand>();
+
+            var sessionClass = context.SessionClass.Where(x => x.SessionClassId == previousSessionClassId && x.ClientId == smsClientId).Include(x => x.SessionClassSubjects).FirstOrDefault();
+            
+            await CreateUpdateClassSubjectsAsync(sessionClass.SessionClassSubjects, newSessionClassId);
+
+            await CreateClassScoreEntryAsync(newSessionClassId, sessionClass.SessionClassSubjects.Select(x => x.SubjectId).ToArray());
+
+        }
+
+        private async Task CreateUpdateClassSubjectsAsync(ICollection<SessionClassSubject> sessionClassSubjects, Guid newSessionClassId)
+        {
+            foreach (var subject in sessionClassSubjects)
             {
-                var newGrades = new Grade
-                {
-                    GradeGroupId = newGradeGroup.GradeGroupId,
-                    GradeName = grade.GradeName,
-                    LowerLimit = grade.LowerLimit,
-                    Remark = grade.Remark,
-                    UpperLimit = grade.UpperLimit,
-                };
-                context.Grade.Add(newGrades);
+                var sub = new SessionClassSubject();
+                sub.SessionClassId = newSessionClassId;
+                sub.SubjectId = subject.SubjectId;
+                sub.SubjectTeacherId = subject.SubjectTeacherId;
+                sub.AssessmentScore = subject.AssessmentScore;
+                sub.ExamScore = subject.ExamScore;
+                await context.SessionClassSubject.AddAsync(sub);
+               
             }
             await context.SaveChangesAsync();
-            var classes = await context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.GradeGroupId == currentGradeGroup.GradeGroupId).ToListAsync();
+        }
 
-            foreach ( var clazz in classes)
+        private async Task CreateClassScoreEntryAsync(Guid newSessionClassId, Guid[] selectedClassSubjectIds)
+        {
+            foreach (var subjectId in selectedClassSubjectIds)
             {
-                var classLookUp = new ClassLookup
-                {
-                    Name = clazz.Name,
-                    IsActive = clazz.IsActive,
-                    GradeGroupId = newGradeGroup.GradeGroupId
-                };
-                context.ClassLookUp.Add(classLookUp);
+                var classEntry = new ClassScoreEntry();
+                classEntry.SessionClassId = newSessionClassId;
+                classEntry.SubjectId = subjectId;
+                await context.ClassScoreEntry.AddAsync(classEntry);
+                await context.SaveChangesAsync();
             }
-            await context.SaveChangesAsync();
-
-            var sessionClasses = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.SessionId == previousSession.SessionId).ToListAsync();
-
-            foreach( var sessionClass in sessionClasses)
-            {
-                var newSessionClass = new SessionClass
-                {
-                    ClassId = sessionClass.ClassId,
-                    FormTeacherId = sessionClass.FormTeacherId,
-                    SessionId = newSession.SessionId,
-                    InSession = sessionClass.InSession,
-                    ExamScore = sessionClass.ExamScore,
-                    AssessmentScore = sessionClass.AssessmentScore,
-                    PassMark = sessionClass.PassMark,
-                };
-                context.SessionClass.Add(sessionClass);
-            }
-            await context.SaveChangesAsync();
         }
     }
 }

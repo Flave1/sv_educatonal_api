@@ -404,33 +404,22 @@ namespace SMP.BLL.Services.AdmissionServices
             }
         }
 
-        public async Task<APIResponse<SelectAdmissionSettings>> GetSettings()
+        public async Task<APIResponse<List<SelectAdmissionSettings>>> GetSettings()
         {
-            var res = new APIResponse<SelectAdmissionSettings>();
+            var res = new APIResponse<List<SelectAdmissionSettings>>();
             try
             {
                 var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
 
                 if (classes is not null)
                 {
-                    var result = await context.AdmissionSettings
-                    .Where(d => d.ClientId == smsClientId && d.Deleted != true && d.AdmissionStatus == true)
+                    res.Result = await context.AdmissionSettings
+                    .Where(d => d.ClientId == smsClientId && d.Deleted != true)
                     .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
 
-                    if (result == null)
-                    {
-                        res.Message.FriendlyMessage = "No admission in progress.";
-                    }
-                    else
-                    {
-                        res.Message.FriendlyMessage = Messages.GetSuccess;
-                    }
-
-                    res.Result = result;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
                 }
-
-                
 
                 res.IsSuccessful = true;
                 return res;
