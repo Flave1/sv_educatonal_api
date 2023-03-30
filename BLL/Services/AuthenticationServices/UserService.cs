@@ -473,6 +473,24 @@ namespace BLL.AuthenticationServices
             };
             await emailService.Send(emMsg);
         }
+        private async Task SendResetSuccessEmailToUserAsync(AppUser obj, SchoolSetting schoolSetting)
+        {
+            var to = new List<EmailAddress>();
+            var frm = new List<EmailAddress>();
+            to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolSetting.SCHOOLSETTINGS_SchoolName });
+            var body = $"Your password has been reset successfully";
+            var content = await emailService.GetMailBody(obj.Email, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
+            var emMsg = new EmailMessage
+            {
+                Content = content,
+                SentBy = "Flavetechs",
+                Subject = "Account Reset",
+                ToAddresses = to,
+                FromAddresses = frm
+            };
+            await emailService.Send(emMsg);
+        }
 
         async Task<APIResponse<LoginSuccessResponse>> IUserService.ChangePasswordAsync(ChangePassword request)
         {
@@ -500,7 +518,8 @@ namespace BLL.AuthenticationServices
             var changePassword = await manager.ResetPasswordAsync(user, token, request.NewPassword);
             if (changePassword.Succeeded)
             {
-                await SendResetSuccessEmailToUserAsync(user);
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x=> x.ClientId == clientId);
+                await SendResetSuccessEmailToUserAsync(user, schoolSettings);
                 return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl);
             }
             else
