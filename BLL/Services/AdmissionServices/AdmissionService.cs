@@ -174,6 +174,14 @@ namespace SMP.BLL.Services.AdmissionServices
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
                 }
+                catch (ArgumentException ex)
+                {
+                    await transaction.RollbackAsync();
+                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    res.Message.FriendlyMessage = ex.Message;
+                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    return res;
+                }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
