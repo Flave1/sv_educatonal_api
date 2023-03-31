@@ -156,6 +156,14 @@ namespace SMP.BLL.Services.AdmissionServices
                 res.Message.FriendlyMessage = Messages.Created;
                 return res;
             }
+            catch(ArgumentException ex)
+            {
+                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
             catch (Exception ex)
             {
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
