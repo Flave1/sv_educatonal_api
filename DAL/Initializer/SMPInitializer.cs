@@ -34,15 +34,15 @@ namespace SMP.DAL.Initializer
                         if (!context.AppActivityParent.Any(w => w.Id == item.Id))
                         {
                             context.Add(item);
-                            context.SaveChanges();
+                            context.SaveChangesNoClientAsync().Wait();
                         }
                     }
                     transaction.Commit();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     transaction.Rollback();
-                    throw ex;
+                    throw;
                 }
                 finally { transaction.Dispose(); }
             }
@@ -447,7 +447,7 @@ namespace SMP.DAL.Initializer
                         if (!context.AppActivity.Any(w => w.Id == item.Id))
                         {
                             context.Add(item);
-                            context.SaveChanges();
+                            context.SaveChangesNoClientAsync().Wait();
                         }
                     }
                     transaction.Commit();
@@ -455,7 +455,7 @@ namespace SMP.DAL.Initializer
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    throw ex;
+                    throw;
                 }
                 finally { transaction.Dispose(); }
             }

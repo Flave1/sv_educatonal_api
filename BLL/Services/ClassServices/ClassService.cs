@@ -162,8 +162,6 @@ namespace BLL.ClassServices
 
             await CreateUpdateClassSubjectsAsync(request.SubjectList, request.SessionClassId);
 
-            await resultsService.CreateClassScoreEntryAsync(sessionClass, request.SubjectList.Select(x => x.SubjectId).Select(Guid.Parse).ToArray());
-
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = "Updated successfully";
             return res;

@@ -21,7 +21,6 @@ using SMP.BLL.Services.GradeServices;
 using SMP.BLL.Services.NoteServices;
 using SMP.BLL.Services.NotififcationServices;
 using SMP.BLL.Services.ParentServices;
-using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
@@ -69,7 +68,6 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<IResultsService, ResultsService>();
             services.AddScoped<IFileUploadService, FileUploadService>();
             services.AddScoped<IPortalSettingService, PortalSettingService>();
-            services.AddScoped<IPinManagementService, PinManagementService>();
             services.AddScoped<IAnnouncementsService, AnnouncementService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IClassGroupService, ClassGroupService>();

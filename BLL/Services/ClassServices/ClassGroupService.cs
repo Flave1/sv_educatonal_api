@@ -6,12 +6,14 @@ using DAL;
 using DAL.ClassEntities;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Utilities;
 using SMP.Contracts.ClassModels;
 using SMP.DAL.Models.ClassEntities;
+using SMP.DAL.Models.GradeEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -225,6 +227,11 @@ namespace BLL.ClassServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
             return res;
+        }
+
+        GradeGroup IClassGroupService.GetClassGrade(Guid ClassLookupId)
+        {
+            return context.GradeGroup.Where(x => x.ClientId == smsClientId && x.Classes.Select(s => s.ClassLookupId).Contains(ClassLookupId)).Include(x => x.Grades).FirstOrDefault();
         }
     }
 }

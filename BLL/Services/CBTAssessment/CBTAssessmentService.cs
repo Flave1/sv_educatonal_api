@@ -77,46 +77,45 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         async Task<APIResponse<bool>> ICBTAssessmentService.IncludeCBTAssessmentToScoreEntryAsAssessment(string sessionClassId, string subjectId, string studentRegNos, bool Include, string examId)
         {
             var res = new APIResponse<bool>();
+            var alreadyAdded = new List<string>();
             var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
 
             try
             {
                 var students = studentRegNos.Split(',').ToArray();
+
+                var fwsClientInformation = await GetClientInformationAsync();
+                var clientDetails = new Dictionary<string, string>();
+                clientDetails.Add("examinationId", examId);
+                clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+
                 foreach (var stdRegNumber in students)
                 {
+                    if(clientDetails.ContainsKey("candidateId_regNo"))
+                        clientDetails.Remove("candidateId_regNo");
+
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student =  await utilitiesService.GetStudentContactByRegNo(studentRegNo);
-
-
-                    var fwsClientInformation = await GetClientInformationAsync();
-
-                    var clientDetails = new Dictionary<string, string>();
-                    clientDetails.Add("examinationId", examId);
                     clientDetails.Add("candidateId_regNo", stdRegNumber);
-                    clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+
+
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if(studentResult.Result == null)
                         continue;
 
-                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString());
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString(), HistorySource.CbtAssessment);
 
                     float score = 0;
                     if (scoreHistory is null)
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include);
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include, HistorySource.CbtAssessment);
                     else
                     {
-                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
+                        alreadyAdded.Add(studentRegNo);
+                        continue;
                     }
+
                     var scoreEntry = scoreEntryService.GetScoreEntry(termId, student.StudentContactId, Guid.Parse(subjectId));
 
-                    if (scoreHistory is null)
-                    {
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId, termId, Include);
-                    }
-                    else
-                    {
-                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
-                    }
                     if (scoreEntry is null)
                     {
                         scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
@@ -135,9 +134,17 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
-
-            res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
-            res.IsSuccessful = true;
+            if (alreadyAdded.Any())
+            {
+                res.Message.FriendlyMessage = $"Students with reg number(s) {string.Join(", ", alreadyAdded)} has been included previously";
+                res.IsSuccessful = true;
+            }
+            else
+            {
+                res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
+                res.IsSuccessful = true;
+            }
+           
             return res;
         }
 
@@ -145,6 +152,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         {
             var res = new APIResponse<bool>();
             var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
+            var alreadyAdded = new List<string>();
 
             try
             {
@@ -155,41 +163,35 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     return res;
                 }
                 var students = studentRegNos.Split(',').ToArray();
+                var fwsClientInformation = await GetClientInformationAsync();
+                var clientDetails = new Dictionary<string, string>();
+                clientDetails.Add("examinationId", examId);
+                clientDetails.Add("userId", fwsClientInformation.Result.UserId);
                 foreach (var stdRegNumber in students)
                 {
+
+                    if (clientDetails.ContainsKey("candidateId_regNo"))
+                        clientDetails.Remove("candidateId_regNo");
+
                     var studentRegNo = utilitiesService.GetStudentRegNumberValue(stdRegNumber);
                     var student = await utilitiesService.GetStudentContactByRegNo(studentRegNo);
-
-                    var fwsClientInformation = await GetClientInformationAsync();
-
-                    var clientDetails = new Dictionary<string, string>();
-                    clientDetails.Add("examinationId", examId);
                     clientDetails.Add("candidateId_regNo", stdRegNumber);
-                    clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+
+
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if (studentResult.Result == null)
-                    {
                         continue;
-                    }
-                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString());
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString(), HistorySource.CbtAssessment);
 
                     float score = 0;
                     if (scoreHistory is null)
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include);
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include, HistorySource.CbtAssessment);
                     else
                     {
-                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
+                        alreadyAdded.Add(studentRegNo);
+                        continue;
                     }
                     var scoreEntry = scoreEntryService.GetScoreEntry(termId, student.StudentContactId, Guid.Parse(subjectId));
-
-                    if (scoreHistory is null)
-                    {
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId, termId, Include);
-                    }
-                    else
-                    {
-                        score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, Include, studentResult.Result.TotalScore);
-                    }
                     if (scoreEntry is null)
                     {
                         scoreEntryService.CreateNewScoreEntryForExam(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
@@ -209,8 +211,16 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 throw;
             }
 
-            res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
-            res.IsSuccessful = true;
+            if (alreadyAdded.Any())
+            {
+                res.Message.FriendlyMessage = $"Students with reg number(s) {string.Join(", ", alreadyAdded)} has been included previously";
+                res.IsSuccessful = true;
+            }
+            else
+            {
+                res.Message.FriendlyMessage = Include ? "Examination Scores Included Successfully" : "Examination Scores Successfully Removed from score entry";
+                res.IsSuccessful = true;
+            }
             return res;
         }
 

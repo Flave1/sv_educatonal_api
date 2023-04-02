@@ -13,5 +13,13 @@ namespace SMP.DAL.Models.ResultModels
         public string SessionTermId { get; set; }
         public string SessionClassId { get; set; }
         public string Subjectid { get; set; }
+        public int Source { get; set; }
+    }
+
+    public enum HistorySource
+    {
+        CbtAssessment = 0,
+        Result = 1,
+        HomeAssessment = 2
     }
 }

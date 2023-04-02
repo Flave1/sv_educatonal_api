@@ -1,8 +1,6 @@
-﻿using API.Controllers.BaseControllers;
-using BLL.Filter;
+﻿using BLL.Filter;
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
-using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
@@ -16,11 +14,9 @@ namespace API.Controllers
     public class ResultsController : Controller
     {
         private readonly IResultsService service;
-        private readonly IPinManagementService pinService;
-        public ResultsController(IResultsService service, IPinManagementService pinService)
+        public ResultsController(IResultsService service)
         {
             this.service = service;
-            this.pinService = pinService;
         }
 
         [HttpGet("get/staff-classes")]
@@ -53,7 +49,7 @@ namespace API.Controllers
         [HttpGet("get/class-score-entries/{sessionClassid}")]
         public async Task<IActionResult> GetClassSubjectScoreEntriesAsync(string sessionClassid, string subjectId, int pageNumber)
         {
-            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var filter = new PaginationFilter { PageNumber = pageNumber, PageSize = 50 };
             var response = await service.GetClassEntryAsync(Guid.Parse(sessionClassid), Guid.Parse(subjectId), filter);
             return Ok(response);
         }
@@ -131,17 +127,17 @@ namespace API.Controllers
         }
 
         [HttpPost("update/previous-terms/exam-score")]
-        public async Task<IActionResult> UpdatePreviousTermsExamScore([FromBody] UpdateOtherSessionScore request)
+        public async Task<IActionResult> UpdatePreviousTermsExamScore([FromBody] UpdateScore request)
         {
-            var response = await service.UpdatePreviousTermsExamScore(request);
+            var response = await service.UpdateExamScore(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }
         [HttpPost("update/previous-terms/assessment-score")]
-        public async Task<IActionResult> UpdatePreviousTermsAssessmentScore([FromBody] UpdateOtherSessionScore request)
+        public async Task<IActionResult> UpdatePreviousTermsAssessmentScore([FromBody] UpdateScore request)
         {
-            var response = await service.UpdatePreviousTermsAssessmentScore(request);
+            var response = await service.UpdateAssessmentScore(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -165,7 +161,7 @@ namespace API.Controllers
         [HttpPost("print/result")]
         public async Task<IActionResult> PrintResultAsync([FromBody] PrintResultRequest request)
         {
-            var response = await pinService.PrintResultAsync(request);
+            var response = await service.PrintResultAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -183,7 +179,7 @@ namespace API.Controllers
         [HttpPost("batch-print/students-results")]
         public async Task<IActionResult> BatchPrintResult([FromBody] BatchPrintResultRequest2 request)
         {
-            var response = await pinService.PrintBatchResultResultAsync(request);
+            var response = await service.PrintBatchResultResultAsync(request);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

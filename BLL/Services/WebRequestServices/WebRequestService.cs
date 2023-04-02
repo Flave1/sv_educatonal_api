@@ -45,6 +45,8 @@ namespace SMP.BLL.Services.WebRequestServices
                     {
                         foreach (var pair in credentials)
                         {
+                            if (client.DefaultRequestHeaders.Contains(pair.Key))
+                                client.DefaultRequestHeaders.Remove(pair.Key);
                             client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
                         }
                     }
@@ -103,6 +105,8 @@ namespace SMP.BLL.Services.WebRequestServices
                     {
                         foreach (var pair in credentials)
                         {
+                            if (client.DefaultRequestHeaders.Contains(pair.Key))
+                                client.DefaultRequestHeaders.Remove(pair.Key);
                             client.DefaultRequestHeaders.Add(pair.Key, pair.Value);
                         }
                     }

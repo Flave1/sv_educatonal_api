@@ -1,7 +1,10 @@
 ﻿using Contracts.Class;
 using Contracts.Common;
 using DAL.ClassEntities;
+using Microsoft.AspNetCore.Mvc;
+using Polly;
 using SMP.Contracts.ClassModels;
+using SMP.DAL.Models.GradeEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,5 +22,6 @@ namespace BLL.ClassServices
         Task<APIResponse<GetClassGroupRequest>> GetSingleClassGroupsAsync(Guid groupId, Guid sessionClassId);
         Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsAsync(Guid sessionClassId);
         Task<APIResponse<List<SessionClassSubjects>>> GetSessionClassSubjectsCbtAsync(Guid sessionClassId, string clientId);
+        GradeGroup GetClassGrade(Guid ClassLookupId);
     }
 }

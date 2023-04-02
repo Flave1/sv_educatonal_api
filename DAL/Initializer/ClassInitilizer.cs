@@ -31,7 +31,7 @@ namespace SMP.DAL.Initializer
                             if (!context.SessionClassGroup.Any(w => w.SessionClassGroupId == item.SessionClassGroupId))
                             {
                                 context.Add(item);
-                                context.SaveChanges();
+                                context.SaveChangesNoClientAsync().Wait();
                             }
                         }
                         transaction.Commit();
@@ -39,7 +39,7 @@ namespace SMP.DAL.Initializer
                     catch (Exception ex)
                     {
                         transaction.Rollback();
-                        throw ex;
+                        throw;
                     }
                     finally { transaction.Dispose(); }
                 }

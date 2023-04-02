@@ -1,14 +1,9 @@
 ﻿using BLL.MiddleWares;
-using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.PortalService;
-using SMP.Contracts.PinManagement;
 using SMP.Contracts.PortalSettings;
-using System;
-using System.Threading.Tasks;  
+using System.Threading.Tasks;
 
 namespace API.Controllers
 {
@@ -18,11 +13,9 @@ namespace API.Controllers
     public class PortalSettingController : Controller
     {
         private readonly IPortalSettingService service;  
-        private readonly IPinManagementService pinservice;
-        public PortalSettingController(IPortalSettingService service, IPinManagementService pinservice)
+        public PortalSettingController(IPortalSettingService service)
         {
             this.service = service;
-            this.pinservice = pinservice;
         }
 
         #region portalsetting

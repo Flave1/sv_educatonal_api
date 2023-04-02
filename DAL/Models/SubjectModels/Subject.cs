@@ -10,6 +10,5 @@ namespace DAL.SubjectModels
         public Guid SubjectId { get; set; }
         public string Name { get; set; }
         public bool IsActive { get; set; }
-        public ScoreEntry ScoreEntry { get; set; }
     }
 }

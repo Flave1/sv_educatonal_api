@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SMP.BLL.Constants;
+using SMP.Contracts.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,6 @@ namespace App.CustomError
             BaseApiError error;
             HttpContext context = HttpContext;
             HttpStatusCode parseCode = (HttpStatusCode)code;
-
             var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
             if (exceptionHandlerPathFeature != null)
             {
@@ -44,7 +44,8 @@ namespace App.CustomError
                 {
                     error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyNOTFOUND);
                     _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
-                    return new ObjectResult (new APIResponse<APIResponseMessage>
+
+                    return new ObjectResult(new APIResponse<APIResponseMessage>
                     {
                         Message = new APIResponseMessage
                         {
@@ -56,7 +57,7 @@ namespace App.CustomError
                 if (parseCode == HttpStatusCode.InternalServerError)
                 {
                     error = new BaseApiError(code ?? 0, parseCode.ToString(), Messages.FriendlyException, result);
-                    _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException.ToString(), exception?.InnerException?.Message);
+                    _logger.Error($"ErrorsController {exception?.Message}", exception?.StackTrace, exception?.InnerException?.ToString(), exception?.InnerException?.Message);
                     return new ObjectResult(new APIResponse<APIResponseMessage>
                     {
                         Message = new APIResponseMessage

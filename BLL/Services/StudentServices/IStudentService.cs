@@ -6,6 +6,7 @@ using DAL.StudentInformation;
 using SMP.Contracts.Students;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BLL.StudentServices
@@ -25,6 +26,7 @@ namespace BLL.StudentServices
         Task<APIResponse<PagedResponse<List<GetStudentContactCbt>>>> GetStudentBySessionClassCbtAsync(PaginationFilter filter, string sessionClassId, string clientId);
         Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId, string clientId);
         Task<APIResponse<byte[]>> DownloadStudentTemplate();
+        IQueryable<StudentContact> GetStudent(Guid studentContactId);
         //StudentContact GetStudentByUserId(string userId);
     }
 }

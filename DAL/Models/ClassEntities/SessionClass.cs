@@ -5,6 +5,7 @@ using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.Register;
 using SMP.DAL.Models.ResultModels;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -33,8 +34,11 @@ namespace DAL.ClassEntities
         public ICollection<StudentContact> Students { get; set; }
         public ICollection<SessionClassSubject> SessionClassSubjects { get; set; }
         public ICollection<ClassRegister> ClassRegisters { get; set; }
-        public ICollection<ClassScoreEntry> ClassScoreEntries { get; set; }
         public virtual ICollection<StudentNote> StudentNotes { get; set; }
-        public virtual ICollection<SessionClassArchive> SessionClassArchive { get; set; }
+        public bool IsPublished { get; set; }
+        public bool IsPromoted { get; set; }
+        public Guid? SessionTermId { get; set; }
+        [ForeignKey("SessionTermId")]
+        public SessionTerm SessionTerm { get; set; }
     }
 }

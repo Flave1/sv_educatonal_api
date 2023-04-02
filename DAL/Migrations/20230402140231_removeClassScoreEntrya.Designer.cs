@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230402140231_removeClassScoreEntrya")]
+    partial class removeClassScoreEntrya
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2148,7 +2150,9 @@ namespace SMP.DAL.Migrations
 
                     b.HasIndex("StudentContactId");
 
-                    b.HasIndex("SubjectId");
+                    b.HasIndex("SubjectId")
+                        .IsUnique()
+                        .HasFilter("[SubjectId] IS NOT NULL");
 
                     b.ToTable("ScoreEntry");
                 });
@@ -2179,9 +2183,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("SessionTermId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Source")
-                        .HasColumnType("int");
 
                     b.Property<string>("StudentId")
                         .HasColumnType("nvarchar(max)");
@@ -3011,8 +3012,8 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId");
+                        .WithOne("ScoreEntry")
+                        .HasForeignKey("SMP.DAL.Models.ResultModels.ScoreEntry", "SubjectId");
 
                     b.Navigation("SessionClass");
 
@@ -3142,6 +3143,11 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ScoreEntries");
 
                     b.Navigation("StudentNote");
+                });
+
+            modelBuilder.Entity("DAL.SubjectModels.Subject", b =>
+                {
+                    b.Navigation("ScoreEntry");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionSetting", b =>

@@ -1,11 +1,6 @@
 ﻿using DAL.ClassEntities;
 using DAL.StudentInformation;
-using SMP.Contracts.ResultModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.PromotionModels
 {
@@ -27,16 +22,7 @@ namespace SMP.Contracts.PromotionModels
         {
             SessionClassId = cl.SessionClassId;
             SessionClassName = cl.Class.Name;
-            IsPromoted = cl?.SessionClassArchive.Any(x => x.IsPromoted) ?? false;
-            //var studentRecords = cl.Students.Select(d => new StudentResultRecord(d, termId)).ToList();
-            //if (studentRecords.Any())
-            //{
-            //    PassedStudentIds = string.Join(',', studentRecords.Where(d => d.ShouldPromoteStudent).Select(s => s.StudentContactId));
-            //    FailedStudentIds = string.Join(',', studentRecords.Where(d => !d.ShouldPromoteStudent).Select(s => s.StudentContactId));
-            //    TotalStudentsPassed = studentRecords.Count(d => d.ShouldPromoteStudent);
-            //    TotalStudentsFailed = studentRecords.Count(d => !d.ShouldPromoteStudent);
-            //}
-            
+            IsPromoted = cl.IsPromoted;
         }
 
     }

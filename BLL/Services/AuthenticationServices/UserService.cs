@@ -14,20 +14,10 @@ using Contracts.Options;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Data;
-using SMP.Contracts.Options;
-using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Constants;
 using Microsoft.AspNetCore.Http;
-using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Utilities;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Microsoft.AspNet.SignalR;
 using SMP.Contracts.Authentication;
-using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
-using DAL.StudentInformation;
-using SMP.DAL.Models.Parents;
-using DAL.TeachersInfor;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.PortalSettings;
 
 namespace BLL.AuthenticationServices
@@ -39,27 +29,21 @@ namespace BLL.AuthenticationServices
         private readonly RoleManager<UserRole> roleManager;
         private readonly DataContext context;
         private readonly IIdentityService identityService;
-        private readonly SchoolSettings schoolSettings;
         private readonly EmailConfiguration emailConfiguration;
-        private readonly FwsConfigSettings fwsConfig;
-        private readonly IPinManagementService pinService;
         private readonly IUtilitiesService utilitiesService;
         private readonly string smsClientId;
         public readonly IHttpContextAccessor accessor;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
-            IIdentityService identityService, IOptions<SchoolSettings> options, IOptions<EmailConfiguration> emailOptions, IOptions<FwsConfigSettings> fwsOptions, 
-            IPinManagementService pinService, IUtilitiesService utilitiesService, IHttpContextAccessor accessor)
+            IIdentityService identityService, IOptions<EmailConfiguration> emailOptions,
+            IUtilitiesService utilitiesService, IHttpContextAccessor accessor)
         {
             this.manager = manager;
             this.emailService = emailService;
             this.roleManager = roleManager;
             this.context = context;
             this.identityService = identityService;
-            this.schoolSettings = options.Value;
             this.accessor = accessor;
             emailConfiguration = emailOptions.Value;
-            fwsConfig = fwsOptions.Value;
-            this.pinService = pinService;
             this.utilitiesService = utilitiesService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
@@ -80,7 +64,6 @@ namespace BLL.AuthenticationServices
                         user = manager.Users.FirstOrDefault(f => f.Id == userId);
                         if (user == null)
                             throw new ArgumentException("User account not found");
-
 
                         var result = await manager.AddToRoleAsync(user, role.Name);
                         if (!result.Succeeded)

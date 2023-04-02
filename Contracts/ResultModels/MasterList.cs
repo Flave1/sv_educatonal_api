@@ -26,11 +26,6 @@ namespace SMP.Contracts.ResultModels
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.FirstName + " " + db.Teacher.LastName;
             TermName = term.TermName;
-            //if (db.Students.Any())
-            //{
-            //    ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new MasterListResult(e, regNoFormat, term.SessionTermId)).ToList();
-            //}
-            
         }
 
     }
@@ -61,9 +56,9 @@ namespace SMP.Contracts.ResultModels
             TotalScore = TotalExamScore + TotalAssessmentScore;
 
             AverageScore = Math.Round(TotalSubjects > 0 ? TotalScore / TotalSubjects : 0, 2);
-            Status = se.FirstOrDefault().ClassScoreEntry.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
+            Status = se.FirstOrDefault().SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
 
-            Subjects = se?.Where(d => d.IsOffered == true).Select(s => s.ClassScoreEntry)
+            Subjects = se?.Where(d => d.IsOffered == true).Select(s => s)
                 .Select(d => new MasterListResultSubjects(d.Subject, se.Where(d => d.IsOffered == true).ToList())).ToList();
 
         }
@@ -77,9 +72,9 @@ namespace SMP.Contracts.ResultModels
         public int Total { get; set; }
         public MasterListResultSubjects(Subject cs, List<ScoreEntry> scores)
         {
-            AssessmentScore = scores.FirstOrDefault(e => cs.SubjectId == e.ClassScoreEntry.SubjectId)?.AssessmentScore ?? 0;
+            AssessmentScore = scores.FirstOrDefault(e => cs.SubjectId == e.SubjectId)?.AssessmentScore ?? 0;
 
-            ExamScore = scores.FirstOrDefault(e => cs.SubjectId == e.ClassScoreEntry.SubjectId)?.ExamScore ?? 0;
+            ExamScore = scores.FirstOrDefault(e => cs.SubjectId == e.SubjectId)?.ExamScore ?? 0;
 
             Total = AssessmentScore + ExamScore;
 
@@ -99,9 +94,6 @@ namespace SMP.Contracts.ResultModels
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.FirstName + " " + db.Teacher.LastName;
-            //if (db.Students.Any())
-            //    ResultList = db.Students.Where(d => d.EnrollmentStatus == 1).Select(e => new CumulativeMasterListResult(e, regNoFormat)).ToList();
-
         } 
     }
 
@@ -133,7 +125,7 @@ namespace SMP.Contracts.ResultModels
             TotalScore = TotalExamScore + TotalAssessmentScore;
 
             AverageScore = Math.Round(TotalSubjects > 0 ? TotalScore / TotalSubjects : 0, 2);
-            Status = entries.FirstOrDefault().ClassScoreEntry?.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
+            Status = entries.FirstOrDefault()?.SessionClass?.PassMark > AverageScore ? "FAILED" : "PASSED";
 
 
             var grouped = entries.GroupBy(u => u.SessionTermId)
@@ -143,7 +135,7 @@ namespace SMP.Contracts.ResultModels
             CumulativeTermAvgScore = grouped.Select(d => new CumulativeTermAvgScore(d)).ToList();
 
 
-            Subjects = entries.GroupBy(x => x.ClassScoreEntryId).Select(d => new CumulativeMasterListResultSubjects(d)).ToList();
+            Subjects = entries.GroupBy(x => x.SubjectId).Select(d => new CumulativeMasterListResultSubjects(d)).ToList();
 
         }
     }
@@ -156,14 +148,14 @@ namespace SMP.Contracts.ResultModels
         public List<CumulativeTermAvgScore> CumulativeTermAvgScore { get; set; }
 
 
-        public CumulativeMasterListResultSubjects(IGrouping<Guid, ScoreEntry> d)
+        public CumulativeMasterListResultSubjects(IGrouping<Guid?, ScoreEntry> d)
         {
             AssessmentScore = d.Sum(s => s.AssessmentScore);
             ExamScore = d.Sum(s => s.ExamScore);
             Total = AssessmentScore + ExamScore;
             CumulativeTermAvgScore = d.Select(x => new CumulativeTermAvgScore(x)).ToList();
 
-            SubjectName = d.FirstOrDefault().ClassScoreEntry.Subject.Name;
+            SubjectName = d.FirstOrDefault().Subject.Name;
         }
     }
 

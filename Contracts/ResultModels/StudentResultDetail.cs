@@ -18,7 +18,6 @@ namespace SMP.Contracts.ResultModels
         {
             if (entries.Any())
             {
-                //IsPublished = entries.FirstOrDefault().ClassScoreEntry?.SessionClass?.PublishStatus?.IsPublished ?? false;
                 PublishResult = entries.Select(x => new StudentResultDetail
                 {
                     StudentName = entries.FirstOrDefault()?.StudentContact?.FirstName + " " + entries.FirstOrDefault()?.StudentContact?.LastName,
@@ -28,7 +27,7 @@ namespace SMP.Contracts.ResultModels
                     TotalExamScore = entries.Sum(d => d.ExamScore),
                     TotalAssessmentScore = entries.Sum(d => d.AssessmentScore),
                     AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2),
-                    Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark >
+                    Status = entries.FirstOrDefault().SessionClass.PassMark >
                     Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2) ? "FAILED" : "PASSED"
                 }).ToList();
             }
@@ -48,7 +47,7 @@ namespace SMP.Contracts.ResultModels
                 s.StudentName = student?.FirstName + " " + student?.LastName;
                 s.RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
                 s.Position = "";
-                var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId);
+                var studentsSubjects = student.ScoreEntries.Where(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId);
                 s.TotalSubjects = studentsSubjects.Count();
                 s.TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
                 s.TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
@@ -85,7 +84,7 @@ namespace SMP.Contracts.ResultModels
             TotalExamScore = entries.Sum(d => d.ExamScore);
             TotalAssessmentScore = entries.Sum(d => d.AssessmentScore);
             AverageScore = Math.Round(Convert.ToDecimal(entries.Sum(d => d.ExamScore) + entries.Sum(d => d.AssessmentScore)) / entries.Count(), 2);
-            Status = entries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > AverageScore ? "FAILED" : "PASSED";
+            Status = entries.FirstOrDefault().SessionClass.PassMark > AverageScore ? "FAILED" : "PASSED";
         }
         public StudentResultDetail(StudentContact student, string regNoFormat, Guid sessionClassId, Guid termId)
         {
@@ -93,7 +92,7 @@ namespace SMP.Contracts.ResultModels
             StudentContactId = student.StudentContactId.ToString();
             RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
             Position = "1";
-            var studentsSubjects = student.ScoreEntries.Where(d => d.ClassScoreEntry.SessionClassId == sessionClassId && d.SessionTermId == termId && d.IsOffered);
+            var studentsSubjects = student.ScoreEntries.Where(d => d.SessionClassId == sessionClassId && d.SessionTermId == termId && d.IsOffered);
             TotalSubjects = studentsSubjects.Count();
             TotalExamScore = studentsSubjects.Sum(d => d.ExamScore);
             TotalAssessmentScore = studentsSubjects.Sum(d => d.AssessmentScore);
@@ -127,11 +126,10 @@ namespace SMP.Contracts.ResultModels
                 StudentName = student?.FirstName + " " + student?.LastName;
                 StudentContactId = student.StudentContactId.ToString();
                 RegistrationNumber = regNoFormat.Replace("%VALUE%", student.RegistrationNumber);
-                //IsPublished = student.SessionClass?.PublishStatus?.IsPublished ?? false;
                 SessionClassName = student.SessionClass.Class.Name;
                 if (student.ScoreEntries.Any())
                 {
-                    StudentSubjectEntries = student.ScoreEntries.Where(x => x.SessionTermId == termId).Select(e => new StudentSubjectEntries(e, e.ClassScoreEntry.SessionClass.Class.GradeLevel)).ToList();
+                    StudentSubjectEntries = student.ScoreEntries.Where(x => x.SessionTermId == termId).Select(e => new StudentSubjectEntries(e, e.SessionClass.Class.GradeLevel)).ToList();
                 }
             }
             
@@ -152,17 +150,15 @@ namespace SMP.Contracts.ResultModels
         public string SubjectId { get; set; }
         public string SibjectName { get; set; }
         public int ExamScore { get; set; }
-        public string ClassScoreEntryId { get; set; }
         public int AssessmentScore { get; set; }
         public int TotalScore { get; set; }
         public string Grade { get; set; }
         public string Remark { get; set; }
         public StudentSubjectEntries(ScoreEntry e, GradeGroup level)
         {
-            SessionClassId = e.ClassScoreEntry.SessionClassId.ToString();
-            ClassScoreEntryId = e.ClassScoreEntry.ClassScoreEntryId.ToString();
-            SubjectId = e.ClassScoreEntry.SubjectId.ToString();
-            SibjectName = e.ClassScoreEntry.Subject.Name;
+            SessionClassId = e.SessionClassId.ToString();
+            SubjectId = e.SubjectId.ToString();
+            SibjectName = e.Subject.Name;
             ExamScore = e.ExamScore;
             AssessmentScore = e.AssessmentScore;
             TotalScore = ExamScore + AssessmentScore;
@@ -200,7 +196,7 @@ namespace SMP.Contracts.ResultModels
         public bool IsPreview { get; set; } = true;
         public bool IsPrint { get; set; } = true;
         public string studentName { get; set; }
-        public Guid studentContactId { get; set; }
+        public Guid? studentContactId { get; set; }
         public string registrationNumber { get; set; }
         public string sessionClassName { get; set; }
         public string session { get; set; }
@@ -228,14 +224,14 @@ namespace SMP.Contracts.ResultModels
             IsPrint = false;
             totalSubjects = se.Count();
             average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
-            remark = sse.ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+            remark = sse.SessionClass.PassMark > average ? "FAILED" : "PASSED";
             position = "1";
             registrationNumber = regNoFormat.Replace("%VALUE%", se.FirstOrDefault().StudentContact.RegistrationNumber);
-            session = sse.ClassScoreEntry.SessionClass.Session.StartDate + " / " + sse.ClassScoreEntry.SessionClass.Session.StartDate;
-            sessionClassName = sse.ClassScoreEntry.SessionClass.Class.Name;
+            session = sse.SessionClass.Session.StartDate + " / " + sse.SessionClass.Session.StartDate;
+            sessionClassName = sse.SessionClass.Class.Name;
             term = se?.FirstOrDefault()?.SessionTerm?.TermName ?? "";
-            studentSubjectEntries = se.Select(e => new StudentSubjectEntry(e, sse.ClassScoreEntry.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
-            gradeSetting = sse.ClassScoreEntry.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
+            studentSubjectEntries = se.Select(e => new StudentSubjectEntry(e, sse.SessionClass.Class.GradeLevel, sessionClassId)).ToList();
+            gradeSetting = sse.SessionClass.Class.GradeLevel.Grades.Select(x => new GradeSetting(x)).ToList();
             totalScores = se.Count() * 100;
             studentName = se.FirstOrDefault().StudentContact.FirstName + " " + se.FirstOrDefault().StudentContact.LastName;
             cognitiveBehaviour = new List<CognitiveBehaviour>
@@ -264,10 +260,10 @@ namespace SMP.Contracts.ResultModels
         public StudentSubjectEntry(ScoreEntry d, GradeGroup level, Guid SessionClassId)
         {
             sessionClassId = SessionClassId.ToString();
-            subjectId = d.ClassScoreEntry.SubjectId.ToString();
-            sibjectName = d.ClassScoreEntry.Subject.Name;
+            subjectId = d.SubjectId.ToString();
+            sibjectName = d.Subject.Name;
             examScore = d.ExamScore;
-            classScoreEntryId = d.ClassScoreEntryId.ToString();
+            classScoreEntryId = d.ToString();
             assessmentScore = d.AssessmentScore;
             totalScore = examScore + assessmentScore;
             var gradeSetup = level.Grades.FirstOrDefault(d => d.LowerLimit <= totalScore && totalScore <= d.UpperLimit);
@@ -320,7 +316,7 @@ namespace SMP.Contracts.ResultModels
         public bool IsPreview { get; set; } = true;
         public bool IsPrint { get; set; } = true;
         public string studentName { get; set; }
-        public Guid studentContactId { get; set; }
+        public Guid? studentContactId { get; set; }
         public string registrationNumber { get; set; }
         public string sessionClassName { get; set; }
         public string session { get; set; }
@@ -340,7 +336,7 @@ namespace SMP.Contracts.ResultModels
         public List<CognitiveBehaviour> cognitiveBehaviour { get; set; }
         public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term, Guid studentId)
         {
-            var clas = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass;
+            var clas = ScoreEntries.FirstOrDefault().SessionClass;
             var std = ScoreEntries.FirstOrDefault().StudentContact;
             totalExamScore = ScoreEntries.Sum(d => d.ExamScore);
             totalSubjects = ScoreEntries.Count();
@@ -352,7 +348,7 @@ namespace SMP.Contracts.ResultModels
             if (studentId == studentContactId)
             {
                 term = Term.TermName;
-                remark = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+                remark = ScoreEntries.FirstOrDefault().SessionClass.PassMark > average ? "FAILED" : "PASSED";
                 position = "1";
                 registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
                 session = clas.Session.StartDate + " / " + clas.Session.EndDate;
@@ -374,7 +370,7 @@ namespace SMP.Contracts.ResultModels
 
         public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term)
         {
-            var clas = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass;
+            var clas = ScoreEntries.FirstOrDefault().SessionClass;
             var std = ScoreEntries.FirstOrDefault().StudentContact;
             totalExamScore = ScoreEntries.Sum(d => d.ExamScore);
             totalSubjects = ScoreEntries.Count();
@@ -384,7 +380,7 @@ namespace SMP.Contracts.ResultModels
             IsPrint = false;
             average = Math.Round(totalSubjects > 0 ? total / totalSubjects : 0, 2);
             term = Term.TermName;
-            remark = ScoreEntries.FirstOrDefault().ClassScoreEntry.SessionClass.PassMark > average ? "FAILED" : "PASSED";
+            remark = ScoreEntries.FirstOrDefault().SessionClass.PassMark > average ? "FAILED" : "PASSED";
             position = "1";
             registrationNumber = regNoFormat.Replace("%VALUE%", std.RegistrationNumber);
             session = clas.Session.StartDate + " / " + clas.Session.EndDate;
@@ -424,16 +420,14 @@ namespace SMP.Contracts.ResultModels
         public string Class { get; set; }
         public string Term { get; set; }
         public string Session { get; set; }
-        public int NumberOfPins { get; set; }
         public int NumberOfStudents { get; set; }
         public string PinStatus { get; set; }
         public List<StudentResultDetail> Students { get; set; }
         public BatchPrintDetail() { }
-        public BatchPrintDetail(SessionClass clas, SessionTerm term, int pins, string pinStatus, int students)
+        public BatchPrintDetail(SessionClass clas, SessionTerm term, string pinStatus, int students)
         {
             Class = clas.Class.Name;
             Term = term.TermName;
-            NumberOfPins = pins;
             NumberOfStudents = students;
             Session = clas.Session.StartDate + " / " + clas.Session.EndDate;
             PinStatus = pinStatus;

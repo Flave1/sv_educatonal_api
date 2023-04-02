@@ -4,14 +4,16 @@ using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace SMP.DAL.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230402061500_removeClassScoreEntry")]
+    partial class removeClassScoreEntry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2131,7 +2133,7 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("SubjectId")
+                    b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -2148,7 +2150,8 @@ namespace SMP.DAL.Migrations
 
                     b.HasIndex("StudentContactId");
 
-                    b.HasIndex("SubjectId");
+                    b.HasIndex("SubjectId")
+                        .IsUnique();
 
                     b.ToTable("ScoreEntry");
                 });
@@ -2179,9 +2182,6 @@ namespace SMP.DAL.Migrations
 
                     b.Property<string>("SessionTermId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Source")
-                        .HasColumnType("int");
 
                     b.Property<string>("StudentId")
                         .HasColumnType("nvarchar(max)");
@@ -3011,8 +3011,10 @@ namespace SMP.DAL.Migrations
                         .IsRequired();
 
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId");
+                        .WithOne("ScoreEntry")
+                        .HasForeignKey("SMP.DAL.Models.ResultModels.ScoreEntry", "SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("SessionClass");
 
@@ -3142,6 +3144,11 @@ namespace SMP.DAL.Migrations
                     b.Navigation("ScoreEntries");
 
                     b.Navigation("StudentNote");
+                });
+
+            modelBuilder.Entity("DAL.SubjectModels.Subject", b =>
+                {
+                    b.Navigation("ScoreEntry");
                 });
 
             modelBuilder.Entity("SMP.DAL.Models.Admission.AdmissionSetting", b =>

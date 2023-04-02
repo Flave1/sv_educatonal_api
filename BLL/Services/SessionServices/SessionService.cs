@@ -322,11 +322,7 @@ namespace BLL.SessionServices
         async Task<APIResponse<bool>> ISessionService.ActivateTermAsync(Guid termId)
         {
             var res = new APIResponse<bool>();
-            //if (!await resultsService.AllResultPublishedAsync())
-            //{
-            //    res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
-            //    return res;
-            //}
+
             var term = await context.SessionTerm.FirstOrDefaultAsync(st => st.SessionTermId == termId && st.ClientId == smsClientId);
             if (term == null)
             {
@@ -335,13 +331,19 @@ namespace BLL.SessionServices
             }
             term.IsActive = true;
             var otherTerms = await context.SessionTerm.Where(st => st.SessionId == term.SessionId && st.SessionTermId != term.SessionTermId && st.ClientId == smsClientId).ToListAsync();
+            
             if (otherTerms.Any())
-            {
                 foreach(var otherTerm in otherTerms)
-                {
                     otherTerm.IsActive = false;
-                }
+
+            var activeClasses = ActiveClasses(term.SessionId);
+            for (int i = 0; i < activeClasses.Count; i++)
+            {
+                activeClasses[i].IsPromoted = false;
+                activeClasses[i].IsPublished = false;
+                activeClasses[i].SessionTermId = termId; 
             }
+
             await context.SaveChangesAsync();
             res.Result = true;
             res.IsSuccessful = true;
@@ -349,6 +351,7 @@ namespace BLL.SessionServices
             return res;
         }
 
+        List<SessionClass> ActiveClasses(Guid sessionId) => context.SessionClass.Where(x => x.SessionId == sessionId && smsClientId == x.ClientId && x.Deleted == false).ToList();
         async Task<APIResponse<ActiveSession>> ISessionService.GetActiveSessionsAsync()
         {
             var res = new APIResponse<ActiveSession>();
@@ -530,8 +533,6 @@ namespace BLL.SessionServices
             var sessionClassSubjects = await context.SessionClassSubject.Where(x => x.SessionClassId == previousSessionClassId && x.ClientId == smsClientId).ToListAsync();
 
             await CreateUpdateClassSubjectsAsync(sessionClassSubjects, newSessionClassId);
-
-            await CreateClassScoreEntryAsync(newSessionClassId, sessionClassSubjects.Select(x => x.SubjectId).ToArray());
         }
 
         private async Task CreateUpdateClassSubjectsAsync(List<SessionClassSubject> sessionClassSubjects, Guid newSessionClassId)
@@ -550,16 +551,6 @@ namespace BLL.SessionServices
             await context.SaveChangesAsync();
         }
 
-        private async Task CreateClassScoreEntryAsync(Guid newSessionClassId, Guid[] selectedClassSubjectIds)
-        {
-            for(int i = 0; i < selectedClassSubjectIds.Count(); i++)
-            {
-                var classEntry = new ClassScoreEntry();
-                classEntry.SessionClassId = newSessionClassId;
-                classEntry.SubjectId = selectedClassSubjectIds[i];
-                await context.ClassScoreEntry.AddAsync(classEntry);
-            }
-            await context.SaveChangesAsync();
-        }
+       
     }
 }

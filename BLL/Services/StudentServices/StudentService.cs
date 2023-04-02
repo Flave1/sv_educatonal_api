@@ -18,7 +18,6 @@ using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
-using SMP.BLL.Services.PinManagementService;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Students;
@@ -40,22 +39,19 @@ namespace BLL.StudentServices
         private readonly IUtilitiesService utilitiesService;
         private readonly ILoggerService loggerService;
         private readonly UserManager<AppUser> userManager;
-        private readonly IResultsService resultsService; 
         private readonly IFileUploadService upload;
         public readonly IHttpContextAccessor accessor;
-        private readonly IPinManagementService pinService;
         private readonly IPaginationService paginationService;
         private readonly IParentService parentService;
         private readonly string smsClientId;
-        public StudentService(DataContext context, UserManager<AppUser> userManager, IResultsService resultsService, IFileUploadService upload, IHttpContextAccessor accessor, IPinManagementService pinService, IPaginationService paginationService, IUserService userService, IParentService parentServices,
+        public StudentService(DataContext context, UserManager<AppUser> userManager,  IFileUploadService upload, 
+            IHttpContextAccessor accessor, IPaginationService paginationService, IUserService userService, IParentService parentServices,
             IUtilitiesService utilitiesService, ILoggerService loggerService)
         {
             this.context = context;
             this.userManager = userManager;
-            this.resultsService = resultsService;
             this.upload = upload;
             this.accessor = accessor;
-            this.pinService = pinService;
             this.paginationService = paginationService;
             this.userService = userService;
             this.utilitiesService = utilitiesService;
@@ -709,6 +705,7 @@ namespace BLL.StudentServices
             }
         }
 
+        IQueryable<StudentContact> IStudentService.GetStudent(Guid studentContactId) => context.StudentContact.Where(x => x.StudentContactId == studentContactId);
        
     }
 

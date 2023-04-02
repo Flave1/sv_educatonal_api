@@ -125,6 +125,13 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var parentId = Guid.Parse(accessor.HttpContext.User.FindFirst(x => x.Type == "parentId").Value);
                 var admissionSettings = await context.AdmissionSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId &&  x.AdmissionStatus == true);
+                if(admissionSettings is null)
+                {
+                    string msg = $"Our school admission is not open yet! Please contact school administration {smsClientId}";
+                    await loggerService.Debug(msg);
+                    res.Message.TechnicalMessage = msg;
+                    return res;
+                }
 
                 var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
                 var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);

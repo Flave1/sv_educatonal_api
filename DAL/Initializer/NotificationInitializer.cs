@@ -42,7 +42,7 @@ namespace SMP.DAL.Initializer
                         if (!context.SchoolSettings.Any(w => w.SchoolSettingsId == item.SchoolSettingsId))
                         {
                             context.Add(item);
-                            context.SaveChanges();
+                            context.SaveChangesNoClientAsync().Wait();
                         }
                     }
                     transaction.Commit();

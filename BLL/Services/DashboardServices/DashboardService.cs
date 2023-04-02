@@ -76,8 +76,8 @@ namespace SMP.BLL.Services.DashboardServices
                 .Include(x => x.User)
                 .Count(x => x.Deleted == false && x.User.Active == true);
 
-            var totalUnusedPins = context.UploadedPin.Where(x => x.ClientId == smsClientId)
-                .Count(x => x.Deleted == false && !x.UsedPin.Any());
+            //var totalUnusedPins = context.UploadedPin.Where(x => x.ClientId == smsClientId)
+            //    .Count(x => x.Deleted == false && !x.UsedPin.Any());
 
             var totalHomeAssessments = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
                 .Count(x => x.Deleted == false);
@@ -92,7 +92,7 @@ namespace SMP.BLL.Services.DashboardServices
                 TotaldStudent = enrolledStudents,
                 TotalStaff = totalStaff,
                 TotalSubjects = totalSubject,
-                TotalUnusedPins = totalUnusedPins
+                TotalUnusedPins = 0
             };
         }
 

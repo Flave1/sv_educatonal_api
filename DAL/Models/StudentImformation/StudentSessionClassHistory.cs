@@ -21,6 +21,7 @@ namespace SMP.DAL.Models.StudentImformation
         public Guid? SessionTermId { get; set; }
         [ForeignKey("SessionTermId")]
         public SessionTerm SessionTerm { get; set; }
+        public bool IsPublished { get; set; }
 
     }
 }

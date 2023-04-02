@@ -4,6 +4,7 @@ using BLL.LoggerService;
 using BLL.SessionServices;
 using BLL.StudentServices;
 using DAL;
+using DAL.ClassEntities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
@@ -55,7 +56,6 @@ namespace SMP.BLL.Services.PromorionServices
                 var lastTermOfPreviousSession = sessionService.GetPreviousSessionLastTermAsync(previousSessionId);
                 var classes = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.InSession && x.Deleted == false && x.SessionId == previousSessionId)
                     .Include(rr => rr.Class)
-                    .Include(d => d.SessionClassArchive)
                     .OrderBy(d => d.Class.Name)
                     .Select(g => new PreviousSessionClasses(g)).ToListAsync();
 
@@ -94,8 +94,14 @@ namespace SMP.BLL.Services.PromorionServices
                     return res;
                 }
 
-                Guid session = context.SessionClass.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.SessionClassId == Guid.Parse(request.ClassToBePromoted)).SessionId;
+                SessionClass sessClass = context.SessionClass.Where(x => x.ClientId == smsClientId).FirstOrDefault(x => x.SessionClassId == Guid.Parse(request.ClassToBePromoted));
 
+                if(sessClass == null) 
+                {
+                    await loggerService.Debug($"Class not found on promotion: {smsClientId}");
+                    res.Message.FriendlyMessage = "Class not found";
+                    return res;
+                }
                 if (resultSettings.RESULTSETTINGS_PromoteAll)
                 {
                     var allStudents = passedStudents.Concat(failedStudents).ToList();
@@ -106,7 +112,7 @@ namespace SMP.BLL.Services.PromorionServices
                 }
                 else
                 {
-                    var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(session);
+                    var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(sessClass.SessionId);
                     foreach (var studentId in passedStudents)
                     {
                         await studentService.ChangeClassAsync(studentId, Guid.Parse(request.ClassToPromoteTo));
@@ -117,7 +123,7 @@ namespace SMP.BLL.Services.PromorionServices
                     }
 
                 }
-                await UpdatePromotedClassAsync(Guid.Parse(request.ClassToBePromoted));
+                await UpdatePromotedClassAsync(sessClass);
 
                 res.Message.FriendlyMessage = "Promotion Successful";
                 res.Result = true;
@@ -171,18 +177,10 @@ namespace SMP.BLL.Services.PromorionServices
             return res;
         }
 
-        async Task UpdatePromotedClassAsync(Guid sessionClassId)
+        async Task UpdatePromotedClassAsync(SessionClass sessClass)
         {
-            var classToPrommote = await context.SessionClassArchive.FirstOrDefaultAsync(d => d.ClientId == smsClientId && d.SessionClassId == sessionClassId);
-            if (classToPrommote != null)
-            {
-                classToPrommote.IsPromoted = true;
-                await context.SaveChangesAsync();
-            }
-            if(classToPrommote is null)
-            {
-                throw new ArgumentException("Invalid request on promotion");
-            }
+            sessClass.IsPromoted = true;
+            await context.SaveChangesAsync();
         }
     }
 }

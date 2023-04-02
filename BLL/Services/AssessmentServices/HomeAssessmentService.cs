@@ -4,6 +4,7 @@ using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
+using Contracts.Session;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -19,6 +20,8 @@ using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.AssessmentEntities;
+using SMP.DAL.Models.ResultModels;
+using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -174,13 +177,13 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var teacherId = accessor?.HttpContext?.User?.FindFirst(x => x.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive);
-            
-            var query = context.HomeAssessment.Where(d => d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
+            var activeTerm = await GetCurrentTerm();
+
+            var query = GetHomeAssessmentBySessionTerm(activeTerm.SessionTermId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
                 .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
-                 .Include(q => q.SessionClassGroup).ThenInclude(s => s.SessionClass)
+                 .Include(q => q.SessionClassGroup)//.ThenInclude(s => s.SessionClass)
                  .Include(q => q.SessionTerm)
                 .OrderByDescending(d => d.CreatedOn).Where(d=> d.Deleted == false);
 
@@ -772,7 +775,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             foreach(var std in students)
             {
-                var scoreHistory = scoreEntryService.GetScoreEntryHistory(std.SessionClassId, std.SubjectId.ToString(), termId.ToString(), std.StudentId.ToString());
+                var scoreHistory = scoreEntryService.GetScoreEntryHistory(std.SessionClassId, std.SubjectId.ToString(), termId.ToString(), std.StudentId.ToString(), HistorySource.HomeAssessment);
 
                 var feedBack = context.HomeAssessmentFeedBack.FirstOrDefault(x => x.HomeAssessmentFeedBackId == std.FeedBackId && x.ClientId == smsClientId);
                 if (feedBack is null)
@@ -781,7 +784,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 float score = 0;
                 if (scoreHistory is null)
-                    score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)std.Score, std.StudentId.ToString(), std.SessionClassId, std.SubjectId.ToString(), termId, Include);
+                    score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)std.Score, std.StudentId.ToString(), std.SessionClassId, std.SubjectId.ToString(), termId, Include, HistorySource.HomeAssessment);
                 else
                 {
                     if(feedBack.Included && !Include)
@@ -816,7 +819,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
 
             }
-            res.Message.FriendlyMessage = "Records included successfully";
+            res.Message.FriendlyMessage = Include ? "Records included successfully" : "Records excluded successfully";
             res.IsSuccessful = true;
             return res;
         }
@@ -837,11 +840,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = "Assessment has not yet closed";
                 return res;
             }
-            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString());
+            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment);
 
             float score = 0;
             if (scoreHistory is null)
-                score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include);
+                score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include, HistorySource.HomeAssessment);
             else
             {
                 if (feedBack.Included && !include)
@@ -899,11 +902,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 return $"Feedback has already be included to score entry";
             }
 
-            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString());
+            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment);
 
             float score = 0;
             if (scoreHistory is null)
-                score = scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include).Result;
+                score = scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include, HistorySource.HomeAssessment).Result;
             else
             {
                 if (feedBack.Included && !include)
@@ -1100,5 +1103,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
                 .Include(x => x.HomeAssessment)
                 .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(homeAssessmentFeedbackId));
+
+        async Task<SessionTerm> GetCurrentTerm() =>
+         await context.SessionTerm.Where(xx => xx.ClientId == smsClientId && xx.IsActive == true).FirstOrDefaultAsync();
+
+        IQueryable<HomeAssessment> GetHomeAssessmentBySessionTerm(Guid sessionTermId) =>
+            context.HomeAssessment.Where(d => d.SessionTermId == sessionTermId && d.ClientId == smsClientId);
     }
 }
