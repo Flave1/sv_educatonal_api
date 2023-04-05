@@ -11,8 +11,11 @@ namespace SMP.BLL.Services.ResultServices
 {
     public interface IScoreEntryHistoryService
     {
-        ScoreEntryHistory GetScoreEntryHistory(string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId,  HistorySource source);
-        Task<float> CreateNewScoreEntryHistoryAndReturnScore(ScoreEntryHistory scoreHistory, float resultScore, string studentContactId, string sessionClassId, string subjectId, Guid termId, bool Include, HistorySource source);
+        ScoreEntryHistory GetScoreEntryHistory(string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId,  HistorySource source, string target);
+        Task<float> CreateNewScoreEntryHistoryAndReturnScore(
+            ScoreEntryHistory scoreHistory, float resultScore, 
+            string studentContactId, string sessionClassId, 
+            string subjectId, Guid termId, bool Include, HistorySource source, string target);
         float IncludeAndExcludeThenReturnScore(ScoreEntryHistory scoreHistory, bool Include, float resultScore);
         ScoreEntry GetScoreEntry(Guid CurrentTermId, Guid StudentContactId, Guid SubjectId);
         void CreateNewScoreEntryForAssessment(ScoreEntry scoreEntry, Guid CurrentTermId, float ResultScore, Guid StudentContactId, Guid SubjectId, Guid SessionClassId);

@@ -36,6 +36,7 @@ namespace SMP.Contracts.PortalSettings
         public string SchoolType { get; set; }
         public string Filepath { get; set; }
         public  string Email { get; set; }
+        public string Abrv { get; set; }
         public SchoolSettingContract()
         {
 
@@ -53,6 +54,7 @@ namespace SMP.Contracts.PortalSettings
             SchoolType = db?.SCHOOLSETTINGS_SchoolType ?? "";
             Filepath = db.SCHOOLSETTINGS_Photo;
             Email = db?.SCHOOLSETTINGS_Email ?? "";
+            Abrv = db?.SCHOOLSETTINGS_SchoolAbbreviation;
         }
     }
 }

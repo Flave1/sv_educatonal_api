@@ -17,6 +17,7 @@ using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.AssessmentEntities;
@@ -40,9 +41,10 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly string smsClientId;
         private readonly IScoreEntryHistoryService scoreEntryService;
         private readonly ILoggerService loggerService;
+        private readonly ITermService termService;
 
-        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub, 
-            INotificationService notificationService, IScoreEntryHistoryService scoreEntryHistoryService, ILoggerService loggerService)
+        public HomeAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IFileUploadService uploadService, IHubContext<NotificationHub> hub,
+            INotificationService notificationService, IScoreEntryHistoryService scoreEntryHistoryService, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -53,6 +55,7 @@ namespace SMP.BLL.Services.AssessmentServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.scoreEntryService = scoreEntryHistoryService;
             this.loggerService = loggerService;
+            this.termService = termService;
         }
         async Task<APIResponse<CreateHomeAssessmentRequest>> IHomeAssessmentService.CreateHomeAssessmentAsync(CreateHomeAssessmentRequest request)
         {
@@ -70,7 +73,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Comment = request.Comment,
                         SessionClassGroupId = Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767"),//DO NOT CHANGE ID PLEASE>>>>
                         SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId),
-                        SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive == true).SessionTermId,
+                        SessionTermId = termService.GetCurrentTerm().SessionTermId,
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
@@ -93,7 +96,7 @@ namespace SMP.BLL.Services.AssessmentServices
                         Comment = request.Comment,
                         SessionClassGroupId = Guid.Parse(request.SessionClassGroupId),
                         SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId),
-                        SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive == true).SessionTermId,
+                        SessionTermId = termService.GetCurrentTerm().SessionTermId,
                         Status = request.ShouldSendToStudents ? (int)HomeAssessmentStatus.Opened : (int)HomeAssessmentStatus.Saved,
                         Type = (int)AssessmentTypes.HomeAssessment,
                         Title = request.Title,
@@ -116,7 +119,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -142,7 +145,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 assessment.SessionClassGroupId = request.SessionClassGroupId == "all-students" ? Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767") :
                     Guid.Parse(request.SessionClassGroupId); //DO NOT CHANGE ID PLEASE....
                 assessment.SessionClassSubjectId = Guid.Parse(request.SessionClassSubjectId);
-                assessment.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive == true).SessionTermId;
+                assessment.SessionTermId = termService.GetCurrentTerm().SessionTermId;
                 assessment.Type = (int)AssessmentTypes.HomeAssessment;
                 assessment.Title = request.Title;
                 assessment.Status = request.ShouldSendToStudents ? assessment.Status : (int)HomeAssessmentStatus.Saved;
@@ -167,7 +170,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -177,7 +180,7 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var teacherId = accessor?.HttpContext?.User?.FindFirst(x => x.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetHomeAssessmentRequest>>>();
-            var activeTerm = await GetCurrentTerm();
+            var activeTerm = termService.GetCurrentTerm();
 
             var query = GetHomeAssessmentBySessionTerm(activeTerm.SessionTermId)
                 .Include(s => s.SessionClass).ThenInclude(s => s.Students)
@@ -265,7 +268,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -398,7 +401,7 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<GetClassAssessmentRecord>> IHomeAssessmentService.GetSubjectAssessmentScoreRecordAsync(Guid sessionClassSubjectId, Guid sessionClasId)
         {
             var res = new APIResponse<GetClassAssessmentRecord>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var selectedClass = context.SessionClass.FirstOrDefault(s => s.SessionClassId == sessionClasId && s.ClientId == smsClientId);
             var homeAssessment = context.HomeAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId);
             var classAssessment = context.ClassAssessment.Where(d => d.SessionClassSubjectId == sessionClassSubjectId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId);
@@ -423,7 +426,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var res = new APIResponse<List<StudentHomeAssessmentRequest>>();
             res.Result = new List<StudentHomeAssessmentRequest>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
             var student = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
             var result = await context.HomeAssessment.Where(x=>x.ClientId == smsClientId)
@@ -458,7 +461,7 @@ namespace SMP.BLL.Services.AssessmentServices
             var studentContactid = accessor.HttpContext.User.FindFirst(d => d.Type == "studentContactId").Value;
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
 
             var query = context.HomeAssessment
@@ -560,7 +563,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -696,7 +699,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -725,7 +728,8 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<List<SubmittedAndUnsubmittedStudents>>();
             var result = await context.HomeAssessment.Where(x => x.ClientId == smsClientId)
-                .Include(x => x.SessionClass).ThenInclude(x => x.Students).ThenInclude(x => x.User)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Class)
+                .Include(x => x.SessionClass).ThenInclude(x => x.Students)
                 .Include(x => x.HomeAssessmentFeedBacks)
                 .FirstOrDefaultAsync(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId));
 
@@ -737,6 +741,10 @@ namespace SMP.BLL.Services.AssessmentServices
             }
 
             res.Result = result.SessionClass.Students.Select(x => new SubmittedAndUnsubmittedStudents(x, fbs)).ToList();
+            res.Result.ForEach(it => {
+                it.ClassName = context.ClassLookUp.FirstOrDefault(x => x.ClientId == smsClientId && x.ClassLookupId == it.ClassLkp).Name;
+                it.SubjectName = context.Subject.FirstOrDefault(x => x.ClientId == smsClientId && x.SubjectId == it.SubjectLkp)?.Name;
+            });
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -745,7 +753,7 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<bool>> IHomeAssessmentService.IncludeClassAssessmentToScoreEntry(string homeAssessmentId, bool Include)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
+            var termId = termService.GetCurrentTerm().SessionTermId;
             var assessment = GetHomeAssessmentById(homeAssessmentId);
 
             if (assessment is null)
@@ -775,7 +783,9 @@ namespace SMP.BLL.Services.AssessmentServices
 
             foreach(var std in students)
             {
-                var scoreHistory = scoreEntryService.GetScoreEntryHistory(std.SessionClassId, std.SubjectId.ToString(), termId.ToString(), std.StudentId.ToString(), HistorySource.HomeAssessment);
+                var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                    std.SessionClassId, std.SubjectId.ToString(), 
+                    termId.ToString(), std.StudentId.ToString(), HistorySource.HomeAssessment, homeAssessmentId);
 
                 var feedBack = context.HomeAssessmentFeedBack.FirstOrDefault(x => x.HomeAssessmentFeedBackId == std.FeedBackId && x.ClientId == smsClientId);
                 if (feedBack is null)
@@ -784,7 +794,10 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 float score = 0;
                 if (scoreHistory is null)
-                    score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)std.Score, std.StudentId.ToString(), std.SessionClassId, std.SubjectId.ToString(), termId, Include, HistorySource.HomeAssessment);
+                    score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(
+                        scoreHistory, (float)std.Score, std.StudentId.ToString(), 
+                        std.SessionClassId, std.SubjectId.ToString(), termId, Include, 
+                        HistorySource.HomeAssessment, homeAssessmentId);
                 else
                 {
                     if(feedBack.Included && !Include)
@@ -827,7 +840,7 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<bool>> IHomeAssessmentService.IncludeStudentAssessmentToScoreEntry(string homeAssessmentFeedbackId, bool include)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termId = termService.GetCurrentTerm().SessionTermId;
 
             var feedBack = GetHomeAssessmentFeedBack(homeAssessmentFeedbackId);
             if (feedBack is null)
@@ -840,11 +853,20 @@ namespace SMP.BLL.Services.AssessmentServices
                 res.Message.FriendlyMessage = "Assessment has not yet closed";
                 return res;
             }
-            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment);
+            var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                feedBack.HomeAssessment.SessionClassId.ToString(), 
+                feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), 
+                termId.ToString(), feedBack.StudentContactId.ToString(), 
+                HistorySource.HomeAssessment, feedBack.HomeAssessmentId.ToString());
 
             float score = 0;
             if (scoreHistory is null)
-                score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include, HistorySource.HomeAssessment);
+                score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(
+                    scoreHistory, (float)feedBack.Mark, 
+                    feedBack.StudentContactId.ToString(), 
+                    feedBack.HomeAssessment.SessionClassId.ToString(), 
+                    feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), 
+                    termId, include, HistorySource.HomeAssessment, feedBack.HomeAssessmentId.ToString());
             else
             {
                 if (feedBack.Included && !include)
@@ -887,7 +909,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
         private string IncludeStudentAssessmentToScoreEntry(HomeAssessmentFeedBack feedBack, bool include)
         {
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termId = termService.GetCurrentTerm().SessionTermId;
 
             if (feedBack is null)
             {
@@ -902,11 +924,19 @@ namespace SMP.BLL.Services.AssessmentServices
                 return $"Feedback has already be included to score entry";
             }
 
-            var scoreHistory = scoreEntryService.GetScoreEntryHistory(feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment);
+            var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                feedBack.HomeAssessment.SessionClassId.ToString(), 
+                feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), 
+                termId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment, feedBack.HomeAssessmentId.ToString());
 
             float score = 0;
             if (scoreHistory is null)
-                score = scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, (float)feedBack.Mark, feedBack.StudentContactId.ToString(), feedBack.HomeAssessment.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), termId, include, HistorySource.HomeAssessment).Result;
+                score = scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(
+                    scoreHistory, (float)feedBack.Mark, 
+                    feedBack.StudentContactId.ToString(), 
+                    feedBack.HomeAssessment.SessionClassId.ToString(), 
+                    feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(), 
+                    termId, include, HistorySource.HomeAssessment, feedBack.HomeAssessmentId.ToString()).Result;
             else
             {
                 if (feedBack.Included && !include)
@@ -976,7 +1006,7 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<PagedResponse<List<StudentHomeAssessmentRequest>>>();
 
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var student = await context.StudentContact.FirstOrDefaultAsync(d => d.StudentContactId == Guid.Parse(studentContactid) && d.ClientId == smsClientId);
 
             var query = context.HomeAssessment
@@ -1088,7 +1118,6 @@ namespace SMP.BLL.Services.AssessmentServices
             await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
         }
 
-
         private HomeAssessment GetHomeAssessmentById(string homeAssessmentId) => 
             context.HomeAssessment
                 .Where(x => x.HomeAssessmentId == Guid.Parse(homeAssessmentId) && x.ClientId == smsClientId)
@@ -1097,15 +1126,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Include(x => x.SessionClassSubject)
                 .FirstOrDefault();
         
-        
         private HomeAssessmentFeedBack GetHomeAssessmentFeedBack(string homeAssessmentFeedbackId) => 
             context.HomeAssessmentFeedBack.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.StudentContact).ThenInclude(x => x.SessionClass)
                 .Include(x => x.HomeAssessment)
                 .ThenInclude(x => x.SessionClassSubject).FirstOrDefault(x => x.HomeAssessmentFeedBackId == Guid.Parse(homeAssessmentFeedbackId));
-
-        async Task<SessionTerm> GetCurrentTerm() =>
-         await context.SessionTerm.Where(xx => xx.ClientId == smsClientId && xx.IsActive == true).FirstOrDefaultAsync();
 
         IQueryable<HomeAssessment> GetHomeAssessmentBySessionTerm(Guid sessionTermId) =>
             context.HomeAssessment.Where(d => d.SessionTermId == sessionTermId && d.ClientId == smsClientId);

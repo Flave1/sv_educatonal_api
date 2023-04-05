@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Smime;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
 using SMP.DAL.Models.Attendance;
 using SMP.DAL.Models.Register;
@@ -26,19 +27,21 @@ namespace SMP.BLL.Services.AttendanceServices
         private readonly DataContext context;
         private readonly IPaginationService paginationService;
         private readonly string smsClientId;
+        private readonly ITermService termService;
 
-        public AttendanceService(DataContext context, IPaginationService paginationService, IHttpContextAccessor accessor)
+        public AttendanceService(DataContext context, IPaginationService paginationService, IHttpContextAccessor accessor, ITermService termService)
         {
             this.context = context;
             this.paginationService = paginationService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
         async Task<APIResponse<GetAttendance>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
             var res = new APIResponse<GetAttendance>();
 
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termid = termService.GetCurrentTerm().SessionTermId;
 
             var datTimeNote = DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
             var reg = new ClassRegister

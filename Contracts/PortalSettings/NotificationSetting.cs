@@ -211,6 +211,7 @@ namespace SMP.Contracts.PortalSettings
         public string schoolUrl { get; set; }
         public string schoolName { get; set; }
         public string schoolLogo { get; set; }
+        public string abrv { get; set; }
 
     }
     public class SidebarType

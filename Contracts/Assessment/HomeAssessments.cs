@@ -172,6 +172,10 @@ namespace SMP.Contracts.Assessment
         public string HomeAsessmentFeedbackId { get; set; }
         public decimal Score { get; set; }
         public bool Included { get; set; }
+        public string SubjectName { get; set; }
+        public string ClassName { get; set; }
+        public Guid ClassLkp { get; set; }
+        public Guid SubjectLkp { get; set; }
         public SubmittedAndUnsubmittedStudents(string studentContactId, ICollection<HomeAssessmentFeedBack> feedbacks, ICollection<StudentContact> students)
         {
             var feedBack = feedbacks.FirstOrDefault(s => s.StudentContactId == Guid.Parse(studentContactId));
@@ -197,6 +201,8 @@ namespace SMP.Contracts.Assessment
             HomeAsessmentFeedbackId = feedBack is not null ? feedBack.HomeAssessmentFeedBackId.ToString() : "";
             StudentName = student?.FirstName + " " + student?.MiddleName + " " + student?.LastName;
             Score = feedBack?.Mark??0;
+            ClassLkp = student.SessionClass.ClassId;
+            SubjectLkp = feedBack is not null ? feedBack.HomeAssessment.SessionClassSubjectId : Guid.Empty;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)

@@ -2,23 +2,20 @@
 using BLL.LoggerService;
 using BLL.Wrappers;
 using DAL;
-using DAL.StudentInformation;
-using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
-using SMP.DAL.Models;
 using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.CBTAssessmentServices
@@ -33,10 +30,11 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         private readonly string smsClientId;
         private readonly IScoreEntryHistoryService scoreEntryService;
         private readonly ILoggerService loggerService;
+        private readonly ITermService termService;
 
         public CBTAssessmentService(IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, DataContext context,
             IUtilitiesService utilitiesService,
-            IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService, ILoggerService loggerService)
+            IHttpContextAccessor accessor, IScoreEntryHistoryService scoreEntryService, ILoggerService loggerService, ITermService termService)
         {
             this.webRequestService = webRequestService;
             fwsOptions = options.Value;
@@ -45,6 +43,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.scoreEntryService = scoreEntryService;
             this.loggerService = loggerService;
+            this.termService = termService;
         }
 
         async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId,string subjectId, int pageNumber)
@@ -66,6 +65,9 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
             if (res.Result == null)
             {
+
+                res.IsSuccessful = true;
+                res.Result = new PagedResponse<List<CBTExamination>>();
                 res.Message.FriendlyMessage = res.Message.FriendlyMessage;
                 return res;
             }
@@ -78,8 +80,8 @@ namespace SMP.BLL.Services.CBTAssessmentServices
         {
             var res = new APIResponse<bool>();
             var alreadyAdded = new List<string>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
-
+            var termId = termService.GetCurrentTerm().SessionTermId;
+            subjectId = GetSubjectByClassSubjectId(Guid.Parse(subjectId));
             try
             {
                 var students = studentRegNos.Split(',').ToArray();
@@ -103,11 +105,25 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     if(studentResult.Result == null)
                         continue;
 
-                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString(), HistorySource.CbtAssessment);
+                    
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                        student.SessionClassId.ToString(),
+                        subjectId, termId.ToString(),
+                        student.StudentContactId.ToString(),
+                        HistorySource.CbtAssessment,
+                        examId);
 
                     float score = 0;
                     if (scoreHistory is null)
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include, HistorySource.CbtAssessment);
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(
+                            scoreHistory, 
+                            studentResult.Result.TotalScore,
+                            student.StudentContactId.ToString(),
+                            sessionClassId, subjectId.ToString(),
+                            termId, 
+                            Include, 
+                            HistorySource.CbtAssessment,
+                            examId);
                     else
                     {
                         alreadyAdded.Add(studentRegNo);
@@ -118,7 +134,14 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
                     if (scoreEntry is null)
                     {
-                        scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
+                        scoreEntryService.CreateNewScoreEntryForAssessment(
+                            scoreEntry,
+                            termId,
+                            studentResult.Result.TotalScore,
+                            student.StudentContactId, 
+                            Guid.Parse(subjectId), 
+                            Guid.Parse(sessionClassId));
+
                         await context.SaveChangesAsync();
                     }
                     else
@@ -131,7 +154,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
             if (alreadyAdded.Any())
@@ -148,28 +171,26 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             return res;
         }
 
+
+        string GetSubjectByClassSubjectId(Guid sessionClassSubjectId) => context.SessionClassSubject.FirstOrDefault(x => x.SessionClassSubjectId == sessionClassSubjectId)?.SubjectId.ToString();
+
         async Task<APIResponse<bool>> ICBTAssessmentService.IncludeCBTAssessmentToScoreEntryAsExamination(string sessionClassId, string subjectId, string studentRegNos, bool Include, string examId)
         {
             var res = new APIResponse<bool>();
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive == true && x.ClientId == smsClientId).SessionTermId;
             var alreadyAdded = new List<string>();
-
+            var termId = termService.GetCurrentTerm().SessionTermId;
+            //subjectId = GetSubjectByClassSubjectId(Guid.Parse(subjectId));
             try
             {
-
-                if (string.IsNullOrEmpty(studentRegNos))
-                {
-                    res.Message.FriendlyMessage = "No student has taken this examination";
-                    return res;
-                }
                 var students = studentRegNos.Split(',').ToArray();
+
                 var fwsClientInformation = await GetClientInformationAsync();
                 var clientDetails = new Dictionary<string, string>();
                 clientDetails.Add("examinationId", examId);
                 clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+
                 foreach (var stdRegNumber in students)
                 {
-
                     if (clientDetails.ContainsKey("candidateId_regNo"))
                         clientDetails.Remove("candidateId_regNo");
 
@@ -181,17 +202,29 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                     var studentResult = await webRequestService.GetAsync<APIResponse<SelectResult>>($"{cbtRoutes.studentResult}", clientDetails);
                     if (studentResult.Result == null)
                         continue;
-                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(student.SessionClassId.ToString(), subjectId, termId.ToString(), student.StudentContactId.ToString(), HistorySource.CbtAssessment);
+
+                    var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                        student.SessionClassId.ToString(), 
+                        subjectId, termId.ToString(), 
+                        student.StudentContactId.ToString(), 
+                        HistorySource.CbtAssessment, studentResult.Result.ExaminationId);
 
                     float score = 0;
                     if (scoreHistory is null)
-                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(scoreHistory, studentResult.Result.TotalScore, student.StudentContactId.ToString(), sessionClassId, subjectId.ToString(), termId, Include, HistorySource.CbtAssessment);
+                        score = await scoreEntryService.CreateNewScoreEntryHistoryAndReturnScore(
+                            scoreHistory, studentResult.Result.TotalScore, 
+                            student.StudentContactId.ToString(), 
+                            sessionClassId, subjectId.ToString(), 
+                            termId, Include, HistorySource.CbtAssessment, 
+                            studentResult.Result.ExaminationId);
                     else
                     {
                         alreadyAdded.Add(studentRegNo);
                         continue;
                     }
+
                     var scoreEntry = scoreEntryService.GetScoreEntry(termId, student.StudentContactId, Guid.Parse(subjectId));
+
                     if (scoreEntry is null)
                     {
                         scoreEntryService.CreateNewScoreEntryForExam(scoreEntry, termId, (float)studentResult.Result.TotalScore, student.StudentContactId, Guid.Parse(subjectId), Guid.Parse(sessionClassId));
@@ -207,10 +240,9 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
-
             if (alreadyAdded.Any())
             {
                 res.Message.FriendlyMessage = $"Students with reg number(s) {string.Join(", ", alreadyAdded)} has been included previously";
@@ -218,9 +250,10 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             }
             else
             {
-                res.Message.FriendlyMessage = Include ? "Examination Scores Included Successfully" : "Examination Scores Successfully Removed from score entry";
+                res.Message.FriendlyMessage = Include ? "Assessment Scores Included Successfully" : "Assessment Scores Successfully Removed from score entry";
                 res.IsSuccessful = true;
             }
+
             return res;
         }
 

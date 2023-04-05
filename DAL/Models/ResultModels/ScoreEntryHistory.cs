@@ -14,6 +14,7 @@ namespace SMP.DAL.Models.ResultModels
         public string SessionClassId { get; set; }
         public string Subjectid { get; set; }
         public int Source { get; set; }
+        public string Target { get; set; }
     }
 
     public enum HistorySource

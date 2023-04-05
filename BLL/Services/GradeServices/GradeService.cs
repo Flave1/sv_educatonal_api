@@ -72,7 +72,7 @@ namespace SMP.BLL.Services.GradeServices
                 {
                     await transaction.RollbackAsync();
                     await context.SaveChangesAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;
@@ -127,7 +127,7 @@ namespace SMP.BLL.Services.GradeServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;
@@ -234,7 +234,7 @@ namespace SMP.BLL.Services.GradeServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex.ToString();
                     return res;

@@ -81,7 +81,7 @@ namespace SMP.BLL.Utilities
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Please ensure registeration number is in correct format");
             }
         }
@@ -102,7 +102,7 @@ namespace SMP.BLL.Utilities
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Unable to Generate Registration Number");
             }
         }

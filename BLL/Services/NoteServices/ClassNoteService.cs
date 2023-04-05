@@ -31,6 +31,7 @@ using PdfSharpCore.Pdf;
 using TheArtOfDev.HtmlRenderer.PdfSharp;
 using PdfSharpCore.Pdf.Advanced;
 using System.IO;
+using SMP.BLL.Services.SessionServices;
 
 namespace SMP.BLL.Services.NoteServices
 {
@@ -43,8 +44,9 @@ namespace SMP.BLL.Services.NoteServices
         private readonly INotificationService notificationService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, 
-            IHubContext<NotificationHub> hub, INotificationService notificationService, ILoggerService loggerService)
+        private readonly ITermService termService;
+        public ClassNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService,
+            IHubContext<NotificationHub> hub, INotificationService notificationService, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -53,13 +55,14 @@ namespace SMP.BLL.Services.NoteServices
             this.notificationService = notificationService;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         async Task<APIResponse<ClassNotes>> IClassNoteService.CreateClassNotesAsync(ClassNotes request)
         {
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var termid = context.SessionTerm.Where(x => x.IsActive == true && x.ClientId == smsClientId).FirstOrDefault().SessionTermId;
+            var termid = termService.GetCurrentTerm().SessionTermId;
             var res = new APIResponse<ClassNotes>();
 
             var newClassNote = new ClassNote()
@@ -100,7 +103,7 @@ namespace SMP.BLL.Services.NoteServices
                     context.ClassNote.Remove(newClassNote);
                     await context.SaveChangesAsync();
                 }
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -294,7 +297,7 @@ namespace SMP.BLL.Services.NoteServices
         {
                 var res = new APIResponse<ShareNotes>();
                 var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var termid = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termid = termService.GetCurrentTerm().SessionTermId;
 
             try
             {
@@ -340,7 +343,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -756,7 +759,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -897,7 +900,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;

@@ -8,6 +8,7 @@ using Contracts.Common;
 using Contracts.Email;
 using DAL;
 using DAL.Authentication;
+using DAL.ClassEntities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -128,7 +129,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 if(admissionSettings is null)
                 {
                     string msg = $"Our school admission is not open yet! Please contact school administration {smsClientId}";
-                    await loggerService.Debug(msg);
+                    loggerService.Debug(msg);
                     res.Message.TechnicalMessage = msg;
                     return res;
                 }
@@ -165,7 +166,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch(ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = ex.Message;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -173,7 +174,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -227,7 +228,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -244,7 +245,10 @@ namespace SMP.BLL.Services.AdmissionServices
                 var result = await context.Admissions
                     .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId) && c.ParentId == parentId)
                     .Include(x => x.AdmissionSettings)
-                    .Select(d => new SelectCandidateAdmission(d, context.ClassLookUp.Where(x => x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).FirstOrDefaultAsync();
+                    .Select(d => new SelectCandidateAdmission(d, 
+                    context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault(), 
+                    context.Parents.Where(x => x.ClientId == smsClientId && x.Parentid == d.ParentId).FirstOrDefault())
+                    ).FirstOrDefaultAsync();
 
                 if (result == null)
                 {
@@ -261,7 +265,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -292,7 +296,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -325,14 +329,15 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<List<AdmissionClasses>>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
+                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.AdmissionStatus == true)?.FirstOrDefault()?.Classes?.Split(',').ToList();
                 if (classes != null)
                 {
-
-                    var result = await context.ClassLookUp
-                        .Where(d => d.Deleted != true && classes.Contains(d.ClassLookupId.ToString())).Select(d => new AdmissionClasses { ClassId = d.ClassLookupId.ToString(), ClassName = d.Name })
-                        .ToListAsync();
-
+                    var result = classes.Select(d => new AdmissionClasses
+                    {
+                        ClassId = d,
+                        ClassName = context.ClassLookUp.FirstOrDefault(c => c.ClientId == smsClientId && c.ClassLookupId == Guid.Parse(d))?.Name
+                    })
+                        .ToList();
                     if (result == null)
                     {
                         res.Message.FriendlyMessage = "No item found";
@@ -351,7 +356,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -411,7 +416,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -424,24 +429,44 @@ namespace SMP.BLL.Services.AdmissionServices
             var res = new APIResponse<List<SelectAdmissionSettings>>();
             try
             {
-                var classes = context.AdmissionSettings?.Where(d => d.ClientId == smsClientId && d.Deleted != true)?.FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
+                var parentId = accessor.HttpContext.User.FindFirst(x => x.Type == "parentId")?.Value;
+                var classes = context.AdmissionSettings?
+                    .Where(d => d.ClientId == smsClientId && d.Deleted != true)?
+                    .FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
+                var parentAdmissions = new List<Guid>();
+                if (!string.IsNullOrEmpty(parentId))
+                {
+                    parentAdmissions = context.Admissions
+                    .Where(x => x.ClientId == smsClientId && x.Deleted == false && x.ParentId == Guid.Parse(parentId))
+                    .Select(c => c.AdmissionSettingId).Distinct().ToList();
+                }
+                
 
                 if (classes is not null)
                 {
-                    res.Result = await context.AdmissionSettings
-                    .Where(d => d.ClientId == smsClientId && d.Deleted != true)
-                    .Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList()))
-                    .ToListAsync();
+                    var schoolClassLkps = context.ClassLookUp.Where(x => x.ClientId == smsClientId && classes.Contains(x.ClassLookupId.ToString())).ToList();
+
+                    if (parentAdmissions.Any())
+                    {
+                        var result = await context.AdmissionSettings
+                        .Where(d => d.ClientId == smsClientId && d.Deleted != true && parentAdmissions.Contains(d.AdmissionSettingId) && d.AdmissionStatus == true)
+                        .OrderBy(x => x.CreatedOn)
+                        .Select(db => new SelectAdmissionSettings(db, schoolClassLkps))
+                        .ToListAsync();
+                        res.Result = result;
+                    }
+                   
+
+
 
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                 }
-
                 res.IsSuccessful = true;
                 return res;
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -487,7 +512,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 response.IsSuccessful = false;
                 response.Message.FriendlyMessage = Messages.FriendlyException;
                 response.Message.TechnicalMessage = ex.ToString();

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
 using SMP.DAL.Models.ClassEntities;
 using System;
@@ -25,8 +26,9 @@ namespace BLL.ClassServices
         private readonly IUtilitiesService utilitiesService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
+        private readonly ITermService termService;
 
-        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService, ILoggerService loggerService)
+        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.resultsService = resultsService;
@@ -34,6 +36,7 @@ namespace BLL.ClassServices
             this.utilitiesService = utilitiesService;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         //async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
@@ -58,7 +61,7 @@ namespace BLL.ClassServices
         //        res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
         //        return res;
         //    }
-          
+
         //    using (var transaction = await context.Database.BeginTransactionAsync())
         //    {
         //        try
@@ -119,6 +122,7 @@ namespace BLL.ClassServices
                     ExamScore = sClass.ExamScore,
                     AssessmentScore = sClass.AssessmentScore,
                     PassMark = sClass.PassMark,
+                    SessionTermId = termService.GetCurrentTerm().SessionTermId
                 };
                 context.SessionClass.Add(sessionClass);
                 await context.SaveChangesAsync();
@@ -130,7 +134,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;
@@ -205,7 +209,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -248,7 +252,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ;
             }
         }
@@ -273,7 +277,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -299,7 +303,7 @@ namespace BLL.ClassServices
             }
             catch (DbUpdateException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Please confirm home and class assessments are not in the deselected subjects");
             }
         }
@@ -550,7 +554,7 @@ namespace BLL.ClassServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.Message;
                 res.IsSuccessful = true;
@@ -591,7 +595,7 @@ namespace BLL.ClassServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;

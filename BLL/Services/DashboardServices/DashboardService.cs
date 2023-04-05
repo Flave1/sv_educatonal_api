@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
+using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Dashboard;
-using SMP.DAL.Models.ClassEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +19,13 @@ namespace SMP.BLL.Services.DashboardServices
         private readonly DataContext context;
         private readonly IHttpContextAccessor accessor;
         private readonly string smsClientId;
-        public DashboardService(DataContext context, IHttpContextAccessor accessor)
+        private readonly ITermService termService;
+        public DashboardService(DataContext context, IHttpContextAccessor accessor, ITermService termService)
         {
             this.context = context;
             this.accessor = accessor;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         APIResponse<GetDashboardCount> IDashboardService.GetDashboardCountAsync()
@@ -98,7 +100,7 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetTeacherDashboardCounts(Guid teacherId, List<string> permissions)
         {
-            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+            var currentTerm = termService.GetCurrentTerm();
             var totalClass = context.SessionClass.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.Session)
                 .Count(x => x.Deleted == false && x.Session.IsActive == true && x.FormTeacherId == teacherId);
@@ -138,7 +140,7 @@ namespace SMP.BLL.Services.DashboardServices
         private GetStudentshDasboardCount GetStudentDashboardCounts(Guid studentId)
         {
             var student = context.StudentContact.Include(x => x.SessionClass).FirstOrDefault(x => x.StudentContactId == studentId);
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termId = termService.GetCurrentTerm().SessionTermId;
             if (student == null)
                 throw new ArgumentException("Not found");
             var totalSubject = context.SessionClassSubject
@@ -180,7 +182,7 @@ namespace SMP.BLL.Services.DashboardServices
             var rolesActivities = context.RoleActivity.Where(x=>x.ClientId == smsClientId).Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
             IQueryable<SessionClass> classesAsASujectTeacher = null;
             IQueryable<SessionClass> classesAsAFormTeacher = null;
-            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+            var currentTerm = termService.GetCurrentTerm();
             if(currentTerm is null)
             {
                 res.Message.FriendlyMessage = "No active term found";

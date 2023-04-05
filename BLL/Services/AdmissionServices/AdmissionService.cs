@@ -12,21 +12,19 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
-using SMP.DAL.Models.Admission;
-using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -51,10 +49,11 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly FwsConfigSettings fwsOptions;
         private readonly IParentService parentService;
         private readonly string smsClientId;
+        private readonly ITermService termService;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
-            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService, ILoggerService loggerService)
+            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.paginationService = paginationService;
@@ -68,6 +67,7 @@ namespace SMP.BLL.Services.AdmissionServices
             fwsOptions = options.Value;
             this.parentService = parentService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         public async Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request)
@@ -169,7 +169,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (DuplicateNameException ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -177,7 +177,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (ArgumentException ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = ex.Message;
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -185,7 +185,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                     return res;
@@ -281,7 +281,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = "Error Occurred trying to enroll student account!! Please contact system administrator";
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -292,7 +292,8 @@ namespace SMP.BLL.Services.AdmissionServices
             var history = new StudentSessionClassHistory();
             history.SessionClassId = student.SessionClassId;
             history.StudentContactId = student.StudentContactId;
-            history.SessionTermId = context.SessionTerm.FirstOrDefault(s => s.IsActive && s.ClientId == smsClientId)?.SessionTermId;
+            var currentTerm = termService.GetCurrentTerm();
+            history.SessionTermId = currentTerm.SessionTermId;
             await context.StudentSessionClassHistory.AddAsync(history);
             await context.SaveChangesAsync();
         }
@@ -391,7 +392,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -423,7 +424,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -527,7 +528,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -597,7 +598,7 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Assessment;
 using SMP.DAL.Models.AssessmentEntities;
 using System;
@@ -26,20 +27,22 @@ namespace SMP.BLL.Services.AssessmentServices
         private readonly IPaginationService paginationService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService)
+        private readonly ITermService termService;
+        public ClassAssessmentService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService, ITermService termService = null)
         {
             this.context = context;
             this.accessor = accessor;
             this.paginationService = paginationService;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         async Task<APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>> IClassAssessmentService.GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId, PaginationFilter filter)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var query =  context.ClassAssessment.Where(c => c.ClientId == smsClientId)
                  .Include(s => s.SessionClassSubject)
                  .Include(s => s.SessionClass).ThenInclude(c => c.Class)
@@ -78,7 +81,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
-                var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+                var activeTerm = termService.GetCurrentTerm();
 
                 var classSubject = await context.SessionClassSubject.Where(c => c.ClientId == smsClientId)
                     .Include(d => d.SessionClass).ThenInclude(s => s.Class)
@@ -107,7 +110,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -116,7 +119,7 @@ namespace SMP.BLL.Services.AssessmentServices
         {
             var res = new APIResponse<List<ClassAssessmentStudents>>();
             res.Result = new List<ClassAssessmentStudents>();
-            var activeTerm = context.SessionTerm.FirstOrDefault(d => d.IsActive && d.ClientId == smsClientId);
+            var activeTerm = termService.GetCurrentTerm();
             var ass = context.ClassAssessment.Where(c => c.ClientId == smsClientId)
                 .Include(s => s.SessionClassSubject).ThenInclude(d => d.SessionClassGroups)
                 .Include(x => x.SessionClass).ThenInclude(x => x.Session).ThenInclude(d => d.Terms)
@@ -195,7 +198,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -222,7 +225,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -271,7 +274,7 @@ namespace SMP.BLL.Services.AssessmentServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }

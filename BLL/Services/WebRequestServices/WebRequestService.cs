@@ -77,7 +77,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     }
                 }catch(Exception ex)
                 {
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     throw new ArgumentException(ex.Message ?? ex.InnerException.Message);
                 }
 
@@ -132,7 +132,7 @@ namespace SMP.BLL.Services.WebRequestServices
                     if (retries >= (maxRetries - 1))
                     {
                         //log error
-                        await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                        loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                         throw;
                     }
                 }

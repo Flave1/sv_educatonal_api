@@ -98,7 +98,7 @@ namespace SMP.BLL.Services.PromorionServices
 
                 if(sessClass == null) 
                 {
-                    await loggerService.Debug($"Class not found on promotion: {smsClientId}");
+                    loggerService.Debug($"Class not found on promotion: {smsClientId}");
                     res.Message.FriendlyMessage = "Class not found";
                     return res;
                 }
@@ -132,7 +132,7 @@ namespace SMP.BLL.Services.PromorionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.ClassTransitionException;
                 res.Message.TechnicalMessage = ex.ToString();
                 return res;

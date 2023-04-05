@@ -3,28 +3,21 @@ using BLL.Constants;
 using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
-using Contracts.Authentication;
 using Contracts.Common;
 using DAL;
-using DAL.SubjectModels;
-using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using SMP.API.Hubs;
 using SMP.BLL.Constants;
-using SMP.BLL.Hubs;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.NotififcationServices;
-using SMP.Contracts.Common;
+using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Notes;
-using SMP.Contracts.NotificationModels;
 using SMP.DAL.Models.NoteEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.NoteServices
@@ -38,9 +31,10 @@ namespace SMP.BLL.Services.NoteServices
         private readonly INotificationService notificationService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
+        private readonly ITermService termService;
 
-        public StudentNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, 
-            IHubContext<NotificationHub> hub, INotificationService notificationService, ILoggerService loggerService)
+        public StudentNoteService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService,
+            IHubContext<NotificationHub> hub, INotificationService notificationService, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -49,13 +43,14 @@ namespace SMP.BLL.Services.NoteServices
             this.notificationService = notificationService;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
 
         async Task<APIResponse<StudentNotes>> IStudentNoteService.CreateStudentNotesAsync(StudentNotes request)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
             var studentContact = context.StudentContact.FirstOrDefault(d => d.StudentContactId == Guid.Parse(studentContactId) && d.ClientId == smsClientId);
-            var termId = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionTermId;
+            var termId = termService.GetCurrentTerm().SessionTermId;
             var res = new APIResponse<StudentNotes>();
 
             try
@@ -105,7 +100,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
             return res;
@@ -640,7 +635,7 @@ namespace SMP.BLL.Services.NoteServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw ex;
             }
 

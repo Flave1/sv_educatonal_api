@@ -1,14 +1,10 @@
 ﻿using DAL.ClassEntities;
-using DAL.StudentInformation;
 using DAL.SubjectModels;
-using SMP.DAL.Models.ClassEntities;
+using SMP.Contracts.Session;
 using SMP.DAL.Models.ResultModels;
-using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.ResultModels
 {
@@ -20,12 +16,12 @@ namespace SMP.Contracts.ResultModels
         public string TermName { get; set; }
         public List<MasterListResult> ResultList { get;set; }
   
-        public MasterList(SessionClass db, SessionTerm term)
+        public MasterList(SessionClass db, SessionTermDto term)
         {
             Session = db.Session.StartDate + " / " + db.Session.EndDate;
             SessionClass = db.Class.Name;
             FormTeacher = db.Teacher.FirstName + " " + db.Teacher.LastName;
-            TermName = term.TermName;
+            TermName = term?.TermName;
         }
 
     }

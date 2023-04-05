@@ -79,7 +79,7 @@ namespace BLL.AuthenticationServices
                 var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
 
-                await loggerService.Error("SOme log here", "SOme log here", "SOme log here", "SOme log here");
+                loggerService.Error("SOme log here", "SOme log here", "SOme log here", "SOme log here");
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
@@ -337,7 +337,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -501,7 +501,7 @@ namespace BLL.AuthenticationServices
             catch (Exception ex)
             {
 
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException($"Something went wrong: {ex.InnerException.Message}");
             }
 
@@ -601,7 +601,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }

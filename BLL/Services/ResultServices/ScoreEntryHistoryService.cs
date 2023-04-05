@@ -33,14 +33,17 @@ namespace SMP.BLL.Services.ResultServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
-        DAL.Models.ResultModels.ScoreEntryHistory IScoreEntryHistoryService.GetScoreEntryHistory(string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId, HistorySource source) =>
+        DAL.Models.ResultModels.ScoreEntryHistory IScoreEntryHistoryService.GetScoreEntryHistory(
+            string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId, HistorySource source, string target) =>
             context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == SessionClassId && x.Subjectid == SubjectId.ToString()
-                    && x.SessionTermId == CurrentTermId && x.StudentId == StudentContactId && x.ClientId == smsClientId && (int)source == x.Source);
+                    && x.SessionTermId == CurrentTermId && x.StudentId == StudentContactId && x.ClientId == smsClientId && (int)source == x.Source && x.Target == target);
 
         ScoreEntry IScoreEntryHistoryService.GetScoreEntry(Guid CurrentTermId, Guid StudentContactId, Guid SubjectId) => 
             context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == CurrentTermId && s.StudentContactId == StudentContactId && s.SubjectId == SubjectId && s.ClientId == smsClientId);
         
-        async Task<float> IScoreEntryHistoryService.CreateNewScoreEntryHistoryAndReturnScore(DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, float resultScore, string studentContactId, string sessionClassId, string subjectId, Guid termId, bool Include, HistorySource source)
+        async Task<float> IScoreEntryHistoryService.CreateNewScoreEntryHistoryAndReturnScore(
+            DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, float resultScore, string studentContactId, 
+            string sessionClassId, string subjectId, Guid termId, bool Include, HistorySource source, string target)
         {
             scoreHistory = new DAL.Models.ResultModels.ScoreEntryHistory();
             scoreHistory.StudentId = studentContactId;
@@ -49,6 +52,7 @@ namespace SMP.BLL.Services.ResultServices
             scoreHistory.SessionTermId = termId.ToString();
             scoreHistory.Score = scoreHistory.Score + '|' + resultScore;
             scoreHistory.Source = (int)source;
+            scoreHistory.Target = target;
             context.ScoreEntryHistory.Add(scoreHistory);
             await context.SaveChangesAsync();
             return +resultScore;
@@ -78,7 +82,13 @@ namespace SMP.BLL.Services.ResultServices
             }
         }
 
-        void IScoreEntryHistoryService.CreateNewScoreEntryForAssessment(ScoreEntry scoreEntry, Guid CurrentTermId, float ResultScore, Guid StudentContactId, Guid SubjectId, Guid SessionClassId)
+        void IScoreEntryHistoryService.CreateNewScoreEntryForAssessment(
+            ScoreEntry scoreEntry, 
+            Guid CurrentTermId, 
+            float ResultScore, 
+            Guid StudentContactId, 
+            Guid SubjectId, 
+            Guid SessionClassId)
         {
             scoreEntry = new ScoreEntry();
             scoreEntry.SessionTermId = CurrentTermId;

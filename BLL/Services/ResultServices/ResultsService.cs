@@ -15,14 +15,17 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Crmf;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Polly;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
+using SMP.Contracts.Session;
 using SMP.DAL.Migrations;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.ResultModels;
@@ -46,8 +49,9 @@ namespace SMP.BLL.Services.ResultServices
         private readonly IStudentService studentService;
         private readonly IClassGroupService classGroupService;
         private readonly IScoreEntryHistoryService scoreEntryService;
+        private readonly ITermService termService;
 
-        public ResultsService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService, IUtilitiesService utilitiesService, IStudentService studentService, IClassGroupService classGroupService, IScoreEntryHistoryService scoreEntryService)
+        public ResultsService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService, IUtilitiesService utilitiesService, IStudentService studentService, IClassGroupService classGroupService, IScoreEntryHistoryService scoreEntryService, ITermService termService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -58,6 +62,7 @@ namespace SMP.BLL.Services.ResultServices
             this.studentService = studentService;
             this.classGroupService = classGroupService;
             this.scoreEntryService = scoreEntryService;
+            this.termService = termService;
         }
 
         async Task<APIResponse<List<GetClasses>>> IResultsService.GetCurrentStaffClassesAsync()
@@ -280,7 +285,7 @@ namespace SMP.BLL.Services.ResultServices
 
             if (sessClass.Session.IsActive)
             {
-                var currentTerm = await GetCurrentTerm();
+                var currentTerm = termService.GetCurrentTerm();
                 if (result != null)
                 {
                     var query = context.StudentContact.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
@@ -316,7 +321,7 @@ namespace SMP.BLL.Services.ResultServices
             filter.PageSize = 50;
             var res = new APIResponse<PagedResponse<PreviewClassScoreEntry>>();
             var regNoFormat = await GetRegNumberFormat();
-            SessionTerm currentTerm = await GetCurrentTerm();
+            SessionTermDto currentTerm = termService.GetCurrentTerm();
             var result = await GetClassScoreEntryPreviewHeader(sessionClassId, subjectId, regNoFormat);
             if (result is not null)
             {
@@ -346,12 +351,12 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<ScoreEntry>();
             try
             {
-                SessionTerm selectedTerm = null;
+                SessionTermDto selectedTerm = null;
                 if (!string.IsNullOrEmpty(request.SessionTermId))
-                    selectedTerm = SelectTerm(Guid.Parse(request.SessionTermId));
+                    selectedTerm = termService.SelectTerm(Guid.Parse(request.SessionTermId));
                 else
                 {
-                    selectedTerm = await GetCurrentTerm();
+                    selectedTerm = termService.GetCurrentTerm();
                     request.SessionTermId = selectedTerm.SessionTermId.ToString();
                 }
 
@@ -371,14 +376,14 @@ namespace SMP.BLL.Services.ResultServices
                 else
                 {
                     var errorMsg = "System facing some technical issues with running term";
-                    await loggerService.Debug(errorMsg + "clentId:"+ smsClientId);
+                    loggerService.Debug(errorMsg + "clentId:"+ smsClientId);
                     res.Message.FriendlyMessage = errorMsg;
                 }
                 return res;
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex?.Message;
                 return res;
             }
@@ -389,12 +394,12 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<ScoreEntry>();
             try
             {
-                SessionTerm selectedTerm = null;
+                SessionTermDto selectedTerm = null;
                 if (!string.IsNullOrEmpty(request.SessionTermId))
-                    selectedTerm = SelectTerm(Guid.Parse(request.SessionTermId));
+                    selectedTerm = termService.SelectTerm(Guid.Parse(request.SessionTermId));
                 else
                 {
-                    selectedTerm = await GetCurrentTerm();
+                    selectedTerm = termService.GetCurrentTerm();
                     request.SessionTermId = selectedTerm.SessionTermId.ToString();
                 }
                     
@@ -415,14 +420,14 @@ namespace SMP.BLL.Services.ResultServices
                 else
                 {
                     var errorMsg = "System facing some technical issues with running term";
-                    await loggerService.Debug(errorMsg + "clentId:" + smsClientId);
+                    loggerService.Debug(errorMsg + "clentId:" + smsClientId);
                     res.Message.FriendlyMessage = errorMsg;
                 }
                 return res;
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex?.Message;
                 return res;
             }
@@ -432,10 +437,10 @@ namespace SMP.BLL.Services.ResultServices
         {
             var regNoFormat = await GetRegNumberFormat();
 
-            var term = SelectTerm(termId);
+            var term = termService.SelectTerm(termId);
             var res = new APIResponse<MasterList>();
 
-            var sessClass = GetSessionClass(sessionClassId).FirstOrDefault();
+            var sessClass = GetSessionClass(sessionClassId).Include(x => x.Teacher).FirstOrDefault();
 
             var mList = new MasterList(sessClass, term);
 
@@ -464,7 +469,7 @@ namespace SMP.BLL.Services.ResultServices
             try
             {
                 var sessClass = GetSessionClass(sessionClassId).FirstOrDefault();
-                var term = SelectTerm(termId);
+                var term = termService.SelectTerm(termId);
                 res.Result = new PagedResponse<StudentResult>();
                 res.Result.Data = new StudentResult();
 
@@ -519,7 +524,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -529,16 +534,17 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<PublishResultRequest>();
             try
             {
-                var sessClass = GetSessionClass(request.SessionClassId).FirstOrDefault();
+                var sessClass = GetSessionClass(request.SessionClassId)
+                .Include(x => x.Students).FirstOrDefault();
 
                 if (sessClass.Session.IsActive)
                     foreach (var student in sessClass.Students.Where(d => d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled))
-                        await SaveSessionClassArchiveAsync(sessClass.SessionClassId, request.SessionTermId, student.StudentContactId, request.Publish);
+                        await SaveSessionClassArchiveAsync(sessClass, request.SessionTermId, student.StudentContactId, request.Publish);
                 else
                 {
                     List<StudentSessionClassHistory> stdsArchive = scoreEntryService.GetStudentsFromArchiveQuery(request.SessionClassId, request.SessionTermId).ToList();
                     foreach (var studentArchive in stdsArchive)
-                        await SaveSessionClassArchiveAsync(sessClass.SessionClassId, studentArchive.SessionTermId, studentArchive.StudentContactId, request.Publish);
+                        await SaveSessionClassArchiveAsync(sessClass, studentArchive.SessionTermId, studentArchive.StudentContactId, request.Publish);
                 }
                 await context.SaveChangesAsync();
 
@@ -549,7 +555,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex?.Message;
                 res.Message.TechnicalMessage = ex?.Message;
                 return res;
@@ -580,7 +586,7 @@ namespace SMP.BLL.Services.ResultServices
 
             if (sessClass.Session.IsActive)
             {
-                var currentTerm = SelectTerm(sessionTermId);
+                var currentTerm = termService.SelectTerm(sessionTermId);
                 if (result != null)
                 {
                     var query = scoreEntryService.GetClassStudentInQuery(sessionClassId);
@@ -751,17 +757,17 @@ namespace SMP.BLL.Services.ResultServices
             return entryRecord;
         }
    
-        private async Task SaveSessionClassArchiveAsync(Guid classId, Guid? termId, Guid studentId, bool publish)
+        private async Task SaveSessionClassArchiveAsync(SessionClass sessClass, Guid? termId, Guid studentId, bool publish)
         {
             var archive = await context.StudentSessionClassHistory
-                .FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.SessionClassId == classId 
+                .FirstOrDefaultAsync(x => x.ClientId == smsClientId && x.SessionClassId == sessClass.SessionClassId
                 && termId == x.SessionTermId && x.StudentContactId == studentId);
-
-            if(archive is null)
+            sessClass.IsPublished = publish;
+            if (archive is null)
             {
                 archive = new StudentSessionClassHistory
                 {
-                    SessionClassId = classId,
+                    SessionClassId = sessClass.SessionClassId,
                     StudentContactId = studentId,
                     SessionTermId = termId,
                     IsPublished = publish,
@@ -779,7 +785,7 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<List<PrintResult>>();
             try
             {
-                var term = await context.SessionTerm.Where(e => e.ClientId == smsClientId && e.SessionTermId == termId).FirstOrDefaultAsync();
+                var term = termService.SelectTerm(termId);
                 if (term == null)
                 {
                     res.Message.FriendlyMessage = "Term not found";
@@ -813,7 +819,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -825,7 +831,7 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<PrintResult>();
             try
             {
-                var term = await context.SessionTerm.Where(e => e.ClientId == smsClientId && e.SessionTermId == termId).FirstOrDefaultAsync();
+                var term = termService.SelectTerm(termId);
                 if (term == null)
                 {
                     res.Message.FriendlyMessage = "Term not found";
@@ -858,7 +864,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
@@ -868,21 +874,19 @@ namespace SMP.BLL.Services.ResultServices
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var res = new APIResponse<PreviewResult>();
-            var term = await context.SessionTerm.Where(e => e.SessionTermId == termId).FirstOrDefaultAsync();
+            var term = termService.SelectTerm(termId);
             if (term == null)
             {
                 res.Message.FriendlyMessage = "Term not found";
                 return res;
             }
 
-            var result = context.ScoreEntry.Where(x=>x.ClientId == smsClientId)
+            var result = context.ScoreEntry.Where(rr  => rr.ClientId == smsClientId && rr.SessionClassId == sessionClassId && rr.SessionTermId == termId)
                 .Include(d => d.StudentContact)
                 .Include(d => d.SessionClass).ThenInclude(e => e.Session)
                 .Include(d => d.SessionClass).ThenInclude(e => e.Class).ThenInclude(f => f.GradeLevel).ThenInclude(s => s.Grades)
                 .Include(d => d.Subject)
-                .Where(rr => rr.SessionClassId == sessionClassId && rr.SessionTermId == termId 
-                && rr.Subject.Deleted == false
-                 && rr.Subject.IsActive == true).AsEnumerable().GroupBy(x => x.StudentContactId)
+                .Where(rr => rr.Subject.Deleted == false && rr.Subject.IsActive == true).AsEnumerable().GroupBy(x => x.StudentContactId)
                 .Select(g => new PreviewResult(g, regNoFormat, sessionClassId)).ToList() ?? new List<PreviewResult>();
 
             if (result.Any())
@@ -916,8 +920,11 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<bool> IResultsService.AllResultPublishedAsync()
         {
-            var currentTerm = await context.SessionTerm.FirstOrDefaultAsync(d => d.IsActive && d.ClientId == smsClientId);
-            var publishCurrentClassResults = await context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(x => x.Students).Where(d => d.Session.IsActive && d.Deleted == false && d.Students.Any() && d.IsPublished == true).ToListAsync();
+            var publishCurrentClassResults = await context.SessionClass
+                .Where(x=>x.ClientId == smsClientId)
+                .Include(x => x.Students)
+                .Where(d => d.Session.IsActive && d.Deleted == false && d.Students.Any() && d.IsPublished == true)
+                .ToListAsync();
             if (!publishCurrentClassResults.Any())
                 return false;
             return true;
@@ -934,7 +941,7 @@ namespace SMP.BLL.Services.ResultServices
             try
             {
                 var clas = context.SessionClass.Where(x => x.ClientId == smsClientId).Include(x => x.Session).Include(x => x.Class).FirstOrDefault(d => d.SessionClassId == sessionClassId);
-                var term = context.SessionTerm.Where(e => e.ClientId == smsClientId && e.SessionTermId == termId).FirstOrDefault();
+                var term = termService.SelectTerm(termId);
 
                 if (clas.Session.IsActive)
                 {
@@ -993,7 +1000,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
 
@@ -1004,7 +1011,7 @@ namespace SMP.BLL.Services.ResultServices
         {
             var res = new APIResponse<List<PublishList>>();
             res.Result = new List<PublishList>();
-            var currentTerm = context.SessionTerm.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+            var currentTerm = termService.GetCurrentTerm();
             
             var classes = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                 .Include(x => x.Class)
@@ -1040,7 +1047,7 @@ namespace SMP.BLL.Services.ResultServices
                 if (classArchive is null)
                 {
                     var errorMsq = $"Student was not found in class archive";
-                    await loggerService.Debug(errorMsq + " client: " + smsClientId);
+                    loggerService.Debug(errorMsq + " client: " + smsClientId);
                     res.Message.FriendlyMessage = errorMsq;
                     return res;
                 }
@@ -1064,7 +1071,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -1108,7 +1115,7 @@ namespace SMP.BLL.Services.ResultServices
             }
             catch (ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -1157,14 +1164,7 @@ namespace SMP.BLL.Services.ResultServices
             var re = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).FirstOrDefaultAsync();
             return re.SCHOOLSETTINGS_StudentRegNoFormat;
         }
-        async Task<SessionTerm> GetCurrentTerm() => 
-            await context.SessionTerm.Where(xx => xx.ClientId == smsClientId && xx.IsActive == true).FirstOrDefaultAsync();
-
-
-        SessionTerm SelectTerm(Guid termId) =>
-            context.SessionTerm.FirstOrDefault(d => d.ClientId == smsClientId && termId == d.SessionTermId);
        
-
         async Task<SessionClassSubject> GetSessionClassSubject(Guid subjectId, Guid sessionClassId) =>
             await context.SessionClassSubject
                 .Where(e => e.ClientId == smsClientId && e.SessionClassId == sessionClassId && e.SubjectId == subjectId)

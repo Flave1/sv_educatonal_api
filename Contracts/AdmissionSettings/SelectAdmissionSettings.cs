@@ -22,10 +22,10 @@ namespace SMP.Contracts.AdmissionSettings
         {
             AdmissionSettingId = settings.AdmissionSettingId.ToString();
             AdmissionSettingName = settings.AdmissionSettingName.ToString();
-            Classes = classLookup?.Select(x => new AdmissionClasses
+            Classes = settings.Classes.Split(',').ToList()?.Select(x => new AdmissionClasses
             {
-                ClassId = x.ClassLookupId.ToString(),
-                ClassName = x.Name
+                ClassId = x,
+                ClassName = classLookup.FirstOrDefault(c => c.ClassLookupId == Guid.Parse(x))?.Name
             }).ToList();
             AdmissionStatus = settings.AdmissionStatus;
             PassedExamEmail = settings.PassedExamEmail;

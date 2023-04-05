@@ -1,5 +1,6 @@
 ﻿using DAL.ClassEntities;
 using DAL.StudentInformation;
+using SMP.Contracts.Session;
 using SMP.DAL.Models.GradeEntities;
 using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
@@ -334,7 +335,7 @@ namespace SMP.Contracts.ResultModels
         public List<StudentSubjectEntry> studentSubjectEntries { get; set; }
         public List<GradeSetting> gradeSetting { get; set; }
         public List<CognitiveBehaviour> cognitiveBehaviour { get; set; }
-        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term, Guid studentId)
+        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTermDto Term, Guid studentId)
         {
             var clas = ScoreEntries.FirstOrDefault().SessionClass;
             var std = ScoreEntries.FirstOrDefault().StudentContact;
@@ -368,7 +369,7 @@ namespace SMP.Contracts.ResultModels
             };
         }
 
-        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTerm Term)
+        public PrintResult(ICollection<ScoreEntry> ScoreEntries, string regNoFormat, SessionTermDto Term)
         {
             var clas = ScoreEntries.FirstOrDefault().SessionClass;
             var std = ScoreEntries.FirstOrDefault().StudentContact;
@@ -424,7 +425,7 @@ namespace SMP.Contracts.ResultModels
         public string PinStatus { get; set; }
         public List<StudentResultDetail> Students { get; set; }
         public BatchPrintDetail() { }
-        public BatchPrintDetail(SessionClass clas, SessionTerm term, string pinStatus, int students)
+        public BatchPrintDetail(SessionClass clas, SessionTermDto term, string pinStatus, int students)
         {
             Class = clas.Class.Name;
             Term = term.TermName;

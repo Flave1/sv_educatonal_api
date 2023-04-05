@@ -15,6 +15,7 @@ namespace SMP.Contracts.ParentModels
         public string Relationship { get; set; }
         public string Email { get; set; }
         public string UserId { get; set; }
+        public string Photo { get; set; }
         public GetParents(Parents parent)
         {
             ParentId = parent.Parentid.ToString();
@@ -23,6 +24,7 @@ namespace SMP.Contracts.ParentModels
             Relationship = parent.Relationship;
             Email = parent.Email;
             UserId = parent.UserId;
+            Photo = parent.Photo;
         }
     }
 }

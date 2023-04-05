@@ -5,6 +5,7 @@ using Contracts.Common;
 using Contracts.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SMP.BLL.Services.SessionServices;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -16,10 +17,12 @@ namespace API.Controllers
     [Route("session/api/v1/")]
     public class SessionController : Controller
     {
-        private readonly ISessionService sessionService;  
-        public SessionController(ISessionService service)
+        private readonly ISessionService sessionService; 
+        private readonly ITermService termService;
+        public SessionController(ISessionService service, ITermService termService)
         {
-            this.sessionService = service; 
+            this.sessionService = service;
+            this.termService = termService;
         }
 
         #region Session
@@ -72,7 +75,7 @@ namespace API.Controllers
         [HttpPost("activate-term")]
         public async Task<IActionResult> ActivateTermAsync([FromBody] ActivateTerm reguest)
         {
-            var response = await sessionService.ActivateTermAsync(Guid.Parse(reguest.SessionTermId));
+            var response = await termService.ActivateTermAsync(Guid.Parse(reguest.SessionTermId));
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
@@ -105,7 +108,7 @@ namespace API.Controllers
         [HttpGet("get-session-terms")]
         public async Task<IActionResult> GetSessionTermsAsync(string sessionId)
         {
-            var response = await sessionService.GetSessionTermsAsync(Guid.Parse(sessionId));
+            var response = await termService.GetSessionTermsAsync(Guid.Parse(sessionId));
             return Ok(response);
         }
 

@@ -128,5 +128,21 @@ namespace SMP.API.Controllers.ParentControllers
             return BadRequest(response);
         }
 
+        [HttpGet("get/profile/{parentId}")]
+        public async Task<IActionResult> GetParentByIdAsync(string parentId)
+        {
+            var response = await service.GetParentByIdAsync(parentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpGet("get/parent-wards")]
+        public async Task<IActionResult> GetParentWardsAsync(PaginationFilter filter, string parentId)
+        {
+            var response = await service.GetParentWardsAsync(filter, parentId);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

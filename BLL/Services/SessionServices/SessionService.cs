@@ -14,6 +14,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
 using SMP.Contracts.ClassModels;
 using SMP.Contracts.GradeModels;
@@ -39,25 +40,29 @@ namespace BLL.SessionServices
         private readonly IPaginationService paginationService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
+        private readonly ITermService termService;
 
-        public SessionService(DataContext context, IResultsService resultsService, IPaginationService paginationService, IHttpContextAccessor accessor, ILoggerService loggerService)
+        public SessionService(DataContext context, IResultsService resultsService, IPaginationService paginationService, IHttpContextAccessor accessor, ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
             this.resultsService = resultsService;
             this.paginationService = paginationService;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.termService = termService;
         }
         async Task<APIResponse<Session>> ISessionService.SwitchSessionAsync(string sessionId)
         {
             var res = new APIResponse<Session>();
-            var savedSession = context.Session.Where(x => x.ClientId == smsClientId).Include(s => s.Terms).FirstOrDefault(d => d.SessionId == Guid.Parse(sessionId));
 
             if (!await resultsService.AllResultPublishedAsync())
             {
                 res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
                 return res;
             }
+            var savedSession = context.Session
+                .Where(x => x.ClientId == smsClientId && x.SessionId == Guid.Parse(sessionId))
+                .Include(s => s.Terms).FirstOrDefault();
             if (savedSession == null)
             {
                 res.Message.FriendlyMessage = $"Session Not Found";
@@ -67,7 +72,7 @@ namespace BLL.SessionServices
             await SetOtherSessionsInactiveAsync(Guid.Parse(sessionId));
 
             savedSession.IsActive = true;
-            savedSession.Terms.FirstOrDefault().IsActive = true;
+            await termService.SetFirstTermActiveAsync(savedSession.SessionId);
             await context.SaveChangesAsync();
             var message = $"Successfuly switched to {savedSession.StartDate} / {savedSession.EndDate} session";
             res.Result = savedSession;
@@ -79,11 +84,11 @@ namespace BLL.SessionServices
         {
             var res = new APIResponse<CreateUpdateSession>();
 
-            //if (!await resultsService.AllResultPublishedAsync())
-            //{
-            //    res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
-            //    return res;
-            //}
+            if (!await resultsService.AllResultPublishedAsync())
+            {
+                res.Message.FriendlyMessage = $"Ensure all class results for current session are published";
+                return res;
+            }
 
             if (context.Session.Any(s => s.ClientId == smsClientId && s.StartDate.Trim().ToLower() == session.StartDate.ToLower() && s.EndDate.Trim().ToLower() == session.EndDate.ToLower()))
             {
@@ -110,7 +115,7 @@ namespace BLL.SessionServices
 
                     await SetOtherSessionsInactiveAsync(dbSession.SessionId);
 
-                    await CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
+                    await termService.CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
 
                     if (session.TransferClasses)
                     {
@@ -126,7 +131,7 @@ namespace BLL.SessionServices
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = "Error Occurred!! Please contact administrator";
                     res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
                     return res;
@@ -137,29 +142,17 @@ namespace BLL.SessionServices
 
         }
 
-        private async Task CreateSessionTermsAsync(Guid sessionId, int noOfTerms)
-        {
-            noOfTerms += 1;
-            for (var i = 1; i < noOfTerms; i++)
-            {
-                var termName = Tools.OrdinalSuffixOf(i);
-
-                var term = new SessionTerm
-                {
-                    IsActive = i == 1 ? true : false,
-                    TermName = termName,
-                    SessionId = sessionId,
-                };
-                context.SessionTerm.Add(term);
-                await context.SaveChangesAsync();
-            }
-        }
+       
 
        
 
         private async Task SetOtherSessionsInactiveAsync(Guid currentSessionId)
         {
-            var sessions = await context.Session.Where(x => x.ClientId == smsClientId).Include(sd => sd.Terms).Where(er => er.SessionId != currentSessionId && er.IsActive == true).ToListAsync();
+            var sessions = await context.Session.Where(x => x.ClientId == smsClientId)
+                .Where(er => er.SessionId != currentSessionId && er.IsActive == true)
+                .Include(sd => sd.Terms)
+                .ToListAsync();
+
             foreach(var session in sessions)
             {
                 session.IsActive = false;
@@ -290,7 +283,7 @@ namespace BLL.SessionServices
 
                 if(result != null)
                 {
-                    result.Terms = context.SessionTerm.Where(x => x.SessionId == Guid.Parse(result.SessionId)).Select(m=> new Terms
+                    result.Terms = termService.GetTermsBySession(Guid.Parse(result.SessionId)).Select(m=> new Terms
                     {
                         SessionTermId = m.SessionTermId,
                         TermName = m.TermName,
@@ -319,39 +312,9 @@ namespace BLL.SessionServices
             return res;
         }
 
-        async Task<APIResponse<bool>> ISessionService.ActivateTermAsync(Guid termId)
-        {
-            var res = new APIResponse<bool>();
+        
 
-            var term = await context.SessionTerm.FirstOrDefaultAsync(st => st.SessionTermId == termId && st.ClientId == smsClientId);
-            if (term == null)
-            {
-                res.Message.FriendlyMessage = "Session not found";
-                return res;
-            }
-            term.IsActive = true;
-            var otherTerms = await context.SessionTerm.Where(st => st.SessionId == term.SessionId && st.SessionTermId != term.SessionTermId && st.ClientId == smsClientId).ToListAsync();
-            
-            if (otherTerms.Any())
-                foreach(var otherTerm in otherTerms)
-                    otherTerm.IsActive = false;
-
-            var activeClasses = ActiveClasses(term.SessionId);
-            for (int i = 0; i < activeClasses.Count; i++)
-            {
-                activeClasses[i].IsPromoted = false;
-                activeClasses[i].IsPublished = false;
-                activeClasses[i].SessionTermId = termId; 
-            }
-
-            await context.SaveChangesAsync();
-            res.Result = true;
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = $"Successfuly activated {term.TermName} term";
-            return res;
-        }
-
-        List<SessionClass> ActiveClasses(Guid sessionId) => context.SessionClass.Where(x => x.SessionId == sessionId && smsClientId == x.ClientId && x.Deleted == false).ToList();
+        
         async Task<APIResponse<ActiveSession>> ISessionService.GetActiveSessionsAsync()
         {
             var res = new APIResponse<ActiveSession>();
@@ -398,7 +361,7 @@ namespace BLL.SessionServices
             }
             catch (Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = Messages.Updated;
                 res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
@@ -406,22 +369,6 @@ namespace BLL.SessionServices
             res.Result=true;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.Updated;
-            return res;
-        }
-
-
-        async Task<APIResponse<List<Terms>>> ISessionService.GetSessionTermsAsync(Guid sessionId)
-        {
-            var res = new APIResponse<List<Terms>>();
-            var result = await context.SessionTerm.Where(d => d.ClientId == smsClientId && d.SessionId == sessionId).Select(t => new Terms
-            {
-                IsActive = t.IsActive,
-                SessionTermId = t.SessionTermId,
-                TermName = t.TermName,
-            }).ToListAsync();
-
-            res.IsSuccessful = true;
-            res.Result = result;
             return res;
         }
 
@@ -489,7 +436,7 @@ namespace BLL.SessionServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;
@@ -522,7 +469,7 @@ namespace BLL.SessionServices
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
             

@@ -24,6 +24,7 @@ using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.PortalService;
 using SMP.BLL.Services.PromorionServices;
 using SMP.BLL.Services.ResultServices;
+using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Services.TeacherServices;
 using SMP.BLL.Services.TimetableServices;
 
@@ -79,6 +80,7 @@ namespace GODP.APIsContinuation.Installers
             services.AddScoped<ICBTAssessmentService, CBTAssessmentService>();
             services.AddScoped<IScoreEntryHistoryService, ScoreEntryHistoryService>();
             services.AddScoped<IExamTimeTableService, ExamTimeTableService>();
+            services.AddScoped<ITermService, TermService>();
         }
     }
 }

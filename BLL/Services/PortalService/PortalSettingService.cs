@@ -79,7 +79,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (System.ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -124,7 +124,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (System.ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -225,7 +225,7 @@ namespace SMP.BLL.Services.PortalService
 
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync(string url)
         {
-            //await loggerService.Error("settings", url, "settings", "settings");
+            //loggerService.Error("settings", url, "settings", "settings");
             var res = new APIResponse<AppLayoutSettings>();
             res.Result = new AppLayoutSettings();
             var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == url.ToLower());
@@ -244,6 +244,7 @@ namespace SMP.BLL.Services.PortalService
                 res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
                 res.Result.schoolName = setting.SCHOOLSETTINGS_SchoolName;
                 res.Result.schoolLogo = setting.SCHOOLSETTINGS_Photo;
+                res.Result.abrv = setting.SCHOOLSETTINGS_SchoolAbbreviation;
                 if(setting.APPLAYOUTSETTINGS_SidebarType is not null)
                     res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
             }
@@ -370,7 +371,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (System.ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -387,7 +388,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch(Exception ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -446,7 +447,7 @@ namespace SMP.BLL.Services.PortalService
             }
             catch (ArgumentException ex)
             {
-                await loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }
