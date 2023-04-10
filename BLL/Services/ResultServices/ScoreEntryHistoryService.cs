@@ -37,6 +37,10 @@ namespace SMP.BLL.Services.ResultServices
             string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId, HistorySource source, string target) =>
             context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == SessionClassId && x.Subjectid == SubjectId.ToString()
                     && x.SessionTermId == CurrentTermId && x.StudentId == StudentContactId && x.ClientId == smsClientId && (int)source == x.Source && x.Target == target);
+        DAL.Models.ResultModels.ScoreEntryHistory IScoreEntryHistoryService.GetScoreEntryHistory(
+                   string SessionClassId, string SubjectId, string CurrentTermId, HistorySource source, string target) =>
+                   context.ScoreEntryHistory.FirstOrDefault(x => x.SessionClassId == SessionClassId && x.Subjectid == SubjectId.ToString()
+                           && x.SessionTermId == CurrentTermId  && x.ClientId == smsClientId && (int)source == x.Source && x.Target == target);
 
         ScoreEntry IScoreEntryHistoryService.GetScoreEntry(Guid CurrentTermId, Guid StudentContactId, Guid SubjectId) => 
             context.ScoreEntry.FirstOrDefault(s => s.SessionTermId == CurrentTermId && s.StudentContactId == StudentContactId && s.SubjectId == SubjectId && s.ClientId == smsClientId);
@@ -58,28 +62,55 @@ namespace SMP.BLL.Services.ResultServices
             return +resultScore;
         }
 
-        float IScoreEntryHistoryService.IncludeAndExcludeThenReturnScore(DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, bool Include, float resultScore)
+        float IScoreEntryHistoryService.IncludeAndExcludeThenReturnScore(DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, bool Include, float resultScore, ScoreEntry scoreEntry)
         {
             if (Include)
             {
-                List<string> previousScores = scoreHistory.Score.Split('|').ToList();
+                bool isLess = false;
+                List<string> previousScores = scoreHistory.Score.Split('|').Where(c => !string.IsNullOrEmpty(c)).ToList();
                 if(previousScores.Any())
                 {
+                    var highest = previousScores.Select(int.Parse).Max();
+                    if (highest > Convert.ToInt32(resultScore) && !previousScores.Any(c => c == Convert.ToInt32(resultScore).ToString()))
+                        isLess = true;
                     previousScores.Add(resultScore.ToString());
                     scoreHistory.Score = string.Join('|', previousScores);
                 }else
                     scoreHistory.Score = scoreHistory.Score + '|' + resultScore;
                 context.SaveChanges();
+                if (isLess && scoreEntry is not null)
+                    return -(resultScore + scoreEntry.AssessmentScore);
                 return +resultScore;
             }
             else
             {
-                var list = scoreHistory.Score.Split('|').ToList();
-                var filtered = list.Remove(resultScore.ToString());
+                var list = scoreHistory.Score.Split('|').Where(c => !string.IsNullOrEmpty(c)).ToList();
+                var removed = list.Remove(resultScore.ToString());
                 scoreHistory.Score = string.Join('|', list);
+                if (!removed)
+                {
+                    return -resultScore;
+                }
                 context.SaveChanges();
                 return -resultScore;
             }
+        }
+
+        float IScoreEntryHistoryService.ForceScoreHistroyExclusion(DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, float resultScore)
+        {
+            var list = scoreHistory.Score.Split('|').Where(c => !string.IsNullOrEmpty(c)).ToList();
+            var removed = list.Remove(resultScore.ToString());
+            scoreHistory.Score = string.Join('|', list);
+            if (!removed)
+            {
+                var highest = list.Select(int.Parse).Max();
+                if (highest < resultScore)
+                    return -highest;
+                if(highest > resultScore)
+                    return -resultScore;
+            }
+            context.SaveChanges();
+            return -resultScore;
         }
 
         void IScoreEntryHistoryService.CreateNewScoreEntryForAssessment(
@@ -103,9 +134,10 @@ namespace SMP.BLL.Services.ResultServices
 
         void IScoreEntryHistoryService.UpdateScoreEntryForAssessment(ScoreEntry scoreEntry, float ResultScore)
         {
-            scoreEntry.AssessmentScore = (scoreEntry.AssessmentScore+(int)ResultScore);
+            scoreEntry.AssessmentScore = Convert.ToInt32((scoreEntry.AssessmentScore + (int)ResultScore).ToString().Trim('-'));
             scoreEntry.IsOffered = true;
             scoreEntry.IsSaved = true;
+            context.SaveChanges();
         }
 
         void IScoreEntryHistoryService.CreateNewScoreEntryForExam(ScoreEntry scoreEntry, Guid CurrentTermId, float ResultScore, Guid StudentContactId, Guid SubjectId, Guid SessionClassId)

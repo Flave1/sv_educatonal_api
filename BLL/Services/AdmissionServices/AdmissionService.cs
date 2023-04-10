@@ -3,6 +3,7 @@ using BLL.AuthenticationServices;
 using BLL.Constants;
 using BLL.Filter;
 using BLL.LoggerService;
+using BLL.StudentServices;
 using BLL.Wrappers;
 using Contracts.Options;
 using DAL;
@@ -50,10 +51,13 @@ namespace SMP.BLL.Services.AdmissionServices
         private readonly IParentService parentService;
         private readonly string smsClientId;
         private readonly ITermService termService;
+        private readonly IUserService userService;
+        private readonly IStudentService studentService;
 
         public AdmissionService(DataContext context, IPaginationService paginationService, IUserService userService, IOptions<FwsConfigSettings> options,
             IParentService parentService, IWebRequestService webRequestService, UserManager<AppUser> manager, IWebHostEnvironment environment,
-            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService, ILoggerService loggerService, ITermService termService)
+            IFileUploadService fileUploadService, IHttpContextAccessor httpContext, IUtilitiesService utilitiesService, ILoggerService 
+            loggerService, ITermService termService, IStudentService studentService)
         {
             this.context = context;
             this.paginationService = paginationService;
@@ -68,131 +72,117 @@ namespace SMP.BLL.Services.AdmissionServices
             this.parentService = parentService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.termService = termService;
+            this.userService = userService;
+            this.studentService = studentService;
         }
 
         public async Task<APIResponse<bool>> EnrollCandidate(EnrollCandidate request)
         {
             var res = new APIResponse<bool>();
-            using (var transaction = await context.Database.BeginTransactionAsync())
+            try
             {
+                var admission = await context.Admissions
+                    .Where(x => x.ClientId == smsClientId && x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true).FirstOrDefaultAsync();
 
-                try
+                if (admission == null)
                 {
-                    var admission = await context.Admissions.Where(x => x.ClientId == smsClientId && x.AdmissionId == Guid.Parse(request.AdmissionId) && x.Deleted != true).FirstOrDefaultAsync();
-
-                    if (admission == null)
-                    {
-                        res.IsSuccessful = false;
-                        res.Message.FriendlyMessage = "AdmissionId doesn't exist!";
-                    }
-                    if (admission.CandidateAdmissionStatus == (int)CandidateAdmissionStatus.Admitted)
-                    {
-                        res.IsSuccessful = false;
-                        res.Message.FriendlyMessage = "Candidate already admitted";
-                    }
-                    var parent = await context.Parents.FirstOrDefaultAsync(x => x.Parentid == admission.ParentId);
-                    var student = new StudentContactCommand
-                    {
-                        FirstName = admission.Firstname,
-                        LastName = admission.Lastname,
-                        MiddleName = admission.Middlename,
-                        Phone = admission.PhoneNumber,
-                        DOB = admission.DateOfBirth.ToString(),
-                        Email = admission.Email,
-                        HomePhone = admission.PhoneNumber,
-                        EmergencyPhone = parent.Phone,
-                        ParentOrGuardianFirstName = parent.FirstName,
-                        ParentOrGuardianEmail = parent.Email,
-                        HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
-                        CityId = admission.StateOfOrigin,
-                        StateId = admission.StateOfOrigin,
-                        CountryId = admission.CountryOfOrigin,
-                        SessionClassId = request.SessionClassId,
-                        Photo = admission.Photo,
-                    };
-
-                    var result = await utilitiesService.GenerateStudentRegNo();
-
-                    var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
-
-                    string photoUrl = "";
-
-                    if(!string.IsNullOrEmpty(admission.Photo))
-                    {
-                        string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
-                        var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/AdmissionPassport", admissionFileName);
-                        string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/ProfileImage", admissionFileName);
-
-                        fileUploadService.CopyFile(admissionPath, profilePhotoPath);
-                        var host = accessor.HttpContext.Request.Host.ToUriComponent();
-                        photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/ProfileImage/{admissionFileName}";
-                    }
-
-                    
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
-                    var item = new StudentContact
-                    {
-                        CityId = student.CityId,
-                        CountryId = student.CountryId,
-                        EmergencyPhone = student.EmergencyPhone,
-                        HomeAddress = student.HomeAddress,
-                        ParentId = parentId,
-                        HomePhone = student.HomePhone,
-                        StateId = student.StateId,
-                        UserId = userId,
-                        ZipCode = student.ZipCode,
-                        RegistrationNumber = result.Keys.First(),
-                        StudentContactId = Guid.NewGuid(),
-                        Status = (int)StudentStatus.Active,
-                        SessionClassId = Guid.Parse(student.SessionClassId),
-                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
-                        LastName = student.LastName,
-                        DOB = student.DOB,
-                        FirstName = student.FirstName,
-                        MiddleName = student.MiddleName,
-                        Phone = student.Phone,
-                        Photo = photoUrl
-                    };
-                    context.StudentContact.Add(item);
-
-                    admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
-
-                    await context.SaveChangesAsync();
-                    await CreateStudentSessionClassHistoryAsync(item);
-
-                    await transaction.CommitAsync();
-                    res.Message.FriendlyMessage = "Successfully Enrolled";
-                    res.Result = true;
-                    res.IsSuccessful = true;
-                    return res;
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "AdmissionId doesn't exist!";
                 }
-                catch (DuplicateNameException ex)
+                if (admission.CandidateAdmissionStatus == (int)CandidateAdmissionStatus.Admitted)
                 {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = ex.Message;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Candidate already admitted";
                 }
-                catch (ArgumentException ex)
+                var parent = await context.Parents.FirstOrDefaultAsync(x => x.Parentid == admission.ParentId);
+
+                var student = new StudentContactCommand(admission, parent, request.SessionClassId);
+
+                var result = await utilitiesService.GenerateStudentRegNo();
+                if (!result.Any())
                 {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = ex.Message;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    res.Message.FriendlyMessage = "School registration number not setup";
                     return res;
                 }
 
+                student.Email = "";
+                var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
 
-                finally { await transaction.DisposeAsync(); }
+                string photoUrl = "";
+
+                if (!string.IsNullOrEmpty(admission.Photo))
+                {
+                    string admissionFileName = student.Photo.Split("AdmissionPassport/")[1];
+                    var admissionPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/AdmissionPassport", admissionFileName);
+                    string profilePhotoPath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/ProfileImage", admissionFileName);
+
+                    fileUploadService.CopyFile(admissionPath, profilePhotoPath);
+                    var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                    photoUrl = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/ProfileImage/{admissionFileName}";
+                }
+
+                var parentId = await parentService.SaveParentDetail(
+                    student.ParentOrGuardianEmail,
+                    student.ParentOrGuardianFirstName, 
+                    student.ParentOrGuardianLastName, 
+                    student.ParentOrGuardianRelationship, 
+                    student.ParentOrGuardianPhone, Guid.Empty);
+
+                var item = new StudentContact
+                {
+                    CityId = student.CityId,
+                    CountryId = student.CountryId,
+                    EmergencyPhone = student.EmergencyPhone,
+                    HomeAddress = student.HomeAddress,
+                    ParentId = parentId,
+                    HomePhone = student.HomePhone,
+                    StateId = student.StateId,
+                    UserId = userId,
+                    ZipCode = student.ZipCode,
+                    RegistrationNumber = result.Keys.First(),
+                    StudentContactId = Guid.NewGuid(),
+                    Status = (int)StudentStatus.Active,
+                    SessionClassId = Guid.Parse(student.SessionClassId),
+                    EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
+                    LastName = student.LastName,
+                    DOB = student.DOB,
+                    FirstName = student.FirstName,
+                    MiddleName = student.MiddleName,
+                    Phone = student.Phone,
+                    Photo = photoUrl
+                };
+                context.StudentContact.Add(item);
+
+                admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
+
+                await context.SaveChangesAsync();
+                await studentService.CreateStudentSessionClassHistoryAsync(item);
+
+                res.Message.FriendlyMessage = "Successfully Enrolled";
+                res.Result = true;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (DuplicateNameException ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            catch (ArgumentException ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
             }
         }
         public async Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request)
@@ -216,25 +206,9 @@ namespace SMP.BLL.Services.AdmissionServices
                     if (admission.CandidateAdmissionStatus != (int)CandidateAdmissionStatus.Admitted)
                     {
                         var parent = await context.Parents.FirstOrDefaultAsync(x => x.Parentid == admission.ParentId);
-                        var student = new StudentContactCommand
-                        {
-                            FirstName = admission.Firstname,
-                            LastName = admission.Lastname,
-                            MiddleName = admission.Middlename,
-                            Phone = admission.PhoneNumber,
-                            DOB = admission.DateOfBirth.ToString(),
-                            Email = admission.Email,
-                            HomePhone = admission.PhoneNumber,
-                            EmergencyPhone = parent.Phone,
-                            ParentOrGuardianFirstName = parent.FirstName,
-                            ParentOrGuardianEmail = parent.Email,
-                            HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}",
-                            CityId = admission.StateOfOrigin,
-                            StateId = admission.StateOfOrigin,
-                            CountryId = admission.CountryOfOrigin,
-                            SessionClassId = request.SessionClassId,
-                            Photo = admission.Photo,
-                        };
+
+                        var student = new StudentContactCommand(admission, parent, request.SessionClassId);
+                        
                         studentContactList.Add(student);
 
                         admission.CandidateAdmissionStatus = (int)CandidateAdmissionStatus.Admitted;
@@ -244,9 +218,22 @@ namespace SMP.BLL.Services.AdmissionServices
                 foreach (var student in studentContactList)
                 {
                     var result = await utilitiesService.GenerateStudentRegNo();
-
-                    var userId = await CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First(), student.Photo);
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                    if (!result.Any())
+                    {
+                        res.Message.FriendlyMessage = "School registration number not setup";
+                        return res;
+                    }
+                    student.Email = "";
+                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
+                    
+                    var parentId = await parentService
+                        .SaveParentDetail(
+                        student.ParentOrGuardianEmail, 
+                        student.ParentOrGuardianFirstName, 
+                        student.ParentOrGuardianLastName, 
+                        student.ParentOrGuardianRelationship, 
+                        student.ParentOrGuardianPhone, Guid.Empty);
+                    
                     var item = new StudentContact
                     {
                         FirstName = student.FirstName,
@@ -271,7 +258,7 @@ namespace SMP.BLL.Services.AdmissionServices
 
                     await context.SaveChangesAsync();
 
-                    await CreateStudentSessionClassHistoryAsync(item);
+                    await studentService.CreateStudentSessionClassHistoryAsync(item);
                 }
 
                 res.Message.FriendlyMessage = "Successfully Enrolled";
@@ -287,54 +274,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
-        async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
-        {
-            var history = new StudentSessionClassHistory();
-            history.SessionClassId = student.SessionClassId;
-            history.StudentContactId = student.StudentContactId;
-            var currentTerm = termService.GetCurrentTerm();
-            history.SessionTermId = currentTerm.SessionTermId;
-            await context.StudentSessionClassHistory.AddAsync(history);
-            await context.SaveChangesAsync();
-        }
-        async Task<string> CreateStudentUserAccountAsync(StudentContactCommand student, string regNo, string regNoFormat, string photoPath)
-        {
-            try
-            {
-                var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
 
-              
-                var user = new AppUser
-                {
-                    UserName = email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = email,
-                    UserType = (int)UserTypes.Student
-                };
-                var result = await manager.CreateAsync(user, regNoFormat);
-                if (!result.Succeeded)
-                {
-                    if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
-                    {
-                        throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
-                    }
-                    else
-                        throw new ArgumentException(result.Errors.FirstOrDefault().Description);
-                }
-                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
-                if (!addTorole.Succeeded)
-                    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
-
-                return user.Id;
-            }
-            catch (ArgumentException ex)
-            {
-                throw new ArgumentException(ex.Message);
-            }
-        }
         public async Task<APIResponse<bool>> ExportCandidatesToCbt(ExportCandidateToCbt request)
         {
             var res = new APIResponse<bool>();
@@ -407,16 +347,14 @@ namespace SMP.BLL.Services.AdmissionServices
             {
                 var result = await context.Admissions
                     .Where(c => c.ClientId == smsClientId && c.Deleted != true && c.AdmissionId == Guid.Parse(admissionId))
-                    .Select(d => new SelectAdmission(d, context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault(), context.Parents.Where(x => x.Parentid == d.ParentId).FirstOrDefault())).FirstOrDefaultAsync();
+                    .Select(d => new SelectAdmission(d, 
+                    context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.ClassLookupId == d.ClassId).FirstOrDefault(), 
+                    context.Parents.Where(x => x.ClientId == smsClientId && x.Parentid == d.ParentId).FirstOrDefault())).FirstOrDefaultAsync();
 
                 if (result == null)
-                {
                     res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-                }
                 else
-                {
                     res.Message.FriendlyMessage = Messages.GetSuccess;
-                }
 
                 res.IsSuccessful = true;
                 res.Result = result;

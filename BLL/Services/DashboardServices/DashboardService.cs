@@ -147,10 +147,12 @@ namespace SMP.BLL.Services.DashboardServices
                 .Count(x => x.Deleted == false && x.SessionClassId == student.SessionClassId && x.ClientId == smsClientId);
 
             Guid allStudentSessionClassGroupId = Guid.Parse("eba102ba-d96c-4920-812a-080c8fdbe767");//DO NOT CHANGE ID PLEASE>>>>
-            var totalHomeAssessments = context.HomeAssessment.Include(x=>x.SessionClassGroup)
+            var totalHomeAssessments = context.HomeAssessment
+                .Include(x=>x.SessionClassGroup)
                .Count(x => x.ClientId == smsClientId && x.Deleted == false && x.SessionClassId == student.SessionClassId 
                && x.SessionTermId == termId && x.Status != (int)HomeAssessmentStatus.Saved 
-               && ( x.SessionClassGroupId == allStudentSessionClassGroupId || x.SessionClassGroup.ListOfStudentContactIds.Contains(studentId.ToString())));
+               && ( x.SessionClassGroupId == allStudentSessionClassGroupId
+               || x.SessionClassGroup.ListOfStudentContactIds.Contains(studentId.ToString())));
 
             var totalClassAssessments = context.ClassAssessment
                .Count(x => x.ClientId == smsClientId && x.SessionClassId == student.SessionClassId && x.SessionTermId == termId);

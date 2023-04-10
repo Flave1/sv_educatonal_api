@@ -4,6 +4,7 @@ using BLL.Wrappers;
 using Contracts.Common;
 using Microsoft.AspNetCore.Http;
 using SMP.Contracts.Assessment;
+using SMP.DAL.Models.ResultModels;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

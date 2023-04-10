@@ -19,5 +19,7 @@ namespace SMP.BLL.Services.FileUploadService
         string ReadFileAsync(string filePath);
         string UploadAdmissionCredentials(IFormFile file);
         string UploadAdmissionPassport(IFormFile file);
+        string UpdateAdmissionCredentials(IFormFile file, string filePath);
+        string UpdateAdmissionPassport(IFormFile file, string filePath);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using DAL.StudentInformation;
 using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
+using SMP.Contracts.Admissions;
+using SMP.DAL.Migrations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,6 +15,7 @@ namespace Contracts.Options
         public string UserId { get; set; }
         public string Password { get; set; } 
         public string ResetToken { get; set; }
+        public string SchoolUrl { get; set; }
     }
     public class ResetPassword
     {
@@ -67,6 +70,28 @@ namespace Contracts.Options
         public string SessionClassId { get; set; } 
         public IFormFile ProfileImage { get; set; }
         public string ParentOrGuardianLastName { get; set; }
+        public StudentContactCommand() { }
+
+        public StudentContactCommand(SMP.DAL.Models.Admission.Admission
+            admission, SMP.DAL.Models.Parents.Parents parent, string SessionClassId)
+        {
+            FirstName = admission.Firstname;
+            LastName = admission.Lastname;
+            MiddleName = admission.Middlename;
+            Phone = admission.PhoneNumber;
+            DOB = admission.DateOfBirth.ToString();
+            Email = admission.Email;
+            HomePhone = admission.PhoneNumber;
+            EmergencyPhone = parent.Phone;
+            ParentOrGuardianFirstName = parent.FirstName;
+            ParentOrGuardianEmail = parent.Email;
+            HomeAddress = $"{admission.LGAOfOrigin}, {admission.StateOfOrigin}, {admission.CountryOfOrigin}";
+            CityId = admission.StateOfOrigin;
+            StateId = admission.StateOfOrigin;
+            CountryId = admission.CountryOfOrigin;
+            this.SessionClassId = SessionClassId;
+            Photo = admission.Photo;
+        }
     }
 
     public class GetStudentContacts

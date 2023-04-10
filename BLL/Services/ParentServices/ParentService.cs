@@ -278,7 +278,7 @@ namespace SMP.BLL.Services.ParentServices
             try
             {
                 var parent = await context.Parents
-                    .Where(d => d.Parentid == Guid.Parse(parentId)).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
+                    .Where(d => d.ClientId == smsClientId && d.Parentid == Guid.Parse(parentId)).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
 
                 res.Result = parent;
                 res.IsSuccessful = true;

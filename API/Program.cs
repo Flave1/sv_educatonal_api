@@ -8,7 +8,7 @@ namespace API
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().SeedData().Run();
+            CreateHostBuilder(args).Build().Run();
         }//.SeedData()
 
         //public static IWebHost CreateHostBuilder(string[] args) =>

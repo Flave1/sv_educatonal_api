@@ -20,6 +20,7 @@ using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
+using SMP.DAL.Migrations;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
 using SMP.DAL.Models.SessionEntities;
@@ -27,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace SMP.BLL.Services.AssessmentServices
 {
@@ -681,17 +683,15 @@ namespace SMP.BLL.Services.AssessmentServices
                 feedBack.Mark = request.Score;
                 feedBack.Included = false;
 
-                if (request.Include)
-                {
-                    var includeRes = IncludeStudentAssessmentToScoreEntry(feedBack, request.Include);
-                    if (includeRes != "success")
-                    {
-                        res.Message.FriendlyMessage = includeRes;
-                        return res;
-                    }
-                }
-
                 await context.SaveChangesAsync();
+
+                var scoreHistory = scoreEntryService.GetScoreEntryHistory(
+                    feedBack.StudentContact.SessionClassId.ToString(), feedBack.HomeAssessment.SessionClassSubject.SubjectId.ToString(),
+                    feedBack.HomeAssessment.SessionTermId.ToString(), feedBack.StudentContactId.ToString(), HistorySource.HomeAssessment, feedBack.HomeAssessmentId.ToString());
+
+                if(scoreHistory is not null)
+                    await IncludeSingleAssessmentToScoreEntry(scoreHistory, feedBack);
+
                 res.Result = request;
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.Saved;
@@ -781,7 +781,7 @@ namespace SMP.BLL.Services.AssessmentServices
                 }
                 ).ToList();
 
-            foreach(var std in students)
+            foreach (var std in students)
             {
                 var scoreHistory = scoreEntryService.GetScoreEntryHistory(
                     std.SessionClassId, std.SubjectId.ToString(), 
@@ -1134,5 +1134,29 @@ namespace SMP.BLL.Services.AssessmentServices
 
         IQueryable<HomeAssessment> GetHomeAssessmentBySessionTerm(Guid sessionTermId) =>
             context.HomeAssessment.Where(d => d.SessionTermId == sessionTermId && d.ClientId == smsClientId);
+
+        private async Task IncludeSingleAssessmentToScoreEntry(DAL.Models.ResultModels.ScoreEntryHistory scoreHistory, HomeAssessmentFeedBack feedback)
+        {
+            float score = 0;
+
+            score = await Task.Run(() => scoreEntryService.ForceScoreHistroyExclusion(scoreHistory, (float)feedback.Mark));
+
+            var scoreEntry = scoreEntryService.GetScoreEntry(Guid.Parse(scoreHistory.SessionTermId), feedback.StudentContactId, Guid.Parse(scoreHistory.Subjectid));
+
+            scoreEntryService.UpdateScoreEntryForAssessment(scoreEntry, score);
+
+            score = await Task.Run(() => scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, true, (float)feedback.Mark, scoreEntry));
+
+
+            if (feedback.Mark > feedback.HomeAssessment.SessionClassSubject.AssessmentScore)
+                return;
+
+            if (score > feedback.HomeAssessment.SessionClassSubject.AssessmentScore)
+                return;
+            scoreEntryService.UpdateScoreEntryForAssessment(scoreEntry, score);
+            feedback.Included = true;
+            await context.SaveChangesAsync();
+        }
+
     }
 }

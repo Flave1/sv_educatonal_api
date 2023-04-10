@@ -1,31 +1,23 @@
 ﻿using BLL.Constants;
 using BLL.LoggerService;
-using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Options;
 using DAL;
 using DAL.Authentication;
-using DAL.StudentInformation;
-using DAL.TeachersInfor;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
-using SMP.BLL.Services;
-using SMP.BLL.Services.ParentServices;
-using SMP.BLL.Services.TeacherServices;
 using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
-using SMP.Contracts.PinManagement;
 using SMP.Contracts.Routes;
-using SMP.DAL.Models;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.PortalSettings;
+using SMP.DAL.Models.StudentImformation;
+using SMP.DAL.Models.TeachersInfor;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -79,7 +71,6 @@ namespace BLL.AuthenticationServices
                 var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
 
-                loggerService.Error("SOme log here", "SOme log here", "SOme log here", "SOme log here");
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
@@ -94,7 +85,9 @@ namespace BLL.AuthenticationServices
 
                 if(userAccount.UserType == (int)UserTypes.Admin)
                 {
-                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                    permisions = context.AppActivity
+                        .Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     if(teacher is null)
                     {
@@ -114,7 +107,7 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
-                    if (teacher != null && teacher.Status == (int)TeacherStatus.Inactive)
+                    if (teacher.Status == (int)TeacherStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
                         return res;
@@ -136,7 +129,7 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
-                    if (student != null && student.Status == (int)StudentStatus.Inactive)
+                    if (student.Status == (int)StudentStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
                         return res;
@@ -640,11 +633,15 @@ namespace BLL.AuthenticationServices
 
         string ClientId(string url) => context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == url).ClientId;
 
-        StudentContact GetStudentByUserId(string userId, string clientId) => context.StudentContact.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+        StudentDto GetStudentByUserId(string userId, string clientId) => context.StudentContact
+            .Where(x => x.UserId == userId && x.ClientId == clientId && x.Deleted == false).Select(c => new StudentDto(c)).FirstOrDefault();
 
-        Parents GetParentByUserId(string userId, string clientId) => context.Parents.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+        ParentDto GetParentByUserId(string userId, string clientId) => context.Parents
+            .Where(x => x.ClientId == clientId && x.UserId == userId && x.Deleted == false).Select(x => new ParentDto(x)).FirstOrDefault();
 
-        Teacher GetTeacherByUserId(string userId, string clientId) => context.Teacher.FirstOrDefault(x => x.UserId == userId && x.ClientId == clientId);
+        TeacherDto GetTeacherByUserId(string userId, string clientId) => context.Teacher
+            .Where(x => x.UserId == userId && x.ClientId == clientId && x.Deleted == false)
+            .Select(c => new TeacherDto(c)).FirstOrDefault();
 
     }
 }

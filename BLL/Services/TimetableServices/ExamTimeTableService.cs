@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.ClassServices;
 using BLL.LoggerService;
 using Contracts.Common;
 using DAL;
@@ -20,28 +21,31 @@ namespace SMP.BLL.Services.TimetableServices
         private readonly IHttpContextAccessor accessor;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
-        public ExamTimeTableService(DataContext context, IHttpContextAccessor accessor, ILoggerService loggerService)
+        private readonly IClassService classService;
+        public ExamTimeTableService(DataContext context, IHttpContextAccessor accessor, ILoggerService loggerService, IClassService classService)
         {
             this.context = context;
             this.accessor = accessor;
             this.loggerService = loggerService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.classService = classService;
         }
         public async Task<APIResponse<List<GetActiveTimetableClasses>>> GetAllActiveClassesAsync()
         {
             var res = new APIResponse<List<GetActiveTimetableClasses>>();
             try
             {
-                var activeClasses = context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
+                var activeClasses = context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true).ToList();
 
-                if (activeClasses.Count() == context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable).Count())
+                var timeTableForAddedClasses = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable).ToList();
+                if (activeClasses.Count == timeTableForAddedClasses.Count)
                 {
-                    res.Result = await activeClasses.Select(a => new GetActiveTimetableClasses(a, context.SessionClass.FirstOrDefault(x=>x.ClassId == a.ClassLookupId))).ToListAsync();
+                    res.Result =  activeClasses.Select(a => new GetActiveTimetableClasses(a,  classService.GetSessionClassByLkp(a.ClassLookupId))).ToList();
 
                     res.IsSuccessful = true;
                     return res;
                 }
-                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !context.ClassTimeTable.Where(x=>x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ExamTimetable).Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+                var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !timeTableForAddedClasses.Select(d => d.ClassId).Contains(s.ClassLookupId)
                 && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
                 if (noneAddedClassIds.Any())
@@ -57,7 +61,7 @@ namespace SMP.BLL.Services.TimetableServices
                     }
                     await context.SaveChangesAsync();
                 }
-                res.Result = await activeClasses.Select(a => new GetActiveTimetableClasses(a, context.SessionClass.FirstOrDefault(x=>x.ClassId == a.ClassLookupId))).ToListAsync();
+                res.Result = activeClasses.Select(a => new GetActiveTimetableClasses(a, classService.GetSessionClassByLkp(a.ClassLookupId))).ToList();
 
                 res.IsSuccessful = true;
                 return res;

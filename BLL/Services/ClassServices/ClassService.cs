@@ -11,6 +11,7 @@ using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
+using SMP.Contracts.ClassModels;
 using SMP.DAL.Models.ClassEntities;
 using System;
 using System.Collections.Generic;
@@ -21,17 +22,17 @@ namespace BLL.ClassServices
     public class ClassService : IClassService
     {
         private readonly DataContext context;
-        private readonly IResultsService resultsService;
         private readonly IHttpContextAccessor accessor;
         private readonly IUtilitiesService utilitiesService;
         private readonly ILoggerService loggerService;
         private readonly string smsClientId;
         private readonly ITermService termService;
 
-        public ClassService(DataContext context, IResultsService resultsService, IHttpContextAccessor accessor, IUtilitiesService utilitiesService, ILoggerService loggerService, ITermService termService)
+        public ClassService(DataContext context,
+            IHttpContextAccessor accessor, IUtilitiesService utilitiesService, 
+            ILoggerService loggerService, ITermService termService)
         {
             this.context = context;
-            this.resultsService = resultsService;
             this.accessor = accessor;
             this.utilitiesService = utilitiesService;
             this.loggerService = loggerService;
@@ -39,65 +40,13 @@ namespace BLL.ClassServices
             this.termService = termService;
         }
 
-        //async Task<APIResponse<SessionClassCommand>>  IClassService.CreateSessionClassAsync(SessionClassCommand sClass)
-        //{
-        //    var res = new APIResponse<SessionClassCommand>();
-        //    if (context.SessionClass
-        //        .Include(x => x.Session)
-        //        .Any(ss => ss.InSession == true && ss.ClassId == Guid.Parse(sClass.ClassId) && ss.Deleted == false && 
-        //                ss.SessionId == Guid.Parse(sClass.SessionId)))
-        //    {
-        //        res.Message.FriendlyMessage = "This class has already been added to this session";
-        //        return res;
-        //    }
+        IQueryable<SessionClass> IClassService.GetSessionClass(Guid sessionClassId) => context.SessionClass
+                .Include(x => x.Session)
+                .Include(x => x.Class)
+                .Where(x => x.SessionClassId == sessionClassId);
 
-        //    if (!sClass.ClassSubjects.Any())
-        //    {
-        //        res.Message.FriendlyMessage = "No Subjects found";
-        //        return res;
-        //    }
-        //    if (!sClass.ClassSubjects.All(e => !string.IsNullOrEmpty(e.SubjectId) && !string.IsNullOrEmpty(e.SubjectTeacherId)))
-        //    {
-        //        res.Message.FriendlyMessage = "Double check all selected subjects are mapped with subject teachers";
-        //        return res;
-        //    }
-
-        //    using (var transaction = await context.Database.BeginTransactionAsync())
-        //    {
-        //        try
-        //        {
-        //            var sessionClass = new SessionClass
-        //            {
-        //                ClassId = Guid.Parse(sClass.ClassId),
-        //                FormTeacherId = Guid.Parse(sClass.FormTeacherId),
-        //                SessionId = Guid.Parse(sClass.SessionId),
-        //                InSession = sClass.InSession,
-        //                ExamScore = sClass.ExamScore,
-        //                AssessmentScore = sClass.AssessmentScore,
-        //                PassMark = sClass.PassMark,
-        //        };
-        //            context.SessionClass.Add(sessionClass);
-        //            await context.SaveChangesAsync();
-
-        //            await CreateClassSubjectsAsync(sClass.ClassSubjects, sessionClass.SessionClassId);
-
-        //            await resultsService.CreateClassScoreEntryAsync(sessionClass);
-
-        //            await transaction.CommitAsync();
-        //            res.IsSuccessful = true;
-        //            res.Message.FriendlyMessage = "Session class created successfully";
-        //            return res;
-
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            await transaction.RollbackAsync();
-        //            res.Message.FriendlyMessage = Messages.FriendlyException;
-        //            res.Message.TechnicalMessage = ex.ToString();
-        //            return res;
-        //        }
-        //    }
-        //}
+        ClassDto IClassService.GetSessionClassByLkp(Guid classLkp) => context.SessionClass
+                .Where(x => x.ClientId == smsClientId && x.ClassId == classLkp && x.Deleted == false).Select(x => new ClassDto(x)).FirstOrDefault();
 
         async Task<APIResponse<SessionClassCommand2>> IClassService.CreateSessionClass2Async(SessionClassCommand2 sClass)
         {

@@ -36,9 +36,9 @@ namespace SMP.BLL.Services.TimetableServices
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
             var activeClasses =  context.ClassLookUp.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true);
-            var timeTableForAddedClasses = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable);
+            var timeTableForAddedClasses = context.ClassTimeTable.Where(x => x.ClientId == smsClientId && x.TimetableType == (int)TimetableType.ActivityTimetable).ToList();
 
-            if (activeClasses.Count() == timeTableForAddedClasses.Count())
+            if (activeClasses.Count() == timeTableForAddedClasses.Count)
             {
                res.Result = await activeClasses.Select(a => new GetApplicationLookups
                 {
@@ -51,7 +51,7 @@ namespace SMP.BLL.Services.TimetableServices
                 res.IsSuccessful = true;
                 return res;
             }
-            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !timeTableForAddedClasses.Select(d => d.ClassId).AsEnumerable().Contains(s.ClassLookupId)
+            var noneAddedClassIds = context.ClassLookUp.Where(s => s.ClientId == smsClientId && !timeTableForAddedClasses.Select(d => d.ClassId).Contains(s.ClassLookupId)
             && s.Deleted != true && s.IsActive == true).Select(s => s.ClassLookupId).ToList();
 
             if (noneAddedClassIds.Any())

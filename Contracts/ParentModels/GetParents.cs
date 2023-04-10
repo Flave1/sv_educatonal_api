@@ -1,9 +1,4 @@
 ﻿using SMP.DAL.Models.Parents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMP.Contracts.ParentModels
 {
@@ -19,7 +14,7 @@ namespace SMP.Contracts.ParentModels
         public GetParents(Parents parent)
         {
             ParentId = parent.Parentid.ToString();
-            Name = parent.FirstName +""+ parent.LastName;
+            Name = parent.FirstName +" "+ parent.LastName;
             Number = parent.Number;
             Relationship = parent.Relationship;
             Email = parent.Email;

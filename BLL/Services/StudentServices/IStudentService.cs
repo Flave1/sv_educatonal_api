@@ -27,6 +27,6 @@ namespace BLL.StudentServices
         Task<APIResponse<List<GetStudentContactCbt>>> GetAllStudentBySessionClassCbtAsync(string sessionClassId, string clientId);
         Task<APIResponse<byte[]>> DownloadStudentTemplate();
         IQueryable<StudentContact> GetStudent(Guid studentContactId);
-        //StudentContact GetStudentByUserId(string userId);
+        Task CreateStudentSessionClassHistoryAsync(StudentContact student);
     }
 }

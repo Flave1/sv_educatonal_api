@@ -10,6 +10,7 @@ using DAL.Authentication;
 using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NLog.Filters;
 using OfficeOpenXml;
@@ -21,6 +22,7 @@ using SMP.BLL.Services.ParentServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.SessionServices;
 using SMP.BLL.Utilities;
+using SMP.Contracts.PinManagement;
 using SMP.Contracts.Students;
 using SMP.DAL.Migrations;
 using SMP.DAL.Models.StudentImformation;
@@ -73,6 +75,11 @@ namespace BLL.StudentServices
                 { 
                     var result = await utilitiesService.GenerateStudentRegNo();
 
+                    if (!result.Any())
+                    {
+                        res.Message.FriendlyMessage = "School registration number not setup";
+                        return res;
+                    }
                     var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var filePath = upload.UploadProfileImage(student.ProfileImage);
@@ -142,7 +149,7 @@ namespace BLL.StudentServices
             }
         }
 
-        async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
+       public async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
         {
             var history  = new StudentSessionClassHistory();
             history.SessionClassId = student.SessionClassId;
@@ -156,66 +163,64 @@ namespace BLL.StudentServices
         {
             var res = new APIResponse<StudentContact>();
 
-            using (var transaction = await context.Database.BeginTransactionAsync())
+            try
             {
-
-                try
+                var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId) && a.ClientId == smsClientId);
+                if (studentInfor == null)
                 {
-                    var studentInfor = await context.StudentContact.FirstOrDefaultAsync(a => a.StudentContactId == Guid.Parse(student.StudentAccountId) && a.ClientId == smsClientId);
-                    if (studentInfor == null)
-                    {
-                        res.Message.FriendlyMessage = "Student Account not found";
-                        return res;
-                    }
-                    var parentid = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, studentInfor?.ParentId?? Guid.Empty);
-
-                    await userService.UpdateStudentUserAccountAsync(student);
-
-                    var filePath = upload.UpdateProfileImage(student.ProfileImage, studentInfor.Photo);
-                    studentInfor.CityId = student.CityId;
-                    studentInfor.CountryId = student.CountryId;
-                    studentInfor.EmergencyPhone = student.EmergencyPhone;
-                    studentInfor.HomePhone = student.HomePhone;
-                    studentInfor.StateId = student.StateId;
-                    studentInfor.ZipCode = student.ZipCode;
-                    studentInfor.ParentId = parentid;
-
-                    studentInfor.LastName = student.LastName;
-                    studentInfor.DOB = student.DOB;
-                    studentInfor.FirstName = student.FirstName;
-                    studentInfor.MiddleName = student.MiddleName;
-                    studentInfor.Phone = student.Phone;
-                    studentInfor.Photo = filePath;
-                    studentInfor.ClientId = smsClientId;
-                    studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
-                    await context.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-                    res.Message.FriendlyMessage = "Updated student account successfully";
-                    res.Result = null;
-                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = "Student Account not found";
                     return res;
                 }
-                catch (DuplicateNameException ex)
-                {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = ex.Message;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
-                }
+                var parentid = await parentService
+                    .SaveParentDetail(
+                    student.ParentOrGuardianEmail, 
+                    student.ParentOrGuardianFirstName, 
+                    student.ParentOrGuardianLastName, 
+                    student.ParentOrGuardianRelationship, 
+                    student.ParentOrGuardianPhone, 
+                    studentInfor?.ParentId ?? Guid.Empty);
 
+                await userService.UpdateStudentUserAccountAsync(student);
 
-                finally { await transaction.DisposeAsync(); }
+                var filePath = upload.UpdateProfileImage(student.ProfileImage, studentInfor.Photo);
+                studentInfor.CityId = student.CityId;
+                studentInfor.CountryId = student.CountryId;
+                studentInfor.EmergencyPhone = student.EmergencyPhone;
+                studentInfor.HomePhone = student.HomePhone;
+                studentInfor.StateId = student.StateId;
+                studentInfor.ZipCode = student.ZipCode;
+                studentInfor.ParentId = parentid;
+
+                studentInfor.LastName = student.LastName;
+                studentInfor.DOB = student.DOB;
+                studentInfor.FirstName = student.FirstName;
+                studentInfor.MiddleName = student.MiddleName;
+                studentInfor.Phone = student.Phone;
+                studentInfor.Photo = filePath;
+                studentInfor.ClientId = smsClientId;
+                studentInfor.SessionClassId = Guid.Parse(student.SessionClassId);
+                await context.SaveChangesAsync();
+
+                res.Message.FriendlyMessage = "Updated student account successfully";
+                res.Result = null;
+                res.IsSuccessful = true;
+                return res;
             }
+            catch (DuplicateNameException ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+
         }
 
         async Task<APIResponse<UpdateProfileByStudentRequest>> IStudentService.UpdateProfileByStudentAsync(UpdateProfileByStudentRequest request)
@@ -298,30 +303,15 @@ namespace BLL.StudentServices
         async Task<APIResponse<bool>> IStudentService.DeleteStudentAsync(MultipleDelete request)
         {
             var res = new APIResponse<bool>();
-
             foreach (var id in request.Items)
             {
-                var user = await userManager.FindByIdAsync(id);
-                if (user == null)
-                {
-                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
-                    return res;
-                }
-
-                var act = context.StudentContact.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
+                var act = context.StudentContact.FirstOrDefault(d => d.ClientId == smsClientId && d.StudentContactId == Guid.Parse(id));
                 if (act != null)
                 {
                     act.Deleted = true;
-                    user.Deleted = true;
-                    user.Active = false;
-                    user.Email = "DELETE" + user.Email;
-                    user.UserName = "DELETE" + user.UserName;
-                    var result = await userManager.UpdateAsync(user);
-                    if (!result.Succeeded)
-                    {
-                        res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                        return res;
-                    }
+                    act.FirstName = "DELETED";
+                    act.FirstName = "DELETED";
+                    await context.SaveChangesAsync();
                 }
             }
 
@@ -442,6 +432,11 @@ namespace BLL.StudentServices
                             if (string.IsNullOrEmpty(item.RegistrationNumber))
                             {
                                 var regNo = await utilitiesService.GenerateStudentRegNo();
+                                if (!regNo.Any())
+                                {
+                                    res.Message.FriendlyMessage = "School registration number not setup";
+                                    return res;
+                                }
                                 item.RegistrationNumber = regNo.FirstOrDefault().Key;
                             }
                             else
@@ -661,34 +656,59 @@ namespace BLL.StudentServices
             {
 
                 byte[] File = new byte[0];
-                DataTable templateColumn = new DataTable();
-                templateColumn.Columns.Add("Session Class");
-                templateColumn.Columns.Add("Registration Number");
-                templateColumn.Columns.Add("Firstname");
-                templateColumn.Columns.Add("Lastname");
-                templateColumn.Columns.Add("Middlename");
-                templateColumn.Columns.Add("Phone");
-                templateColumn.Columns.Add("DOB");
-                templateColumn.Columns.Add("Email");
-                templateColumn.Columns.Add("Home Phone");
-                templateColumn.Columns.Add("Emergency Phone");
-                templateColumn.Columns.Add("Parent Or Guardian Name");
-                templateColumn.Columns.Add("Parent Or Guardian Relationship");
-                templateColumn.Columns.Add("Parent Or Guardian Phone");
-                templateColumn.Columns.Add("Parent Or Guardian Email");
-                templateColumn.Columns.Add("Home Address");
-                templateColumn.Columns.Add("City Id");
-                templateColumn.Columns.Add("State Id");
-                templateColumn.Columns.Add("Country Id");
-                templateColumn.Columns.Add("Zip Code");
+                DataTable dt = new DataTable();
+                dt.Columns.Add("Session Class");
+                dt.Columns.Add("Registration Number");
+                dt.Columns.Add("Firstname");
+                dt.Columns.Add("Lastname");
+                dt.Columns.Add("Middlename");
+                dt.Columns.Add("Phone");
+                dt.Columns.Add("DOB");
+                dt.Columns.Add("Email");
+                dt.Columns.Add("Home Phone");
+                dt.Columns.Add("Emergency Phone");
+                dt.Columns.Add("Parent Or Guardian Name");
+                dt.Columns.Add("Parent Or Guardian Relationship");
+                dt.Columns.Add("Parent Or Guardian Phone");
+                dt.Columns.Add("Parent Or Guardian Email");
+                dt.Columns.Add("Home Address");
+                dt.Columns.Add("City Id");
+                dt.Columns.Add("State Id");
+                dt.Columns.Add("Country Id");
+                dt.Columns.Add("Zip Code");
+
+                for (var i = 1; i < 2 + 1; i++)
+                {
+                    var row = dt.NewRow();
+                    row["Session Class"] = "change";
+                    row["Registration Number"] = "change";
+                    row["Firstname"] = "change";
+                    row["Lastname"] = "change";
+                    row["Middlename"] = "change";
+                    row["Phone"] = "change";
+                    row["DOB"] = "change";
+                    row["Email"] = "change";
+                    row["Home Phone"] = "change";
+                    row["Emergency Phone"] = "change";
+                    row["Parent Or Guardian Name"] = "change";
+                    row["Parent Or Guardian Relationship"] = "change";
+                    row["Parent Or Guardian Phone"] = "change";
+                    row["Parent Or Guardian Email"] = "change";
+                    row["Home Address"] = "change";
+                    row["City Id"] = "change";
+                    row["State Id"] = "change";
+                    row["Country Id"] = "change";
+                    row["Zip Code"] = "change";
+                    dt.Rows.Add(row);
+                }
 
 
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 using (ExcelPackage pck = new ExcelPackage())
                 {
-                    ExcelWorksheet ws = pck.Workbook.Worksheets.Add("PINS");
+                    ExcelWorksheet ws = pck.Workbook.Worksheets.Add("Sheet One");
                     ws.DefaultColWidth = 20;
-                    ws.Cells["A1"].LoadFromDataTable(templateColumn, true, OfficeOpenXml.Table.TableStyles.None);
+                    ws.Cells["A1"].LoadFromDataTable(dt, true, OfficeOpenXml.Table.TableStyles.None);
                     File = pck.GetAsByteArray();
                 }
 

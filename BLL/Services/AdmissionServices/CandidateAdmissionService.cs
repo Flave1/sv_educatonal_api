@@ -377,9 +377,9 @@ namespace SMP.BLL.Services.AdmissionServices
                     res.Message.FriendlyMessage = "AdmissionId doesn't exist";
                     return res;
                 }
-                var filePath = fileUpload.UploadAdmissionCredentials(request.Credentials);
+                var filePath = fileUpload.UpdateAdmissionCredentials(request.Credentials, request.CredentialPath);
 
-                var photoPath = fileUpload.UploadAdmissionPassport(request.Photo);
+                var photoPath = fileUpload.UpdateAdmissionPassport(request.Photo, request.ProfilePhotoPath);
 
                 admission.Firstname = request.Firstname;
                 admission.Lastname = request.Lastname;
@@ -499,7 +499,13 @@ namespace SMP.BLL.Services.AdmissionServices
                         return response;
                     }
                     accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;
-                    var parentId = await parentService.SaveParentDetail(request.Email, request.Firstname, request.Lastname, request.Relationship, request.PhoneNumber, Guid.Empty);
+                    var parentId = await parentService.SaveParentDetail(
+                        request.Email, 
+                        request.Firstname, 
+                        request.Lastname, 
+                        request.Relationship, 
+                        request.PhoneNumber, 
+                        Guid.Empty);
 
                     await SendNotifications(parentId.ToString(), request.Firstname, request.Email, request.SchoolUrl, schoolSettings);
 

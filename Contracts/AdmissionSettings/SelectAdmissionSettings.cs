@@ -33,6 +33,16 @@ namespace SMP.Contracts.AdmissionSettings
             ScreeningEmail = settings.ScreeningEmail;
             RegistrationFee = settings.RegistrationFee;
         }
+        public SelectAdmissionSettings(AdmissionSetting settings)
+        {
+            AdmissionSettingId = settings.AdmissionSettingId.ToString();
+            AdmissionSettingName = settings.AdmissionSettingName.ToString();
+            AdmissionStatus = settings.AdmissionStatus;
+            PassedExamEmail = settings.PassedExamEmail;
+            FailedExamEmail = settings.FailedExamEmail;
+            ScreeningEmail = settings.ScreeningEmail;
+            RegistrationFee = settings.RegistrationFee;
+        }
     }
     public class AdmissionClasses
     {

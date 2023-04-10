@@ -553,6 +553,109 @@ namespace SMP.BLL.Services.FileUploadService
             throw new ArgumentException("Error uploading admission passport");
         }
 
+        public string UpdateAdmissionCredentials(IFormFile file, string filePath)
+        {
+            CreateClientDirectory(AdmissionCredentialsPath);
+
+            if (file == null || file.Length == 0)
+            {
+                return filePath;
+            }
+            int maxFileSize = 1024 * 1024 / 2;
+            var fileSize = file.Length;
+            if (fileSize > maxFileSize)
+            {
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+            }
+            if (file.FileName.EndsWith(".jpg")
+                        || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
+                        || file.FileName.EndsWith(".jpeg") || file.FileName.EndsWith(".png"))
+            {
+                string ext = Path.GetExtension(file.FileName);
+                string fileName = Guid.NewGuid().ToString() + ext;
+
+                bool fileExists = File.Exists(filePath);
+                if (fileExists)
+                {
+                    File.Delete(filePath);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                }
+                else
+                {
+                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionCredentialsPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                }
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{AdmissionCredentialsPath}/{fileName}";
+                return url;
+            }
+            throw new ArgumentException("Invalid Principal Stamp");
+        }
+
+        public string UpdateAdmissionPassport(IFormFile file, string filePath)
+        {
+            CreateClientDirectory(AdmissionPassportPath);
+
+            if (file == null || file.Length == 0)
+            {
+                return filePath;
+            }
+            int maxFileSize = 1024 * 1024 / 2;
+            var fileSize = file.Length;
+            if (fileSize > maxFileSize)
+            {
+                throw new ArgumentException($"file limit exceeded, greater than {maxFileSize}");
+            }
+            if (file.FileName.EndsWith(".jpg")
+                        || file != null && file.Length > 0 || file.FileName.EndsWith(".jpg")
+                        || file.FileName.EndsWith(".jpeg") || file.FileName.EndsWith(".png"))
+            {
+                string ext = Path.GetExtension(file.FileName);
+                string fileName = Guid.NewGuid().ToString() + ext;
+
+                bool fileExists = File.Exists(filePath);
+                if (fileExists)
+                {
+                    File.Delete(filePath);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                }
+                else
+                {
+                    filePath = Path.Combine(environment.ContentRootPath, "wwwroot/" + smsClientId + "/" + AdmissionPassportPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fileStream.Position = 0;
+                        file.CopyTo(fileStream);
+                        fileStream.Flush();
+                        fileStream.Close();
+                    }
+                }
+                var host = accessor.HttpContext.Request.Host.ToUriComponent();
+                var url = $"{accessor.HttpContext.Request.Scheme}://{host}/{smsClientId}/{AdmissionPassportPath}/{fileName}";
+                return url;
+            }
+            throw new ArgumentException("Invalid Principal Stamp");
+        }
         private void CreateClientDirectory(string folderName)
         {
             if (string.IsNullOrEmpty(smsClientId))

@@ -1,4 +1,5 @@
 ﻿using DAL.ClassEntities;
+using SMP.Contracts.ClassModels;
 using SMP.DAL.Models.Timetable;
 using System;
 using System.Collections.Generic;
@@ -115,13 +116,13 @@ namespace SMP.Contracts.Timetable
         public bool IsActive { get; set; }
         public string GradeLevelName { get; set; }
         public string SessionClassId { get; set; }
-        public GetActiveTimetableClasses(ClassLookup classLookup, SessionClass sessionClass)
+        public GetActiveTimetableClasses(ClassLookup classLookup, ClassDto sessionClass)
         {
             LookupId = classLookup.ClassLookupId.ToString();
             Name = classLookup.Name;
             GradeLevelId = classLookup.GradeGroupId.ToString();
             IsActive = classLookup.IsActive;
-            SessionClassId = sessionClass.SessionClassId.ToString();
+            SessionClassId = sessionClass?.SessionClassId.ToString();
 
         }
     }

@@ -34,6 +34,14 @@ namespace SMP.API.Controllers.AdmissionControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [HttpGet("get-all-settings/from-admission")]
+        public async Task<IActionResult> GetAllSettingsFromAdmissionScreen(PaginationFilter filter)
+        {
+            var response = await service.GetAllSettingsFromAdmissionScreen(filter);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
         [HttpGet("get-single-settings")]
         public async Task<IActionResult> GetSettings(string admissionSettingsId)
         {

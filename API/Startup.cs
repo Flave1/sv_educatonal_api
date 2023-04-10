@@ -66,7 +66,7 @@ namespace API
 
             app.UseSwagger(option => { option.RouteTemplate = swaggerOptions.JsonRoute; });
 
-            app.UseCors(); 
+            app.UseCors("AllowAnyOrigin");
 
             app.UseSwaggerUI(option => {
                 option.SwaggerEndpoint(swaggerOptions.UIEndpoint, swaggerOptions.Description);

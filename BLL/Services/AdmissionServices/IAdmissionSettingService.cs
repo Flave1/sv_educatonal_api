@@ -18,5 +18,6 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<SelectAdmissionSettings>> GetSettingsById(string admissionSettingsId);
         Task<APIResponse<bool>> DeleteSettings(SingleDelete request);
         Task<APIResponse<UpdateAdmissionSettings>> UpdateSettings(UpdateAdmissionSettings request);
+        Task<APIResponse<PagedResponse<List<SelectAdmissionSettings>>>> GetAllSettingsFromAdmissionScreen(PaginationFilter filter);
     }
 }

@@ -94,6 +94,10 @@ namespace SMP.BLL.Utilities
                 var newRegNo = (lastRegNumber == "1" ? 1 : long.Parse(lastRegNumber) + 1).ToString();
 
                 var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+                if (string.IsNullOrEmpty(regNoFormat))
+                {
+                    return dictionary;
+                }
                 newRegNo = number(newRegNo);
 
                 var regNo = regNoFormat.Replace("%VALUE%", newRegNo);

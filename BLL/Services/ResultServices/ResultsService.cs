@@ -5,19 +5,11 @@ using BLL.Filter;
 using BLL.LoggerService;
 using BLL.StudentServices;
 using BLL.Wrappers;
-using Contracts.Class;
-using Contracts.Session;
 using DAL;
 using DAL.ClassEntities;
 using DAL.StudentInformation;
-using DAL.SubjectModels;
-using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Crmf;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Polly;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FilterService;
@@ -26,10 +18,8 @@ using SMP.BLL.Utilities;
 using SMP.Contracts.PinManagement;
 using SMP.Contracts.ResultModels;
 using SMP.Contracts.Session;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.ClassEntities;
 using SMP.DAL.Models.ResultModels;
-using SMP.DAL.Models.SessionEntities;
 using SMP.DAL.Models.StudentImformation;
 using System;
 using System.Collections.Generic;
@@ -50,8 +40,8 @@ namespace SMP.BLL.Services.ResultServices
         private readonly IClassGroupService classGroupService;
         private readonly IScoreEntryHistoryService scoreEntryService;
         private readonly ITermService termService;
-
-        public ResultsService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService, IUtilitiesService utilitiesService, IStudentService studentService, IClassGroupService classGroupService, IScoreEntryHistoryService scoreEntryService, ITermService termService)
+        private readonly IClassService classService;
+        public ResultsService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, ILoggerService loggerService, IUtilitiesService utilitiesService, IStudentService studentService, IClassGroupService classGroupService, IScoreEntryHistoryService scoreEntryService, ITermService termService, IClassService classService)
         {
             this.context = context;
             this.accessor = accessor;
@@ -63,6 +53,7 @@ namespace SMP.BLL.Services.ResultServices
             this.classGroupService = classGroupService;
             this.scoreEntryService = scoreEntryService;
             this.termService = termService;
+            this.classService = classService;
         }
 
         async Task<APIResponse<List<GetClasses>>> IResultsService.GetCurrentStaffClassesAsync()
@@ -268,7 +259,7 @@ namespace SMP.BLL.Services.ResultServices
         async Task<APIResponse<PagedResponse<GetClassScoreEntry>>> IResultsService.GetClassEntryAsync(Guid sessionClassId, Guid subjectId, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
-            SessionClass sessClass = GetSessionClass(sessionClassId).FirstOrDefault();
+            SessionClass sessClass = classService.GetSessionClass(sessionClassId).FirstOrDefault();
             if(sessClass is null)
             {
                 res.Message.FriendlyMessage = "Class not found";
@@ -440,7 +431,7 @@ namespace SMP.BLL.Services.ResultServices
             var term = termService.SelectTerm(termId);
             var res = new APIResponse<MasterList>();
 
-            var sessClass = GetSessionClass(sessionClassId).Include(x => x.Teacher).FirstOrDefault();
+            var sessClass = classService.GetSessionClass(sessionClassId).Include(x => x.Teacher).FirstOrDefault();
 
             var mList = new MasterList(sessClass, term);
 
@@ -468,7 +459,7 @@ namespace SMP.BLL.Services.ResultServices
 
             try
             {
-                var sessClass = GetSessionClass(sessionClassId).FirstOrDefault();
+                var sessClass = classService.GetSessionClass(sessionClassId).FirstOrDefault();
                 var term = termService.SelectTerm(termId);
                 res.Result = new PagedResponse<StudentResult>();
                 res.Result.Data = new StudentResult();
@@ -534,7 +525,7 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<PublishResultRequest>();
             try
             {
-                var sessClass = GetSessionClass(request.SessionClassId)
+                var sessClass = classService.GetSessionClass(request.SessionClassId)
                 .Include(x => x.Students).FirstOrDefault();
 
                 if (sessClass.Session.IsActive)
@@ -567,7 +558,7 @@ namespace SMP.BLL.Services.ResultServices
             var res = new APIResponse<PagedResponse<GetClassScoreEntry>>();
             var regNoFormat = await GetRegNumberFormat();
 
-            var sessClass = GetSessionClass(sessionClassId).FirstOrDefault();
+            var sessClass = classService.GetSessionClass(sessionClassId).FirstOrDefault();
 
             var result = await scoreEntryService.GetScoreEntriesQuery(subjectId, sessionClassId, sessionTermId)
                   .Include(d => d.SessionClass).ThenInclude(d => d.Class)
@@ -680,7 +671,7 @@ namespace SMP.BLL.Services.ResultServices
         {
             var res = new APIResponse<CumulativeMasterList>();
             var regNoFormat = await GetRegNumberFormat();
-            var sessClass = GetSessionClass(sessionClassId)
+            var sessClass = classService.GetSessionClass(sessionClassId)
                 .Include(r => r.Teacher).FirstOrDefault();
             var cMList = new CumulativeMasterList(sessClass);
 
@@ -711,13 +702,12 @@ namespace SMP.BLL.Services.ResultServices
             var sessClass = context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(x => x.Class).Include(x => x.Session).FirstOrDefault(d => d.SessionClassId == sessionClassId);
             if (sessClass.Session.IsActive)
             {
-                res.Result = GetSessionClass(sessionClassId)
+                res.Result = classService.GetSessionClass(sessionClassId)
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(d => d.Subject)
                  .Include(r => r.Students).ThenInclude(d => d.ScoreEntries).ThenInclude(x => x.SessionTerm)
                  .Include(r => r.Students)
                  .Include(r => r.Students).ThenInclude(d => d.SessionClass).ThenInclude(d => d.Class).ThenInclude(d => d.GradeLevel).ThenInclude(d => d.Grades)
                  .Select(g => new StudentCoreEntry(g.Students.FirstOrDefault(x => x.StudentContactId == studentContactId), regNoFormat, termId)).FirstOrDefault();
-
 
                 if (res.Result != null)
                     res.Result.IsPublished = IsResultPublished(sessionClassId, termId, studentContactId);
@@ -1155,10 +1145,7 @@ namespace SMP.BLL.Services.ResultServices
                 .Include(d => d.Subject)
                 .AsQueryable().Select(s => new PreviewClassScoreEntry(s, regNoFormat)).FirstOrDefaultAsync();
 
-        IQueryable<SessionClass> GetSessionClass(Guid sessionClassId) => context.SessionClass
-                .Include(x => x.Session)
-                .Include(x => x.Class)
-                .Where(x => x.SessionClassId == sessionClassId);
+        
         async Task<string> GetRegNumberFormat() {
 
             var re = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).FirstOrDefaultAsync();

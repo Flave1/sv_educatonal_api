@@ -42,6 +42,5 @@ namespace DAL.StudentInformation
         public Parents Parent { get; set; }
         public virtual ICollection<ScoreEntry> ScoreEntries { get; set; }
         public virtual ICollection<StudentNote> StudentNote { get; set; }
-        //public virtual ICollection<SessionClassArchive> SessionClassArchive { get; set; }
     }
 }

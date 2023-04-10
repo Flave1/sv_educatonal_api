@@ -1,5 +1,7 @@
 ﻿using Contracts.Class;
 using Contracts.Options;
+using DAL.ClassEntities;
+using SMP.Contracts.ClassModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,5 +28,7 @@ namespace BLL.ClassServices
         Task<APIResponse<SessionClassCommand>> UpdateSessionClass2Async(SessionClassCommand2 request);
         Task<APIResponse<GetSessionClass>> GetSingleSessionClassesWithoutSubjectsAndStudentsAsync(Guid sessionClassId);
         Task<APIResponse<List<ClassSubjects>>> GetSessionClassSubjects(Guid sessionClassId);
+        IQueryable<SessionClass> GetSessionClass(Guid sessionClassId);
+        ClassDto GetSessionClassByLkp(Guid classLkp);
     }
 }

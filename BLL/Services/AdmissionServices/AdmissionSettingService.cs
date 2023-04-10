@@ -174,6 +174,49 @@ namespace SMP.BLL.Services.AdmissionServices
                     .Where(d => d.Deleted != true && d.ClientId == smsClientId)?
                     .FirstOrDefault()?.Classes?.Split(',', StringSplitOptions.None).ToList();
 
+                if (classes is null)
+                {
+                    res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
+                    res.IsSuccessful = true;
+                    return res;
+                }
+                IQueryable<AdmissionSetting> query = null;
+
+                query = context.AdmissionSettings
+                 .Where(d => d.Deleted != true && smsClientId == d.ClientId).OrderByDescending(x => x.CreatedOn);
+
+                if (query is null)
+                {
+                    res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
+                    res.IsSuccessful = true;
+                    return res;
+                }
+
+                var totalRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter)
+                    .Select(db => new SelectAdmissionSettings(db, 
+                    context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList())).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
+        public async Task<APIResponse<PagedResponse<List<SelectAdmissionSettings>>>> GetAllSettingsFromAdmissionScreen(PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<SelectAdmissionSettings>>>();
+            try
+            {
                 var parentId = accessor.HttpContext.User.FindFirst(x => x.Type == "parentId")?.Value;
                 var parentAdmissions = new List<Guid>();
                 if (!string.IsNullOrEmpty(parentId))
@@ -183,21 +226,16 @@ namespace SMP.BLL.Services.AdmissionServices
                     .Select(c => c.AdmissionSettingId).Distinct().ToList();
                 }
 
-                if (classes is null)
-                {
-                    res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
-                    res.IsSuccessful = true;
-                    return res;
-                }
                 IQueryable<AdmissionSetting> query = null;
 
                 if (parentAdmissions.Any())
                 {
                     query = context.AdmissionSettings
-                    .Where(d => d.Deleted != true && smsClientId == d.ClientId && parentAdmissions.Contains(d.AdmissionSettingId) && d.AdmissionStatus == true).OrderBy(x => x.CreatedOn);
+                    .Where(d => d.Deleted != true && smsClientId == d.ClientId 
+                    && d.AdmissionStatus == true || parentAdmissions.Contains(d.AdmissionSettingId)).OrderByDescending(x => x.CreatedOn);
                 }
 
-                if(query is null)
+                if (query is null)
                 {
                     res.Result = new PagedResponse<List<SelectAdmissionSettings>>();
                     res.IsSuccessful = true;
@@ -205,7 +243,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
 
                 var totalRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(db => new SelectAdmissionSettings(db, context.ClassLookUp.Where(x => classes.Contains(x.ClassLookupId.ToString())).ToList())).ToListAsync();
+                var result = await paginationService.GetPagedResult(query, filter).Select(db => new SelectAdmissionSettings(db)).ToListAsync();
                 res.Result = paginationService.CreatePagedReponse(result, filter, totalRecord);
 
                 res.Message.FriendlyMessage = Messages.GetSuccess;

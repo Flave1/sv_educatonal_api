@@ -20,14 +20,10 @@ namespace API.Controllers
     public class StudentController : Controller
     { 
         private readonly IStudentService service;
-        private readonly IUriService uriService;
-        private readonly DataContext context;
 
-        public StudentController(IStudentService service, IUriService uriService, DataContext context)
+        public StudentController(IStudentService service)
         {
             this.service = service;
-            this.uriService = uriService;
-            this.context = context;
         }
 
         #region STUDENTS

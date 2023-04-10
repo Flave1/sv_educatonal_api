@@ -11,12 +11,13 @@ namespace SMP.BLL.Services.ResultServices
 {
     public interface IScoreEntryHistoryService
     {
+        ScoreEntryHistory GetScoreEntryHistory(string SessionClassId, string SubjectId, string CurrentTermId, HistorySource source, string target);
         ScoreEntryHistory GetScoreEntryHistory(string SessionClassId, string SubjectId, string CurrentTermId, string StudentContactId,  HistorySource source, string target);
         Task<float> CreateNewScoreEntryHistoryAndReturnScore(
             ScoreEntryHistory scoreHistory, float resultScore, 
             string studentContactId, string sessionClassId, 
             string subjectId, Guid termId, bool Include, HistorySource source, string target);
-        float IncludeAndExcludeThenReturnScore(ScoreEntryHistory scoreHistory, bool Include, float resultScore);
+        float IncludeAndExcludeThenReturnScore(ScoreEntryHistory scoreHistory, bool Include, float resultScore, ScoreEntry scoreEntry = null);
         ScoreEntry GetScoreEntry(Guid CurrentTermId, Guid StudentContactId, Guid SubjectId);
         void CreateNewScoreEntryForAssessment(ScoreEntry scoreEntry, Guid CurrentTermId, float ResultScore, Guid StudentContactId, Guid SubjectId, Guid SessionClassId);
         void UpdateScoreEntryForAssessment(ScoreEntry scoreEntry, float ResultScore);
@@ -32,5 +33,6 @@ namespace SMP.BLL.Services.ResultServices
         Task<ScoreEntry> CreateScoreEntryForAssessment(UpdateScore request);
         Task<ScoreEntry> UpdateScoreEntryForAssessment(UpdateScore request, ScoreEntry studentEntry);
         IQueryable<ScoreEntry> GetScoreEntriesQuery(Guid subjectId, Guid sessionClassId, Guid sessionTermId);
+        float ForceScoreHistroyExclusion(ScoreEntryHistory scoreHistory, float resultScore);
     }
 }

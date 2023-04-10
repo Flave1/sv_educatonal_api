@@ -21,6 +21,8 @@ namespace SMP.Contracts.Admissions
         public string LGAOfOrigin { get; set; }
         public IFormFile Credentials { get; set; }
         public IFormFile Photo { get; set; }
+        public string ProfilePhotoPath { get; set; }
+        public string CredentialPath { get; set; }
         public string ClassId { get; set; }
     }
 }

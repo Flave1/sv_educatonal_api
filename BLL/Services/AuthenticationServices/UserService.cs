@@ -430,7 +430,7 @@ namespace BLL.AuthenticationServices
             var changePassword = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
             if (changePassword.Succeeded)
             {
-                await SendResetSuccessEmailToUserAsync(user);
+                //await SendResetSuccessEmailToUserAsync(user);
                 var loginResult = await identityService.WebLoginAsync(new LoginCommand { Password = request.Password, UserName = user.UserName });
                 if (!string.IsNullOrEmpty(loginResult.Result.AuthResult.Token))
                     return res;
@@ -440,22 +440,22 @@ namespace BLL.AuthenticationServices
             throw new ArgumentException("Ooops!! Something is wrong some where");
         }
 
-        private async Task SendResetSuccessEmailToUserAsync(AppUser obj)
-        {
-            var to = new List<EmailAddress>();
-            var frm = new List<EmailAddress>();
-            to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
-            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
-            var emMsg = new EmailMessage
-            {
-                Content = $"Your password has been reset successfully",
-                SentBy = "Flavetechs",
-                Subject = "Account Reset",
-                ToAddresses = to,
-                FromAddresses = frm
-            };
-            await emailService.Send(emMsg);
-        }
+        //private async Task SendResetSuccessEmailToUserAsync(AppUser obj)
+        //{
+        //    var to = new List<EmailAddress>();
+        //    var frm = new List<EmailAddress>();
+        //    to.Add(new EmailAddress { Address = obj.Email, Name = obj.UserName });
+        //    frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = emailConfiguration.Sender });
+        //    var emMsg = new EmailMessage
+        //    {
+        //        Content = $"Your password has been reset successfully",
+        //        SentBy = "Flavetechs",
+        //        Subject = "Account Reset",
+        //        ToAddresses = to,
+        //        FromAddresses = frm
+        //    };
+        //    await emailService.Send(emMsg);
+        //}
         private async Task SendResetSuccessEmailToUserAsync(AppUser obj, SchoolSetting schoolSetting)
         {
             var to = new List<EmailAddress>();
@@ -642,7 +642,7 @@ namespace BLL.AuthenticationServices
 
                 res.IsSuccessful = true;
                 res.Result = true;
-                res.Message.FriendlyMessage = "Successful! Kindly click the link sent to your email to reset password.";
+                res.Message.FriendlyMessage = "A link has been sent your email, Please clcik on the link to change password";
                 return res;
             }
             catch(Exception ex)
@@ -667,6 +667,9 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
                 request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
+
+                var clientId = ClientId(request.SchoolUrl);
+                accessor.HttpContext.Items["smsClientId"] = clientId;
                 var resetPasswordResult = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
                 if (!resetPasswordResult.Succeeded)
                 {
@@ -674,7 +677,7 @@ namespace BLL.AuthenticationServices
                     res.Message.FriendlyMessage = "Error occurred on password reset!! Please contact administrator.";
                     return res;
                 }
-                await SendResetSuccessEmailToUserAsync(user);
+                //await SendResetSuccessEmailToUserAsync(user);
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successful";

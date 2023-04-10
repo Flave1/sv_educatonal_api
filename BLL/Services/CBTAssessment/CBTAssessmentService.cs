@@ -71,6 +71,13 @@ namespace SMP.BLL.Services.CBTAssessmentServices
                 res.Message.FriendlyMessage = res.Message.FriendlyMessage;
                 return res;
             }
+            res.Result.Data.ForEach(ele =>
+            {
+                ele.IsIncluded = scoreEntryService.GetScoreEntryHistory(ele.CandidateCategoryId_ClassId,
+                        ele.ExamName_SubjectId, termService.GetCurrentTerm().SessionTermId.ToString(),
+                        HistorySource.CbtAssessment,
+                        ele.ExaminationId) is null ? false : true;
+            });
             res.IsSuccessful = true;
             return res;
 
