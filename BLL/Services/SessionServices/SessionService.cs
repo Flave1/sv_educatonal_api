@@ -99,46 +99,39 @@ namespace BLL.SessionServices
             
             var currentSession = await context.Session.Where(x=>x.ClientId == smsClientId && x.IsActive == true).FirstOrDefaultAsync();
 
-            using(var transaction = await context.Database.BeginTransactionAsync())
+            try
             {
-                try
+                var dbSession = new Session
                 {
-                    var dbSession = new Session
-                    {
-                        StartDate = session.StartDate,
-                        EndDate = session.EndDate,
-                        IsActive = true,
-                        HeadTeacherId = Guid.Parse(session.HeadTeacherId),
-                    };
-                    context.Session.Add(dbSession);
-                    await context.SaveChangesAsync();
+                    StartDate = session.StartDate,
+                    EndDate = session.EndDate,
+                    IsActive = true,
+                    HeadTeacherId = Guid.Parse(session.HeadTeacherId),
+                };
+                context.Session.Add(dbSession);
+                await context.SaveChangesAsync();
 
-                    await SetOtherSessionsInactiveAsync(dbSession.SessionId);
+                await SetOtherSessionsInactiveAsync(dbSession.SessionId);
 
-                    await termService.CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
+                await termService.CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
 
-                    if (session.TransferClasses)
-                    {
-                        await TransferSessionRecord(currentSession, dbSession);
-                    }
-
-                    await transaction.CommitAsync();
-                    res.IsSuccessful = true;
-                    res.Result = session;
-                    res.Message.FriendlyMessage = $"Successfuly created a session with {session.Terms} terms";
-                    return res;
-                }
-                catch (Exception ex)
+                if (session.TransferClasses)
                 {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = "Error Occurred!! Please contact administrator";
-                    res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
-                    return res;
+                    await TransferSessionRecord(currentSession, dbSession);
                 }
-                finally { await transaction.DisposeAsync(); }
+
+                res.IsSuccessful = true;
+                res.Result = session;
+                res.Message.FriendlyMessage = $"Successfuly created a session with {session.Terms} terms";
+                return res;
             }
-           
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred!! Please contact administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
+                return res;
+            }
 
         }
 

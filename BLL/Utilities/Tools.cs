@@ -14,12 +14,12 @@ namespace SMP.BLL.Utilities
     {
         public record ClassRecord { public decimal Average; public string Position; }
         private static readonly Regex sWhitespace = new Regex(@"\s+");
-        public static string ReplaceWhitespace(string input)
-        {
-            if (input == null)
-                return input;
-            return sWhitespace.Replace(input.ToLower(), "");
-        }
+        //public static string ReplaceWhitespace(string input)
+        //{
+        //    if (input == null)
+        //        return input;
+        //    return sWhitespace.Replace(input.ToLower(), "");
+        //}
 
         public static List<ClassRecord> GetStudentPositions(IEnumerable<decimal> averages)
         {

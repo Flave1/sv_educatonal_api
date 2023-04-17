@@ -31,7 +31,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<ClassLookup>();
             try
             {
-                if (context.ClassLookUp.Where(c=> c.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(className) == Tools.ReplaceWhitespace(r.Name) && r.Deleted == false))
+                if (context.ClassLookUp.Where(c=> c.ClientId == smsClientId).AsEnumerable().Any(r => className.ToLower() == r.Name.ToLower() && r.Deleted == false))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";
                     return res;
@@ -65,7 +65,7 @@ namespace BLL.ClassServices
 
             try
             {
-                if (context.ClassLookUp.Where(c => c.ClientId == smsClientId).AsEnumerable().Any(r => Tools.ReplaceWhitespace(lookupName) == Tools.ReplaceWhitespace(r.Name) 
+                if (context.ClassLookUp.Where(c => c.ClientId == smsClientId).AsEnumerable().Any(r => lookupName.ToLower() == r.Name.ToLower() 
                 && r.ClassLookupId != Guid.Parse(lookupId)))
                 {
                     res.Message.FriendlyMessage = "Class Name Already exist";

@@ -73,13 +73,14 @@ namespace BLL.Services.SubjectServices
 
             try
             {
-                if (context.Subject.AsEnumerable().Any(r => Tools.ReplaceWhitespace(Name) == Tools.ReplaceWhitespace(r.Name) && r.SubjectId != Guid.Parse(Id) && r.ClientId == smsClientId))
+                
+                if (context.Subject.Any(r => r.ClientId == smsClientId && Name == r.Name && r.SubjectId != Guid.Parse(Id)))
                 {
                     res.Message.FriendlyMessage = "Subject Name Already exist";
                     return res;
                 }
 
-                var lookup = context.Subject.FirstOrDefault(r => r.SubjectId == Guid.Parse(Id) && r.ClientId == smsClientId);
+                var lookup = context.Subject.FirstOrDefault(r =>  r.ClientId == smsClientId && r.SubjectId == Guid.Parse(Id));
                 if (lookup == null)
                 {
                     res.Message.FriendlyMessage = "Subject  does not exist";
@@ -106,8 +107,17 @@ namespace BLL.Services.SubjectServices
         async Task<APIResponse<List<GetApplicationLookups>>> ISubjectService.GetAllSubjectsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result =  await context.Subject.Where(d => d.Deleted != true && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
-            res.Result = result;
+            var result = await context.Subject
+                .Where(d => d.ClientId == smsClientId && d.Deleted != true).ToListAsync();
+
+
+            var assa = result.OrderByDescending(d => d.CreatedOn)
+                .Select(a => new GetApplicationLookups 
+                { LookupId = a.SubjectId.ToString().ToLower(), 
+                    Name = a.Name, IsActive = a.IsActive }
+                ).ToList();
+
+            res.Result = assa;
             res.IsSuccessful = true;
             return res;
         }
@@ -115,8 +125,17 @@ namespace BLL.Services.SubjectServices
         async Task<APIResponse<List<GetApplicationLookups>>> ISubjectService.GetAllActiveSubjectsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.Subject.Where(d => d.Deleted != true && d.IsActive == true && d.ClientId == smsClientId).OrderByDescending(d => d.CreatedOn).Select(a => new GetApplicationLookups { LookupId = a.SubjectId.ToString().ToLower(), Name = a.Name, IsActive = a.IsActive }).ToListAsync();
+            var result = await context.Subject.Where(d => d.ClientId == smsClientId && d.Deleted != true && d.IsActive == true)
+                .OrderByDescending(d => d.CreatedOn)
+                .Select(a => new
+                GetApplicationLookups
+                {
+                    LookupId = a.SubjectId.ToString().ToLower(),
+                    Name = a.Name,
+                    IsActive = a.IsActive
+                }).ToListAsync();
             res.Result = result;
+
             res.IsSuccessful = true;
             return res;
         }
@@ -191,5 +210,10 @@ namespace BLL.Services.SubjectServices
             res.IsSuccessful = true;
             return res;
         }
+
+        //SubjectDto ISubjectService.GetSubjects(Guid subjectId) 
+        //{ 
+
+        //}
     }
 }

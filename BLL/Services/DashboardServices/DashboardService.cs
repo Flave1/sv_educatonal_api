@@ -66,6 +66,8 @@ namespace SMP.BLL.Services.DashboardServices
 
         private GetDashboardCount GetDashboardCounts()
         {
+
+            var currentTerm = termService.GetCurrentTerm();
             var enrolledStudents = context.StudentContact.Where(x=>x.ClientId == smsClientId).Count(x => x.Deleted == false && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled);
             var totalClass = context.SessionClass.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.Session)
@@ -81,10 +83,10 @@ namespace SMP.BLL.Services.DashboardServices
             //var totalUnusedPins = context.UploadedPin.Where(x => x.ClientId == smsClientId)
             //    .Count(x => x.Deleted == false && !x.UsedPin.Any());
 
-            var totalHomeAssessments = context.HomeAssessment.Where(x => x.ClientId == smsClientId)
+            var totalHomeAssessments = context.HomeAssessment.Where(x => x.ClientId == smsClientId && currentTerm.SessionTermId == x.SessionTermId)
                 .Count(x => x.Deleted == false);
 
-            var totalClassAssessments = context.ClassAssessment.Where(x => x.ClientId == smsClientId)
+            var totalClassAssessments = context.ClassAssessment.Where(x => x.ClientId == smsClientId && currentTerm.SessionTermId == x.SessionTermId)
                .Count();
 
             return new GetDashboardCount

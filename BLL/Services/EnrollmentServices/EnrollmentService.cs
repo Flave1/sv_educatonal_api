@@ -46,7 +46,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             var query = (from a in context.StudentContact
                                 .Include(s => s.SessionClass)
                                 .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                          where a.ClientId == smsClientId && a.Status == status && a.SessionClassId == sessionClassId select a);
+                          where a.ClientId == smsClientId && a.Status == status && a.Deleted == false &&  a.SessionClassId == sessionClassId select a);
 
             var totaltRecord = query.Count();
             var result = paginationService.GetPagedResult(query, filter).Select(a =>  new EnrolledStudents(a, regNoFormat)).ToList();
@@ -63,7 +63,7 @@ namespace SMP.BLL.Services.EnrollmentServices
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
             var query =  (from a in context.StudentContact.Include(s => s.User)
-                                where a.ClientId == smsClientId && a.Status == (int)EnrollmentStatus.UnEnrolled
+                                where a.ClientId == smsClientId && a.EnrollmentStatus == (int)EnrollmentStatus.UnEnrolled && a.Deleted == false
                                 select new EnrolledStudents
                                 {
                                     Status = "unenrrolled",

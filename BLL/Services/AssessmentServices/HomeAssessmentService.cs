@@ -470,13 +470,14 @@ namespace SMP.BLL.Services.AssessmentServices
                 .Where(d => d.SessionClassId == student.SessionClassId && d.SessionTermId == activeTerm.SessionTermId && d.ClientId == smsClientId)
                 .OrderByDescending(d => d.CreatedOn)
                 .Include(d => d.HomeAssessmentFeedBacks)
-                .Include(q => q.SessionClassSubject).ThenInclude(s => s.Subject)
+                .Include(q => q.SessionClassSubject)
+                .ThenInclude(s => s.Subject)
                 .Include(q => q.SessionClassGroup)
                 .Where(x => x.Deleted == false);
 
             if (status == -1)
             {
-                query = query.Where(x => x.Status == (int)HomeAssessmentStatus.Opened);
+                query = query.Where(x => x.Status > -1);
             }
             if (status >= 0 && status != 3)
             {
