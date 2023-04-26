@@ -48,7 +48,7 @@ namespace SMP.BLL.Services.SessionServices
                 {
                     IsActive = i == 1 ? true : false,
                     TermName = termName,
-                    SessionId = sessionId,
+                    SessionId = sessionId
                 };
                 context.SessionTerm.Add(term);
                 await context.SaveChangesAsync();
@@ -56,7 +56,8 @@ namespace SMP.BLL.Services.SessionServices
         }
 
         SessionTermDto ITermService.GetCurrentTerm() =>
-           context.SessionTerm.Where(d => d.ClientId == smsClientId && d.IsActive == true).Select(c => new SessionTermDto(c)).FirstOrDefault();
+           context.SessionTerm.Where(d => d.ClientId == smsClientId && d.IsActive == true)
+            .Select(c => new SessionTermDto(c)).FirstOrDefault() ?? throw new ArgumentNullException("No Current term found");
 
 
         SessionTermDto ITermService.SelectTerm(Guid termId) =>

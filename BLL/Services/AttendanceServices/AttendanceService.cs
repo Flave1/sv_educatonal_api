@@ -4,10 +4,8 @@ using BLL.Wrappers;
 using Contracts.AttendanceContract;
 using Contracts.Common;
 using DAL;
-using DAL.StudentInformation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Smime;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.SessionServices;
@@ -17,7 +15,6 @@ using SMP.DAL.Models.Register;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.AttendanceServices
@@ -43,7 +40,6 @@ namespace SMP.BLL.Services.AttendanceServices
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
             var termid = termService.GetCurrentTerm().SessionTermId;
 
-            var datTimeNote = DateTimeOffset.Now.AddDays(1).Subtract(TimeSpan.FromHours(3));
             var reg = new ClassRegister
             {
                 SessionClassId = SessionClassId,
@@ -132,6 +128,32 @@ namespace SMP.BLL.Services.AttendanceServices
             {
                 query = query.Where(d => d.SessionTermId == Guid.Parse(termId));
             }
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetAttendance(f)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<PagedResponse<List<GetAttendance>>>> IAttendanceService.GetAllAttendanceRegisterAsync(string sessionClassId, PaginationFilter filter)
+        {
+            var res = new APIResponse<PagedResponse<List<GetAttendance>>>();
+            var termId = termService.GetCurrentTerm().SessionTermId;
+
+            var query = context.ClassRegister.Where(c => c.ClientId == smsClientId)
+                .Include(s => s.SessionClass).ThenInclude(s => s.Students)
+                .Include(q => q.StudentAttendances)
+                .OrderByDescending(d => d.CreatedOn)
+                .Where(d => d.Deleted == false);
+            if (!string.IsNullOrEmpty(sessionClassId))
+            {
+                query = query.Where(d => d.SessionClassId == Guid.Parse(sessionClassId));
+            }
+
+            query = query.Where(d => d.SessionTermId == termId);
 
             var totaltRecord = query.Count();
             var result = await paginationService.GetPagedResult(query, filter).Select(f => new GetAttendance(f)).ToListAsync();

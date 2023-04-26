@@ -261,6 +261,7 @@ namespace BLL.ClassServices
         {
             var res = new APIResponse<List<GetSessionClass>>();
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+            var currentTermId = termService.GetCurrentTerm().SessionTermId;
             //GET SUPER ADMIN CLASSES
             if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
@@ -268,7 +269,7 @@ namespace BLL.ClassServices
                    .Include(rr => rr.Session)
                    .Include(rr => rr.Class)
                    .OrderBy(d => d.Class.Name)
-                   .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId))
+                   .Where(r => r.Deleted == false && r.SessionId == Guid.Parse(sessionId) && currentTermId == r.SessionTermId)
                    .Include(rr => rr.Teacher).Select(g => new GetSessionClass(g)).ToListAsync();
                 return res;
             }
@@ -279,10 +280,10 @@ namespace BLL.ClassServices
                      .Include(s => s.Class)
                      .Include(s => s.Session)
                      .OrderBy(s => s.Class.Name)
-                     .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && e.SessionClassSubjects
+                     .Where(e => e.Deleted == false && e.SessionId == Guid.Parse(sessionId) && currentTermId == e.SessionTermId && e.SessionClassSubjects
                      .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
 
-                var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
+                var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId && currentTermId == c.SessionTermId)
                     .Include(s => s.Class)
                     .Include(s => s.Session)
                     .OrderBy(s => s.Class.Name)

@@ -2,12 +2,17 @@
 using BLL.Constants;
 using DAL;
 using DAL.ClassEntities;
+using DAL.SessionEntities;
+using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Dashboard;
+//using SMP.Contracts.PortalSettings;
+using SMP.Contracts.Session;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -268,6 +273,267 @@ namespace SMP.BLL.Services.DashboardServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-    }
+  
+        APIResponse<List<ApplicationSetupStatus>> IDashboardService.GetApplicationStatus()
+        {
+            var res = new APIResponse<List<ApplicationSetupStatus>>();
+            res.Result = new List<ApplicationSetupStatus>();
+            var currentterm = termService.GetCurrentTerm();
+            var session = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive && d.Deleted == false);
+            var classes = context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
+            var subs = context.Subject.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
+            var setting = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId && d.Deleted == false);
+            res.Result.Add(GetSessionStatus(session));
+            res.Result.Add(GetClassStatus(classes, session.SessionId, currentterm));
+            res.Result.Add(GetSubjectsStatus(subs, session.SessionId, currentterm));
+            res.Result.Add(GetSchoolSettingStatus(setting)); 
+            res.Result.Add(GetResultSettingStatus(setting));
+            res.Result.Add(GetRegNumberStatus(setting));
+            res.Result.Add(GetGradeStatus(currentterm));
+            res.Result.Add(GetTemplateStatus(setting));
+            return res;
+        }
 
+
+        ApplicationSetupStatus GetSessionStatus(Session session)
+        {
+
+            const string type = "session";
+            if (session == null)
+                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+            else
+            {
+                var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                var terms = context.SessionTerm.Where(d => d.ClientId == smsClientId && session.SessionId == d.SessionId).ToList();
+                decimal totalCount = terms.Count();
+                decimal percentageCompletion = 100 / totalCount;
+                for (int i = 0; i < totalCount; i++)
+                {
+                    res.CompleteionStatus += percentageCompletion;
+                }
+                if (res.CompleteionStatus != 100)
+                    res.Message = "Don't worry! this will turn completed when the school runs all terms;";
+                else
+                    res.Message = "All seems to be good here";
+                return res;
+            }
+        }
+
+        ApplicationSetupStatus GetClassStatus(List<ClassLookup> clas, Guid sessionId, SessionTermDto term)
+        {
+
+            const string type = "classes";
+            if (!clas.Any())
+                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+            else
+            {
+                var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                var sClasses = context.SessionClass.Include(c => c.Students)
+                    .Where(d => d.ClientId == smsClientId && sessionId == d.SessionId 
+                    && d.SessionTermId == term.SessionTermId
+                    && clas.Select(f => f.ClassLookupId).Contains(d.ClassId)).ToList();
+                decimal totalCount = sClasses.Count();
+                if(totalCount == 0 )
+                    return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+                decimal percentageCompletion = 100 / totalCount;
+                for (int i = 0; i < totalCount; i++)
+                {
+                    if (sClasses[i].Students.Count > 0)
+                    {
+                        res.CompleteionStatus += percentageCompletion;
+                    }
+                }
+                if (res.CompleteionStatus != 100)
+                    res.Message = "It seems some classes have no students in them. Please check";
+                else
+                    res.Message = "All is good here";
+                return res;
+            }
+        }
+
+        ApplicationSetupStatus GetSubjectsStatus(List<Subject> subs, Guid sessionId, SessionTermDto term)
+        {
+
+            const string type = "subjects";
+            if (!subs.Any())
+                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+            else
+            {
+                var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                var sessioClasSubjs = context.SessionClassSubject.Include(d => d.SessionClass)
+                    .Where(d => d.ClientId == smsClientId && term.SessionTermId == d.SessionClass.SessionTermId && subs.Select(f => f.SubjectId).Contains(d.SubjectId)).ToList();
+                var classesWithSubjs = sessioClasSubjs.GroupBy(d => d.SessionClassId).Select(f => f.First()).ToList();
+                var allClasess = context.SessionClass.Where(d => d.Deleted == false && d.SessionTermId == term.SessionTermId).ToList();
+                decimal totalCount = 0;
+                if (allClasess.Count != classesWithSubjs.Count)
+                {
+                    res.Message = "It seems some classes have no subjects in them. Please check";
+                    return res;
+                }
+                res.CompleteionStatus = 100;
+                if (res.CompleteionStatus != 100)
+                {
+                    res.Message = "It seems some classes have no subjects in them. Please check";
+                    res.CompleteionStatus = 50;
+                }
+                else
+                {
+                    res.Message = "All is good here";
+                    res.CompleteionStatus = 100;
+                }
+
+                
+                return res;
+            }
+        }
+
+        ApplicationSetupStatus GetSchoolSettingStatus(SchoolSetting setting)
+        {
+
+            const string type = "schoolsetting";
+            var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+
+            decimal totalCount = 10;
+            decimal percentageCompletion = 100 / totalCount;
+            if(!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_SchoolName))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_SchoolAbbreviation))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_Email))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_Country))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_State))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_SchoolAddress))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_PhoneNo1))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_PhoneNo2))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_SchoolType))
+                res.CompleteionStatus += percentageCompletion;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_Photo))
+                res.CompleteionStatus += percentageCompletion;
+
+            if(res.CompleteionStatus != 100)
+                res.Message = "Ensure all fields in school setting are provided";
+            else
+                res.Message = "All seems to be good here";
+            return res;
+
+        }
+
+        ApplicationSetupStatus GetResultSettingStatus(SchoolSetting setting)
+        {
+
+            const string type = "resultsetting";
+            var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+
+            decimal totalCount = 1;
+            decimal percentageCompletion = 100 / totalCount;
+            if (!string.IsNullOrEmpty(setting.RESULTSETTINGS_PrincipalStample))
+                res.CompleteionStatus = 100;
+
+
+            if (res.CompleteionStatus != 100)
+                res.Message = "Ensure result settings are well done to be able to print result effectively";
+            else
+                res.Message = "All seems to be good here";
+            return res;
+
+        }
+        ApplicationSetupStatus GetRegNumberStatus(SchoolSetting setting)
+        {
+
+            const string type = "registrationnumber";
+            var res = new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+
+            decimal totalCount = 3;
+            decimal percentageCompletion = 100 / totalCount;
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_StudentRegNoFormat))
+            {
+                res.CompleteionStatus += percentageCompletion;
+                res.Cleared = true;
+            }
+            if (setting.SCHOOLSETTINGS_RegNoPosition != 0)
+            {
+                res.CompleteionStatus += percentageCompletion;
+                res.Cleared = true;
+            }
+            if (!string.IsNullOrEmpty(setting.SCHOOLSETTINGS_RegNoSeperator))
+            {
+                res.CompleteionStatus += percentageCompletion;
+                res.Cleared = true;
+            }
+
+            if (res.CompleteionStatus != 100)
+                res.Message = "Please ENSURE Students registration number is set up before adding students";
+            else
+                res.Message = "All seems to be good here";
+
+            return res;
+        }
+
+        ApplicationSetupStatus GetGradeStatus(SessionTermDto term)
+        {
+
+            const string type = "grade";
+            var gradesetting = context.Grade.FirstOrDefault(c => c.ClientId == smsClientId && c.Deleted == false);
+            var res = new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+            if (gradesetting == null)
+                return res;
+
+            var activeClasses = context.SessionClass
+                .Include(s => s.Class).ThenInclude(d => d.GradeLevel)
+                .Where(c => c.ClientId == smsClientId && c.SessionTermId == term.SessionTermId).ToList();
+
+            decimal totalCount = activeClasses.Count;
+            if(totalCount == 0) {
+
+                res.Message = "No Class found. Please check";
+                return res; 
+            }
+            decimal percentageCompletion = 100 / totalCount;
+            for (int i = 0; i < totalCount; i++)
+            {
+                if (activeClasses[i].Class.GradeLevel == null)
+                    continue;
+                else
+                {
+                    res.CompleteionStatus += percentageCompletion;
+                    res.Cleared = true;
+                }
+            
+            }
+            if (res.CompleteionStatus != 100)
+                res.Message = "Please ENSURE all classes are graded accordingly e.g Junior, Senior, Primary, Cretch";
+            else
+                res.Message = "All seems to be good here";
+            return res;
+
+        }
+
+        ApplicationSetupStatus GetTemplateStatus(SchoolSetting setting)
+        {
+
+            const string type = "resulttemplate";
+            var res = new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+
+            decimal totalCount = 1;
+            decimal percentageCompletion = 100 / totalCount;
+            if (!string.IsNullOrEmpty(setting.RESULTSETTINGS_SelectedTemplate))
+            {
+                res.CompleteionStatus += percentageCompletion;
+                res.Cleared = true;
+            }
+
+            if (res.CompleteionStatus != 100)
+                res.Message = "Please ENSURE result template is selected to be able to print result effectively";
+            else
+                res.Message = "All seems to be good here";
+
+            return res;
+        }
+    }
 }

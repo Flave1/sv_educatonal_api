@@ -453,6 +453,7 @@ namespace BLL.SessionServices
                         ExamScore = sessionClasses[i].ExamScore,
                         AssessmentScore = sessionClasses[i].AssessmentScore,
                         PassMark = sessionClasses[i].PassMark,
+                        SessionTermId = termService.GetCurrentTerm().SessionTermId
                     };
                     context.SessionClass.Add(newSessionClass);
                     await context.SaveChangesAsync();

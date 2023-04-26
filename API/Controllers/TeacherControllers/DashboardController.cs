@@ -21,6 +21,13 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get/portal-status")]
+        public IActionResult Status()
+        {
+            var response = service.GetApplicationStatus();
+            return Ok(response);
+        }
+
         [HttpGet("get-student/dashboard-count")]
         public IActionResult GetStudentDashboardCountAsync()
         {

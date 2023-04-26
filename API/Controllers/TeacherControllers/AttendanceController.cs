@@ -69,6 +69,14 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get/all/class-register/activeterm/{sessionClassId}")]
+        public async Task<IActionResult> GetAllAttendanceRegisterAsync(string sessionClassId, int pageNumber)
+        {
+            var filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetAllAttendanceRegisterAsync(sessionClassId, filter);
+            return Ok(response);
+        }
+
         [HttpPost("delete/class-register")]
         public async Task<IActionResult> DeleteClassRegisterAsync(SingleDelete delete)
         {

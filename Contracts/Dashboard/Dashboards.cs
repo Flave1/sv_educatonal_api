@@ -39,4 +39,12 @@ namespace SMP.Contracts.Dashboard
         public int StudentNoteCount { get; set; }
         public int StudentCounts { get; set; }
     }
+
+    public class ApplicationSetupStatus
+    {
+        public string Setup { get; set;}
+        public bool Cleared { get; set; }
+        public decimal CompleteionStatus { get; set; }
+        public string Message { get; set; }
+    }
 }
