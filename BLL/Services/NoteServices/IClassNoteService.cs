@@ -35,5 +35,6 @@ namespace SMP.BLL.Services.NoteServices
         Task<APIResponse<PagedResponse<List<GetClassNotes>>>> GetMyWardsClassNotesByAsync(string subjectId, string studentContactId, PaginationFilter filter);
         Task<APIResponse<GetClassNotes>> GetSingleMyWardsClassNotesByAsync(Guid teacherClassNoteId);
         Task<APIResponse<byte[]>> DownloadClassNotesByAsync(string classnoteId);
+        Task<APIResponse<PagedResponse<List<GetClassNotes>>>> GetClassNotesByTeachersMobileAsync(string classId, string subjectId, int status, PaginationFilter filter);
     }
 }

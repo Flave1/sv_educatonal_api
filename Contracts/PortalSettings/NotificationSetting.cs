@@ -71,13 +71,13 @@ namespace SMP.Contracts.PortalSettings
             
         }
     }
-    public class Session : NotificationSesstionMedia
+    public class SessionDto1 : NotificationSesstionMedia
     {
-        public Session()
+        public SessionDto1()
         {
 
         }
-        public Session(string setting)
+        public SessionDto1(string setting)
         {
             if (!string.IsNullOrEmpty(setting))
             {
@@ -173,7 +173,7 @@ namespace SMP.Contracts.PortalSettings
         public Announcement Announcement { get; set; } = new Announcement();
         public Assessment Assessment { get; set; } = new Assessment();
         public Permission Permission { get; set; } = new Permission();
-        public Session Session { get; set; } = new Session();
+        public SessionDto1 Session { get; set; } = new SessionDto1();
         public ClassManagement ClassManagement { get; set; } = new ClassManagement();
         public Staff Staff { get; set; } = new Staff();
         public Enrollment Enrollment { get; set; } = new Enrollment();
@@ -188,7 +188,7 @@ namespace SMP.Contracts.PortalSettings
             Announcement = new Announcement(st.NOTIFICATIONSETTINGS_Announcement);
             Assessment = new Assessment(st.NOTIFICATIONSETTINGS_Assessment);
             Permission = new Permission(st.NOTIFICATIONSETTINGS_Permission);
-            Session = new Session(st.NOTIFICATIONSETTINGS_Session);
+            Session = new SessionDto1(st.NOTIFICATIONSETTINGS_Session);
             ClassManagement = new ClassManagement(st.NOTIFICATIONSETTINGS_ClassManagement);
             Staff = new Staff(st.NOTIFICATIONSETTINGS_Staff);
             Enrollment = new Enrollment(st.NOTIFICATIONSETTINGS_Enrollment);

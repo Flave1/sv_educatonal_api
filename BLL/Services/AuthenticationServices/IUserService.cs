@@ -32,5 +32,8 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<bool>> ResetPassword(ResetAccount request);
         Task<bool> TeacherAccountByEmailExist(string email);
         Task<bool> TeacherAccountByEmailExistOnUpdate(string email, Guid teacherId);
+        Task<APIResponse<AuthenticationResult>> ValidateEmailAsync(ValidateEmail request);
+        Task<APIResponse<AuthenticationResult>> ValidateOTPAsync(ValidateOtp request);
+        Task<APIResponse<bool>> ResetPasswordMobile(ResetAccountMobile request);
     }
 }

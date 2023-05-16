@@ -46,6 +46,12 @@ namespace API.Controllers
             var response = await service.GetAllSubjectsAsync();
             return Ok(response);
         }
+        [HttpGet("getall/subject-by-class")]
+        public async Task<IActionResult> GetAllSubjectsAsync(Guid sessionClassId)
+        {
+            var response = await service.GetAllSubjects2Async(sessionClassId);
+            return Ok(response);
+        }
 
         [AllowAnonymous]
         [HttpGet("getall/active-subject")]

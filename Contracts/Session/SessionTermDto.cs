@@ -18,6 +18,10 @@ namespace SMP.Contracts.Session
             IsActive = db.IsActive;
             SessionId = db.SessionId;
         }
+        public SessionTermDto()
+        {
+            
+        }
     }
 
     public class SessionDto

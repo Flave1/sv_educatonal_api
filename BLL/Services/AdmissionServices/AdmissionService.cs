@@ -106,7 +106,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 }
 
                 student.Email = "";
-                var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
+                var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), studentService.GetRegistrationFormat());
 
                 string photoUrl = "";
 
@@ -185,6 +185,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 return res;
             }
         }
+
         public async Task<APIResponse<bool>> EnrollMultipleCandidates(EnrollCandidates request)
         {
             var res = new APIResponse<bool>();
@@ -224,7 +225,7 @@ namespace SMP.BLL.Services.AdmissionServices
                         return res;
                     }
                     student.Email = "";
-                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
+                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), studentService.GetRegistrationFormat());
                     
                     var parentId = await parentService
                         .SaveParentDetail(

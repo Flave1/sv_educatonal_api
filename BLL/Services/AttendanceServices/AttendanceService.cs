@@ -33,6 +33,22 @@ namespace SMP.BLL.Services.AttendanceServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.termService = termService;
         }
+
+        async Task CreateRegister(PostStudentAttendance2 req)
+        {
+            var term = termService.GetCurrentTerm();
+            var reg = new ClassRegister
+            {
+                ClassRegisterId = req.ClassRegisterId,
+                SessionClassId = req.SessionClassId,
+                RegisterLabel = req.RegisterLabel,
+                SessionTermId = term.SessionTermId
+            };
+            await context.ClassRegister.AddAsync(reg);
+            await context.SaveChangesAsync();
+        }
+
+
         async Task<APIResponse<GetAttendance>> IAttendanceService.CreateClassRegisterAsync(Guid SessionClassId)
         {
             var res = new APIResponse<GetAttendance>();
@@ -57,6 +73,36 @@ namespace SMP.BLL.Services.AttendanceServices
             res.Result = classAttendance;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.Created;
+            return res;
+        }
+        async Task<APIResponse<PostStudentAttendance>> IAttendanceService.UpdateStudentAttendanceRecordFromMobile(PostStudentAttendance2 req)
+        {
+            var res = new APIResponse<PostStudentAttendance>();
+
+            var register = context.ClassRegister.Find(req.ClassRegisterId);
+
+            if(register == null)
+            {
+                await CreateRegister(req);
+                res.Result = (this as IAttendanceService).UpdateStudentAttendanceRecord(new PostStudentAttendance
+                {
+                    ClassRegisterId = req.ClassRegisterId,
+                    IsPresent = req.IsPresent,
+                    StudentContactId = req.StudentContactId
+                }
+                ).Result.Result;
+            }
+            else
+            {
+                res.Result = (this as IAttendanceService).UpdateStudentAttendanceRecord(new PostStudentAttendance
+                {
+                    ClassRegisterId = req.ClassRegisterId,
+                    IsPresent = req.IsPresent,
+                    StudentContactId = req.StudentContactId
+                }).Result.Result;
+            }
+           
+            res.IsSuccessful = true;
             return res;
         }
         async Task<APIResponse<PostStudentAttendance>> IAttendanceService.UpdateStudentAttendanceRecord(PostStudentAttendance attendance)

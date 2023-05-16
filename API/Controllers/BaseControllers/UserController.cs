@@ -46,24 +46,6 @@ namespace API.Controllers
             }
         }
 
-        [AllowAnonymous]
-        [HttpPost("mobile-login")]
-        public async Task<IActionResult> MobileLogin([FromBody] LoginCommand request)
-        {
-            try
-            {
-                var response = await identityService.MobileLoginAsync(request);
-                if (response.IsSuccessful)
-                    return Ok(response);
-                return BadRequest(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(400, new { result = ex.Message });
-            }
-        }
-
-
 
         [AllowAnonymous]
         [HttpPost("generate/reset-link")]
@@ -95,6 +77,9 @@ namespace API.Controllers
                 return BadRequest(new { result = ex.Message });
             }
         }
+
+
+      
         [AllowAnonymous]
         [HttpPost("first-time/change-password")]
         public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePassword request)
@@ -167,9 +152,59 @@ namespace API.Controllers
                 return Ok(response);
             return BadRequest(response);
         }
+
+
+
+
+        [AllowAnonymous]
+        [HttpPost("mobile-login")]
+        public async Task<IActionResult> MobileLogin([FromBody] LoginCommand request)
+        {
+            try
+            {
+                var response = await identityService.MobileLoginAsync(request);
+                if (response.IsSuccessful)
+                    return Ok(response);
+                return BadRequest(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { result = ex.Message });
+            }
+        }
+        [AllowAnonymous]
+        [HttpPost("forget/mobile-password")]
+        public async Task<IActionResult> ForgotMobilePassword([FromBody] ValidateEmail request)
+        {
+
+            var response = await userService.ValidateEmailAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("validate-otp-mobile")]
+        public async Task<IActionResult> ValidateOTPAsync([FromBody] ValidateOtp request)
+        {
+
+            var response = await userService.ValidateOTPAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-password-mobile")]
+        public async Task<IActionResult> ResetPass([FromBody] ResetAccountMobile request)
+        {
+            var response = await userService.ResetPasswordMobile(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
         #endregion
-
-
 
 
 

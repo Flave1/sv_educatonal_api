@@ -28,6 +28,7 @@ using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.Admission;
 using System.Linq;
 using SMP.DAL.Models.Logger;
+using SMP.DAL.Models.Authentication;
 
 namespace DAL
 {
@@ -41,10 +42,7 @@ namespace DAL
 
         private readonly IHttpContextAccessor accessor;
 
-     
-        public DataContext()
-        {
-        }
+        public DataContext() { }
 
 
         public DbSet<UserRole> UserRole { get; set; }
@@ -66,14 +64,8 @@ namespace DAL
         public DbSet<StudentAttendance> StudentAttendance { get; set; }
         public DbSet<ClassRegister> ClassRegister { get; set; }
         public DbSet<ScoreEntry> ScoreEntry { get; set; }
-        //public DbSet<ClassScoreEntry> ClassScoreEntry { get; set; }
         public DbSet<SchoolSetting> SchoolSettings { get; set; }
-        //public DbSet<ResultSetting> ResultSetting { get; set; }
-        ////public DbSet<NotificationSetting> NotificationSetting { get; set; }
-        //public DbSet<AppLayoutSetting> AppLayoutSetting { get; set; }
         public DbSet<Notification> Notification { get; set; }
-        //public DbSet<UploadedPin> UploadedPin { get; set; }
-        //public DbSet<UsedPin> UsedPin { get; set; }
         public DbSet<Announcements> Announcement { get; set; }
         public DbSet<ClassNote> ClassNote { get; set; }
         public DbSet<StudentNote> StudentNote { get; set; }
@@ -89,13 +81,12 @@ namespace DAL
         public DbSet<AssessmentScoreRecord> AssessmentScoreRecord { get; set; }
         public DbSet<HomeAssessment> HomeAssessment { get; set; }
         public DbSet<HomeAssessmentFeedBack> HomeAssessmentFeedBack { get; set; }
-        //public DbSet<SessionClassArchive> SessionClassArchive { get; set; }
         public DbSet<Parents> Parents { get; set; }
-        //public DbSet<AdmissionNotification> AdmissionNotifications { get; set; }
         public DbSet<AdmissionSetting> AdmissionSettings { get; set; }
         public DbSet<Admission> Admissions { get; set; }
         public DbSet<ScoreEntryHistory> ScoreEntryHistory { get; set; }
         public DbSet<Log> Log { get; set; }
+        public DbSet<OTP> OTP { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

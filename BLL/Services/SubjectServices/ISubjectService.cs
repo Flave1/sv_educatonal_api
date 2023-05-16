@@ -1,6 +1,7 @@
 ﻿using Contracts.Class;
 using Contracts.Common;
 using DAL.SubjectModels;
+using SMP.Contracts.ClassModels;
 using SMP.Contracts.Common;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,6 @@ namespace BLL.Services.SubjectServices
         Task<APIResponse<List<GetApplicationLookups>>> GetAllActiveSubjectsAsync();
         APIResponse<List<DropdownSelect>> GetAllStudentSubjects();
         APIResponse<Guid> GetSubjectTeacher(Guid subjectId);
+        Task<APIResponse<List<SessionClassSubjects2>>> GetAllSubjects2Async(Guid sessionClassId);
     }
 }

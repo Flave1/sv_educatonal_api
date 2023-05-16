@@ -910,11 +910,16 @@ namespace SMP.BLL.Services.ResultServices
 
         async Task<bool> IResultsService.AllResultPublishedAsync()
         {
-            var publishCurrentClassResults = await context.SessionClass
+            var allClasses = await context.SessionClass //
                 .Where(x=>x.ClientId == smsClientId)
                 .Include(x => x.Students)
-                .Where(d => d.Session.IsActive && d.Deleted == false && d.Students.Any() && d.IsPublished == true)
+                .Where(d => d.Session.IsActive && d.Deleted == false)
                 .ToListAsync();
+
+            if (!allClasses.Any())
+                return true;
+
+            var publishCurrentClassResults = allClasses.Where(d => d.Students.Any() && d.IsPublished == true);
             if (!publishCurrentClassResults.Any())
                 return false;
             return true;

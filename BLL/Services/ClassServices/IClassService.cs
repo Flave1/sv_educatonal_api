@@ -30,5 +30,6 @@ namespace BLL.ClassServices
         Task<APIResponse<List<ClassSubjects>>> GetSessionClassSubjects(Guid sessionClassId);
         IQueryable<SessionClass> GetSessionClass(Guid sessionClassId);
         ClassDto GetSessionClassByLkp(Guid classLkp);
+        Task<APIResponse<List<GetStudentContacts2>>> GetClassStudentsClassesMobileAsync(Guid sessionClassId);
     }
 }

@@ -21,5 +21,6 @@ namespace SMP.BLL.Services.AttendanceServices
         Task<APIResponse<GetAttendance>> ContinueAttendanceAsync(Guid ClassRegisterId);
         Task<APIResponse<bool>> DeleteClassRegisterAsync(SingleDelete ClassRegister);
         Task<APIResponse<UpdateClassRegister>> UpdateClassRegisterLabel(UpdateClassRegister ClassRegister);
+        Task<APIResponse<PostStudentAttendance>> UpdateStudentAttendanceRecordFromMobile(PostStudentAttendance2 req);
     }
 }

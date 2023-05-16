@@ -127,11 +127,11 @@ namespace SMP.BLL.Services.NoteServices
             return res;
         }
          
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByTeachersAsync(string classId, string subjectId, int status)
+        async Task<APIResponse<PagedResponse<List<GetStudentNotes>>>> IStudentNoteService.GetStudentNotesByTeachersAsync(string classId, string subjectId, int status, PaginationFilter filter)
         {
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
-            var res = new APIResponse<List<GetStudentNotes>>();
+            var res = new APIResponse<PagedResponse<List<GetStudentNotes>>>();
 
             var query = context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Student)
@@ -156,12 +156,58 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(u => u.SubjectId == Guid.Parse(subjectId));
                 }
             }
-            res.Result = await query.Select(x => new GetStudentNotes(x)).ToListAsync();
+
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetStudentNotes(x)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-    
+
+        async Task<APIResponse<PagedResponse<List<GetStudentNotes>>>> IStudentNoteService.GetStudentNotesByTeachers2Async(string classId, string subjectId, int status, PaginationFilter filter)
+        {
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+
+            var res = new APIResponse<PagedResponse<List<GetStudentNotes>>>();
+
+            var query = context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
+                        .Include(s => s.Student)
+                        .Include(s => s.SessionClass).ThenInclude(s => s.Session)
+                        .Include(d => d.Teacher)
+                        .Include(d => d.Subject).Where(u => u.SessionClassId == Guid.Parse(classId) && u.SessionClass.Session.IsActive == true && u.AprrovalStatus != (int)NoteApprovalStatus.Saved);
+
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            {
+                query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
+            }
+
+            if (status >= 0)
+            {
+                query = query.Where(u => u.AprrovalStatus == status);
+            }
+
+            if (!string.IsNullOrEmpty(subjectId))
+            {
+                if (subjectId != "all")
+                {
+                    query = query.Where(u => u.SubjectId == Guid.Parse(subjectId));
+                }
+            }
+
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetStudentNotes(x)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
+
+
         async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetAllUnreviewedAsync()
         {
             var res = new APIResponse<List<GetStudentNotes>>();
@@ -293,10 +339,10 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
-        async Task<APIResponse<List<GetStudentNotes>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId, int status, string termId)
+        async Task<APIResponse<PagedResponse<List<GetStudentNotes>>>> IStudentNoteService.GetStudentNotesByStudentAsync(string subjectId, int status, string termId, PaginationFilter filter)
         {
             var studentContactId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
-            var res = new APIResponse<List<GetStudentNotes>>();
+            var res = new APIResponse<PagedResponse<List<GetStudentNotes>>>();
             if (!string.IsNullOrEmpty(studentContactId))
             {
                 var query = context.StudentNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
@@ -327,9 +373,9 @@ namespace SMP.BLL.Services.NoteServices
                     query = query.Where(u => u.AprrovalStatus == status);
                 }
 
-                res.Result = await query.Select(x => new GetStudentNotes(x)).ToListAsync();
-
-
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetStudentNotes(x)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = Messages.GetSuccess; 

@@ -38,6 +38,7 @@ namespace SMP.Contracts.Dashboard
         public int AssessmentCount { get; set; }
         public int StudentNoteCount { get; set; }
         public int StudentCounts { get; set; }
+        public Guid ClassLookupId { get; set; } 
     }
 
     public class ApplicationSetupStatus

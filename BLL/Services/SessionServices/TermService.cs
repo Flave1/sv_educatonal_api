@@ -57,7 +57,7 @@ namespace SMP.BLL.Services.SessionServices
 
         SessionTermDto ITermService.GetCurrentTerm() =>
            context.SessionTerm.Where(d => d.ClientId == smsClientId && d.IsActive == true)
-            .Select(c => new SessionTermDto(c)).FirstOrDefault() ?? throw new ArgumentNullException("No Current term found");
+            .Select(c => new SessionTermDto(c))?.FirstOrDefault() ?? new SessionTermDto();
 
 
         SessionTermDto ITermService.SelectTerm(Guid termId) =>

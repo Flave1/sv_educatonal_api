@@ -10,6 +10,7 @@ using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Dashboard;
+using SMP.Contracts.PortalSettings;
 //using SMP.Contracts.PortalSettings;
 using SMP.Contracts.Session;
 using SMP.DAL.Models.PortalSettings;
@@ -217,14 +218,14 @@ namespace SMP.BLL.Services.DashboardServices
 
                 }
                 else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
-
-                     classesAsASujectTeacher = context.SessionClass
-                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
-                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name);
+                {
+                    classesAsASujectTeacher = context.SessionClass
+                                            .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                                            .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
+                                            .Include(s => s.Class)
+                                            .Include(s => s.Session)
+                                            .Include(s => s.SessionClassSubjects)
+                                            .OrderBy(s => s.Class.Name);
 
                     classesAsAFormTeacher = context.SessionClass
                         .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId))
@@ -232,42 +233,40 @@ namespace SMP.BLL.Services.DashboardServices
                         .Include(s => s.Session)
                         .Include(s => s.SessionClassSubjects)
                         .OrderBy(s => s.Class.Name);
-
-                   
-                    //res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
                 }
-                var allClasses = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new { ClassName = s.Class.Name, SessionClassId = s.SessionClassId, Classid = s.ClassId }).ToList();
+            }
+            var allClasses = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new { ClassName = s.Class.Name, SessionClassId = s.SessionClassId, Classid = s.ClassId }).ToList();
 
-                var classRes = new List<Teacherclasses>();
-                for (int i = 0; i < allClasses.Count; i++)
-                {
-                    var result = new Teacherclasses();
+            var classRes = new List<Teacherclasses>();
+            for (int i = 0; i < allClasses.Count; i++)
+            {
+                var result = new Teacherclasses();
 
-                    result.SessionClass = allClasses[i].ClassName;
-                    result.SessionClassId = allClasses[i].SessionClassId;
+                result.SessionClass = allClasses[i].ClassName;
+                result.SessionClassId = allClasses[i].SessionClassId;
+                result.ClassLookupId = allClasses[i].Classid;
 
-                    var totalHomeAssessments = context.HomeAssessment
+                var totalHomeAssessments = context.HomeAssessment
                         .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
                         .Count(x => x.Deleted == false && x.TeacherId == Guid.Parse(teacherId));
 
-                    var totalClassAssessments = context.ClassAssessment
-                        .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
-                        .Include(x => x.SessionClass).ThenInclude(x => x.Session)
-                        .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
-                       .Count(x => x.Scorer == Guid.Parse(teacherId));
+                var totalClassAssessments = context.ClassAssessment
+                    .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
+                    .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                    .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+                   .Count(x => x.Scorer == Guid.Parse(teacherId));
 
-                    result.AssessmentCount = (totalHomeAssessments + totalClassAssessments);
+                result.AssessmentCount = (totalHomeAssessments + totalClassAssessments);
 
-                    result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
+                result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
 
                 result.StudentNoteCount = context.TeacherClassNote
                     .Where(x => x.ClientId == smsClientId && x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
-                    .Where(x => x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString())).Distinct().Count();
+                    .Where(x => x?.Classes != null ? (bool)x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString()) : false).Distinct().Count();
                 classRes.Add(result);
             }
-
             res.Result = classRes;
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;
@@ -279,13 +278,13 @@ namespace SMP.BLL.Services.DashboardServices
             var res = new APIResponse<List<ApplicationSetupStatus>>();
             res.Result = new List<ApplicationSetupStatus>();
             var currentterm = termService.GetCurrentTerm();
-            var session = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive && d.Deleted == false);
+            var session = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive && d.Deleted == false) ?? null;
             var classes = context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
             var subs = context.Subject.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
             var setting = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId && d.Deleted == false);
             res.Result.Add(GetSessionStatus(session));
-            res.Result.Add(GetClassStatus(classes, session.SessionId, currentterm));
-            res.Result.Add(GetSubjectsStatus(subs, session.SessionId, currentterm));
+            res.Result.Add(GetClassStatus(classes, session?.SessionId, currentterm));
+            res.Result.Add(GetSubjectsStatus(subs, session?.SessionId, currentterm));
             res.Result.Add(GetSchoolSettingStatus(setting)); 
             res.Result.Add(GetResultSettingStatus(setting));
             res.Result.Add(GetRegNumberStatus(setting));
@@ -304,6 +303,8 @@ namespace SMP.BLL.Services.DashboardServices
             else
             {
                 var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                if(session == null)
+                    return res;
                 var terms = context.SessionTerm.Where(d => d.ClientId == smsClientId && session.SessionId == d.SessionId).ToList();
                 decimal totalCount = terms.Count();
                 decimal percentageCompletion = 100 / totalCount;
@@ -319,7 +320,7 @@ namespace SMP.BLL.Services.DashboardServices
             }
         }
 
-        ApplicationSetupStatus GetClassStatus(List<ClassLookup> clas, Guid sessionId, SessionTermDto term)
+        ApplicationSetupStatus GetClassStatus(List<ClassLookup> clas, Guid? sessionId, SessionTermDto term)
         {
 
             const string type = "classes";
@@ -328,6 +329,8 @@ namespace SMP.BLL.Services.DashboardServices
             else
             {
                 var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                if (sessionId == null)
+                    return res;
                 var sClasses = context.SessionClass.Include(c => c.Students)
                     .Where(d => d.ClientId == smsClientId && sessionId == d.SessionId 
                     && d.SessionTermId == term.SessionTermId
@@ -351,7 +354,7 @@ namespace SMP.BLL.Services.DashboardServices
             }
         }
 
-        ApplicationSetupStatus GetSubjectsStatus(List<Subject> subs, Guid sessionId, SessionTermDto term)
+        ApplicationSetupStatus GetSubjectsStatus(List<Subject> subs, Guid? sessionId, SessionTermDto term)
         {
 
             const string type = "subjects";
@@ -360,11 +363,13 @@ namespace SMP.BLL.Services.DashboardServices
             else
             {
                 var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
+                if (sessionId == null)
+                    return res;
                 var sessioClasSubjs = context.SessionClassSubject.Include(d => d.SessionClass)
                     .Where(d => d.ClientId == smsClientId && term.SessionTermId == d.SessionClass.SessionTermId && subs.Select(f => f.SubjectId).Contains(d.SubjectId)).ToList();
                 var classesWithSubjs = sessioClasSubjs.GroupBy(d => d.SessionClassId).Select(f => f.First()).ToList();
                 var allClasess = context.SessionClass.Where(d => d.Deleted == false && d.SessionTermId == term.SessionTermId).ToList();
-                decimal totalCount = 0;
+    
                 if (allClasess.Count != classesWithSubjs.Count)
                 {
                     res.Message = "It seems some classes have no subjects in them. Please check";

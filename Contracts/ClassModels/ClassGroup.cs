@@ -96,4 +96,21 @@ namespace SMP.Contracts.ClassModels
             Subjectid = db.SubjectId.ToString();
         }
     }
+
+    public class SessionClassSubjects2
+    {
+        public string SessionClassSubjectId { get; set; }
+        public string SubjectName { get; set; }
+        public string Subjectid { get; set; }
+        public string SubjectTeacher { get; set; }
+        public string SubjectTeacherId { get; set; }
+        public SessionClassSubjects2(SessionClassSubject db)
+        {
+            SessionClassSubjectId = db.SessionClassSubjectId.ToString();
+            SubjectName = db.Subject.Name;
+            Subjectid = db.SubjectId.ToString();
+            SubjectTeacherId = db.SubjectTeacherId.ToString();
+            SubjectTeacher = db.SubjectTeacher.LastName + " " + db.SubjectTeacher.FirstName;
+        }
+    }
 }

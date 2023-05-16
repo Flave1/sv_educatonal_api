@@ -1,8 +1,6 @@
 ﻿using DAL.StudentInformation;
 using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
-using SMP.Contracts.Admissions;
-using SMP.DAL.Migrations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,10 +11,30 @@ namespace Contracts.Options
     public class ResetAccount
     {
         public string UserId { get; set; }
-        public string Password { get; set; } 
+        public string Password { get; set; }
         public string ResetToken { get; set; }
         public string SchoolUrl { get; set; }
     }
+    public class ResetAccountMobile
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string ClientId { get; set; }
+    }
+    public class ValidateEmail
+    { 
+        public string Email { get; set; }
+        public string ClientId { get; set; }
+    }
+    public class ValidateOtp
+    {
+        public string Otp { get; set; }
+        public string ClientId { get; set; }
+    }
+    //public class ResetAccount2
+    //{
+    //    public string Email { get; set; }
+    //}
     public class ResetPassword
     {
         public string ResetOption { get; set; }
@@ -210,6 +228,7 @@ namespace Contracts.Options
         public string UserName { get; set; }
         public string RegistrationNumber { get; set; }
         public string SchoolLogo { get; set; }
+        public string Id { get; set; }
     }
 
     public class UploadClass
@@ -242,6 +261,35 @@ namespace Contracts.Options
         public string SessionClass { get; set; }
         public int ExcelLineNumber { get; set; }
         public string ParentOrGuardianLastName { get; set; }
+    }
+
+
+    public class GetStudentContacts2
+    {
+        public string StudentAccountId { get; set; }
+        public int UserType { get; set; }
+        public bool Active { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string Email { get; set; }
+        public string SessionClassID { get; set; }
+        public GetStudentContacts2(StudentContact db, string regNoFormat)
+        {
+
+            RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
+            UserType = db.User.UserType;
+            Active = db.User.Active;
+            FirstName = db.FirstName;
+            LastName = db.LastName;
+            MiddleName = db.MiddleName;
+            StudentAccountId = db.StudentContactId.ToString();
+            Email = db.User.Email;
+            SessionClassID = db.SessionClassId.ToString();
+        }
+
+
     }
 
 }

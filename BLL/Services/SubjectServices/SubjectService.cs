@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Utilities;
+using SMP.Contracts.ClassModels;
 using SMP.Contracts.Common;
 using SMP.DAL.Migrations;
 using System;
@@ -117,6 +118,18 @@ namespace BLL.Services.SubjectServices
                     Name = a.Name, IsActive = a.IsActive }
                 ).ToList();
 
+            res.Result = assa;
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        async Task<APIResponse<List<SessionClassSubjects2>>> ISubjectService.GetAllSubjects2Async(Guid sessionClassId)
+        {
+            var res = new APIResponse<List<SessionClassSubjects2>>();
+            var assa = await context.SessionClassSubject
+                .Where(d => d.ClientId == smsClientId && d.Deleted != true && d.SessionClassId == sessionClassId)
+                .Include(s => s.Subject).Include(d => d.SubjectTeacher)
+                .Select(a => new SessionClassSubjects2(a)).ToListAsync();
             res.Result = assa;
             res.IsSuccessful = true;
             return res;

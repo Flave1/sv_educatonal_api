@@ -234,6 +234,12 @@ namespace SMP.BLL.Services.AdmissionServices
                     .Where(d => d.Deleted != true && smsClientId == d.ClientId 
                     && d.AdmissionStatus == true || parentAdmissions.Contains(d.AdmissionSettingId)).OrderByDescending(x => x.CreatedOn);
                 }
+                else
+                {
+                    query = context.AdmissionSettings
+                   .Where(d => d.Deleted != true && smsClientId == d.ClientId
+                   && d.AdmissionStatus == true).OrderByDescending(x => x.CreatedOn);
+                }
 
                 if (query is null)
                 {

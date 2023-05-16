@@ -433,6 +433,22 @@ namespace BLL.ClassServices
             res.IsSuccessful = true;
             return res;
         }
+        async Task<APIResponse<List<GetStudentContacts2>>> IClassService.GetClassStudentsClassesMobileAsync(Guid sessionClassId)
+        {
+            var res = new APIResponse<List<GetStudentContacts2>>();
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+
+            var result = await context.StudentContact.Where(x => x.ClientId == smsClientId)
+                .Include(x => x.User)
+                .OrderByDescending(d => d.FirstName)
+                .Where(d => d.Deleted == false && d.SessionClassId == sessionClassId && d.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
+                .Select(f => new GetStudentContacts2(f, regNoFormat)).ToListAsync();
+
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            res.Result = result;
+            res.IsSuccessful = true;
+            return res;
+        }
 
         async Task<APIResponse<List<GetSessionClass>>> IClassService.GetSessionClassesBySessionAsync(string startDate, string endDate)
         {

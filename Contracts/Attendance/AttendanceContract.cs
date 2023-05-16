@@ -64,7 +64,15 @@ namespace Contracts.AttendanceContract
         public Guid ClassRegisterId { get; set; } 
         public Guid StudentContactId { get; set; }
         public bool IsPresent { get; set; }
-    } 
+    }
+    public class PostStudentAttendance2
+    {
+        public Guid SessionClassId { get; set; }
+        public Guid ClassRegisterId { get; set; }
+        public Guid StudentContactId { get; set; }
+        public bool IsPresent { get; set; }
+        public string RegisterLabel { get; set; }
+    }
     public class GetStudentAttendance
     {
         public Guid ClassAttendanceId { get; set; }

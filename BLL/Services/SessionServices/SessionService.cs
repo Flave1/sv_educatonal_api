@@ -115,7 +115,7 @@ namespace BLL.SessionServices
 
                 await termService.CreateSessionTermsAsync(dbSession.SessionId, session.Terms);
 
-                if (session.TransferClasses)
+                if (session.TransferClasses && !IsAnewSchool())
                 {
                     await TransferSessionRecord(currentSession, dbSession);
                 }
@@ -136,6 +136,16 @@ namespace BLL.SessionServices
         }
 
        
+        private bool IsAnewSchool()
+        {
+            var allClasses =  context.SessionClass
+                .Where(x => x.ClientId == smsClientId)
+                .Where(d => d.Deleted == false)
+                .ToList();
+            if (!allClasses.Any())
+                return true;
+            return false;
+        }
 
        
 

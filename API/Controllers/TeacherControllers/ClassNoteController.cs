@@ -1,9 +1,7 @@
 ﻿using BLL.Filter;
-using BLL.Helpers;
-using BLL.MiddleWares; 
+using BLL.MiddleWares;
 using Contracts.Common;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.NoteServices;
 using SMP.Contracts.Notes;
 using System;
@@ -56,15 +54,20 @@ namespace SMP.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get/classnotes/by-teacher/mobile")]
+        public async Task<IActionResult> GetClassNotesByTeachersMobileAsync(string classId, string subjectId, int status, int pageNumber)
+        {
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber, PageSize = 5 };
+            var response = await service.GetClassNotesByTeachersMobileAsync(classId, subjectId, status, filter);
+            return Ok(response);
+        }
+
         [HttpGet("get/single/teacher-classnote")]
         public async Task<IActionResult> GetSingleTeacherClassNotesAsync(string TeacherClassNoteId)
         {
             var response = await service.GetSingleTeacherClassNotesAsync(TeacherClassNoteId);
             return Ok(response);
         }
-
-       
-
 
         [HttpGet("get/single/classnotes/by-admin")]
         public async Task<IActionResult> GetSingleClassNotesByAdminAsync(SingleClassNotes request)

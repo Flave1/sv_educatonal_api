@@ -1,4 +1,5 @@
-﻿using BLL.MiddleWares; 
+﻿using BLL.Filter;
+using BLL.MiddleWares; 
 using Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc; 
@@ -38,17 +39,26 @@ namespace SMP.API.Controllers
         }
 
         [HttpGet("get/studentnotes/by-teacher")]
-        public async Task<IActionResult> GetStudentNotesByTeachersAsync(string classId, string subjectId, int status)
+        public async Task<IActionResult> GetStudentNotesByTeachersAsync(string classId, string subjectId, int status, int pageNumber)
         {
-            var response = await service.GetStudentNotesByTeachersAsync(classId, subjectId, status);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber, PageSize = 20 };
+            var response = await service.GetStudentNotesByTeachersAsync(classId, subjectId, status, filter);
             return Ok(response);
         }
-        
+        [HttpGet("get/studentnotes/by-teacher/mobile")]
+        public async Task<IActionResult> GetStudentNotesByTeachers2Async(string classId, string subjectId, int status, int pageNumber)
+        {
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber, PageSize = 5 };
+            var response = await service.GetStudentNotesByTeachers2Async(classId, subjectId, status, filter);
+            return Ok(response);
+        }
+
 
         [HttpGet("get/studentnotes/by-student")]
-        public async Task<IActionResult> GetStudentNotesByStudentAsync(string subjectId, int status, string termId)
+        public async Task<IActionResult> GetStudentNotesByStudentAsync(string subjectId, int status, string termId, int pageNumber)
         {
-            var response = await service.GetStudentNotesByStudentAsync(subjectId, status, termId);
+            PaginationFilter filter = new PaginationFilter { PageNumber = pageNumber };
+            var response = await service.GetStudentNotesByStudentAsync(subjectId, status, termId, filter);
             return Ok(response);
         }
        

@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Http;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Authentication;
 using SMP.DAL.Models.PortalSettings;
+using static System.Net.WebRequestMethods;
+using SMP.BLL.Services.AuthenticationServices;
+using SMP.DAL.Migrations;
 
 namespace BLL.AuthenticationServices
 {
@@ -33,9 +36,10 @@ namespace BLL.AuthenticationServices
         private readonly IUtilitiesService utilitiesService;
         private readonly string smsClientId;
         public readonly IHttpContextAccessor accessor;
+        private readonly IOtpService otpService;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
             IIdentityService identityService, IOptions<EmailConfiguration> emailOptions,
-            IUtilitiesService utilitiesService, IHttpContextAccessor accessor)
+            IUtilitiesService utilitiesService, IHttpContextAccessor accessor, IOtpService otpService)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -46,6 +50,7 @@ namespace BLL.AuthenticationServices
             emailConfiguration = emailOptions.Value;
             this.utilitiesService = utilitiesService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.otpService = otpService;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -85,9 +90,15 @@ namespace BLL.AuthenticationServices
         {
             try
             {
-                var email = !string.IsNullOrEmpty(student.Email) ? student.Email : regNo.Replace("/", "") + "@school.com";
+                var email = "";
+                if (!string.IsNullOrEmpty(student.Email))
+                    email =  student.Email;
+                else
+                    email = regNo + "@" + regNoFormat + ".com".ToLower();
+
+                var password = regNo;
                 var user = await manager.FindByEmailAsync(email);
-                if(user == null)
+                if (user == null)
                 {
                     user = new AppUser
                     {
@@ -99,7 +110,7 @@ namespace BLL.AuthenticationServices
                         Email = email,
                         UserType = (int)UserTypes.Student
                     };
-                    var result = await manager.CreateAsync(user, regNoFormat);
+                    var result = await manager.CreateAsync(user, password);
                     if (!result.Succeeded)
                     {
                         if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
@@ -440,6 +451,64 @@ namespace BLL.AuthenticationServices
             throw new ArgumentException("Ooops!! Something is wrong some where");
         }
 
+        async Task<APIResponse<AuthenticationResult>> IUserService.ValidateEmailAsync(ValidateEmail request)
+        {
+            var res = new APIResponse<AuthenticationResult>();
+            var user = await manager.FindByEmailAsync(request.Email);
+           
+            if (user == null)
+            {
+                res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                return res;
+            }
+            if (!IsUserAvailableInSchool(request.ClientId, user.Id))
+            {
+                res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                return res;
+            }
+
+            await SendReseOtpOnMobileAsync(request.ClientId, request.Email);
+
+            res.Message.FriendlyMessage = "An otp has been sent to your email";
+            res.IsSuccessful = true;
+            return res;
+        }
+        async Task<APIResponse<AuthenticationResult>> IUserService.ValidateOTPAsync(ValidateOtp request)
+        {
+            var res = new APIResponse<AuthenticationResult>();
+            if (otpService.IsOtpValid(request.Otp, request.ClientId))
+            {
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Otp is valid";
+                return res;
+            }
+            res.Message.FriendlyMessage = "Otp is invalid";
+            return res;
+        }
+
+        private async Task SendReseOtpOnMobileAsync(string clientId, string email)
+        {
+            var schoolSetting = context.SchoolSettings.FirstOrDefault(d => d.ClientId == clientId);
+            var to = new List<EmailAddress>();
+            var frm = new List<EmailAddress>();
+            to.Add(new EmailAddress { Address = email, Name = email });
+            frm.Add(new EmailAddress { Address = emailConfiguration.SmtpUsername, Name = schoolSetting.SCHOOLSETTINGS_SchoolName });
+            var otp = otpService.GenerateOtp(clientId);
+            var body = $"Your OTP for password change is: {otp.Token}. Please enter this code within {"30"} minutes to complete the password reset process. " +
+                $"If you didn't initiate this request, please ignore this message.";
+            var content = await emailService.GetMailBody(email, body, schoolSetting.SCHOOLSETTINGS_SchoolAbbreviation);
+            var emMsg = new EmailMessage
+            {
+                Content = content,
+                SentBy = schoolSetting.SCHOOLSETTINGS_SchoolName,
+                Subject = "RESET PASSWORD",
+                ToAddresses = to,
+                FromAddresses = frm
+            };
+            await emailService.Send(emMsg);
+        }
+
+
         //private async Task SendResetSuccessEmailToUserAsync(AppUser obj)
         //{
         //    var to = new List<EmailAddress>();
@@ -562,6 +631,7 @@ namespace BLL.AuthenticationServices
                             res.Result.FullName = student.FirstName + " " + student.LastName;
                             res.Result.RegistrationNumber = student.RegistrationNumber;
                             res.Result.UserName = student.User.UserName;
+                            res.Result.Id =  student.StudentContactId.ToString();
                             res.Message.FriendlyMessage = Messages.GetSuccess;
                             res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
                             return res;
@@ -583,6 +653,7 @@ namespace BLL.AuthenticationServices
                         //res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
                         res.Result.RegistrationNumber = "";
                         res.Result.UserName = teacher.UserName;
+                        res.Result.Id = context.Teacher.FirstOrDefault(c => c.UserId == teacher.Id && request.ClientId == c.ClientId).TeacherId.ToString();
                         res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
                         res.Message.FriendlyMessage = Messages.GetSuccess;
                         return res;
@@ -602,6 +673,7 @@ namespace BLL.AuthenticationServices
                         res.Result.Status = "success";
                         //res.Result.FullName = teacher.FirstName + " " + teacher.LastName;
                         res.Result.UserName = teacher.UserName;
+                        res.Result.Id = context.Teacher.FirstOrDefault(c => c.UserId == teacher.Id && request.ClientId == c.ClientId).TeacherId.ToString();
                         res.Result.RegistrationNumber = "";
                         res.Message.FriendlyMessage = Messages.GetSuccess;
                         res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
@@ -694,6 +766,43 @@ namespace BLL.AuthenticationServices
             }
         }
 
+        public async Task<APIResponse<bool>> ResetPasswordMobile(ResetAccountMobile request)
+        {
+            var res = new APIResponse<bool>();
+            try
+            {
+                var user = await manager.FindByNameAsync(request.Email);
+                if (user == null)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Account doesn't exists";
+                    return res;
+                }
+                var resetToken = await manager.GeneratePasswordResetTokenAsync(user);
+                accessor.HttpContext.Items["smsClientId"] = request.ClientId;
+                var resetPasswordResult = await manager.ResetPasswordAsync(user, resetToken, request.Password);
+                if (!resetPasswordResult.Succeeded)
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "Error occurred on password reset!! Please contact administrator.";
+                    return res;
+                }
+                //await SendResetSuccessEmailToUserAsync(user);
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successful";
+                res.Result = true;
+                return res;
+
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
         string ClientId(string url) => context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == url).ClientId;
 
         public async Task<bool> TeacherAccountByEmailExist(string email)
@@ -736,6 +845,20 @@ namespace BLL.AuthenticationServices
         {
             var userAccount = await manager.FindByEmailAsync(email);
             if (context.Parents.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId && e.Parentid != parentId))
+                return true;
+            return false;
+        }
+        
+        private bool IsUserAvailableInSchool(string clientId, string UserId)
+        {
+            var teacher = context.Teacher.FirstOrDefault(d => d.UserId == UserId && d.ClientId == clientId);
+            if(teacher  != null)
+                return true;
+            var student = context.StudentContact.FirstOrDefault(d => d.UserId == UserId && d.ClientId == clientId);
+            if (student != null)
+                return true;
+            var parent = context.Parents.FirstOrDefault(d => d.UserId == UserId && d.ClientId == clientId);
+            if (parent != null)
                 return true;
             return false;
         }

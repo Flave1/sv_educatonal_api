@@ -26,6 +26,7 @@ using SMP.BLL.Services.FilterService;
 using SMP.BLL.Utilities;
 using SMP.BLL.Services.AdmissionServices;
 using SMP.DAL.Models;
+using SMP.BLL.Services.AuthenticationServices;
 
 namespace API.Installers
 {
@@ -80,6 +81,7 @@ namespace API.Installers
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddScoped<IAdmissionService, AdmissionService>();
             services.AddSingleton<FwsClientInformation>();
+            services.AddScoped<IOtpService, OtpService>();
             services.AddDistributedMemoryCache();
             services.AddSession();
 

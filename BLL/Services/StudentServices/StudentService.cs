@@ -80,7 +80,7 @@ namespace BLL.StudentServices
                         res.Message.FriendlyMessage = "School registration number not setup";
                         return res;
                     }
-                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), result.Values.First());
+                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), GetRegistrationFormat());
                     var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
                     var filePath = upload.UploadProfileImage(student.ProfileImage);
                     var item = new StudentContact
@@ -149,7 +149,13 @@ namespace BLL.StudentServices
             }
         }
 
-       public async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
+        public string GetRegistrationFormat()
+        {
+            var regF = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId);
+            var reg = regF.SCHOOLSETTINGS_StudentRegNoFormat.Replace("%VALUE%", "");
+            return reg.Replace(regF.SCHOOLSETTINGS_RegNoSeperator + "", "");
+        }
+        public async Task CreateStudentSessionClassHistoryAsync(StudentContact student)
         {
             var history  = new StudentSessionClassHistory();
             history.SessionClassId = student.SessionClassId;

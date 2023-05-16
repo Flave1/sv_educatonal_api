@@ -26,7 +26,6 @@ namespace API.Controllers
         [HttpPost("create-register")]
         public async Task<IActionResult> CreateClassRegisterAsync([FromBody] CreateClassRegister request)
         {
-
             var response = await service.CreateClassRegisterAsync(request.SessionClassId);
             if (response.IsSuccessful)
                 return Ok(response);
@@ -38,6 +37,14 @@ namespace API.Controllers
         {
             var response = await service.UpdateStudentAttendanceRecord(request);
             if(response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+        [HttpPost("update/student-attendance-mobile")]
+        public async Task<IActionResult> UpdateStudentAttendanceRecordMobile([FromBody] PostStudentAttendance2 request)
+        {
+            var response = await service.UpdateStudentAttendanceRecordFromMobile(request);
+            if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
         }

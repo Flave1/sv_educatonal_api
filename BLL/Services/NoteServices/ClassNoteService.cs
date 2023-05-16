@@ -211,6 +211,55 @@ namespace SMP.BLL.Services.NoteServices
             res.Message.FriendlyMessage = Messages.GetSuccess;
             return res;
         }
+        async Task<APIResponse<PagedResponse<List<GetClassNotes>>>> IClassNoteService.GetClassNotesByTeachersMobileAsync(string classId, string subjectId, int status, PaginationFilter filter)
+        {
+            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+
+            var res = new APIResponse<PagedResponse<List<GetClassNotes>>>();
+
+            IQueryable<TeacherClassNote> query = null;
+            var termId = termService.GetCurrentTerm().SessionTermId;
+
+            query = context.TeacherClassNote.Where(x => x.ClientId == smsClientId && x.Deleted == false)
+           .Include(d => d.Teacher).ThenInclude(d => d.User)
+                   .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
+                   .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
+                   .OrderByDescending(x => x.CreatedOn);
+
+            query = query.Where(u => termId == u.ClassNote.SessionTermId);
+            if (status == -2)
+            {
+                query = query.Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
+            }
+            else if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            {
+                query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
+            }
+            if (!string.IsNullOrEmpty(subjectId))
+            {
+                query = query.Where(u => Guid.Parse(subjectId) == u.ClassNote.SubjectId);
+            }
+
+            else if (status >= 0)
+            {
+                query = query.Where(u => status == u.ClassNote.AprrovalStatus);
+            }
+            if (!string.IsNullOrEmpty(classId))
+            {
+                var classes = query.Select(u => new { id = u.TeacherClassNoteId, cls = u.Classes }).AsEnumerable();
+                var selectedClassNotes = classes.Where(x => !string.IsNullOrEmpty(x.cls) ? x.cls.Split(',').Any(c => c == classId) : false);
+                query = query.Where(u => selectedClassNotes.Select(x => x.id).Contains(u.TeacherClassNoteId));
+            }
+
+            var totaltRecord = query.Count();
+            var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetClassNotes(x, true)).ToListAsync();
+            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+            res.IsSuccessful = true;
+            res.Message.FriendlyMessage = Messages.GetSuccess;
+            return res;
+        }
 
         async Task<APIResponse<List<GetClassNotes>>> IClassNoteService.GetClassNotesByStatusAsync(string subjectId, int status)
         {

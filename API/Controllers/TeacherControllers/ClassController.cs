@@ -172,6 +172,13 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-students/mobile/{sessionClassId}")]
+        public async Task<IActionResult> GetSessionClassStudentsMobileAsync(string sessionClassId)
+        {
+            var response = await service.GetClassStudentsClassesMobileAsync(Guid.Parse(sessionClassId));
+            return Ok(response);
+        }
+
         [HttpPost("delete-session-class")]
         public async Task<IActionResult> DeleteSessionClassAsync([FromBody] SingleDelete reguest)
         {
@@ -216,7 +223,7 @@ namespace API.Controllers
             var response = await classGoupService.GetSessionClassSubjectsAsync(Guid.Parse(sessionClassId));
             return Ok(response);
         }
-
+     
         [HttpGet("getall/single/class-group")]
         public async Task<IActionResult> GetSingleClassGroupsAsync(string groupId, string sessionClassId)
         {
