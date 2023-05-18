@@ -958,23 +958,27 @@ namespace SMP.BLL.Services.NoteServices
         private async Task SendNotificationToAdminAsync(string userid, Guid classNoteId, Guid subjectId)
         {
             var appActivityId = "13f6763e-e5ab-45a0-8da1-244dbe63d298"; /// >>> Pls do not change Id //Can Review Lesson Notes
-            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false && r.ClientId == smsClientId).RoleId;
-            var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
-            string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
-
-            var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId && m.ClientId == smsClientId).Name;
-            var author = context.Teacher.FirstOrDefault(m => m.UserId == userid && m.ClientId == smsClientId);
-            await notificationService.CreateNotitficationAsync(new NotificationDTO
+            var roleId = context.RoleActivity.FirstOrDefault(r => r.ActivityId == Guid.Parse(appActivityId) && r.Deleted == false && r.ClientId == smsClientId)?.RoleId;
+            if (!string.IsNullOrEmpty(roleId))
             {
-                Content = $"{author.FirstName} {author.LastName} submitted note on {subject} for approval",
-                NotificationPageLink = $"smp-notification/lesson-note-details?teacherClassNoteId={classNoteId}",
-                NotificationSourceId = classNoteId.ToString(),
-                Subject = "Class Note",
-                ReceiversEmail = adminsEmail,
-                Type = "class-note",
-                ToGroup = "Admin"
-            });
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+                var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
+                string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
+
+                var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId && m.ClientId == smsClientId).Name;
+                var author = context.Teacher.FirstOrDefault(m => m.UserId == userid && m.ClientId == smsClientId);
+                await notificationService.CreateNotitficationAsync(new NotificationDTO
+                {
+                    Content = $"{author.FirstName} {author.LastName} submitted note on {subject} for approval",
+                    NotificationPageLink = $"smp-notification/lesson-note-details?teacherClassNoteId={classNoteId}",
+                    NotificationSourceId = classNoteId.ToString(),
+                    Subject = "Class Note",
+                    ReceiversEmail = adminsEmail,
+                    Type = "class-note",
+                    ToGroup = "Admin"
+                });
+                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            }
+            
         }
     
         private async Task NotifyTeacherOnNoteShareAsync(ClassNote noteToShare, ShareNotes request)

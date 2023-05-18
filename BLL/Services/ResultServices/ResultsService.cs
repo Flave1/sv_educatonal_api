@@ -331,6 +331,10 @@ namespace SMP.BLL.Services.ResultServices
                 var totaltRecord = query.Count();
                 res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
             }
+            else
+            {
+                res.Result = new PagedResponse<PreviewClassScoreEntry>();
+            }
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.IsSuccessful = true;
@@ -982,7 +986,7 @@ namespace SMP.BLL.Services.ResultServices
                         {
                             item.Position = studentPositions.FirstOrDefault(d => d.Average == (decimal)item.AverageScore)?.Position ?? "";
                         }
-                        res.Result.Students = result.Where(x => x.AverageScore > 0).ToList();
+                        res.Result.Students = result.Where(x => x.AverageScore > 0).OrderByDescending(d => d.AverageScore).ToList();
                     }
                 }
 
@@ -1063,6 +1067,8 @@ namespace SMP.BLL.Services.ResultServices
                     res.Message.FriendlyMessage = "Student Result does not exist";
                     return res;
                 }
+                res = studentResult;
+                res.IsSuccessful = true;
             }
             catch (ArgumentException ex)
             {
@@ -1097,7 +1103,7 @@ namespace SMP.BLL.Services.ResultServices
                         var regNo = utilitiesService.GetStudentRegNumberValue(student.registrationNumber);
                         var studentInfor = await utilitiesService.GetStudentContactByRegNo(regNo);
                     }
-                    res.Result = studentResults.Result;
+                    res.Result = studentResults.Result.OrderByDescending(d => d.average).ToList();
                     res.IsSuccessful = true;
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     return res;

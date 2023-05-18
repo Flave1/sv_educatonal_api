@@ -8,7 +8,6 @@ namespace SMP.Contracts.PinManagement
 {
     public class PrintResultRequest
     {
-        public string Pin { get; set; } 
         public string RegistractionNumber { get; set; }
         public Guid SessionClassid;
         public string TermId { get; set; }

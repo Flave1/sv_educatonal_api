@@ -42,8 +42,12 @@ namespace SMP.Contracts.Notes
         public string StudentNoteId { get; set; }
     }
 
+    public class CommenterObj
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
 
-
+    }
     public class StudentNoteComments
     {
         public Guid CommentId { get; set; }
@@ -55,7 +59,7 @@ namespace SMP.Contracts.Notes
         public Guid? RepliedToId { get; set; }
         public List<StudentNoteComments> RepliedComments { get; set; }
         public StudentNoteComments() { }
-        public StudentNoteComments(StudentNoteComment db, dynamic account = null)
+        public StudentNoteComments(StudentNoteComment db, CommenterObj account = null)
         {
             CommentId = db.StudentNoteCommentId;
             Comment = db.Comment;

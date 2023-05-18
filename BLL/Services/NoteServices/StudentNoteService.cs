@@ -8,6 +8,7 @@ using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using SMP.API.Hubs;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
@@ -521,8 +522,8 @@ namespace SMP.BLL.Services.NoteServices
                 .Include(d => d.Replies).ThenInclude(d => d.Replies)
                 .Where(u => u.StudentNoteId == Guid.Parse(studentNoteId) && u.IsParent == true)
                 .Select(x => new StudentNoteComments(x, 
-                    context.Teacher.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault() ??
-                    context.StudentContact.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault())).ToListAsync();
+                    context.Teacher.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new CommenterObj { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault() ??
+                    context.StudentContact.Where(c => c.ClientId == smsClientId && c.UserId == x.UserId).Select(d => new CommenterObj { FirstName = d.FirstName, LastName = d.LastName }).FirstOrDefault())).ToListAsync();
 
             res.IsSuccessful = true;
             res.Message.FriendlyMessage = Messages.GetSuccess;

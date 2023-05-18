@@ -313,7 +313,8 @@ namespace SMP.BLL.Services.ParentServices
 
                 var studentsSessionClassId = await students.Select(x => x.SessionClassId).ToListAsync();
 
-                var classAssessment = context.ClassAssessment.Where(x => studentsSessionClassId.Contains(x.SessionClassId));
+                var sessionClassSubjectIds = context.SessionClassSubject.Where(x => studentsSessionClassId.Contains(x.SessionClassId)).Select(x => x.SessionClassSubjectId).ToList();
+                var classAssessment = context.ClassAssessment.Where(x => sessionClassSubjectIds.Contains(x.SessionClassSubjectId ?? Guid.Empty));
                 var totalClassAssessment = classAssessment.Count();
 
                 var studentsTeacherId = await students.Select(x => x.SessionClass.Teacher.TeacherId).ToListAsync();

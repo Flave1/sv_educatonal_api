@@ -287,8 +287,8 @@ namespace BLL.StudentServices
         async Task<APIResponse<GetStudentContacts>> IStudentService.GetSingleStudentAsync(Guid studentContactId)
         {
             var res = new APIResponse<GetStudentContacts>();
-            var regNoFormat = context.SchoolSettings.SingleOrDefault(x => x.ClientId == smsClientId)?.SCHOOLSETTINGS_StudentRegNoFormat;
-
+            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId)?.SCHOOLSETTINGS_StudentRegNoFormat;
+            var subjects = context.Subject.Where(d => d.IsActive && !d.Deleted && d.ClientId == smsClientId).ToList();
             var result = await context.StudentContact
                 .Where(d => studentContactId == d.StudentContactId && d.ClientId == smsClientId)
                 .OrderByDescending(d => d.CreatedOn)
@@ -298,7 +298,7 @@ namespace BLL.StudentServices
                 .Include(x => x.Parent)
                 .Include(q=> q.SessionClass).ThenInclude(s => s.Class)
                 .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student)
-                .Select(f => new GetStudentContacts(f, regNoFormat, context.Subject.Where(d => d.IsActive && !d.Deleted && d.ClientId == smsClientId).ToList())).FirstOrDefaultAsync();
+                .Select(f => new GetStudentContacts(f, regNoFormat, subjects)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;
             res.Result = result;

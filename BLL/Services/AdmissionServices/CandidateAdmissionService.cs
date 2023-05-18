@@ -319,7 +319,7 @@ namespace SMP.BLL.Services.AdmissionServices
                 Subject = "Admission Registration Notice",
                 ToAddresses = toEmail,
                 FromAddresses = frmEmail,
-                SentBy = "Flavetechs"
+                SentBy = schoolSetting.SCHOOLSETTINGS_SchoolName
             };
             await emailService.Send(email);
         }

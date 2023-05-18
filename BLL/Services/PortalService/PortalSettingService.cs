@@ -1,6 +1,7 @@
 ﻿using BLL;
 using BLL.LoggerService;
 using DAL;
+using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -36,27 +37,7 @@ namespace SMP.BLL.Services.PortalService
             {
                 var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
 
-                if (schoolSetting == null)
-                {
-                    var filePath = upload.UploadSchoolLogo(request.Photo);
-                    schoolSetting = new SchoolSetting()
-                    {
-                        SCHOOLSETTINGS_SchoolName = request.SchoolName,
-                        SCHOOLSETTINGS_SchoolAddress = request.SchoolAddress,
-                        SCHOOLSETTINGS_SchoolAbbreviation = request.SchoolAbbreviation,
-                        SCHOOLSETTINGS_PhoneNo1 = request.PhoneNo1,
-                        SCHOOLSETTINGS_PhoneNo2 = request.PhoneNo2,
-                        SCHOOLSETTINGS_SchoolType = request.SchoolType,
-                        SCHOOLSETTINGS_Country = request.Country,
-                        SCHOOLSETTINGS_State = request.State,
-                        SCHOOLSETTINGS_Photo = filePath,
-                        SCHOOLSETTINGS_Email = request.Email
-
-                    };
-                    await context.SchoolSettings.AddAsync(schoolSetting);
-
-                }
-                else
+                if (schoolSetting != null)
                 {
                     var filePath = upload.UpdateSchoolLogo(request.Photo, request.Filepath);
                     schoolSetting.SCHOOLSETTINGS_SchoolName = request.SchoolName;
@@ -69,6 +50,11 @@ namespace SMP.BLL.Services.PortalService
                     schoolSetting.SCHOOLSETTINGS_State = request.State;
                     schoolSetting.SCHOOLSETTINGS_Photo = filePath;
                     schoolSetting.SCHOOLSETTINGS_Email = request.Email;
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "School not found";
+                    return res;
                 }
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = Messages.Saved;
@@ -91,21 +77,7 @@ namespace SMP.BLL.Services.PortalService
             try
             {
                 var setting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
-                if (setting == null)
-                {
-                    var filePath = upload.UploadPrincipalStamp(request.PrincipalStamp);
-                    setting = new SchoolSetting()
-                    {
-                        RESULTSETTINGS_PromoteAll = request.PromoteAll,
-                        RESULTSETTINGS_ShowPositionOnResult = request.ShowPositionOnResult,
-                        RESULTSETTINGS_ShowNewsletter = request.ShowNewsletter,
-                        RESULTSETTINGS_CumulativeResult = request.CumulativeResult,
-                        RESULTSETTINGS_BatchPrinting = request.BatchPrinting,
-                        RESULTSETTINGS_PrincipalStample = filePath
-                    };
-                    await context.SchoolSettings.AddAsync(setting);
-                }
-                else
+                if (setting != null)
                 {
                     var filePath = upload.UpdatePrincipalStamp(request.PrincipalStamp, request.Filepath);
                     setting.RESULTSETTINGS_PromoteAll = request.PromoteAll;
@@ -114,6 +86,11 @@ namespace SMP.BLL.Services.PortalService
                     setting.RESULTSETTINGS_CumulativeResult = request.CumulativeResult;
                     setting.RESULTSETTINGS_BatchPrinting = request.BatchPrinting;
                     setting.RESULTSETTINGS_PrincipalStample = filePath;
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "School not found";
+                    return res;
                 }
                 await context.SaveChangesAsync();
                 res.Message.FriendlyMessage = Messages.Saved;
@@ -134,25 +111,7 @@ namespace SMP.BLL.Services.PortalService
         {
             var res = new APIResponse<UpdateResultSetting>();
             var result = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
-            if (result == null)
-            {
-                var setting = new SchoolSetting()
-                {
-                    RESULTSETTINGS_PromoteAll = true,
-                    RESULTSETTINGS_ShowPositionOnResult = false,
-                    RESULTSETTINGS_ShowNewsletter = false,
-                    RESULTSETTINGS_CumulativeResult = true,
-                    RESULTSETTINGS_BatchPrinting = true,
-                    RESULTSETTINGS_PrincipalStample = "",
-                    RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate
-                };
-                context.Add(setting);
-                await context.SaveChangesAsync();
-                res.Message.FriendlyMessage = "Template selected successfully";
-                res.IsSuccessful = true;
-                return res;
-            }
-            else
+            if (result != null)
             {
                 result.RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate;
                 await context.SaveChangesAsync();
@@ -160,6 +119,11 @@ namespace SMP.BLL.Services.PortalService
                 res.IsSuccessful = true;
                 res.Result = request;
 
+                return res;
+            }
+            else
+            {
+                res.Message.FriendlyMessage = "School not found";
                 return res;
             }
         }
@@ -321,6 +285,14 @@ namespace SMP.BLL.Services.PortalService
                 setting.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = false;
                 setting.NOTIFICATIONSETTINGS_Staff = "email/false";
 
+                setting.RESULTSETTINGS_PromoteAll = true;
+                setting.RESULTSETTINGS_ShowPositionOnResult = false;
+                setting.RESULTSETTINGS_ShowNewsletter = false;
+                setting.RESULTSETTINGS_CumulativeResult = true;
+                setting.RESULTSETTINGS_BatchPrinting = true;
+                setting.RESULTSETTINGS_PrincipalStample = "";
+                setting.RESULTSETTINGS_SelectedTemplate = "default-template";
+
                 if (isNew) context.SchoolSettings.Add(setting);
             }
             catch (Exception)
@@ -341,25 +313,16 @@ namespace SMP.BLL.Services.PortalService
                     string studentRegNoFormat = GenerateStudentRegNoFormat(request);
                     string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);
 
-                    schoolSetting = new SchoolSetting()
-                    {
-                        SCHOOLSETTINGS_StudentRegNoFormat = studentRegNoFormat,
-                        SCHOOLSETTINGS_RegNoPosition = request.RegNoPosition,
-                        RESULTSETTINGS_SelectedTemplate = teacherRegNoFormat,
-                        SCHOOLSETTINGS_RegNoSeperator = request.RegNoSeperator
-                    };
-                    await context.SchoolSettings.AddAsync(schoolSetting);
-
-                }
-                else
-                {
-                    string studentRegNoFormat = GenerateStudentRegNoFormat(request);
-                    string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);
-
                     schoolSetting.SCHOOLSETTINGS_StudentRegNoFormat = studentRegNoFormat;
                     schoolSetting.SCHOOLSETTINGS_RegNoPosition = request.RegNoPosition;
                     schoolSetting.SCHOOLSETTINGS_TeacherRegNoFormat = teacherRegNoFormat;
                     schoolSetting.SCHOOLSETTINGS_RegNoSeperator = request.RegNoSeperator;
+
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "Schoo not found";
+                    return res;
                 }
 
                 await context.SaveChangesAsync();

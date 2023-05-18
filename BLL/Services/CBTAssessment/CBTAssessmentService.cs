@@ -186,7 +186,7 @@ namespace SMP.BLL.Services.CBTAssessmentServices
             var res = new APIResponse<bool>();
             var alreadyAdded = new List<string>();
             var termId = termService.GetCurrentTerm().SessionTermId;
-            //subjectId = GetSubjectByClassSubjectId(Guid.Parse(subjectId));
+            subjectId = GetSubjectByClassSubjectId(Guid.Parse(subjectId));
             try
             {
                 var students = studentRegNos.Split(',').ToArray();
