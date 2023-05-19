@@ -1074,7 +1074,7 @@ namespace SMP.BLL.Services.AssessmentServices
                     var subject = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId).Include(x => x.Subject).FirstOrDefault(x => x.SessionClassSubjectId == reg.SessionClassSubjectId);
                     var studentIds = context.SessionClassGroup.FirstOrDefault(x => x.SessionClassGroupId == reg.SessionClassGroupId && x.ClientId == smsClientId).ListOfStudentContactIds.Split(",").ToList();
                     var userIds = context.StudentContact.Where(x => x.ClientId == smsClientId && studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
-                    string studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x => x.Email).ToList());
+                    string studentEmails = string.Join(",", context.Users.Where(x => userIds.Contains(x.Id)).Select(x => x.Email).ToList());
 
                     await notificationService.CreateNotitficationAsync(new NotificationDTO
                     {
@@ -1104,7 +1104,7 @@ namespace SMP.BLL.Services.AssessmentServices
             {
                 var studentIds = sessionClassGroup.ListOfStudentContactIds.Split(",").ToList();
                 var userIds = context.StudentContact.Where(x => x.ClientId == smsClientId && studentIds.Contains(x.StudentContactId.ToString())).Select(x => x.UserId).ToList();
-                studentEmails = string.Join(",", context.Users.Where(x => x.Deleted == false && userIds.Contains(x.Id)).Select(x => x.Email).ToList());
+                studentEmails = string.Join(",", context.Users.Where(x => userIds.Contains(x.Id)).Select(x => x.Email).ToList());
             }
             await notificationService.CreateNotitficationAsync(new NotificationDTO
             {

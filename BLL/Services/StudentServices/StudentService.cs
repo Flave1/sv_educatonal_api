@@ -3,6 +3,7 @@ using BLL.Constants;
 using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
+using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Options;
 using DAL;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NLog.Filters;
 using OfficeOpenXml;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.FileUploadService;
@@ -68,84 +70,73 @@ namespace BLL.StudentServices
         async Task<APIResponse<StudentContact>> IStudentService.CreateStudenAsync(StudentContactCommand student)
         {
             var res = new APIResponse<StudentContact>();
-            using (var transaction = await context.Database.BeginTransactionAsync())
+            try
             {
+                var result = await utilitiesService.GenerateStudentRegNo();
 
-                try
-                { 
-                    var result = await utilitiesService.GenerateStudentRegNo();
-
-                    if (!result.Any())
-                    {
-                        res.Message.FriendlyMessage = "School registration number not setup";
-                        return res;
-                    }
-                    var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), GetRegistrationFormat());
-                    var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
-                    var filePath = upload.UploadProfileImage(student.ProfileImage);
-                    var item = new StudentContact
-                    {
-                        CityId = student.CityId,
-                        CountryId = student.CountryId,
-                        EmergencyPhone = student.EmergencyPhone,
-                        HomeAddress = student.HomeAddress,
-                        ParentId = parentId,
-                        HomePhone = student.HomePhone,
-                        StateId = student.StateId,
-                        UserId = userId, 
-                        ZipCode = student.ZipCode,
-                        RegistrationNumber = result.Keys.First(),
-                        StudentContactId = Guid.NewGuid(),
-                        Status = (int)StudentStatus.Active,
-                        SessionClassId = Guid.Parse(student.SessionClassId),
-                        EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
-                        LastName = student.LastName,
-                        DOB = student.DOB,
-                        FirstName = student.FirstName,
-                        MiddleName = student.MiddleName,
-                        Phone = student.Phone,
-                        Photo = filePath,
-                        ClientId = smsClientId,
-                    };
-                    context.StudentContact.Add(item);
-                    await context.SaveChangesAsync();
-
-                    await CreateStudentSessionClassHistoryAsync(item);
-
-
-                    await transaction.CommitAsync();
-                    res.Message.FriendlyMessage = Messages.Created;
-                    res.Result = null;
-                    res.IsSuccessful = true;
-                    return res;
-                }
-                catch (DuplicateNameException ex)
+                if (!result.Any())
                 {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = ex.Message;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
-                }
-                catch (ArgumentException ex)
-                {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = ex.Message;
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
-                    return res;
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
-                    res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
-                    res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                    res.Message.FriendlyMessage = "School registration number not setup";
                     return res;
                 }
 
+                var userId = await userService.CreateStudentUserAccountAsync(student, result.Keys.First(), GetRegistrationFormat());
+                
+                var parentId = await parentService.SaveParentDetail(student.ParentOrGuardianEmail, student.ParentOrGuardianFirstName, student.ParentOrGuardianLastName, student.ParentOrGuardianRelationship, student.ParentOrGuardianPhone, Guid.Empty);
+                var filePath = upload.UploadProfileImage(student.ProfileImage);
+                var item = new StudentContact
+                {
+                    CityId = student.CityId,
+                    CountryId = student.CountryId,
+                    EmergencyPhone = student.EmergencyPhone,
+                    HomeAddress = student.HomeAddress,
+                    ParentId = parentId,
+                    HomePhone = student.HomePhone,
+                    StateId = student.StateId,
+                    UserId = userId,
+                    ZipCode = student.ZipCode,
+                    RegistrationNumber = result.Keys.First(),
+                    StudentContactId = Guid.NewGuid(),
+                    Status = (int)StudentStatus.Active,
+                    SessionClassId = Guid.Parse(student.SessionClassId),
+                    EnrollmentStatus = (int)EnrollmentStatus.Enrolled,
+                    LastName = student.LastName,
+                    DOB = student.DOB,
+                    FirstName = student.FirstName,
+                    MiddleName = student.MiddleName,
+                    Phone = student.Phone,
+                    Photo = filePath,
+                    ClientId = smsClientId,
+                };
+                context.StudentContact.Add(item);
+                await context.SaveChangesAsync();
 
-                finally { await transaction.DisposeAsync(); }
+                await CreateStudentSessionClassHistoryAsync(item);
+                res.Message.FriendlyMessage = Messages.Created;
+                res.Result = null;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (DuplicateNameException ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            catch (ArgumentException ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
             }
         }
 
@@ -269,7 +260,7 @@ namespace BLL.StudentServices
             var res = new APIResponse<PagedResponse<List<GetStudentContacts>>>();
             var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
-            var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.User.UserType == (int)UserTypes.Student)
+            var query = context.StudentContact.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                 .Include(x => x.User)
                 .Include(q => q.SessionClass).ThenInclude(s => s.Class)
                 .OrderBy(s => s.FirstName);
@@ -297,7 +288,7 @@ namespace BLL.StudentServices
                 .Include(x => x.SessionClass)
                 .Include(x => x.Parent)
                 .Include(q=> q.SessionClass).ThenInclude(s => s.Class)
-                .Where(d => d.Deleted == false && d.User.UserType == (int)UserTypes.Student)
+                .Where(d => d.Deleted == false)
                 .Select(f => new GetStudentContacts(f, regNoFormat, subjects)).FirstOrDefaultAsync();
 
             res.Message.FriendlyMessage = Messages.GetSuccess;

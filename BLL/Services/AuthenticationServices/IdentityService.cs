@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.WebRequestServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.Authentication;
 using SMP.Contracts.Options;
 using SMP.Contracts.Routes;
@@ -32,7 +33,7 @@ namespace BLL.AuthenticationServices
     {
         public IdentityService(UserManager<AppUser> userManager, TokenValidationParameters tokenValidationParameters,
             RoleManager<UserRole> roleManager, ILoggerService loggerService, IOptions<JwtSettings> jwtSettings,
-            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options)
+            DataContext context, IHttpContextAccessor accessor, IWebRequestService webRequestService, IOptions<FwsConfigSettings> options, IUtilitiesService utilitiesService)
         {
             this.userManager = userManager;
             this.tokenValidationParameters = tokenValidationParameters;
@@ -44,6 +45,7 @@ namespace BLL.AuthenticationServices
             this.loggerService = loggerService;
             fwsOptions = options.Value;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            this.utilitiesService = utilitiesService;
         }
 
         private readonly UserManager<AppUser> userManager;
@@ -55,6 +57,7 @@ namespace BLL.AuthenticationServices
         private readonly IWebRequestService webRequestService;
         private readonly ILoggerService loggerService;
         private readonly FwsConfigSettings fwsOptions;
+        private readonly IUtilitiesService utilitiesService;
         private static string smsClientId { get; set; }
 
 
@@ -64,13 +67,14 @@ namespace BLL.AuthenticationServices
             res.Result = new LoginSuccessResponse();
             string firstName = string.Empty;
             string lastName = string.Empty;
+            string userType = string.Empty;
             try
             {
                 var id = Guid.NewGuid();
                 var clientId = ClientId(loginRequest.SchoolUrl);
-                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
 
+                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
@@ -83,23 +87,9 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if(userAccount.UserType == (int)UserTypes.Admin)
-                {
-                    permisions = context.AppActivity
-                        .Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                
 
-                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
-                    if(teacher is null)
-                    {
-                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
-                        return res;
-                    }
-                    firstName = teacher.FirstName;
-                    lastName = teacher.LastName;
-                    id = teacher.TeacherId;
-                }
-
-                if (userAccount.UserType == (int)UserTypes.Teacher)
+                if (loginRequest.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     if (teacher is null)
@@ -107,21 +97,31 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
+
                     if (teacher.Status == (int)TeacherStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
                         return res;
                     }
+
+                    if (utilitiesService.IsThisUser(UserTypes.Admin, userAccount.UserTypes))
+                    {
+                        permisions = context.AppActivity
+                            .Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                        userType = UserTypes.Admin.ToString();
+                    }
+                    else
+                    {
+                        var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                        permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
+                        userType = UserTypes.Teacher.ToString();
+                    }
                     id = teacher.TeacherId;
-
-                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
-
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
 
-                if (userAccount.UserType == (int)UserTypes.Student)
+                if (loginRequest.UserType == (int)UserTypes.Student)
                 {
                     var student = GetStudentByUserId(userAccount.Id, clientId);
                     if (student is null)
@@ -137,10 +137,11 @@ namespace BLL.AuthenticationServices
                     id = student?.StudentContactId ?? new Guid();
                     firstName = student.FirstName;
                     lastName = student.LastName;
+                    userType = UserTypes.Student.ToString();
                 }
                 SchoolSetting schoolSettings = null;
 
-                if (userAccount.UserType == (int)UserTypes.Parent)
+                if (loginRequest.UserType == (int)UserTypes.Parent)
                 {
                     var parent = GetParentByUserId(userAccount.Id, clientId);
                     if (parent is null)
@@ -151,6 +152,7 @@ namespace BLL.AuthenticationServices
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                     id = parent.Parentid;
+                    userType = UserTypes.Parent.ToString();
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
@@ -158,7 +160,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -175,6 +177,7 @@ namespace BLL.AuthenticationServices
             res.Result = new LoginSuccessResponse();
             string firstName = string.Empty;
             string lastName = string.Empty;
+            string userType = string.Empty;
             try
             {
                 var id = Guid.NewGuid();
@@ -192,22 +195,8 @@ namespace BLL.AuthenticationServices
                     res.Message.FriendlyMessage = $"Password seems to be incorrect";
                     return res;
                 }
-
-                if (userAccount.UserType == (int)UserTypes.Admin)
-                {
-                    permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
-                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
-                    if (teacher is null)
-                    {
-                        res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
-                        return res;
-                    }
-                    firstName = teacher.FirstName;
-                    lastName = teacher.LastName;
-                    id = teacher.TeacherId;
-                }
-
-                if (userAccount.UserType == (int)UserTypes.Teacher)
+               
+                if (loginRequest.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
                     if (teacher is null)
@@ -215,21 +204,32 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
-                    if (teacher != null && teacher.Status == (int)TeacherStatus.Inactive)
+
+                    if (teacher.Status == (int)TeacherStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
                         return res;
                     }
+
+                    if (utilitiesService.IsThisUser(UserTypes.Admin, userAccount.UserTypes))
+                    {
+                        permisions = context.AppActivity
+                            .Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                        userType = UserTypes.Admin.ToString();
+                    }
+                    else
+                    {
+                        var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                        permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
+                        userType = UserTypes.Teacher.ToString();
+                    }
                     id = teacher.TeacherId;
-
-                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
-
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
 
-                if (userAccount.UserType == (int)UserTypes.Student)
+
+                if (loginRequest.UserType == (int)UserTypes.Student)
                 {
                     var student = GetStudentByUserId(userAccount.Id, clientId);
                     if (student is null)
@@ -245,10 +245,11 @@ namespace BLL.AuthenticationServices
                     id = student?.StudentContactId ?? new Guid();
                     firstName = student.FirstName;
                     lastName = student.LastName;
+                    userType = UserTypes.Student.ToString();
                 }
                 SchoolSetting appSettings = null;
 
-                if (userAccount.UserType == (int)UserTypes.Parent)
+                if (loginRequest.UserType == (int)UserTypes.Parent)
                 {
                     var parent = GetParentByUserId(userAccount.Id, clientId);
                     if (parent is null)
@@ -259,6 +260,7 @@ namespace BLL.AuthenticationServices
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                     id = parent.Parentid;
+                    userType = UserTypes.Parent.ToString();
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
@@ -268,7 +270,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -278,7 +280,7 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        async Task<APIResponse<List<string>>> IIdentityService.GetMobilePermissionsAsync(string userId)
+        async Task<APIResponse<List<string>>> IIdentityService.GetTeacherMobilePermissionsAsync(string userId)
         {
             var res = new APIResponse<List<string>>();
             res.Result = new List<string>();
@@ -293,36 +295,24 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (userAccount.UserType == (int)UserTypes.Admin)
+                if (utilitiesService.IsThisUser(UserTypes.Admin, userAccount.UserTypes))
                 {
                     permisions = context.AppActivity.Where(d => d.IsActive).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
                 }
-
-                if (userAccount.UserType == (int)UserTypes.Teacher)
+                else
                 {
-                    var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
-                    if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
-                    {
-                        res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
-                        return res;
-                    }
-                    id = techerAccount.TeacherId;
-
                     var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive 
+                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive
                     & d.Deleted == false
                     & userRoleIds.Contains(d.RoleId)).Select(s => s.Activity.Permission).Distinct().ToList();
                 }
-
-                if (userAccount.UserType == (int)UserTypes.Student)
+                var techerAccount = await context.Teacher.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
+                if (techerAccount != null && techerAccount.Status == (int)TeacherStatus.Inactive)
                 {
-                    var studentAccount = await context.StudentContact.FirstOrDefaultAsync(e => e.UserId == userAccount.Id);
-                    if (studentAccount != null && studentAccount.Status == (int)StudentStatus.Inactive)
-                    {
-                        res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
-                        return res;
-                    }
+                    res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
+                    return res;
                 }
+                id = techerAccount.TeacherId;
 
                 res.Result = permisions;
                 res.IsSuccessful = true;
@@ -423,13 +413,13 @@ namespace BLL.AuthenticationServices
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim("userId", user.Id),
-                    new Claim("userType", user.UserType.ToString()),
+                    new Claim("userType", 1.ToString()),
                     new Claim("userName",user.UserName),
                     new Claim("name", firstName + " " + lastName),
-                    user.UserType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    user.UserType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
-                    user.UserType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    user.UserType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
+                    user.UserTypes == ((int)UserTypes.Teacher).ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    //user.UserType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
+                    //user.UserType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    //user.UserType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     schoolSetting != null ? new Claim("smsClientId", schoolSetting.ClientId) : new Claim("smsClientId", clientId),
                 };
@@ -506,7 +496,7 @@ namespace BLL.AuthenticationServices
             return currentUser; 
         }
 
-        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.LoginAfterPasswordIsChangedAsync(AppUser userAccount, string schoolUrl)
+        async Task<APIResponse<LoginSuccessResponse>> IIdentityService.LoginAfterPasswordIsChangedAsync(AppUser userAccount, string schoolUrl, UserTypes uType)
         {
             var res = new APIResponse<LoginSuccessResponse>();
             res.Result = new LoginSuccessResponse();
@@ -517,6 +507,7 @@ namespace BLL.AuthenticationServices
                 SchoolSetting schoolSettings = null;
                 string firstName = String.Empty;
                 string lastName = String.Empty;
+                string userType = string.Empty;
 
                 var clientId = ClientId(schoolUrl);
                 if (!string.IsNullOrEmpty(schoolUrl))
@@ -527,36 +518,36 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (userAccount.UserType == (int)UserTypes.Admin)
+
+                if (uType == UserTypes.Teacher)
                 {
-                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.AppActivity.Where(d => d.IsActive && d.ClientId == schoolSettings.ClientId).Select(s => s.Permission).OrderBy(s => s).Distinct().ToList();
-
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
-                    firstName = teacher.FirstName;
-                    lastName = teacher.LastName;
-                    id = teacher.TeacherId;
-                }
-
-                if (userAccount.UserType == (int)UserTypes.Teacher)
-                {
-
-                    var teacher = GetTeacherByUserId(userAccount.Id, clientId);
-                    if (teacher != null && teacher.Status == (int)TeacherStatus.Inactive)
+                  
+                    if (teacher.Status == (int)TeacherStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Teacher account is currently unavailable!! Please contact school administration";
                         return res;
                     }
+
+                    if (utilitiesService.IsThisUser(UserTypes.Admin, userAccount.UserTypes))
+                    {
+                        permisions = context.AppActivity
+                            .Where(d => d.IsActive).Select(s => s.Permission).Distinct().OrderBy(s => s).Distinct().ToList();
+                        userType = UserTypes.Admin.ToString();
+                    }
+                    else
+                    {
+                        var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
+                        permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == clientId).Select(s => s.Activity.Permission).Distinct().ToList();
+                        userType = UserTypes.Teacher.ToString();
+                    }
                     id = teacher.TeacherId;
-
-                    var userRoleIds = await context.UserRoles.Where(d => d.UserId == userAccount.Id).Select(d => d.RoleId).ToListAsync();
-                    permisions = context.RoleActivity.Include(d => d.Activity).Where(d => d.Activity.IsActive & userRoleIds.Contains(d.RoleId) && d.ClientId == schoolSettings.ClientId).Select(s => s.Activity.Permission).Distinct().ToList();
-
                     firstName = teacher.FirstName;
                     lastName = teacher.LastName;
                 }
 
-                if (userAccount.UserType == (int)UserTypes.Student)
+
+                if (uType == UserTypes.Student)
                 {
 
                     var student = GetStudentByUserId(userAccount.Id, clientId);
@@ -568,13 +559,15 @@ namespace BLL.AuthenticationServices
                     id = student?.StudentContactId ?? new Guid();
                     firstName = student.FirstName;
                     lastName = student.LastName;
+                    userType = UserTypes.Student.ToString();
                 }
-                if (userAccount.UserType == (int)UserTypes.Parent)
+                if (uType == UserTypes.Parent)
                 {
                     var parent = GetParentByUserId(userAccount.Id, clientId);
                     firstName = parent.FirstName;
                     lastName = parent.LastName;
                     id = parent.Parentid;
+                    userType = UserTypes.Parent.ToString();
                 }
 
 
@@ -587,7 +580,7 @@ namespace BLL.AuthenticationServices
                 res.Result = new LoginSuccessResponse();
                 userAccount.EmailConfirmed = true;
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
 
                 return res;

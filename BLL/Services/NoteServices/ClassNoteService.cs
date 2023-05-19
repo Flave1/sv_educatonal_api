@@ -458,7 +458,7 @@ namespace SMP.BLL.Services.NoteServices
                 && x.TeacherClassNoteId == Guid.Parse(TeacherClassNoteId))
                 .Include(d => d.Teacher).ThenInclude(d => d.User)
                 .Include(x => x.ClassNote).ThenInclude(x => x.Subject)
-                .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail).ThenInclude(x => x.Teacher)
+                .Include(x => x.ClassNote).ThenInclude(d => d.AuthorDetail)
                 .Select(x => new GetClassNotes(x, true)).FirstOrDefaultAsync();
 
             res.IsSuccessful = true;
@@ -962,7 +962,7 @@ namespace SMP.BLL.Services.NoteServices
             if (!string.IsNullOrEmpty(roleId))
             {
                 var userIds = context.UserRoles.Where(r => r.RoleId == roleId).Select(x => x.UserId).ToList();
-                string adminsEmail = string.Join(",", context.Users.Where(a => a.Deleted == false && userIds.Contains(a.Id)).Select(x => x.Email).ToList());
+                string adminsEmail = string.Join(",", context.Users.Where(a => userIds.Contains(a.Id)).Select(x => x.Email).ToList());
 
                 var subject = context.Subject.FirstOrDefault(m => m.SubjectId == subjectId && m.ClientId == smsClientId).Name;
                 var author = context.Teacher.FirstOrDefault(m => m.UserId == userid && m.ClientId == smsClientId);

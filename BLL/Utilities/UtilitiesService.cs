@@ -14,6 +14,7 @@ using DAL.StudentInformation;
 using SMP.Contracts.Options;
 using SMP.DAL.Models.PortalSettings;
 using BLL.LoggerService;
+using BLL.Constants;
 
 namespace SMP.BLL.Utilities
 {
@@ -130,5 +131,31 @@ namespace SMP.BLL.Utilities
                 return regNo;
 
         }
+        
+        public string GetUserType(string userTpyes, UserTypes type)
+        {
+            if (!string.IsNullOrEmpty(userTpyes))
+            {
+                IEnumerable<int> splited = userTpyes.Split('|').Select(int.Parse);
+                if (!splited.Any(d => d == (int)type))
+                    return string.Join("|", splited);
+                return userTpyes;
+            }
+            else 
+                return string.Join("|", (int)type);
+        }
+
+
+        public bool IsThisUser(UserTypes type, string userTpyes)
+        {
+            if (!string.IsNullOrEmpty(userTpyes))
+            {
+                IEnumerable<int> splited = userTpyes.Split('|').Select(int.Parse);
+                if (splited.Any(d => d == (int)type))
+                    return true;
+            }
+            return false;
+        }
+
     }
 }

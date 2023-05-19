@@ -97,8 +97,6 @@ namespace DAL
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<Teacher>().HasOne<AppUser>(a => a.User).WithOne(d => d.Teacher).HasForeignKey<Teacher>(ad => ad.UserId);
-
             base.OnModelCreating(builder);
         }
 

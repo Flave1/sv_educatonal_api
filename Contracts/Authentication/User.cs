@@ -116,4 +116,14 @@ namespace Contracts.Authentication
         public List<TeacherSubjectsAsSubjectTeacher> SubjectsAsSubjectTeacher { get; set; } = new List<TeacherSubjectsAsSubjectTeacher>();
 
     }
+
+    public class CreateUserCommand
+    {
+        public string Email { get; set; }
+    }
+    public class UpdateUserCommand
+    {
+        public string fwsUserId { get; set; }
+        public string Email { get; set; }
+    }
 }
