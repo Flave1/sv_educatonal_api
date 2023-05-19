@@ -308,7 +308,7 @@ namespace SMP.BLL.Services.PortalService
             {
                 var schoolSetting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
 
-                if (schoolSetting == null)
+                if (schoolSetting != null)
                 {
                     string studentRegNoFormat = GenerateStudentRegNoFormat(request);
                     string teacherRegNoFormat = GenerateTeacherRegNoFormat(request);

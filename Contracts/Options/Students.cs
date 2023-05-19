@@ -44,9 +44,10 @@ namespace Contracts.Options
     }
     public class ChangePassword {
         public string UserId { get; set; }
-        public string OldPassword { get; set; }
+        public string OldPassword { get; set; } 
         public string NewPassword { get; set; }
         public string SchoolUrl { get; set; }
+        public int UserType { get; set; } = 0;
     }
 
     public class UserInformationFromMobileRequest
@@ -115,7 +116,7 @@ namespace Contracts.Options
     public class GetStudentContacts
     {
         public string StudentAccountId { get; set; }
-        public int UserType { get; set; }
+        public string UserTypes { get; set; }
         public bool Active { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -146,7 +147,7 @@ namespace Contracts.Options
         public GetStudentContacts(StudentContact db, string regNoFormat, List<Subject> subjects)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
-            UserType = db.User.UserType;
+            UserTypes = db.User.UserTypes;
             Active = db.User.Active;
             FirstName = db.FirstName;
             LastName = db.LastName;
@@ -181,7 +182,7 @@ namespace Contracts.Options
         public GetStudentContacts(StudentContact db, string regNoFormat)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
-            UserType = db.User.UserType;
+            UserTypes = db.User.UserTypes;
             Active = db.User.Active;
             FirstName = db.FirstName;
             LastName = db.LastName;
@@ -267,7 +268,7 @@ namespace Contracts.Options
     public class GetStudentContacts2
     {
         public string StudentAccountId { get; set; }
-        public int UserType { get; set; }
+        public string UserTypes { get; set; }
         public bool Active { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -279,7 +280,7 @@ namespace Contracts.Options
         {
 
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
-            UserType = db.User.UserType;
+            UserTypes = db.User.UserTypes;
             Active = db.User.Active;
             FirstName = db.FirstName;
             LastName = db.LastName;

@@ -17,6 +17,7 @@ namespace Contracts.Authentication
         public string UserName { get; set; }
         public string Password { get; set; }
         public string SchoolUrl { get; set; }
+        public int UserType { get; set; }
     }
 
     public class UserDetail
@@ -30,7 +31,7 @@ namespace Contracts.Authentication
         public string UserAccountId { get; set; }
         public bool IsFirstTimeLogin { get; set; }
         public UserDetail() { }
-        public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id)
+        public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id, string userType)
         {
             Id = id.ToString();
             SchoolAbbreviation = db.SCHOOLSETTINGS_SchoolAbbreviation;
@@ -39,14 +40,15 @@ namespace Contracts.Authentication
             UserName = FirstName + " " + LastName;
             UserAccountId = user.Id;
             IsFirstTimeLogin = !user.EmailConfirmed;
-            if (user.UserType == -1)
-                UserType = "Admin";
-            if (user.UserType == 1)
-                UserType = "Teacher";
-            if (user.UserType == 0)
-                UserType = "Student";
-            if (user.UserType == 2)
-                UserType = "Parent";
+            //if (user.UserType == -1)
+            //    UserType = "Admin";
+            //if (user.UserType == 1)
+            //    UserType = "Teacher";
+            //if (user.UserType == 0)
+            //    UserType = "Student";
+            //if (user.UserType == 2)
+            //    UserType = "Parent";
+            UserType = userType;
         }
 
     }

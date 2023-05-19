@@ -1,9 +1,6 @@
-﻿using DAL.StudentInformation;
-using SMP.DAL.Migrations;
-using System;
+﻿using BLL.Constants;
+using DAL.StudentInformation;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Utilities
@@ -13,5 +10,7 @@ namespace SMP.BLL.Utilities
         string GetStudentRegNumberValue(string regNo, string clientId = null);
         Task<IDictionary<string, string>> GenerateStudentRegNo();
         Task<StudentContact> GetStudentContactByRegNo(string studentRegNoValue, string clientId = null);
+        string GetUserType(string userTpyes, UserTypes type);
+        bool IsThisUser(UserTypes type, string userTpyes);
     }
 }

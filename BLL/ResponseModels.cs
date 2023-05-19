@@ -1,4 +1,6 @@
-﻿namespace BLL
+﻿using Enums;
+
+namespace BLL
 {
     public class APIResponse<T>
     {
@@ -22,4 +24,8 @@
         public string FieldName { get; set; }
         public APIResponse<ErrorModel> Status { get; set; }
     }
+
+
+ 
+
 }

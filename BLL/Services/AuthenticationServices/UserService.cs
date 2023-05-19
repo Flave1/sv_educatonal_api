@@ -19,9 +19,10 @@ using Microsoft.AspNetCore.Http;
 using SMP.BLL.Utilities;
 using SMP.Contracts.Authentication;
 using SMP.DAL.Models.PortalSettings;
-using static System.Net.WebRequestMethods;
 using SMP.BLL.Services.AuthenticationServices;
 using SMP.DAL.Migrations;
+using SMP.Contracts.Routes;
+using SMP.BLL.Services.WebRequestServices;
 
 namespace BLL.AuthenticationServices
 {
@@ -37,9 +38,10 @@ namespace BLL.AuthenticationServices
         private readonly string smsClientId;
         public readonly IHttpContextAccessor accessor;
         private readonly IOtpService otpService;
+        private readonly IWebRequestService requestService;
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
             IIdentityService identityService, IOptions<EmailConfiguration> emailOptions,
-            IUtilitiesService utilitiesService, IHttpContextAccessor accessor, IOtpService otpService)
+            IUtilitiesService utilitiesService, IHttpContextAccessor accessor, IOtpService otpService, IWebRequestService requestService)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -51,6 +53,7 @@ namespace BLL.AuthenticationServices
             this.utilitiesService = utilitiesService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.otpService = otpService;
+            this.requestService = requestService;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
@@ -90,6 +93,7 @@ namespace BLL.AuthenticationServices
         {
             try
             {
+                IdentityResult identityResult = null;
                 var email = "";
                 if (!string.IsNullOrEmpty(student.Email))
                     email =  student.Email;
@@ -99,33 +103,42 @@ namespace BLL.AuthenticationServices
                 var password = regNo;
                 var user = await manager.FindByEmailAsync(email);
                 if (user == null)
+                    user = new AppUser();
+
+                user.UserName = email;
+                user.Active = true;
+                user.Email = email;
+                user.UserTypes = utilitiesService.GetUserType(user.UserTypes, UserTypes.Student);
+
+                if (string.IsNullOrEmpty(user.Id))
                 {
-                    user = new AppUser
+                    identityResult = await manager.CreateAsync(user, password);
+                    if (!identityResult.Succeeded)
                     {
-                        UserName = email,
-                        Active = true,
-                        Deleted = false,
-                        CreatedOn = DateTime.UtcNow,
-                        CreatedBy = "",
-                        Email = email,
-                        UserType = (int)UserTypes.Student
-                    };
-                    var result = await manager.CreateAsync(user, password);
-                    if (!result.Succeeded)
-                    {
-                        if (result.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
+                        if (identityResult.Errors.Select(d => d.Code).Any(a => a == "DuplicateUserName"))
                         {
                             if (await StudentAccountByEmailExist(user.Email))
-                                throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
+                                throw new DuplicateNameException(identityResult.Errors.FirstOrDefault().Description);
                         }
                         else
-                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                            throw new ArgumentException(identityResult.Errors.FirstOrDefault().Description);
                     }
+
                     var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
                     if (!addTorole.Succeeded)
                         if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
                             throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
                 }
+                else
+                {
+                    identityResult = await manager.UpdateAsync(user);
+                }
+
+                if (!identityResult.Succeeded)
+                {
+                    throw new ArgumentException(identityResult.Errors.FirstOrDefault().Description);
+                }
+
                 return user.Id;
             }
             catch (ArgumentException ex)
@@ -144,11 +157,8 @@ namespace BLL.AuthenticationServices
                 {
                     UserName = email,
                     Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
                     Email = email,
-                    UserType = (int)UserTypes.Student
+                    UserTypes = utilitiesService.GetUserType("", UserTypes.Student)
                 };
                 var result = await manager.CreateAsync(user, regNoFormat);
                 if (!result.Succeeded)
@@ -186,7 +196,6 @@ namespace BLL.AuthenticationServices
 
                 account.UserName = student.Email;
                 account.Email = student.Email;
-                account.UserType = (int)UserTypes.Student;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -216,7 +225,6 @@ namespace BLL.AuthenticationServices
                 }
                 account.UserName = student.Email;
                 account.Email = student.Email;
-                account.UserType = (int)UserTypes.Student;
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
                 {
@@ -245,11 +253,7 @@ namespace BLL.AuthenticationServices
                     {
                         UserName = email,
                         Active = true,
-                        Deleted = false,
-                        CreatedOn = DateTime.UtcNow,
-                        CreatedBy = "",
                         Email = email,
-                        UserType = (int)UserTypes.Parent
                     };
                     var result = await manager.CreateAsync(user, "000000");
                     if (!result.Succeeded)
@@ -295,7 +299,6 @@ namespace BLL.AuthenticationServices
 
                 account.UserName = email;
                 account.Email = email;
-                account.UserType = (int)UserTypes.Parent;
                 
                 var result = await manager.UpdateAsync(account);
                 if (!result.Succeeded)
@@ -397,7 +400,7 @@ namespace BLL.AuthenticationServices
                 throw new ArgumentException("Invalid Request");
             if (int.Parse(request.UserType) == (int)UserTypes.Student)
             {
-                var user = await manager.Users.FirstOrDefaultAsync(d => d.UserType == (int)UserTypes.Student && d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
+                var user = await manager.Users.FirstOrDefaultAsync(d =>  d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
                 if (user == null)
                     throw new ArgumentException("Student account with this email address is not registered");
 
@@ -572,7 +575,7 @@ namespace BLL.AuthenticationServices
             {
                 var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x=> x.ClientId == clientId);
                 await SendResetSuccessEmailToUserAsync(user, schoolSettings);
-                return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl);
+                return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl, (UserTypes)request.UserType);
             }
             else
             {
@@ -697,7 +700,7 @@ namespace BLL.AuthenticationServices
             try
             {
                 var appSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl);
-                var user = await manager.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Trim() == request.Email.ToLower().Trim() && x.Deleted != true);
+                var user = await manager.Users.FirstOrDefaultAsync(x => x.Email.ToLower().Trim() == request.Email.ToLower().Trim());
                 if (user == null)
                 {
                     res.IsSuccessful = false;
@@ -848,7 +851,6 @@ namespace BLL.AuthenticationServices
                 return true;
             return false;
         }
-        
         private bool IsUserAvailableInSchool(string clientId, string UserId)
         {
             var teacher = context.Teacher.FirstOrDefault(d => d.UserId == UserId && d.ClientId == clientId);
@@ -862,5 +864,11 @@ namespace BLL.AuthenticationServices
                 return true;
             return false;
         }
+
+        public  async Task<APIResponses.FwsAPIResponse<string>> CreateUserOnFws(CreateUserCommand request) =>
+            await requestService.PostAsync<APIResponses.FwsAPIResponse<string>, CreateUserCommand>(fwsRoutes.createUser, request);
+
+        public async Task<APIResponses.FwsAPIResponse<string>> UpdateUserOnFws(UpdateUserCommand request) =>
+           await requestService.PostAsync<APIResponses.FwsAPIResponse<string>, UpdateUserCommand>(fwsRoutes.updateUser, request);
     }
 }

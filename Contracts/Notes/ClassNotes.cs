@@ -111,7 +111,7 @@ namespace SMP.Contracts.Notes
                 LastName = db.Teacher.LastName,
                 MiddleName = db.Teacher.MiddleName,
                 Photo = db.Teacher.Photo,
-                ShortBio = db.ClassNote.AuthorDetail?.Teacher?.ShortBiography
+                ShortBio = db.Teacher?.ShortBiography
             } : null;
         }
         public GetClassNotes(ClassNote db, Teacher teacher)

@@ -26,6 +26,13 @@
 
 
   <ItemGroup>
+    <Reference Include="FWS.SDK">
+      <HintPath>..\..\FWS\FWS\FWS.SDK\bin\Debug\net5.0\FWS.SDK.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
     <None Update="Properties\launchSettings.json">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>

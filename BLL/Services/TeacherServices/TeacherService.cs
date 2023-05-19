@@ -11,15 +11,21 @@ using Contracts.Email;
 using DAL;
 using DAL.Authentication;
 using DAL.TeachersInfor;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.PortalService;
+using SMP.BLL.Services.WebRequestServices;
+using SMP.BLL.Utilities;
 using SMP.Contracts.PortalSettings;
+using SMP.Contracts.Routes;
+using SMP.DAL.Migrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,9 +46,11 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IPortalSettingService portalSettingService;
         private readonly ILoggerService loggerService;
         private readonly IHttpContextAccessor contextaccessor;
+        private readonly IWebRequestService requestService;
+        private readonly IUtilitiesService utilitiesService;
         public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
-            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor, 
-            IPortalSettingService portalSettingService, ILoggerService loggerService)
+            IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor,
+            IPortalSettingService portalSettingService, ILoggerService loggerService, IWebRequestService requestService, IUtilitiesService utilitiesService)
         {
             this.userManager = userManager;
             this.context = context;
@@ -55,6 +63,8 @@ namespace SMP.BLL.Services.TeacherServices
             this.portalSettingService = portalSettingService;
             this.loggerService = loggerService;
             contextaccessor = accessor;
+            this.requestService = requestService;
+            this.utilitiesService = utilitiesService;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -62,44 +72,67 @@ namespace SMP.BLL.Services.TeacherServices
             var res = new APIResponse<UserCommand>();
             try
             {
-                var filePath = upload.UploadProfileImage(request.ProfileImage);
-                
-                var user = new AppUser
+
+                var userAccount = await userManager.FindByEmailAsync(request.Email);
+                var fwsResponse = await userService.CreateUserOnFws(new CreateUserCommand { Email = request.Email });
+                IdentityResult identityResult = null;
+                if (fwsResponse.code != Enums.Code.Success)
                 {
-                    UserName = request.Email,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    Email = request.Email,
-                    UserType = (int)UserTypes.Teacher,
-                    EmailConfirmed = false,
-                    
-                };
-                var result = await userManager.CreateAsync(user, UserConstants.PASSWORD);
-                if (!result.Succeeded)
-                {
-                    if(result.Errors.Any(x => x.Code == "DuplicateUserName"))
+                    if(fwsResponse.code == Enums.Code.BadRequest)
                     {
-                        var userAccount = await userManager.FindByEmailAsync(request.Email);
-                        if (context.Teacher.Any(e => e.UserId == userAccount.Id && e.ClientId == smsClientId))
-                        {
-                            res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
-                            return res;
-                        }
+                        res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
+                        return res;
                     }
-                    
-                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                    return res;
-                }
-                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.TEACHER);
-                if (!addTorole.Succeeded)
-                {
-                    res.Message.FriendlyMessage = addTorole.Errors.FirstOrDefault().Description;
-                    return res;
                 }
 
-                CreateUpdateTeacherProfile(request, user.Id, filePath);
+                if (userAccount == null)
+                {
+                    userAccount = new AppUser();
+                    userAccount.FwsUserId = fwsResponse.Result;
+                    userAccount.UserName = request.Email;
+                    userAccount.Email = request.Email;
+                    userAccount.UserTypes = utilitiesService.GetUserType(userAccount.UserTypes, UserTypes.Teacher);
+                    userAccount.EmailConfirmed = false;
+                    if (TeacherExist(userAccount.Id))
+                    {
+                        res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                        return res;
+                    };
+                    identityResult = await userManager.CreateAsync(userAccount, UserConstants.PASSWORD);
+                    if (!identityResult.Succeeded)
+                    {
+                        res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
+                }
+                else
+                {
+                    userAccount.UserName = request.Email;
+                    userAccount.Email = request.Email;
+                    userAccount.UserTypes = utilitiesService.GetUserType(userAccount.UserTypes, UserTypes.Teacher);
+                    userAccount.EmailConfirmed = false;
+                    if (TeacherExist(userAccount.Id))
+                    {
+                        res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                        return res;
+                    }
+                    identityResult = await userManager.UpdateAsync(userAccount);
+                    if (!identityResult.Succeeded)
+                    {
+                        res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
+                    identityResult = await userManager.AddToRoleAsync(userAccount, DefaultRoles.TEACHER);
+                    if (!identityResult.Succeeded)
+                    {
+                        res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
+                }
+
+                
+                var filePath = upload.UploadProfileImage(request.ProfileImage);
+                CreateUpdateTeacherProfile(request, userAccount.Id, filePath);
 
                 res.IsSuccessful = true;
                 res.Message.FriendlyMessage = "Successfully added a staff";
@@ -139,18 +172,31 @@ namespace SMP.BLL.Services.TeacherServices
         {
             var res = new APIResponse<UserCommand>();
             var filePath = upload.UpdateProfileImage(userDetail.ProfileImage, userDetail.Photo);
+
             var user = await userManager.FindByIdAsync(userDetail.TeacherUserAccountId);
             if (user == null)
             {
                 res.Message.FriendlyMessage = "Teacher user account does not exist";
                 return res;
             }
+
+            var fwsResponse = await userService.UpdateUserOnFws(new UpdateUserCommand { Email = userDetail.Email, fwsUserId = user.FwsUserId});
+            if (fwsResponse.code != Enums.Code.Success)
+            {
+                if (fwsResponse.code == Enums.Code.BadRequest)
+                {
+                    res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
+                    return res;
+                }
+            }
+
             var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
             if (teacherAct != null)
             {
                 CreateUpdateTeacherProfile(userDetail, user.Id, filePath);
                 user.Email = userDetail.Email;
                 user.UserName = userDetail.Email;
+                user.FwsUserId = fwsResponse.Result;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
                 await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
@@ -231,7 +277,7 @@ namespace SMP.BLL.Services.TeacherServices
             {
                 var teacherAct = context.Teacher.FirstOrDefault(d => d.ClientId == smsClientId && d.TeacherId == Guid.Parse(id));
                 var userAccount = await userManager.FindByIdAsync(teacherAct.UserId);
-                if(userAccount != null && userAccount.UserType == (int)UserTypes.Admin)
+                if(userAccount != null && utilitiesService.IsThisUser(UserTypes.Admin, userAccount.UserTypes))
                 {
                     res.Message.FriendlyMessage = "Admin account cannot be deleted";
                     return res;
@@ -346,11 +392,8 @@ namespace SMP.BLL.Services.TeacherServices
 
                 user.UserName = request.Email;
                 user.Active = true;
-                user.Deleted = false;
-                user.CreatedOn = DateTime.UtcNow;
-                user.CreatedBy = "";
                 user.Email = request.Email;
-                user.UserType = (int)UserTypes.Admin;
+                user.UserTypes = utilitiesService.GetUserType(user.UserTypes, UserTypes.Admin);
                 user.EmailConfirmed = false;
                 user.PasswordHash = request.PasswordHash;
                 user.EmailConfirmed = true;
@@ -421,8 +464,24 @@ namespace SMP.BLL.Services.TeacherServices
                 throw new ArgumentException(x?.Message ?? x?.InnerException.Message);
             }
         }
+        bool TeacherExist(string UserId, string teacherId = "")
+        {
 
-       
-
+            if (string.IsNullOrEmpty(teacherId))
+            {
+                if (context.Teacher.Any(e => e.UserId == UserId && e.ClientId == smsClientId))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (context.Teacher.Any(e => e.UserId == UserId && e.ClientId == smsClientId && e.TeacherId != Guid.Parse(teacherId)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

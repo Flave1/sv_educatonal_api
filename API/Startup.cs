@@ -123,7 +123,7 @@ namespace API
             {
                 Email = userSettings.Email,
                 UserName = userSettings.UserName,
-                UserType = (int)UserTypes.Admin,
+                UserTypes = "-1",
                 Active = true,
             };
 

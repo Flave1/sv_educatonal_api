@@ -119,7 +119,7 @@ namespace API.Controllers
         public async Task<ActionResult> GetUserProfile()
         {
             string userId = HttpContext.User?.FindFirst(c => c.Type == "userId").Value;
-            var response = await identityService.GetMobilePermissionsAsync(userId);
+            var response = await identityService.GetTeacherMobilePermissionsAsync(userId);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);

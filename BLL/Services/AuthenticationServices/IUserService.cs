@@ -1,4 +1,5 @@
-﻿using Contracts.Authentication;
+﻿using APIResponses;
+using Contracts.Authentication;
 using Contracts.Options;
 using DAL.Authentication;
 using DAL.StudentInformation;
@@ -35,5 +36,7 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<AuthenticationResult>> ValidateEmailAsync(ValidateEmail request);
         Task<APIResponse<AuthenticationResult>> ValidateOTPAsync(ValidateOtp request);
         Task<APIResponse<bool>> ResetPasswordMobile(ResetAccountMobile request);
+        Task<FwsAPIResponse<string>> CreateUserOnFws(CreateUserCommand request);
+        Task<FwsAPIResponse<string>> UpdateUserOnFws(UpdateUserCommand request);
     }
 }

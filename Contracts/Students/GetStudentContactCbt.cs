@@ -11,7 +11,7 @@ namespace SMP.Contracts.Students
     public class GetStudentContactCbt
     {
         public string StudentAccountId { get; set; }
-        public int UserType { get; set; }
+        public string UserTypes { get; set; }
         public bool Active { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -37,7 +37,7 @@ namespace SMP.Contracts.Students
         public GetStudentContactCbt(StudentContact db, string regNoFormat)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
-            UserType = db.User.UserType;
+            UserTypes = db.User.UserTypes;
             Active = db.User.Active;
             FirstName = db.FirstName;
             LastName = db.LastName;
