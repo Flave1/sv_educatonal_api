@@ -400,7 +400,7 @@ namespace BLL.AuthenticationServices
                             StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "")
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "", int userType = 1)
         {
             try
             {
@@ -413,13 +413,13 @@ namespace BLL.AuthenticationServices
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim("userId", user.Id),
-                    new Claim("userType", 1.ToString()),
+                    new Claim("userType", userType.ToString()),
                     new Claim("userName",user.UserName),
                     new Claim("name", firstName + " " + lastName),
-                    user.UserTypes == ((int)UserTypes.Teacher).ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
+                    userType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
+                    userType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     schoolSetting != null ? new Claim("smsClientId", schoolSetting.ClientId) : new Claim("smsClientId", clientId),
                 };
