@@ -20,7 +20,6 @@ using SMP.BLL.Utilities;
 using SMP.Contracts.Authentication;
 using SMP.DAL.Models.PortalSettings;
 using SMP.BLL.Services.AuthenticationServices;
-using SMP.DAL.Migrations;
 using SMP.Contracts.Routes;
 using SMP.BLL.Services.WebRequestServices;
 

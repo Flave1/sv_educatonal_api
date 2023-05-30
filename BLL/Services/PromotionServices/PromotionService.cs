@@ -1,5 +1,4 @@
 ﻿using BLL;
-using BLL.Constants;
 using BLL.LoggerService;
 using BLL.SessionServices;
 using BLL.StudentServices;
@@ -8,16 +7,13 @@ using DAL.ClassEntities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
-using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.EnrollmentServices;
 using SMP.BLL.Services.ResultServices;
 using SMP.Contracts.PromotionModels;
 using SMP.Contracts.ResultModels;
-using SMP.DAL.Migrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.PromorionServices
@@ -112,7 +108,7 @@ namespace SMP.BLL.Services.PromorionServices
                 }
                 else
                 {
-                    var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(sessClass.SessionId);
+                    var lastTermOfPreviousSessionTerm = sessionService.GetPreviousSessionLastTermAsync(sessClass.SessionId.Value);
                     foreach (var studentId in passedStudents)
                     {
                         await studentService.ChangeClassAsync(studentId, Guid.Parse(request.ClassToPromoteTo));

@@ -6,21 +6,14 @@ using Contracts.Common;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using NLog.Filters;
-using Org.BouncyCastle.Asn1.IsisMtt.X509;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
-using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.Admission;
-using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SMP.BLL.Services.AdmissionServices
 {

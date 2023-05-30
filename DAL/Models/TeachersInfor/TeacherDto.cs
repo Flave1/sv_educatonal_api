@@ -1,5 +1,4 @@
 ﻿using DAL.TeachersInfor;
-using SMP.DAL.Migrations;
 using System;
 
 namespace SMP.DAL.Models.TeachersInfor

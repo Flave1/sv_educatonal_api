@@ -539,7 +539,7 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     List<StudentSessionClassHistory> stdsArchive = scoreEntryService.GetStudentsFromArchiveQuery(request.SessionClassId, request.SessionTermId).ToList();
                     foreach (var studentArchive in stdsArchive)
-                        await SaveSessionClassArchiveAsync(sessClass, studentArchive.SessionTermId, studentArchive.StudentContactId, request.Publish);
+                        await SaveSessionClassArchiveAsync(sessClass, studentArchive.SessionTermId, studentArchive.StudentContactId.Value, request.Publish);
                 }
                 await context.SaveChangesAsync();
 
@@ -615,8 +615,8 @@ namespace SMP.BLL.Services.ResultServices
                     foreach (var student in sts)
                     {
                         ScoreEntrySheet scoreEntrySheet = new ScoreEntrySheet();
-                        ScoreEntry scoreEntry = scoreEntryService.GetScoreEntry(sessionTermId, student.StudentContactId, subjectId);
-                        StudentContact studenInfor = studentService.GetStudent(student.StudentContactId).FirstOrDefault();
+                        ScoreEntry scoreEntry = scoreEntryService.GetScoreEntry(sessionTermId, student.StudentContactId.Value, subjectId);
+                        StudentContact studenInfor = studentService.GetStudent(student.StudentContactId.Value).FirstOrDefault();
                         scoreEntrySheet.AssessmentScore = scoreEntry?.AssessmentScore ?? 0;
                         scoreEntrySheet.ExamsScore = scoreEntry?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", studenInfor.RegistrationNumber);

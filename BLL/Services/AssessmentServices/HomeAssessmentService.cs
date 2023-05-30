@@ -4,7 +4,6 @@ using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
-using Contracts.Session;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -20,15 +19,12 @@ using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
-using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace SMP.BLL.Services.AssessmentServices
 {

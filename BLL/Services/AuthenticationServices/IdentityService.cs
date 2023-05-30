@@ -159,7 +159,7 @@ namespace BLL.AuthenticationServices
                     schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
                 res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
@@ -269,7 +269,7 @@ namespace BLL.AuthenticationServices
                 var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId, userType);
                 res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
@@ -400,7 +400,7 @@ namespace BLL.AuthenticationServices
                             StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "", int userType = 1)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "", string userType = "")
         {
             try
             {
@@ -413,13 +413,13 @@ namespace BLL.AuthenticationServices
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim("userId", user.Id),
-                    new Claim("userType", userType.ToString()),
+                    new Claim("userType", userType),
                     new Claim("userName",user.UserName),
                     new Claim("name", firstName + " " + lastName),
-                    userType == (int)UserTypes.Teacher ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    userType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
-                    userType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    userType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
+                    userType == UserTypes.Teacher.ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == UserTypes.Student.ToString() ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
+                    userType == UserTypes.Admin.ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == UserTypes.Parent.ToString() ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     schoolSetting != null ? new Claim("smsClientId", schoolSetting.ClientId) : new Claim("smsClientId", clientId),
                 };

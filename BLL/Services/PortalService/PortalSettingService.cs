@@ -1,15 +1,12 @@
 ﻿using BLL;
 using BLL.LoggerService;
 using DAL;
-using Microsoft.AspNet.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.Contracts.PortalSettings;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Linq;

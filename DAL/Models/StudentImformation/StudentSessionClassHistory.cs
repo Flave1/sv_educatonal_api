@@ -15,7 +15,7 @@ namespace SMP.DAL.Models.StudentImformation
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
-        public Guid StudentContactId { get; set; }
+        public Guid? StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact StudentContact { get;set; }
         public Guid? SessionTermId { get; set; }
