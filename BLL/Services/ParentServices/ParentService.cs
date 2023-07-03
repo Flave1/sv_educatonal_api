@@ -289,6 +289,28 @@ namespace SMP.BLL.Services.ParentServices
                 return res;
             }
         }
+        public async Task<APIResponse<GetParents>> GetParentByEmailAsync(string email,string clientId)
+        {
+            var res = new APIResponse<GetParents>();
+            try
+            {
+                var parent = await context.Parents
+                    .Where(d => d.ClientId == clientId && d.Email == email).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
+
+                res.Result = parent;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
 
         public async Task<APIResponse<ParentDashboardCount>> GetDashboardCount()
         {

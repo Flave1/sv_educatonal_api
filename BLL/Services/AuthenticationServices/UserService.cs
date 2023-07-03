@@ -100,16 +100,20 @@ namespace BLL.AuthenticationServices
                     email = regNo + "@" + regNoFormat + ".com".ToLower();
 
                 var password = regNo;
+                bool isNew = false;
                 var user = await manager.FindByEmailAsync(email);
                 if (user == null)
+                {
                     user = new AppUser();
+                    isNew = true;
+                }
 
                 user.UserName = email;
                 user.Active = true;
                 user.Email = email;
                 user.UserTypes = utilitiesService.GetUserType(user.UserTypes, UserTypes.Student);
 
-                if (string.IsNullOrEmpty(user.Id))
+                if (isNew)
                 {
                     identityResult = await manager.CreateAsync(user, password);
                     if (!identityResult.Succeeded)
@@ -559,6 +563,7 @@ namespace BLL.AuthenticationServices
                 res.Message.FriendlyMessage = "Ooops!! Account not identified";
                 return res;
             }
+            user.EmailConfirmed = true;
 
             var isUserPAssword = await manager.CheckPasswordAsync(user, request.OldPassword);
             if (!isUserPAssword)
@@ -566,6 +571,7 @@ namespace BLL.AuthenticationServices
                 res.Message.FriendlyMessage = "Old Password incorrect";
                 return res;
             }
+            user.EmailConfirmed = true;
 
 
             var token = await manager.GeneratePasswordResetTokenAsync(user);

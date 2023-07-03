@@ -21,5 +21,6 @@ namespace SMP.BLL.Services.ParentServices
         Task<APIResponse<PagedResponse<List<GetParentWards>>>> GetParentWardsAsync(PaginationFilter filter, string parentId);
         Task<APIResponse<GetParents>> GetParentByIdAsync(string parentId);
         public Task<APIResponse<ParentDashboardCount>> GetDashboardCount();
+        Task<APIResponse<GetParents>> GetParentByEmailAsync(string email, string clientId);
     }
 }

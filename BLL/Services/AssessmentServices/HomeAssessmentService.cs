@@ -872,10 +872,10 @@ namespace SMP.BLL.Services.AssessmentServices
                     score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, include, (float)feedBack.Mark);
             }
 
-            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
             if (scoreEntry is null)
             {
-                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
+                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
                 feedBack.IncludedScore = (int)score;
                 feedBack.Included = include ? true : false;
                 await context.SaveChangesAsync();
@@ -941,11 +941,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 if (!feedBack.Included && include)
                     score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, include, (float)feedBack.Mark);
             }
-            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
 
             if (scoreEntry is null)
             {
-                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
+                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
                 feedBack.IncludedScore = Convert.ToInt16(feedBack.Mark);
                 feedBack.Included = include ? true : false;
             }
@@ -1138,7 +1138,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             score = await Task.Run(() => scoreEntryService.ForceScoreHistroyExclusion(scoreHistory, (float)feedback.Mark));
 
-            var scoreEntry = scoreEntryService.GetScoreEntry(Guid.Parse(scoreHistory.SessionTermId), feedback.StudentContactId, Guid.Parse(scoreHistory.Subjectid));
+            var scoreEntry = scoreEntryService.GetScoreEntry(Guid.Parse(scoreHistory.SessionTermId), feedback.StudentContactId.Value, Guid.Parse(scoreHistory.Subjectid));
 
             scoreEntryService.UpdateScoreEntryForAssessment(scoreEntry, score);
 

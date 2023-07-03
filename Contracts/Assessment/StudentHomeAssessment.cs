@@ -111,7 +111,7 @@ namespace SMP.Contracts.Assessment
             Comment = db.Comment;;
             StudentName = db.StudentContact.FirstName + " " + db.StudentContact.LastName;
             HomeAssessmentFeedBackId = db.HomeAssessmentFeedBackId.ToString();
-            HomeAssessmentId = db.HomeAssessmentId;
+            HomeAssessmentId = db.HomeAssessmentId.Value;
             Files = (!string.IsNullOrEmpty(db.AttachmentUrls) ? db.AttachmentUrls.Split(',').ToList() : new List<string>()); 
             Status = db.Status;
             if (db.Status == 1)

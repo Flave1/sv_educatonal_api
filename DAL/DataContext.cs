@@ -18,7 +18,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SMP.DAL.Models.PortalSettings;
-using SMP.DAL.Models.PinManagement;
 using SMP.DAL.Models.Annoucement;
 using SMP.DAL.Models.NoteEntities;
 using SMP.DAL.Models.Timetable;
@@ -26,7 +25,6 @@ using SMP.DAL.Models.AssessmentEntities;
 using Microsoft.AspNetCore.Http;
 using SMP.DAL.Models.Parents;
 using SMP.DAL.Models.Admission;
-using System.Linq;
 using SMP.DAL.Models.Logger;
 using SMP.DAL.Models.Authentication;
 
@@ -132,10 +130,10 @@ namespace DAL
         {
             var loggedInUserId = accessor?.HttpContext?.User?.FindFirst(x => x?.Type == "userId")?.Value ?? "";
             var smsClientId = accessor?.HttpContext?.Items["smsClientId"]?.ToString() ?? "";
-            if (string.IsNullOrEmpty(smsClientId))
-            {
-                throw new ArgumentNullException(nameof(smsClientId));
-            }
+            //if (string.IsNullOrEmpty(smsClientId))
+            //{
+            //    throw new ArgumentNullException(nameof(smsClientId));
+            //}
             foreach (var entry in ChangeTracker.Entries<CommonEntity>())
             {
                 if (entry.State == EntityState.Added)

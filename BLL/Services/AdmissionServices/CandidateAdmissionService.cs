@@ -512,5 +512,42 @@ namespace SMP.BLL.Services.AdmissionServices
                 return response;
             }
         }
+
+        public async Task<APIResponse<string>> ResendEmailTORegisteredParent(ResendRegEmail request)
+        {
+            var response = new APIResponse<string>();
+            try
+            {
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl);
+                accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;
+
+                if (schoolSettings != null)
+                {
+                    var parent = await parentService.GetParentByEmailAsync(request.Email, schoolSettings.ClientId);
+                    if (parent == null)
+                    {
+                        response.IsSuccessful = false;
+                        response.Message.FriendlyMessage = "Parent account does not exist.";
+                        return response;
+                    }
+
+                    await SendNotifications(parent.Result.ParentId.ToString(), request.Firstname, request.Email, request.SchoolUrl, schoolSettings);
+
+                    response.Result = parent.Result.ParentId.ToString();
+                    response.IsSuccessful = true;
+                    response.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
+                }
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                response.IsSuccessful = false;
+                response.Message.FriendlyMessage = Messages.FriendlyException;
+                response.Message.TechnicalMessage = ex.ToString();
+                return response;
+            }
+        }
     }
 }
