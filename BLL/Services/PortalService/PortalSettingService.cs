@@ -244,18 +244,10 @@ namespace SMP.BLL.Services.PortalService
             return res;
         }
 
-        void IPortalSettingService.CreateSchoolSettingsAsync(string clientId, string schoolUrl)
+        void UpdateSchoolSettingsAsync(SchoolSetting setting, string schoolUrl)
         {
             try
             {
-                var isNew = false;
-                var setting = context.SchoolSettings.Where(x => x.ClientId == clientId).FirstOrDefault();
-                if(setting == null)
-                {
-                    setting = new SchoolSetting();
-                    isNew = true;
-                }
-
                 //APPLAYOUTSETTINGS
                 setting.APPLAYOUTSETTINGS_Scheme = "light";
                 setting.APPLAYOUTSETTINGS_SchemeDir = "ltr";
@@ -268,7 +260,6 @@ namespace SMP.BLL.Services.PortalService
                 setting.APPLAYOUTSETTINGS_loginTemplate = "default-login-template";
                 setting.APPLAYOUTSETTINGS_SchoolUrl = schoolUrl;
                 setting.APPLAYOUTSETTINGS_SidebarActiveStyle = "roundedAllSide";
-                setting.ClientId = clientId;
 
                 //NOTIFICATIONSETTINGS
                 setting.NOTIFICATIONSETTINGS_Announcement = "email/false";
@@ -289,8 +280,6 @@ namespace SMP.BLL.Services.PortalService
                 setting.RESULTSETTINGS_BatchPrinting = true;
                 setting.RESULTSETTINGS_PrincipalStample = "";
                 setting.RESULTSETTINGS_SelectedTemplate = "default-template";
-
-                if (isNew) context.SchoolSettings.Add(setting);
             }
             catch (Exception)
             {
@@ -403,7 +392,11 @@ namespace SMP.BLL.Services.PortalService
                 schoolSetting.SCHOOLSETTINGS_Email = email;
                 schoolSetting.ClientId = request.ClientId;
 
+                UpdateSchoolSettingsAsync(schoolSetting, request.SchoolUrl);
+
                 if (isNew) await context.SchoolSettings.AddAsync(schoolSetting);
+
+                await context.SaveChangesAsync();
             }
             catch (ArgumentException ex)
             {

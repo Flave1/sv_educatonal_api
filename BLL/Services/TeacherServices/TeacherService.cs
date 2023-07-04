@@ -379,7 +379,7 @@ namespace SMP.BLL.Services.TeacherServices
                 contextaccessor.HttpContext.Items["smsClientId"] = request.ClientId;
                 if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
                 {
-                    portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
+                    //portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
                     res.Result = "failed";
                     res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
                     return res;
@@ -411,11 +411,10 @@ namespace SMP.BLL.Services.TeacherServices
 
                 CreateUpdateTeacherProfile(request, user.Id, "");
 
-                var schooSetting = new SMSSMPAccountSetting(request.SchoolName, request.Country, request.State, request.Address, request.SchoolLogo, request.ClientId);
+                var schooSetting = new SMSSMPAccountSetting(request.SchoolName, request.Country, request.State, request.Address, request.SchoolLogo, request.ClientId, request.SchoolUrl);
 
                 await portalSettingService.CreateSchoolSettingsAsync(schooSetting, user.Email);
 
-                portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
                 await context.SaveChangesAsync();
 
                 res.IsSuccessful = true;

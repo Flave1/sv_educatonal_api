@@ -182,8 +182,9 @@ namespace BLL.AuthenticationServices
             {
                 var id = Guid.NewGuid();
                 var clientId = ClientId(loginRequest.SchoolUrl);
-                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
+
+                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
@@ -195,7 +196,9 @@ namespace BLL.AuthenticationServices
                     res.Message.FriendlyMessage = $"Password seems to be incorrect";
                     return res;
                 }
-               
+
+
+
                 if (loginRequest.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
@@ -228,7 +231,6 @@ namespace BLL.AuthenticationServices
                     lastName = teacher.LastName;
                 }
 
-
                 if (loginRequest.UserType == (int)UserTypes.Student)
                 {
                     var student = GetStudentByUserId(userAccount.Id, clientId);
@@ -237,7 +239,7 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
-                    if (student != null && student.Status == (int)StudentStatus.Inactive)
+                    if (student.Status == (int)StudentStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
                         return res;
@@ -247,7 +249,7 @@ namespace BLL.AuthenticationServices
                     lastName = student.LastName;
                     userType = UserTypes.Student.ToString();
                 }
-                SchoolSetting appSettings = null;
+                SchoolSetting schoolSettings = null;
 
                 if (loginRequest.UserType == (int)UserTypes.Parent)
                 {
@@ -264,19 +266,18 @@ namespace BLL.AuthenticationServices
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
-                    appSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
-
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
+                    schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId, userType);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                res.Message.FriendlyMessage = "Unexpected Error Occurred";
+                return res;
             }
         }
 
