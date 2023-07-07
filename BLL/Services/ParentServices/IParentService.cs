@@ -3,7 +3,6 @@ using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using SMP.Contracts.ParentModels;
-using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

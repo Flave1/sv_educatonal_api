@@ -69,22 +69,22 @@ namespace SMP.BLL.Services.TeacherServices
             try
             {
 
-                var userAccount = await userManager.FindByEmailAsync(request.Email);
-                var fwsResponse = await userService.CreateUserOnFws(new CreateUserCommand { Email = request.Email });
                 IdentityResult identityResult = null;
-                if (fwsResponse.code != Enums.Code.Success)
-                {
-                    if(fwsResponse.code == Enums.Code.BadRequest)
-                    {
-                        res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
-                        return res;
-                    }
-                }
+                var userAccount = await userManager.FindByEmailAsync(request.Email);
+                //var fwsResponse = await userService.CreateUserOnFws(new CreateUserCommand { Email = request.Email });
+                //if (fwsResponse.code != Enums.Code.Success)
+                //{
+                //    if (fwsResponse.code == Enums.Code.BadRequest)
+                //    {
+                //        res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
+                //        return res;
+                //    }
+                //}
 
                 if (userAccount == null)
                 {
                     userAccount = new AppUser();
-                    userAccount.FwsUserId = fwsResponse.Result;
+                    //userAccount.FwsUserId = fwsResponse.Result;
                     userAccount.UserName = request.Email;
                     userAccount.Email = request.Email;
                     userAccount.UserTypes = utilitiesService.GetUserType(userAccount.UserTypes, UserTypes.Teacher);
@@ -176,15 +176,15 @@ namespace SMP.BLL.Services.TeacherServices
                 return res;
             }
 
-            var fwsResponse = await userService.UpdateUserOnFws(new UpdateUserCommand { Email = userDetail.Email, fwsUserId = user.FwsUserId});
-            if (fwsResponse.code != Enums.Code.Success)
-            {
-                if (fwsResponse.code == Enums.Code.BadRequest)
-                {
-                    res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
-                    return res;
-                }
-            }
+            //var fwsResponse = await userService.UpdateUserOnFws(new UpdateUserCommand { Email = userDetail.Email, fwsUserId = user.FwsUserId});
+            //if (fwsResponse.code != Enums.Code.Success)
+            //{
+            //    if (fwsResponse.code == Enums.Code.BadRequest)
+            //    {
+            //        res.Message.FriendlyMessage = fwsResponse.Message.FriendlyMessage;
+            //        return res;
+            //    }
+            //}
 
             var teacherAct = context.Teacher.FirstOrDefault(d => d.UserId == user.Id && d.ClientId == smsClientId);
             if (teacherAct != null)
@@ -192,7 +192,7 @@ namespace SMP.BLL.Services.TeacherServices
                 CreateUpdateTeacherProfile(userDetail, user.Id, filePath);
                 user.Email = userDetail.Email;
                 user.UserName = userDetail.Email;
-                user.FwsUserId = fwsResponse.Result;
+                //user.FwsUserId = fwsResponse.Result;
                 var token = await userManager.GenerateChangePhoneNumberTokenAsync(user, userDetail.Phone);
 
                 await userManager.ChangePhoneNumberAsync(user, userDetail.Phone, token);
