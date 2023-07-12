@@ -77,7 +77,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                    var classesAsASujectTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -128,7 +128,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                 //    var classesAsASujectTeacher = context.SessionClass
                 //         .Include(s => s.Class)
@@ -178,7 +178,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var subjectTeacherSubjects = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SubjectTeacherId == Guid.Parse(teacherId)
                         && x.SessionClassId == sessionClassId)
@@ -226,7 +226,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var subjectTeacherSubjects = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SubjectTeacherId == Guid.Parse(teacherId) 
                     && x.SessionClassId == sessionClassId)

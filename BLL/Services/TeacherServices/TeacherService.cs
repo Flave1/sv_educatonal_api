@@ -118,7 +118,7 @@ namespace SMP.BLL.Services.TeacherServices
                         res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
                         return res;
                     }
-                    identityResult = await userManager.AddToRoleAsync(userAccount, DefaultRoles.TEACHER);
+                    identityResult = await userManager.AddToRoleAsync(userAccount, DefaultRoles.TeacherRole(smsClientId));
                     if (!identityResult.Succeeded)
                     {
                         res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;

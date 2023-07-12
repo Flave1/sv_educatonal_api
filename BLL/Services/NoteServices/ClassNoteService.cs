@@ -837,7 +837,7 @@ namespace SMP.BLL.Services.NoteServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var classesAsASujectTeacher = context.SessionClass
                          .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects

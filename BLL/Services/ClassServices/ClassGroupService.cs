@@ -143,7 +143,7 @@ namespace BLL.ClassServices
                 return res;
             }
 
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
             {
                 var subjectTeacherSubjects = context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                     .Include(d => d.Subject)

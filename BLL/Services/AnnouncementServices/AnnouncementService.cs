@@ -94,7 +94,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "teacher" && c.Deleted == false)
                          .Include(d => d.Sender)

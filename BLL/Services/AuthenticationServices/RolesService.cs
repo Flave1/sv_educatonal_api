@@ -144,7 +144,7 @@ namespace BLL.AuthenticationServices
             
             var result = await manager.Roles.Where(x => x.Deleted == false).OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Name != DefaultRoles.FLAVETECH
-                    && (d.Name == DefaultRoles.SCHOOLADMIN || d.Name == DefaultRoles.TEACHER || d.Name == DefaultRoles.PARENTS)
+                    && (d.Name == DefaultRoles.SCHOOLADMIN || d.Name == DefaultRoles.TeacherRole(smsClientId) || d.Name == DefaultRoles.PARENTS)
                     || d.ClientId == smsClientId
                     )
                 .OrderByDescending(we => we.UpdatedBy)
@@ -240,7 +240,7 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.TEACHER)
+                if (role.Name == DefaultRoles.TeacherRole(smsClientId))
                 {
                     res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
                     return res;

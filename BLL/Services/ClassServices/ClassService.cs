@@ -274,7 +274,7 @@ namespace BLL.ClassServices
                 return res;
             }
             //GET TEACHER CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
             {
                 var classesAsASujectTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                      .Include(s => s.Class)
@@ -311,7 +311,7 @@ namespace BLL.ClassServices
                 return res;
             }
             //GET TEACHER CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
             {
                 var classesAsAFormTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                     .Include(s => s.Class)
@@ -347,7 +347,7 @@ namespace BLL.ClassServices
                 return res;
             }
             //GET TEACHER CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
             {
                 var classesAsASujectTeacher = context.SessionClass.Where(c => c.ClientId == smsClientId)
                      .Include(s => s.Class)
