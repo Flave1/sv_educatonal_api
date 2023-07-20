@@ -637,6 +637,29 @@ namespace BLL.AuthenticationServices
             .Where(x => x.UserId == userId && x.ClientId == clientId && x.Deleted == false)
             .Select(c => new TeacherDto(c)).FirstOrDefault();
 
+
+         async Task<APIResponse<List<AllSchools>>> IIdentityService.GetAllSchoolsAsync()
+        {
+            var resp = new APIResponse<List<AllSchools>>();
+            var res =  await context.SchoolSettings.Where(d => d.Deleted == false).Select(d => new AllSchools
+            {
+                Address = d.SCHOOLSETTINGS_SchoolAddress,
+                ClientId = d.ClientId,
+                RegNumberformat =  d.SCHOOLSETTINGS_StudentRegNoFormat,
+                SchoolHead = context.Session
+                .Where(r => r.IsActive == true && r.ClientId == d.ClientId)
+                .Include(d => d.HeadTeacher)
+                .Select(t => new { Name = t.HeadTeacher.FirstName + " "+ t.HeadTeacher.LastName })
+                .FirstOrDefault().Name,
+                SchoolLogo = d.SCHOOLSETTINGS_Photo,
+                SchoolName = d.SCHOOLSETTINGS_SchoolName,
+                SchoolUrl = d.APPLAYOUTSETTINGS_SchoolUrl
+            }).ToListAsync();
+
+            resp.IsSuccessful = true;
+            resp.Result = res;
+            return resp;
+        }
     }
 }
 

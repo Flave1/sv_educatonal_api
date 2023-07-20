@@ -65,7 +65,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass.Where(x=>x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -116,7 +116,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -167,7 +167,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                         .Include(d => d.Subject)
@@ -212,7 +212,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)

@@ -45,7 +45,7 @@ namespace SMP.BLL.Services.DashboardServices
 
             if (!string.IsNullOrEmpty(userId))
             { 
-                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if(accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = GetDashboardCounts();
                 }
@@ -200,7 +200,7 @@ namespace SMP.BLL.Services.DashboardServices
             }
             if (!string.IsNullOrEmpty(userId))
             {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     classesAsASujectTeacher = context.SessionClass
                         .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)

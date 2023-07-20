@@ -127,7 +127,7 @@ namespace BLL.AuthenticationServices
                             throw new ArgumentException(identityResult.Errors.FirstOrDefault().Description);
                     }
 
-                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
+                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.StudentRole(smsClientId));
                     if (!addTorole.Succeeded)
                         if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
                             throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
@@ -174,7 +174,7 @@ namespace BLL.AuthenticationServices
                     else
                         throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
-                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.STUDENT);
+                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.StudentRole(smsClientId));
                 if (!addTorole.Succeeded)
                     if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
                         throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
@@ -269,7 +269,7 @@ namespace BLL.AuthenticationServices
                         else
                             throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.PARENTS);
+                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.ParentRole(smsClientId));
                     if (!addTorole.Succeeded)
                     {
                         if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)

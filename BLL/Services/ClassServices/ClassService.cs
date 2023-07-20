@@ -263,7 +263,7 @@ namespace BLL.ClassServices
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var currentTermId = termService.GetCurrentTerm().SessionTermId;
             //GET SUPER ADMIN CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
                 res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)
@@ -300,7 +300,7 @@ namespace BLL.ClassServices
             var res = new APIResponse<List<GetSessionClass>>();
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             //GET SUPER ADMIN CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
                 res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)
@@ -331,7 +331,7 @@ namespace BLL.ClassServices
             var sessionId = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId).SessionId;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             //GET SUPER ADMIN CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
                 res.Result = await context.SessionClass.Where(c => c.ClientId == smsClientId)
                    .Include(rr => rr.Session)

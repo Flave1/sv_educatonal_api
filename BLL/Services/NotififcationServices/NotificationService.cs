@@ -69,6 +69,7 @@ namespace SMP.BLL.Services.NotififcationServices
                     SendNotificationByEmail(item);
                 //if (bySms)
                     //SendNotificationByEmail(item);
+                //PUsh
             }
             catch (Exception ex)
             {
@@ -100,7 +101,7 @@ namespace SMP.BLL.Services.NotififcationServices
             {
                 var query =  context.Notification.Where(x=>x.ClientId == smsClientId).OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
                 {
                     query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
                 }
@@ -109,11 +110,11 @@ namespace SMP.BLL.Services.NotififcationServices
                     query = query.Where(x => x.ToGroup == NotificationRooms.Teachers);
                 }
 
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
                 {
                     query = query.Where(x => x.ToGroup == NotificationRooms.Students);
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.ParentRole(smsClientId)))
                 {   
                     query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
                 }

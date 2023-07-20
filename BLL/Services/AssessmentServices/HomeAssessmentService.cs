@@ -188,7 +188,7 @@ namespace SMP.BLL.Services.AssessmentServices
                  .Include(q => q.SessionTerm)
                 .OrderByDescending(d => d.CreatedOn).Where(d=> d.Deleted == false);
 
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }

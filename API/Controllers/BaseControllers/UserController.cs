@@ -204,6 +204,14 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+
+        [AllowAnonymous]
+        [HttpGet("get/allschools")]
+        public async Task<ActionResult> GetAllSchools()
+        {
+            var response = await identityService.GetAllSchoolsAsync();
+            return Ok(response);
+        }
         #endregion
 
 

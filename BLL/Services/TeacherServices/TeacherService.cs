@@ -401,7 +401,7 @@ namespace SMP.BLL.Services.TeacherServices
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
-                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.SCHOOLADMIN);
+                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.AdminRole(smsClientId));
                 if (!addTorole.Succeeded)
                 {
                     res.Result = "failed";
