@@ -17,7 +17,7 @@ namespace DAL.ClassEntities
     {
         [Key]
         public Guid SessionClassId { get; set; }
-        public Guid SessionId { get; set; }
+        public Guid? SessionId { get; set; }
         [ForeignKey("SessionId")]
         public virtual Session Session { get; set; }
         public Guid ClassId { get; set; }

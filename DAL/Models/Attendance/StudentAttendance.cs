@@ -16,7 +16,7 @@ namespace SMP.DAL.Models.Attendance
     {
         [Key]
         public Guid ClassAttendanceId { get; set; }
-        public Guid StudentContactId { get; set; }
+        public Guid? StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact StudentContact { get; set; }
         public Guid ClassRegisterId { get; set; }

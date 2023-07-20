@@ -2,7 +2,6 @@
 using BLL.MiddleWares;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.ParentServices;
-using SMP.DAL.Migrations;
 using System.Threading.Tasks;
 
 namespace SMP.API.Controllers.TeacherControllers

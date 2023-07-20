@@ -50,7 +50,7 @@ namespace SMP.BLL.Services.AssessmentServices
                  .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
                  .Where(x => x.SessionTermId == activeTerm.SessionTermId);
 
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.Scorer == Guid.Parse(teacherId));
             }

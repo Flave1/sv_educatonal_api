@@ -228,8 +228,10 @@ namespace SMP.Contracts.PortalSettings
         public string State { get; set; }
         public string Address { get; set; }
         public string SchoolLogo { get; set; }
-        public SMSSMPAccountSetting(string SchoolName, string Country, string State, string Address, string SchoolLogo, string clientId)
+        public string SchoolUrl { get; set; }
+        public SMSSMPAccountSetting(string SchoolName, string Country, string State, string Address, string SchoolLogo, string clientId, string url)
         {
+            this.SchoolUrl = url;
             this.SchoolName = SchoolName;
             this.Country = Country;
             this.State = State;

@@ -66,7 +66,7 @@ namespace SMP.Contracts.Notes
             IsParent = db.IsParent;
             StudentNoteId = db.StudentNoteId;
             RepliedToId = db.RepliedToId;
-            StudentId = db.StudentNote.StudentContactId;
+            StudentId = db.StudentNote.StudentContactId.Value;
 
             Name = account?.FirstName + "  " + account?.LastName;
 

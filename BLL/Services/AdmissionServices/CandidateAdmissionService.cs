@@ -1,5 +1,4 @@
 ﻿using BLL;
-using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
 using BLL.LoggerService;
@@ -8,36 +7,24 @@ using Contracts.Common;
 using Contracts.Email;
 using DAL;
 using DAL.Authentication;
-using DAL.ClassEntities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using NLog.Filters;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
 using SMP.BLL.Services.ParentServices;
-using SMP.BLL.Services.PortalService;
 using SMP.Contracts.Admissions;
 using SMP.Contracts.AdmissionSettings;
 using SMP.Contracts.PortalSettings;
-using SMP.DAL.Migrations;
-using SMP.DAL.Models.Admission;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.AdmissionServices
@@ -517,6 +504,43 @@ namespace SMP.BLL.Services.AdmissionServices
 
             }
             catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                response.IsSuccessful = false;
+                response.Message.FriendlyMessage = Messages.FriendlyException;
+                response.Message.TechnicalMessage = ex.ToString();
+                return response;
+            }
+        }
+
+        public async Task<APIResponse<string>> ResendEmailTORegisteredParent(ResendRegEmail request)
+        {
+            var response = new APIResponse<string>();
+            try
+            {
+                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl == request.SchoolUrl);
+                accessor.HttpContext.Items["smsClientId"] = schoolSettings.ClientId;
+
+                if (schoolSettings != null)
+                {
+                    var parent = await parentService.GetParentByEmailAsync(request.Email, schoolSettings.ClientId);
+                    if (parent == null)
+                    {
+                        response.IsSuccessful = false;
+                        response.Message.FriendlyMessage = "Parent account does not exist.";
+                        return response;
+                    }
+
+                    await SendNotifications(parent.Result.ParentId.ToString(), request.Firstname, request.Email, request.SchoolUrl, schoolSettings);
+
+                    response.Result = parent.Result.ParentId.ToString();
+                    response.IsSuccessful = true;
+                    response.Message.FriendlyMessage = "Successfully registered. Kindly check your email, a confirmation mail has been sent to you.";
+                }
+                return response;
+
+            }
+            catch (Exception ex)
             {
                 loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 response.IsSuccessful = false;

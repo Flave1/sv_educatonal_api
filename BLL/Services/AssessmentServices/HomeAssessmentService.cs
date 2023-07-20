@@ -4,7 +4,6 @@ using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Common;
-using Contracts.Session;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -20,15 +19,12 @@ using SMP.BLL.Services.ResultServices;
 using SMP.BLL.Services.SessionServices;
 using SMP.Contracts.Assessment;
 using SMP.Contracts.NotificationModels;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.AssessmentEntities;
 using SMP.DAL.Models.ResultModels;
-using SMP.DAL.Models.SessionEntities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace SMP.BLL.Services.AssessmentServices
 {
@@ -192,7 +188,7 @@ namespace SMP.BLL.Services.AssessmentServices
                  .Include(q => q.SessionTerm)
                 .OrderByDescending(d => d.CreatedOn).Where(d=> d.Deleted == false);
 
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }
@@ -876,10 +872,10 @@ namespace SMP.BLL.Services.AssessmentServices
                     score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, include, (float)feedBack.Mark);
             }
 
-            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
             if (scoreEntry is null)
             {
-                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
+                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
                 feedBack.IncludedScore = (int)score;
                 feedBack.Included = include ? true : false;
                 await context.SaveChangesAsync();
@@ -945,11 +941,11 @@ namespace SMP.BLL.Services.AssessmentServices
                 if (!feedBack.Included && include)
                     score = scoreEntryService.IncludeAndExcludeThenReturnScore(scoreHistory, include, (float)feedBack.Mark);
             }
-            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
+            var scoreEntry = scoreEntryService.GetScoreEntry(termId, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId);
 
             if (scoreEntry is null)
             {
-                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
+                scoreEntryService.CreateNewScoreEntryForAssessment(scoreEntry, termId, score, feedBack.StudentContactId.Value, feedBack.HomeAssessment.SessionClassSubject.SubjectId, feedBack.HomeAssessment.SessionClassId);
                 feedBack.IncludedScore = Convert.ToInt16(feedBack.Mark);
                 feedBack.Included = include ? true : false;
             }
@@ -1142,7 +1138,7 @@ namespace SMP.BLL.Services.AssessmentServices
 
             score = await Task.Run(() => scoreEntryService.ForceScoreHistroyExclusion(scoreHistory, (float)feedback.Mark));
 
-            var scoreEntry = scoreEntryService.GetScoreEntry(Guid.Parse(scoreHistory.SessionTermId), feedback.StudentContactId, Guid.Parse(scoreHistory.Subjectid));
+            var scoreEntry = scoreEntryService.GetScoreEntry(Guid.Parse(scoreHistory.SessionTermId), feedback.StudentContactId.Value, Guid.Parse(scoreHistory.Subjectid));
 
             scoreEntryService.UpdateScoreEntryForAssessment(scoreEntry, score);
 

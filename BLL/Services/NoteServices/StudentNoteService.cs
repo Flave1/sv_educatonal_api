@@ -140,7 +140,7 @@ namespace SMP.BLL.Services.NoteServices
                         .Include(d => d.Teacher)
                         .Include(d => d.Subject).Where(u => u.SessionClassId == Guid.Parse(classId) && u.SessionClass.Session.IsActive == true && u.AprrovalStatus != (int)NoteApprovalStatus.Saved);
 
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }
@@ -180,7 +180,7 @@ namespace SMP.BLL.Services.NoteServices
                         .Include(d => d.Teacher)
                         .Include(d => d.Subject).Where(u => u.SessionClassId == Guid.Parse(classId) && u.SessionClass.Session.IsActive == true && u.AprrovalStatus != (int)NoteApprovalStatus.Saved);
 
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }

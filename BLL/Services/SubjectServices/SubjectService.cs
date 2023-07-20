@@ -6,14 +6,11 @@ using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
-using SMP.BLL.Utilities;
 using SMP.Contracts.ClassModels;
 using SMP.Contracts.Common;
-using SMP.DAL.Migrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BLL.Services.SubjectServices

@@ -354,7 +354,7 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("PassMark")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SessionId")
+                    b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("SessionTermId")
@@ -1127,10 +1127,10 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid>("SessionClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SessionClassSubjectId")
+                    b.Property<Guid?>("SessionClassSubjectId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SessionTermId")
+                    b.Property<Guid?>("SessionTermId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
@@ -1194,7 +1194,7 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("HomeAssessmentId")
+                    b.Property<Guid?>("HomeAssessmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("Included")
@@ -1209,7 +1209,7 @@ namespace SMP.DAL.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("StudentContactId")
+                    b.Property<Guid?>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -1248,7 +1248,7 @@ namespace SMP.DAL.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("StudentContactId")
+                    b.Property<Guid?>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -1611,7 +1611,7 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("SessionTermId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StudentContactId")
+                    b.Property<Guid?>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SubjectId")
@@ -2290,7 +2290,7 @@ namespace SMP.DAL.Migrations
                     b.Property<Guid?>("SessionTermId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StudentContactId")
+                    b.Property<Guid?>("StudentContactId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -2547,9 +2547,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("DAL.SessionEntities.Session", "Session")
                         .WithMany("SessionClass")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SessionId");
 
                     b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
                         .WithMany()
@@ -2744,15 +2742,11 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("SMP.DAL.Models.ClassEntities.SessionClassSubject", "SessionClassSubject")
                         .WithMany("HomeAssessments")
-                        .HasForeignKey("SessionClassSubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SessionClassSubjectId");
 
                     b.HasOne("SMP.DAL.Models.SessionEntities.SessionTerm", "SessionTerm")
                         .WithMany()
-                        .HasForeignKey("SessionTermId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SessionTermId");
 
                     b.Navigation("SessionClass");
 
@@ -2767,15 +2761,11 @@ namespace SMP.DAL.Migrations
                 {
                     b.HasOne("SMP.DAL.Models.AssessmentEntities.HomeAssessment", "HomeAssessment")
                         .WithMany("HomeAssessmentFeedBacks")
-                        .HasForeignKey("HomeAssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("HomeAssessmentId");
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
                         .WithMany()
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StudentContactId");
 
                     b.Navigation("HomeAssessment");
 
@@ -2792,9 +2782,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
                         .WithMany()
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StudentContactId");
 
                     b.Navigation("ClassRegister");
 
@@ -2902,9 +2890,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "Student")
                         .WithMany("StudentNote")
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StudentContactId");
 
                     b.HasOne("DAL.SubjectModels.Subject", "Subject")
                         .WithMany()
@@ -3071,9 +3057,7 @@ namespace SMP.DAL.Migrations
 
                     b.HasOne("DAL.StudentInformation.StudentContact", "StudentContact")
                         .WithMany()
-                        .HasForeignKey("StudentContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StudentContactId");
 
                     b.Navigation("SessionClass");
 

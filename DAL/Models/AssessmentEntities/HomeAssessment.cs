@@ -22,13 +22,13 @@ namespace SMP.DAL.Models.AssessmentEntities
         public Guid SessionClassId { get; set; }
         [ForeignKey("SessionClassId")]
         public SessionClass SessionClass { get; set; }
-        public Guid SessionClassSubjectId { get; set; }
+        public Guid? SessionClassSubjectId { get; set; }
         [ForeignKey("SessionClassSubjectId")]
         public SessionClassSubject SessionClassSubject { get; set; }
         public Guid? SessionClassGroupId { get; set; }
         [ForeignKey("SessionClassGroupId")]
         public SessionClassGroup SessionClassGroup { get; set; }
-        public Guid SessionTermId { get; set; }
+        public Guid? SessionTermId { get; set; }
         [ForeignKey("SessionTermId")]
         public SessionTerm SessionTerm { get; set; }
         public string DateDeadLine { get; set; }

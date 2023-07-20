@@ -3,7 +3,6 @@ using BLL.Filter;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using SMP.Contracts.ParentModels;
-using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,5 +20,6 @@ namespace SMP.BLL.Services.ParentServices
         Task<APIResponse<PagedResponse<List<GetParentWards>>>> GetParentWardsAsync(PaginationFilter filter, string parentId);
         Task<APIResponse<GetParents>> GetParentByIdAsync(string parentId);
         public Task<APIResponse<ParentDashboardCount>> GetDashboardCount();
+        Task<APIResponse<GetParents>> GetParentByEmailAsync(string email, string clientId);
     }
 }

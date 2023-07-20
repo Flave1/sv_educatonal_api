@@ -1,24 +1,19 @@
 ﻿using BLL;
 using BLL.AuthenticationServices;
-using BLL.Constants;
 using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Annoucements;
-using Contracts.Session;
 using DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using NLog.Filters;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FilterService;
 using SMP.Contracts.ParentModels;
-using SMP.DAL.Migrations;
 using SMP.DAL.Models.Parents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SMP.BLL.Services.ParentServices
@@ -294,6 +289,28 @@ namespace SMP.BLL.Services.ParentServices
                 return res;
             }
         }
+        public async Task<APIResponse<GetParents>> GetParentByEmailAsync(string email,string clientId)
+        {
+            var res = new APIResponse<GetParents>();
+            try
+            {
+                var parent = await context.Parents
+                    .Where(d => d.ClientId == clientId && d.Email == email).Select(parent => new GetParents(parent)).FirstOrDefaultAsync();
+
+                res.Result = parent;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
 
         public async Task<APIResponse<ParentDashboardCount>> GetDashboardCount()
         {
@@ -322,7 +339,7 @@ namespace SMP.BLL.Services.ParentServices
                 var totalTeacherClassNote = teacherClassNote.Count();
 
                 var studentsContactId = await students.Select(x => x.StudentContactId).ToListAsync();
-                var studentClassNote = context.StudentNote.Where(x => studentsContactId.Contains(x.StudentContactId) && x.Deleted != true);
+                var studentClassNote = context.StudentNote.Where(x => studentsContactId.Contains(x.StudentContactId.Value) && x.Deleted != true);
                 var totalstudentClassNote = studentClassNote.Count();
 
                 res.Result = new ParentDashboardCount { TotalWards = totalWards, TotalAssessment = totalClassAssessment, TeachersNote = totalTeacherClassNote, WardsNote = totalstudentClassNote};

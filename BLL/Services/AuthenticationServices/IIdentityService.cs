@@ -13,5 +13,6 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<LoginSuccessResponse>> MobileLoginAsync(LoginCommand loginRequest);
         Task<APIResponse<List<string>>> GetTeacherMobilePermissionsAsync(string userId);
         Task<APIResponse<CBTLoginDetails>> GetCBTTokenAsync();
+        Task<APIResponse<List<AllSchools>>> GetAllSchoolsAsync();
     }
 }
