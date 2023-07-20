@@ -114,7 +114,7 @@ namespace SMP.BLL.Services.NotififcationServices
                     query = query.Where(x => x.ToGroup == NotificationRooms.Students);
                 }
                 else if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
-                {
+                {   
                     query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
                 }
 
