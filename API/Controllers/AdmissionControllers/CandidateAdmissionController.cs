@@ -106,5 +106,14 @@ namespace SMP.API.Controllers.AdmissionControllers
                 return Ok(response);
             return BadRequest(response);
         }
+        [AllowAnonymous]
+        [HttpPost("resend-email-to/registered-parent")]
+        public async Task<IActionResult> ResendEmailTORegisteredParent([FromBody] ResendRegEmail request)
+        {
+            var response = await service.ResendEmailTORegisteredParent(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
     }
 }

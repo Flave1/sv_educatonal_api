@@ -85,7 +85,7 @@ namespace SMP.BLL.Services.AnnouncementServices
             
             if (!string.IsNullOrEmpty(userid))
             {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.Deleted == false)
                           .Include(d => d.Sender)
@@ -100,7 +100,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "teacher" && c.Deleted == false)
                          .Include(d => d.Sender)
@@ -114,7 +114,7 @@ namespace SMP.BLL.Services.AnnouncementServices
                     res.Message.FriendlyMessage = Messages.GetSuccess;
                     return res;
                 }
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.STUDENT))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
                 {
                     var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "student" && c.Deleted == false)
                           .Include(d => d.Sender)

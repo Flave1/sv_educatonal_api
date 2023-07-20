@@ -177,7 +177,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 query = query.Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
             }
-            else if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            else if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }
@@ -232,7 +232,7 @@ namespace SMP.BLL.Services.NoteServices
             {
                 query = query.Where(u => u.Deleted == false && u.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.InProgress);
             }
-            else if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN))
+            else if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
             {
                 query = query.Where(x => x.TeacherId == Guid.Parse(teacherId));
             }
@@ -825,7 +825,7 @@ namespace SMP.BLL.Services.NoteServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass.Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
                         .Include(s => s.Class)
@@ -837,7 +837,7 @@ namespace SMP.BLL.Services.NoteServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var classesAsASujectTeacher = context.SessionClass
                          .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects

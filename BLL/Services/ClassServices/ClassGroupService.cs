@@ -131,7 +131,7 @@ namespace BLL.ClassServices
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
 
             //GET SUPER ADMIN CLASSES
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
             {
                 res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                 .Include(s => s.Subject)
@@ -143,7 +143,7 @@ namespace BLL.ClassServices
                 return res;
             }
 
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
             {
                 var subjectTeacherSubjects = context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                     .Include(d => d.Subject)
@@ -162,7 +162,7 @@ namespace BLL.ClassServices
                 return res;
             }
 
-            if (accessor.HttpContext.User.IsInRole(DefaultRoles.PARENTS))
+            if (accessor.HttpContext.User.IsInRole(DefaultRoles.ParentRole(smsClientId)))
             {
                 res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId)
                 .Include(s => s.Subject)

@@ -111,7 +111,7 @@ namespace BLL.AuthenticationServices
                 res.Message.FriendlyMessage = "Role cannot be edited ";
                 return res;
             }
-            role.Name = request.Name;
+            role.Name = request.Name + "" + smsClientId;
             role.UpdateOn = DateTime.Now;
             var result = await manager.UpdateAsync(role);
             if (!result.Succeeded)
@@ -141,12 +141,10 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            
             var result = await manager.Roles.Where(x => x.Deleted == false).OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Name != DefaultRoles.FLAVETECH
-                    && (d.Name == DefaultRoles.SCHOOLADMIN || d.Name == DefaultRoles.TEACHER || d.Name == DefaultRoles.PARENTS)
-                    || d.ClientId == smsClientId
-                    )
+                    && (d.Name == DefaultRoles.AdminRole(smsClientId) || d.Name == DefaultRoles.TeacherRole(smsClientId) || d.Name == DefaultRoles.ParentRole(smsClientId))
+                    || d.ClientId == smsClientId)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name.Replace(smsClientId, "") }).ToListAsync();
 
@@ -240,24 +238,24 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.TEACHER)
+                if (role.Name == DefaultRoles.TeacherRole(smsClientId))
                 {
                     res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.STUDENT)
+                if (role.Name == DefaultRoles.StudentRole(smsClientId))
                 {
                     res.Message.FriendlyMessage = "Student role cannot be deleted ";
                     return res;
                 }
 
-                if (role.Name == DefaultRoles.SCHOOLADMIN)
+                if (role.Name == DefaultRoles.AdminRole(smsClientId))
                 {
                     res.Message.FriendlyMessage = "Admin role cannot be deleted";
                     return res;
                 }
-                if (role.Name == DefaultRoles.SCHOOLADMIN)
+                if (role.Name == DefaultRoles.AdminRole(smsClientId))
                 {
                     res.Message.FriendlyMessage = "Role cannot be deleted";
                     return res;

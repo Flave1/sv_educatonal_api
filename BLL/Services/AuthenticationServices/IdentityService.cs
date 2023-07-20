@@ -168,7 +168,7 @@ namespace BLL.AuthenticationServices
                 await webRequestService.PostAsync<UserLoginResponse, UserLoginDetails>($"{NotificationRoutes.createUser}", userRequest);
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
                 res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
@@ -191,8 +191,9 @@ namespace BLL.AuthenticationServices
             {
                 var id = Guid.NewGuid();
                 var clientId = ClientId(loginRequest.SchoolUrl);
-                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 var permisions = new List<string>();
+
+                var userAccount = await userManager.FindByNameAsync(loginRequest.UserName);
                 if (userAccount == null)
                 {
                     res.Message.FriendlyMessage = $"User account with {loginRequest.UserName} is not available";
@@ -204,7 +205,9 @@ namespace BLL.AuthenticationServices
                     res.Message.FriendlyMessage = $"Password seems to be incorrect";
                     return res;
                 }
-               
+
+
+
                 if (loginRequest.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
@@ -237,7 +240,6 @@ namespace BLL.AuthenticationServices
                     lastName = teacher.LastName;
                 }
 
-
                 if (loginRequest.UserType == (int)UserTypes.Student)
                 {
                     var student = GetStudentByUserId(userAccount.Id, clientId);
@@ -246,7 +248,7 @@ namespace BLL.AuthenticationServices
                         res.Message.FriendlyMessage = $"{loginRequest.UserName} is not available in school database";
                         return res;
                     }
-                    if (student != null && student.Status == (int)StudentStatus.Inactive)
+                    if (student.Status == (int)StudentStatus.Inactive)
                     {
                         res.Message.FriendlyMessage = $"Student account is currently unavailable!! Please contact school administration";
                         return res;
@@ -256,7 +258,7 @@ namespace BLL.AuthenticationServices
                     lastName = student.LastName;
                     userType = UserTypes.Student.ToString();
                 }
-                SchoolSetting appSettings = null;
+                SchoolSetting schoolSettings = null;
 
                 if (loginRequest.UserType == (int)UserTypes.Parent)
                 {
@@ -273,19 +275,18 @@ namespace BLL.AuthenticationServices
                 }
 
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
-                    appSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
-
-                var schoolSetting = context.SchoolSettings.FirstOrDefault(x => x.ClientId == appSettings.ClientId) ?? new SchoolSetting();
+                    schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
                 res.Result = new LoginSuccessResponse();
-                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, appSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
+                res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
                 res.IsSuccessful = true;
                 return res;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                res.Message.FriendlyMessage = "Unexpected Error Occurred";
+                return res;
             }
         }
 
@@ -409,7 +410,7 @@ namespace BLL.AuthenticationServices
                             StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "")
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(AppUser user, Guid ID, List<string> permissions = null, SchoolSetting schoolSetting = null, string firstName = "", string lastName = "", string clientId = "", string userType = "")
         {
             try
             {
@@ -422,13 +423,13 @@ namespace BLL.AuthenticationServices
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim("userId", user.Id),
-                    new Claim("userType", 1.ToString()),
+                    new Claim("userType", userType),
                     new Claim("userName",user.UserName),
                     new Claim("name", firstName + " " + lastName),
-                    user.UserTypes == ((int)UserTypes.Teacher).ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Student ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Admin ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
-                    //user.UserType == (int)UserTypes.Parent ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
+                    userType == UserTypes.Teacher.ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == UserTypes.Student.ToString() ? new Claim("studentContactId", ID.ToString()) : new Claim("studentContactId", ID.ToString()),
+                    userType == UserTypes.Admin.ToString() ? new Claim("teacherId", ID.ToString()) : new Claim("teacherId", ID.ToString()),
+                    userType == UserTypes.Parent.ToString() ? new Claim("parentId", ID.ToString()) : new Claim("parentId", ID.ToString()),
                     permissions != null ? new Claim("permissions", string.Join(',', permissions)) : new Claim("permissions", string.Join(',', "N/A")),
                     schoolSetting != null ? new Claim("smsClientId", schoolSetting.ClientId) : new Claim("smsClientId", clientId),
                 };
@@ -645,6 +646,29 @@ namespace BLL.AuthenticationServices
             .Where(x => x.UserId == userId && x.ClientId == clientId && x.Deleted == false)
             .Select(c => new TeacherDto(c)).FirstOrDefault();
 
+
+         async Task<APIResponse<List<AllSchools>>> IIdentityService.GetAllSchoolsAsync()
+        {
+            var resp = new APIResponse<List<AllSchools>>();
+            var res =  await context.SchoolSettings.Where(d => d.Deleted == false).Select(d => new AllSchools
+            {
+                Address = d.SCHOOLSETTINGS_SchoolAddress,
+                ClientId = d.ClientId,
+                RegNumberformat =  d.SCHOOLSETTINGS_StudentRegNoFormat,
+                SchoolHead = context.Session
+                .Where(r => r.IsActive == true && r.ClientId == d.ClientId)
+                .Include(d => d.HeadTeacher)
+                .Select(t => new { Name = t.HeadTeacher.FirstName + " "+ t.HeadTeacher.LastName })
+                .FirstOrDefault().Name,
+                SchoolLogo = d.SCHOOLSETTINGS_Photo,
+                SchoolName = d.SCHOOLSETTINGS_SchoolName,
+                SchoolUrl = d.APPLAYOUTSETTINGS_SchoolUrl
+            }).ToListAsync();
+
+            resp.IsSuccessful = true;
+            resp.Result = res;
+            return resp;
+        }
     }
 }
 

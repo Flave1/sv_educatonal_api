@@ -1,5 +1,6 @@
 ﻿using BLL;
 using SMP.Contracts.PortalSettings;
+using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace SMP.BLL.Services.PortalService
         Task<APIResponse<UpdateResultSetting>> UpdateResultSettingTemplateAsync(UpdateResultSetting request);
         Task<APIResponse<AppLayoutSettings>> UpdateAppLayoutSettingsAsync(AppLayoutSettings request);
         Task<APIResponse<AppLayoutSettings>> GetAppLayoutSettingsAsync(string url);
-        void CreateSchoolSettingsAsync(string clientId, string schoolUrl);
+        //void UpdateSchoolSettingsAsync(SchoolSetting setting, string schoolUrl);
         Task<APIResponse<CreateRegNoSetting>> CreateUpdateRegNoSettingsAsync(CreateRegNoSetting request);
         Task<APIResponse<RegNoSetting>> GetRegNoSettingsAsync();
         Task CreateSchoolSettingsAsync(SMSSMPAccountSetting request, string email);

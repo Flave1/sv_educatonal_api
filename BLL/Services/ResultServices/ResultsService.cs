@@ -65,7 +65,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass.Where(x=>x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -77,7 +77,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                    var classesAsASujectTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -116,7 +116,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                         .Include(s => s.Class)
@@ -128,7 +128,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
                 //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                 //    var classesAsASujectTeacher = context.SessionClass
                 //         .Include(s => s.Class)
@@ -167,7 +167,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                         .Include(d => d.Subject)
@@ -178,7 +178,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var subjectTeacherSubjects = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SubjectTeacherId == Guid.Parse(teacherId)
                         && x.SessionClassId == sessionClassId)
@@ -212,7 +212,7 @@ namespace SMP.BLL.Services.ResultServices
             if (!string.IsNullOrEmpty(userid))
             {
                 //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = await context.SessionClassSubject.Where(x => x.ClientId == smsClientId && x.SessionClassId == sessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
@@ -226,7 +226,7 @@ namespace SMP.BLL.Services.ResultServices
                     return res;
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     var subjectTeacherSubjects = context.SessionClassSubject.Where(x=>x.ClientId == smsClientId && x.SubjectTeacherId == Guid.Parse(teacherId) 
                     && x.SessionClassId == sessionClassId)
@@ -539,7 +539,7 @@ namespace SMP.BLL.Services.ResultServices
                 {
                     List<StudentSessionClassHistory> stdsArchive = scoreEntryService.GetStudentsFromArchiveQuery(request.SessionClassId, request.SessionTermId).ToList();
                     foreach (var studentArchive in stdsArchive)
-                        await SaveSessionClassArchiveAsync(sessClass, studentArchive.SessionTermId, studentArchive.StudentContactId, request.Publish);
+                        await SaveSessionClassArchiveAsync(sessClass, studentArchive.SessionTermId, studentArchive.StudentContactId.Value, request.Publish);
                 }
                 await context.SaveChangesAsync();
 
@@ -615,8 +615,8 @@ namespace SMP.BLL.Services.ResultServices
                     foreach (var student in sts)
                     {
                         ScoreEntrySheet scoreEntrySheet = new ScoreEntrySheet();
-                        ScoreEntry scoreEntry = scoreEntryService.GetScoreEntry(sessionTermId, student.StudentContactId, subjectId);
-                        StudentContact studenInfor = studentService.GetStudent(student.StudentContactId).FirstOrDefault();
+                        ScoreEntry scoreEntry = scoreEntryService.GetScoreEntry(sessionTermId, student.StudentContactId.Value, subjectId);
+                        StudentContact studenInfor = studentService.GetStudent(student.StudentContactId.Value).FirstOrDefault();
                         scoreEntrySheet.AssessmentScore = scoreEntry?.AssessmentScore ?? 0;
                         scoreEntrySheet.ExamsScore = scoreEntry?.ExamScore ?? 0;
                         scoreEntrySheet.RegistrationNumber = regNoFormat.Replace("%VALUE%", studenInfor.RegistrationNumber);

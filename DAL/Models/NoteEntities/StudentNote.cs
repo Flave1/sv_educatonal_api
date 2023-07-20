@@ -17,7 +17,7 @@ namespace SMP.DAL.Models.NoteEntities
         public string NoteTitle { get; set; }
         public string NoteContent { get; set; }
         public int AprrovalStatus { get; set; }
-        public Guid StudentContactId { get; set; }
+        public Guid? StudentContactId { get; set; }
         [ForeignKey("StudentContactId")]
         public StudentContact Student { get; set; }  
         public Guid SubjectId { get; set; }

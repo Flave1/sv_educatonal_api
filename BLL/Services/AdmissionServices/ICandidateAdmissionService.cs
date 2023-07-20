@@ -25,5 +25,6 @@ namespace SMP.BLL.Services.AdmissionServices
         Task<APIResponse<string>> UpdateAdmission(UpdateAdmission request);
         Task<APIResponse<SchoolSettingContract>> GetSchollSettingsAsync();
         Task<APIResponse<string>> RegisterParent(CreateAdmissionParent request);
+        Task<APIResponse<string>> ResendEmailTORegisteredParent(ResendRegEmail request);
     }
 }

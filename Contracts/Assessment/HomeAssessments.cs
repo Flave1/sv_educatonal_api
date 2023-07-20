@@ -202,7 +202,7 @@ namespace SMP.Contracts.Assessment
             StudentName = student?.FirstName + " " + student?.MiddleName + " " + student?.LastName;
             Score = feedBack?.Mark??0;
             ClassLkp = student.SessionClass.ClassId;
-            SubjectLkp = feedBack is not null ? feedBack.HomeAssessment.SessionClassSubjectId : Guid.Empty;
+            SubjectLkp = feedBack is not null ? feedBack.HomeAssessment.SessionClassSubjectId.Value : Guid.Empty;
             if (feedBack is not null)
             {
                 if (feedBack.Status == 3)

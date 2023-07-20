@@ -15,7 +15,7 @@ namespace SMP.Contracts.ClassModels
         public ClassDto(SessionClass sClass)
         {
             SessionClassId = sClass.SessionClassId;
-            SessionId = sClass.SessionId;
+            SessionId = sClass.SessionId.Value;
             ClassId = sClass.ClassId;
             FormTeacherId = sClass.FormTeacherId;
             InSession = sClass.InSession;

@@ -85,6 +85,17 @@ namespace Contracts.Authentication
     {
         public string PasswordHash { get; set; }
     }
+
+    public class AllSchools
+    {
+        public string ClientId { get; set; }
+        public string SchoolName { get; set; }
+        public string Address { get; set; }
+        public string SchoolLogo { get; set; }
+        public string SchoolHead { get; set; }
+        public string SchoolUrl { get; set; }
+        public string RegNumberformat { get; set; }
+    }
 }
 
    

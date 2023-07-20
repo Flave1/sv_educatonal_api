@@ -45,11 +45,11 @@ namespace SMP.BLL.Services.DashboardServices
 
             if (!string.IsNullOrEmpty(userId))
             { 
-                if(accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if(accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     res.Result = GetDashboardCounts();
                 }
-                else if(accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                else if(accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
                 } 
@@ -84,7 +84,7 @@ namespace SMP.BLL.Services.DashboardServices
 
             var totalStaff = context.Teacher.Where(x => x.ClientId == smsClientId)
                 .Include(x => x.User)
-                .Count(x => x.Deleted == false && x.User.Active == true);
+                .Count(x => x.Deleted == false );//&& x.User.Active == true
 
             //var totalUnusedPins = context.UploadedPin.Where(x => x.ClientId == smsClientId)
             //    .Count(x => x.Deleted == false && !x.UsedPin.Any());
@@ -200,7 +200,7 @@ namespace SMP.BLL.Services.DashboardServices
             }
             if (!string.IsNullOrEmpty(userId))
             {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.SCHOOLADMIN) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
                 {
                     classesAsASujectTeacher = context.SessionClass
                         .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
@@ -217,7 +217,7 @@ namespace SMP.BLL.Services.DashboardServices
                         .OrderBy(s => s.Class.Name);
 
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TEACHER))
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {
                     classesAsASujectTeacher = context.SessionClass
                                             .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
