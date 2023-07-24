@@ -158,14 +158,19 @@ namespace BLL.AuthenticationServices
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
                     schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
-                
-                var userRequest = new UserLoginDetails
+                if (userAccount.SocketId?.ToLower() != loginRequest.SocketId?.ToLower())
                 {
-                    UserId = userAccount.Id,
-                    Email = userAccount.Email,
-                    SocketId = loginRequest.SocketId
-                };
-                await webRequestService.PostAsync<UserLoginResponse, UserLoginDetails>($"{NotificationRoutes.createUser}", userRequest);
+                    userAccount.SocketId = loginRequest.SocketId;
+                }
+
+                //var userRequest = new UserLoginDetails
+                //{
+                //    UserId = userAccount.Id,
+                //    Email = userAccount.Email,
+                //    SocketId = loginRequest.SocketId
+                //};
+
+                //await webRequestService.PostAsync<UserLoginResponse, UserLoginDetails>($"{fwsOptions.FwsBaseUrl}{NotificationRoutes.createUser}", userRequest);
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);

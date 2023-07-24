@@ -167,20 +167,6 @@ namespace SMP.BLL.Services.AnnouncementServices
             });
             await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
 
-            var announcementRequest = new SendAnnouncement
-            {
-                AnnouncementId = newAnnouncement.AnnouncementsId.ToString(),
-                Subject = newAnnouncement.Header,
-                Content = newAnnouncement.Content,
-                NotificationSourceId = newAnnouncement.AnnouncementsId.ToString(),
-                NotificationPageLink = $"smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
-                Type = "announcement",
-                DateCreated = DateTime.Now.ToString("dd MMM, yyyy HH:mm:ss"),
-                Assignees = request.AssignedTo.Split(",").ToList().Select(x => new Assignees { Id = x }).ToList()
-            };
-
-             webRequestService.PostAsync<AnnouncementResponse, SendAnnouncement>($"{NotificationRoutes.createAnnouncement}", announcementRequest);
-
             res.Message.FriendlyMessage = Messages.Created;
             res.IsSuccessful = true;
             res.Result = request;

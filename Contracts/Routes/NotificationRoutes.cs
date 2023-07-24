@@ -8,7 +8,7 @@ namespace SMP.Contracts.Routes
 {
     public class NotificationRoutes
     {
-        public const string RouteName = "http://localhost:3000/'";
+        public const string RouteName = "job/server/";
         public const string createUser = RouteName + "user/create";
         public const string createAnnouncement = RouteName + "announcement/create";
     }

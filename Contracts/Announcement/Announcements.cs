@@ -55,7 +55,7 @@ namespace Contracts.Annoucements
             IsSeen = !string.IsNullOrEmpty(db.SeenByIds) ? db.SeenByIds.Split(',').ToList().Contains(userId) : false;
         }
     }
-    public class SendAnnouncement
+    public class PushNotificationDto
     {
         public string AnnouncementId { get; set; }
         public string Subject { get; set; }
@@ -64,6 +64,7 @@ namespace Contracts.Annoucements
         public string NotificationEmailLink { get; set; } = string.Empty;
         public string NotificationPageLink { get; set; } = string.Empty;
         public string Type { get; set; }
+        public string Group { get; set; }
         public string DateCreated { get; set; }
         public List<Assignees> Assignees { get; set; }
     }
