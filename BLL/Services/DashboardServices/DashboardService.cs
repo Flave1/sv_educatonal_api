@@ -298,8 +298,9 @@ namespace SMP.BLL.Services.DashboardServices
         {
 
             const string type = "session";
+            string ms = "Action required! refer to the documentation (Help) to understand how to create a session";
             if (session == null)
-                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type, Message = ms };
             else
             {
                 var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
@@ -324,8 +325,9 @@ namespace SMP.BLL.Services.DashboardServices
         {
 
             const string type = "classes";
+            string ms = "Action required! refer to the documentation (Help) to understand how to create classes";
             if (!clas.Any())
-                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+                return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type, Message = ms };
             else
             {
                 var res = new ApplicationSetupStatus { Cleared = true, CompleteionStatus = 0, Setup = type };
@@ -358,6 +360,8 @@ namespace SMP.BLL.Services.DashboardServices
         {
 
             const string type = "subjects";
+
+            string ms = "Action required! refer to the documentation (Help) to understand how to create subjects";
             if (!subs.Any())
                 return new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
             else
@@ -484,8 +488,10 @@ namespace SMP.BLL.Services.DashboardServices
         {
 
             const string type = "grade";
+            string ms = "Action required! refer to the documentation (Help) to understand how to add grades";
+
             var gradesetting = context.Grade.FirstOrDefault(c => c.ClientId == smsClientId && c.Deleted == false);
-            var res = new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type };
+            var res = new ApplicationSetupStatus { Cleared = false, CompleteionStatus = 0, Setup = type, Message = ms };
             if (gradesetting == null)
                 return res;
 
