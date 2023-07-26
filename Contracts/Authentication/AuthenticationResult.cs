@@ -18,6 +18,7 @@ namespace Contracts.Authentication
         public string Password { get; set; }
         public string SchoolUrl { get; set; }
         public int UserType { get; set; }
+        public string SocketId { get; set; }
     }
 
     public class UserDetail

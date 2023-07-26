@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <Reference Include="FWS.SDK">
-      <HintPath>..\..\FWS\FWS\FWS.SDK\bin\Debug\net5.0\FWS.SDK.dll</HintPath>
+      <HintPath>bin\Debug\net5.0\FWS.SDK.dll</HintPath>
     </Reference>
   </ItemGroup>
 

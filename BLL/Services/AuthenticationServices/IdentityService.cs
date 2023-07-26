@@ -158,6 +158,11 @@ namespace BLL.AuthenticationServices
                 if (!string.IsNullOrEmpty(loginRequest.SchoolUrl))
                     schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == loginRequest.SchoolUrl.ToLower());
 
+                if (userAccount.SocketId?.ToLower() != loginRequest.SocketId?.ToLower())
+                {
+                    userAccount.SocketId = loginRequest.SocketId;
+                }
+
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
                 res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);

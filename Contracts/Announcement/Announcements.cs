@@ -55,4 +55,27 @@ namespace Contracts.Annoucements
             IsSeen = !string.IsNullOrEmpty(db.SeenByIds) ? db.SeenByIds.Split(',').ToList().Contains(userId) : false;
         }
     }
+    public class PushNotificationDto
+    {
+        public string AnnouncementId { get; set; }
+        public string Subject { get; set; }
+        public string Content { get; set; }
+        public string NotificationSourceId { get; set; } = string.Empty;
+        public string NotificationEmailLink { get; set; } = string.Empty;
+        public string NotificationPageLink { get; set; } = string.Empty;
+        public string Type { get; set; }
+        public string Group { get; set; }
+        public string DateCreated { get; set; }
+        public List<Assignees> Assignees { get; set; }
+    }
+    public class Assignees 
+    {
+        public string Id { get; set; }
+    }
+    public class AnnouncementResponse
+    {
+        public string Status { get; set; }
+        public string Message { get; set; }
+    }
+
 }

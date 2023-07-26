@@ -4,15 +4,22 @@ using BLL.EmailServices;
 using BLL.Filter;
 using BLL.LoggerService;
 using BLL.Wrappers;
+using Contracts.Annoucements;
 using Contracts.Email;
 using DAL;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.API.Hubs;
 using SMP.BLL.Hubs;
 using SMP.BLL.Services.FilterService;
+using SMP.BLL.Services.WebRequestServices;
 using SMP.Contracts.NotificationModels;
+using SMP.Contracts.Options;
+using SMP.Contracts.Routes;
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
@@ -29,9 +36,12 @@ namespace SMP.BLL.Services.NotififcationServices
         private readonly IHttpContextAccessor accessor;
         protected readonly IHubContext<NotificationHub> hub;
         private readonly ILoggerService loggerService;
+        private readonly IWebRequestService webRequestService;
         private readonly string smsClientId;
+        private readonly FwsConfigSettings fwsOptions;
+
         public NotificationService(DataContext context, IEmailService emailService, IPaginationService paginationService, IHttpContextAccessor accessor, 
-            IHubContext<NotificationHub> hub, ILoggerService loggerService)
+            IHubContext<NotificationHub> hub, ILoggerService loggerService, IOptions<FwsConfigSettings> options, IWebRequestService webRequestService)
         {
             this.context = context;
             this.emailService = emailService;
@@ -39,7 +49,9 @@ namespace SMP.BLL.Services.NotififcationServices
             this.accessor = accessor;
             this.hub = hub;
             this.loggerService = loggerService;
+            this.webRequestService = webRequestService;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
+            fwsOptions = options.Value;
         }
 
 
@@ -68,8 +80,11 @@ namespace SMP.BLL.Services.NotififcationServices
                 if(byEmail)
                     SendNotificationByEmail(item);
                 //if (bySms)
-                    //SendNotificationByEmail(item);
+                //SendNotificationByEmail(item);
                 //PUsh
+
+                await PushNotification(request);
+
             }
             catch (Exception ex)
             {
@@ -174,6 +189,29 @@ namespace SMP.BLL.Services.NotififcationServices
                 loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
+        }
+        private async Task PushNotification(NotificationDTO request)
+        {
+            string socketIds = "";
+            if(request.Receivers != "all")
+            {
+                socketIds = string.Join(",", context.Users.Where(x => request.Receivers.Contains(x.Email)).Select(x => x.SocketId).ToList());
+            }
+
+            var notificationRequest = new PushNotificationDto
+            {
+                AnnouncementId = request.NotificationSourceId.ToString(),
+                Subject = request.Subject,
+                Content = request.Content,
+                NotificationSourceId = request.NotificationSourceId.ToString(),
+                NotificationPageLink = request.NotificationPageLink,
+                Type = request.Type,
+                Group = request.ToGroup,
+                DateCreated = DateTime.Now.ToString("dd MMM, yyyy HH:mm:ss"),
+                Assignees = socketIds != "" ? socketIds.Split(",").ToList().Select(x => new Assignees { Id = x }).ToList() : new List<Assignees>()
+            };
+
+            await webRequestService.PostAsync<AnnouncementResponse, PushNotificationDto>($"{fwsOptions.FwsBaseUrl}{NotificationRoutes.createAnnouncement}", notificationRequest);
         }
 
     }
