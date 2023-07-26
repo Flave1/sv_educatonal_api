@@ -163,15 +163,6 @@ namespace BLL.AuthenticationServices
                     userAccount.SocketId = loginRequest.SocketId;
                 }
 
-                //var userRequest = new UserLoginDetails
-                //{
-                //    UserId = userAccount.Id,
-                //    Email = userAccount.Email,
-                //    SocketId = loginRequest.SocketId
-                //};
-
-                //await webRequestService.PostAsync<UserLoginResponse, UserLoginDetails>($"{fwsOptions.FwsBaseUrl}{NotificationRoutes.createUser}", userRequest);
-
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
                 res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
