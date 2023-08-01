@@ -165,7 +165,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
-                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType, schoolSettings.ClientId);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -275,7 +275,7 @@ namespace BLL.AuthenticationServices
 
                 res.Result = new LoginSuccessResponse();
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId, userType);
-                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType);
+                res.Result.UserDetail = new UserDetail(schoolSettings, userAccount, firstName, lastName, id, userType, schoolSettings.ClientId);
                 res.IsSuccessful = true;
                 return res;
             }
@@ -586,7 +586,7 @@ namespace BLL.AuthenticationServices
                 res.Result = new LoginSuccessResponse();
                 userAccount.EmailConfirmed = true;
                 res.Result.AuthResult = await GenerateAuthenticationResultForUserAsync(userAccount, id, permisions, schoolSettings, firstName, lastName, clientId);
-                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType);
+                res.Result.UserDetail = new UserDetail(schoolSetting, userAccount, firstName, lastName, id, userType, schoolSettings.ClientId);
                 res.IsSuccessful = true;
 
                 return res;

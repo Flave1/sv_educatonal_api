@@ -208,6 +208,7 @@ namespace SMP.BLL.Services.NotififcationServices
                 Type = request.Type,
                 Group = request.ToGroup,
                 DateCreated = DateTime.Now.ToString("dd MMM, yyyy HH:mm:ss"),
+                ClientId = smsClientId,
                 Assignees = socketIds != "" ? socketIds.Split(",").ToList().Select(x => new Assignees { Id = x }).ToList() : new List<Assignees>()
             };
 
