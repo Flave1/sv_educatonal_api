@@ -66,6 +66,7 @@ namespace Contracts.Annoucements
         public string Type { get; set; }
         public string Group { get; set; }
         public string DateCreated { get; set; }
+        public string ClientId { get; set; }
         public List<Assignees> Assignees { get; set; }
     }
     public class Assignees 

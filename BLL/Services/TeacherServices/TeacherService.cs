@@ -31,6 +31,8 @@ namespace SMP.BLL.Services.TeacherServices
 {
     public class TeacherService : ITeacherService
     {
+
+        private readonly RoleManager<UserRole> roleManager;
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
         private readonly IEmailService emailService;
@@ -44,9 +46,10 @@ namespace SMP.BLL.Services.TeacherServices
         private readonly IHttpContextAccessor contextaccessor;
         private readonly IWebRequestService requestService;
         private readonly IUtilitiesService utilitiesService;
+        private readonly IRolesService rolesService;
         public TeacherService(UserManager<AppUser> userManager, DataContext context, IEmailService emailService, IWebHostEnvironment environment,
             IFileUploadService upload, IUserService userService, IPaginationService paginationService, IHttpContextAccessor accessor,
-            IPortalSettingService portalSettingService, ILoggerService loggerService, IWebRequestService requestService, IUtilitiesService utilitiesService)
+            IPortalSettingService portalSettingService, ILoggerService loggerService, IWebRequestService requestService, IUtilitiesService utilitiesService, IRolesService rolesService, RoleManager<UserRole> roleManager)
         {
             this.userManager = userManager;
             this.context = context;
@@ -61,6 +64,8 @@ namespace SMP.BLL.Services.TeacherServices
             contextaccessor = accessor;
             this.requestService = requestService;
             this.utilitiesService = utilitiesService;
+            this.rolesService = rolesService;
+            this.roleManager = roleManager;
         }
 
         async Task<APIResponse<UserCommand>> ITeacherService.CreateTeacherAsync(UserCommand request)
@@ -370,7 +375,6 @@ namespace SMP.BLL.Services.TeacherServices
             res.IsSuccessful = true;
             return res;
         }
-
         async Task<APIResponse<string>> ITeacherService.CreateAdminAsync(UserCommand request)
         {
             var res = new APIResponse<string>();
@@ -401,7 +405,10 @@ namespace SMP.BLL.Services.TeacherServices
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
                     return res;
                 }
-                var addTorole = await userManager.AddToRoleAsync(user, DefaultRoles.AdminRole(smsClientId));
+
+                var roleName = await CreateRoleIfNotCreated(DefaultRoles.AdminRole(smsClientId));
+
+                var addTorole = await userManager.AddToRoleAsync(user, roleName);
                 if (!addTorole.Succeeded)
                 {
                     res.Result = "failed";
@@ -430,6 +437,29 @@ namespace SMP.BLL.Services.TeacherServices
             }
         }
 
+        async Task<string> CreateRoleIfNotCreated(string roleName)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                var role = new UserRole
+                {
+                    Name = roleName,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    ClientId = smsClientId
+                };
+
+                var result = await roleManager.CreateAsync(role);
+                if (result.Succeeded)
+                {
+                    return roleName;
+                }
+            }
+            return "failed";
+
+        }
 
         void CreateUpdateTeacherProfile(UserCommand request, string userId, string filePath)
         {

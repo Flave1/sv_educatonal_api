@@ -26,6 +26,7 @@ namespace BLL.AuthenticationServices
         private readonly ITeacherService teacherService;
         private readonly IStudentService studentService;
         private readonly ILoggerService loggerService;
+        private RoleManager<UserRole> @object;
 
         public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor, 
             ITeacherService teacherService, IStudentService studentService, ILoggerService loggerService)
@@ -38,6 +39,8 @@ namespace BLL.AuthenticationServices
             this.studentService = studentService;
             this.loggerService = loggerService;
         }
+
+
         async Task<APIResponse<UserRole>> IRolesService.CreateRoleAsync(CreateRoleActivity request)
         {
             var res = new APIResponse<UserRole>();
@@ -137,6 +140,9 @@ namespace BLL.AuthenticationServices
                 context.RoleActivity.RemoveRange(existingActivities);
             await context.SaveChangesAsync();
         }
+
+
+        
 
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {

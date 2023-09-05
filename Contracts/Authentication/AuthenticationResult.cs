@@ -31,8 +31,9 @@ namespace Contracts.Authentication
         public string Id { get; set; }
         public string UserAccountId { get; set; }
         public bool IsFirstTimeLogin { get; set; }
+        public string ClientId { get; set; }
         public UserDetail() { }
-        public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id, string userType)
+        public UserDetail(SchoolSetting db, AppUser user, string FirstName, string LastName, Guid id, string userType, string clientId)
         {
             Id = id.ToString();
             SchoolAbbreviation = db.SCHOOLSETTINGS_SchoolAbbreviation;
@@ -50,6 +51,7 @@ namespace Contracts.Authentication
             //if (user.UserType == 2)
             //    UserType = "Parent";
             UserType = userType;
+            ClientId = clientId;
         }
 
     }

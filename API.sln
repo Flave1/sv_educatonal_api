@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SMP.BLL", "BLL\SMP.BLL.cspr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SMP.Contracts", "Contracts\SMP.Contracts.csproj", "{D8CF8E08-E9FE-4157-86BC-5A53EC72AE49}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API.TEST", "API.TEST\API.TEST.csproj", "{42DAD37D-9166-418B-AA5E-D6043FB80D01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D8CF8E08-E9FE-4157-86BC-5A53EC72AE49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8CF8E08-E9FE-4157-86BC-5A53EC72AE49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8CF8E08-E9FE-4157-86BC-5A53EC72AE49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42DAD37D-9166-418B-AA5E-D6043FB80D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42DAD37D-9166-418B-AA5E-D6043FB80D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42DAD37D-9166-418B-AA5E-D6043FB80D01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42DAD37D-9166-418B-AA5E-D6043FB80D01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
