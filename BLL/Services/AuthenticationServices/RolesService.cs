@@ -23,20 +23,18 @@ namespace BLL.AuthenticationServices
         private readonly UserManager<AppUser> userManager;
         private readonly DataContext context;
         private readonly string smsClientId;
-        private readonly ITeacherService teacherService;
-        private readonly IStudentService studentService;
         private readonly ILoggerService loggerService;
-        private RoleManager<UserRole> @object;
 
-        public RolesService(RoleManager<UserRole> manager, UserManager<AppUser> userManager, DataContext context, IHttpContextAccessor accessor, 
-            ITeacherService teacherService, IStudentService studentService, ILoggerService loggerService)
+        public RolesService(
+            RoleManager<UserRole> manager, 
+            UserManager<AppUser> userManager, 
+            DataContext context, IHttpContextAccessor accessor, 
+            ILoggerService loggerService)
         {
             this.manager = manager;
             this.userManager = userManager;
             this.context = context;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
-            this.teacherService = teacherService;
-            this.studentService = studentService;
             this.loggerService = loggerService;
         }
 
