@@ -10,6 +10,6 @@ namespace SMP.Contracts.Routes
     {
         public const string RouteName = "job/server/";
         public const string createUser = RouteName + "user/create";
-        public const string createAnnouncement = RouteName + "announcement/create";
+        public const string createAnnouncement = RouteName + "notification/create";
     }
 }
