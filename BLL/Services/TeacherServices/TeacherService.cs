@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.FileUploadService;
 using SMP.BLL.Services.FilterService;
@@ -123,7 +124,9 @@ namespace SMP.BLL.Services.TeacherServices
                         res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
                         return res;
                     }
-                    identityResult = await userManager.AddToRoleAsync(userAccount, DefaultRoles.TeacherRole(smsClientId));
+
+                    var roleName = await CreateRoleIfNotCreated(DefaultRoles.TeacherRole(request.ClientId));
+                    identityResult = await userManager.AddToRoleAsync(userAccount, roleName);
                     if (!identityResult.Succeeded)
                     {
                         res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
@@ -214,6 +217,13 @@ namespace SMP.BLL.Services.TeacherServices
                         }
                     }
                     res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+                var roleName = await CreateRoleIfNotCreated(DefaultRoles.TeacherRole(smsClientId));
+                var identityResult = await userManager.AddToRoleAsync(user, roleName);
+                if (!identityResult.Succeeded)
+                {
+                    res.Message.FriendlyMessage = identityResult.Errors.FirstOrDefault().Description;
                     return res;
                 }
             }
@@ -381,14 +391,18 @@ namespace SMP.BLL.Services.TeacherServices
             try
             {
                 contextaccessor.HttpContext.Items["smsClientId"] = request.ClientId;
+
+                var user = new AppUser();
+                bool exist = false;
                 if (userManager.Users.Any(e => e.Email.ToLower().Trim().Contains(request.Email.ToLower().Trim())))
                 {
                     //portalSettingService.CreateSchoolSettingsAsync(request.ClientId, request.SchoolUrl);
-                    res.Result = "failed";
-                    res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
-                    return res;
+                    //res.Result = "failed";
+                    //res.Message.FriendlyMessage = "Teacher With Email Has Already been Added";
+                    //return res;
+                    user = await userManager.FindByEmailAsync(request.Email);
+                    exist = true;
                 }
-                var user = new AppUser();
 
                 user.UserName = request.Email;
                 user.Active = true;
@@ -397,16 +411,19 @@ namespace SMP.BLL.Services.TeacherServices
                 user.EmailConfirmed = false;
                 user.PasswordHash = request.PasswordHash;
                 user.EmailConfirmed = true;
-
-                var result = await userManager.CreateAsync(user);
-                if (!result.Succeeded)
+                if (!exist)
                 {
-                    res.Result = "failed";
-                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                    return res;
+                    var result = await userManager.CreateAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        res.Result = "failed";
+                        res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
                 }
+                
 
-                var roleName = await CreateRoleIfNotCreated(DefaultRoles.AdminRole(smsClientId));
+                var roleName = await CreateRoleIfNotCreated(DefaultRoles.AdminRole(request.ClientId));
 
                 var addTorole = await userManager.AddToRoleAsync(user, roleName);
                 if (!addTorole.Succeeded)
@@ -456,6 +473,10 @@ namespace SMP.BLL.Services.TeacherServices
                 {
                     return roleName;
                 }
+            }
+            else
+            {
+                return roleName;
             }
             return "failed";
 

@@ -118,7 +118,12 @@ namespace SMP.BLL.Services.NotififcationServices
 
                 if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
                 {
-                    query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin || x.ToGroup == NotificationRooms.Teachers);
+                    }
+                    else
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
                 }
                 else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
                 {

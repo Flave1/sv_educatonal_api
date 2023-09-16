@@ -24,7 +24,6 @@ namespace BLL.AuthenticationServices
         //Task UpdateStudentUserProfileImageAsync(IFormFile file, string studentId);
         //Task UpdateTeacherUserProfileImageAsync(IFormFile file, AppUser account);
         Task<APIResponse<LoginSuccessResponse>> ChangePasswordAsync(ChangePassword request);
-        Task<APIResponse<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync(UserInformationFromMobileRequest request);
         Task<string> CreateStudentUserAccountAsync(UploadStudentExcel student, string regNo, string regNoFormat);
         Task UpdateStudentUserAccountAsync(UploadStudentExcel student, string userAccountId, string studentId);
         Task<string> CreateParentUserAccountAsync(string email, string phone);
@@ -38,5 +37,6 @@ namespace BLL.AuthenticationServices
         Task<APIResponse<bool>> ResetPasswordMobile(ResetAccountMobile request);
         Task<FwsAPIResponse<string>> CreateUserOnFws(CreateUserCommand request);
         Task<FwsAPIResponse<string>> UpdateUserOnFws(UpdateUserCommand request);
+        Task<APIResponse<SmpStudentValidationResponse>> ValidateUserAsync(SetupMobileAccountRequest request);
     }
 }

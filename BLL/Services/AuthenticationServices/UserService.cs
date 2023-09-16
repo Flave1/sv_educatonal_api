@@ -22,6 +22,7 @@ using SMP.DAL.Models.PortalSettings;
 using SMP.BLL.Services.AuthenticationServices;
 using SMP.Contracts.Routes;
 using SMP.BLL.Services.WebRequestServices;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace BLL.AuthenticationServices
 {
@@ -69,6 +70,14 @@ namespace BLL.AuthenticationServices
                     foreach (var userId in userIds)
                     {
                         user = manager.Users.FirstOrDefault(f => f.Id == userId);
+
+                        if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
+                             user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Admin);
+                        if (role.Name.StartsWith(DefaultRoles.TEACHER))
+                            user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
+                        if (role.Name.StartsWith(DefaultRoles.STUDENT))
+                            user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
+
                         if (user == null)
                             throw new ArgumentException("User account not found");
 
@@ -127,10 +136,13 @@ namespace BLL.AuthenticationServices
                             throw new ArgumentException(identityResult.Errors.FirstOrDefault().Description);
                     }
 
-                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.StudentRole(smsClientId));
-                    if (!addTorole.Succeeded)
-                        if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
-                            throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+
+                    var roleName = await CreateRoleIfNotCreated(DefaultRoles.StudentRole(smsClientId));
+
+                    var addTorole = await manager.AddToRoleAsync(user, roleName);
+                    //if (!addTorole.Succeeded)
+                    //    if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
+                    //        throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
                 }
                 else
                 {
@@ -150,7 +162,35 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        
+        async Task<string> CreateRoleIfNotCreated(string roleName)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                var role = new UserRole
+                {
+                    Name = roleName,
+                    Active = true,
+                    Deleted = false,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "",
+                    ClientId = smsClientId
+                };
+
+                var result = await roleManager.CreateAsync(role);
+                if (result.Succeeded)
+                {
+                    return roleName;
+                }
+            }
+            else
+            {
+                return roleName;
+            }
+            return "failed";
+
+        }
+
+
         async Task<string> IUserService.CreateStudentUserAccountAsync(UploadStudentExcel student, string regNo, string regNoFormat)
         {
             try
@@ -174,7 +214,9 @@ namespace BLL.AuthenticationServices
                     else
                         throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
-                var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.StudentRole(smsClientId));
+                //remove
+                var roleName = await CreateRoleIfNotCreated(DefaultRoles.StudentRole(smsClientId));
+                var addTorole = await manager.AddToRoleAsync(user, roleName);
                 if (!addTorole.Succeeded)
                     if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
                         throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
@@ -209,6 +251,7 @@ namespace BLL.AuthenticationServices
                     }
                     throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                 }
+
             }
             catch (ArgumentException ex)
             {
@@ -269,11 +312,14 @@ namespace BLL.AuthenticationServices
                         else
                             throw new ArgumentException(result.Errors.FirstOrDefault().Description);
                     }
-                    var addTorole = await manager.AddToRoleAsync(user, DefaultRoles.ParentRole(smsClientId));
+
+                    var roleName = await CreateRoleIfNotCreated(DefaultRoles.ParentRole(smsClientId));
+
+                    var addTorole = await manager.AddToRoleAsync(user, roleName);
                     if (!addTorole.Succeeded)
                     {
-                        if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
-                            throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
+                        //if (addTorole.Errors.Select(d => d.Code).FirstOrDefault(a => a == "DuplicateUserName") == null)
+                        //    throw new ArgumentException(addTorole.Errors.FirstOrDefault().Description);
 
                     }
                 }
@@ -312,6 +358,10 @@ namespace BLL.AuthenticationServices
                             throw new DuplicateNameException(result.Errors.FirstOrDefault().Description);
                     }
                 }
+
+                var roleName = await CreateRoleIfNotCreated(DefaultRoles.ParentRole(smsClientId));
+
+                var addTorole = await manager.AddToRoleAsync(account, roleName);
             }
             catch (ArgumentException ex)
             {
@@ -589,26 +639,44 @@ namespace BLL.AuthenticationServices
             }
         }
 
-        async Task<APIResponse<SmpStudentValidationResponse>> IUserService.ValidateUserInformationFromMobileAsync(UserInformationFromMobileRequest request)
+        async Task<APIResponse<SmpStudentValidationResponse>> IUserService.ValidateUserAsync(SetupMobileAccountRequest request)
+        {
+            var res = new APIResponse<SmpStudentValidationResponse>();
+
+            var school = await context.SchoolSettings.FirstOrDefaultAsync(s => s.ClientId == request.ClientId);
+
+            if (school == null)
+            {
+                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                return res;
+            }
+
+            res = await ValidateUserInformationFromMobileAsync(request, school);
+
+            if (res.Result.Status != "success")
+            {
+                res.IsSuccessful = false;
+                return res;
+            }
+
+            res.Result.SchoolUrl = school.APPLAYOUTSETTINGS_SchoolUrl;
+            res.Result.UserType = request.UserType;
+            res.Result.ClientId = school.ClientId.ToString();
+            res.IsSuccessful = true;
+            return res;
+        }
+
+        private async Task<APIResponse<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync(SetupMobileAccountRequest request, SchoolSetting setting)
         {
             var res = new APIResponse<SmpStudentValidationResponse>();
             res.Result = new SmpStudentValidationResponse();
             res.IsSuccessful = true;
 
-            var appLayout = context.SchoolSettings.FirstOrDefault(x=>x.ClientId == request.ClientId);
-            if(appLayout is null)
-            {
-                res.Result.Status = "failed";
-                res.Message.FriendlyMessage = "Selected School not found";
-                return res;
-            }
-
             try
             {
                 if (request.UserType == (int)UserTypes.Student)
                 {
-
-                    var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == request.ClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+                    var regNoFormat = setting.SCHOOLSETTINGS_StudentRegNoFormat;
 
                     if (regNoFormat is null)
                     {
@@ -641,7 +709,7 @@ namespace BLL.AuthenticationServices
                             res.Result.UserName = student.User.UserName;
                             res.Result.Id =  student.StudentContactId.ToString();
                             res.Message.FriendlyMessage = Messages.GetSuccess;
-                            res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
+                            res.Result.SchoolLogo = setting.SCHOOLSETTINGS_Photo;
                             return res;
                         }
                     }
@@ -662,7 +730,7 @@ namespace BLL.AuthenticationServices
                         res.Result.RegistrationNumber = "";
                         res.Result.UserName = teacher.UserName;
                         res.Result.Id = context.Teacher.FirstOrDefault(c => c.UserId == teacher.Id && request.ClientId == c.ClientId).TeacherId.ToString();
-                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
+                        res.Result.SchoolLogo = setting.SCHOOLSETTINGS_Photo;
                         res.Message.FriendlyMessage = Messages.GetSuccess;
                         return res;
                     }
@@ -684,7 +752,7 @@ namespace BLL.AuthenticationServices
                         res.Result.Id = context.Teacher.FirstOrDefault(c => c.UserId == teacher.Id && request.ClientId == c.ClientId).TeacherId.ToString();
                         res.Result.RegistrationNumber = "";
                         res.Message.FriendlyMessage = Messages.GetSuccess;
-                        res.Result.SchoolLogo = context.SchoolSettings.FirstOrDefault().SCHOOLSETTINGS_Photo;
+                        res.Result.SchoolLogo = setting.SCHOOLSETTINGS_Photo;
                         return res;
                     }
                 }

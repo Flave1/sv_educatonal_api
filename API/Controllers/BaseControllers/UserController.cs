@@ -7,6 +7,7 @@ using Contracts.Common;
 using Contracts.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SMP.Contracts.Authentication;
 using System;
 using System.Threading.Tasks;
@@ -99,11 +100,11 @@ namespace API.Controllers
 
         [AllowAnonymous]
         [HttpPost("validate/user-information/from-mobile")]
-        public async Task<ActionResult<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync([FromBody] UserInformationFromMobileRequest request)
+        public async Task<ActionResult<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync([FromBody] SetupMobileAccountRequest request)
         {
             try
             {
-                var response = await userService.ValidateUserInformationFromMobileAsync(request);
+                var response = await userService.ValidateUserAsync(request);
                 if (response.IsSuccessful)
                     return Ok(response);
                 return BadRequest(response);
@@ -212,6 +213,7 @@ namespace API.Controllers
             var response = await identityService.GetAllSchoolsAsync();
             return Ok(response);
         }
+
         #endregion
 
 

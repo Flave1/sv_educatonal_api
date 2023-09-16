@@ -50,15 +50,6 @@ namespace Contracts.Options
         public int UserType { get; set; } = 0;
     }
 
-    public class UserInformationFromMobileRequest
-    {
-        [Required]
-        public string ClientId { get; set; }
-        [Required]
-        public string UsernameOrRegNumber { get; set; }
-  
-        public int UserType { get; set; }
-    }
     public class StudentContactCommand
     {
         /// <summary>
@@ -230,6 +221,9 @@ namespace Contracts.Options
         public string RegistrationNumber { get; set; }
         public string SchoolLogo { get; set; }
         public string Id { get; set; }
+        public int UserType { get; set; }
+        public string SchoolUrl { get; set; }
+        public string ClientId { get; set; }
     }
 
     public class UploadClass

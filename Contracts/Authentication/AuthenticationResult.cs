@@ -2,6 +2,7 @@
 using SMP.DAL.Models.PortalSettings;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Contracts.Authentication
 {
@@ -98,6 +99,17 @@ namespace Contracts.Authentication
         public string SchoolUrl { get; set; }
         public string RegNumberformat { get; set; }
     }
+
+    public class SetupMobileAccountRequest
+    {
+        [Required]
+        public string ClientId { get; set; }
+        [Required]
+        public string UsernameOrRegNumber { get; set; }
+        public int UserType { get; set; }
+        public string SchoolUrl { get; set; }
+    }
+
 }
 
-   
+

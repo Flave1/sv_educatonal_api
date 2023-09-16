@@ -158,7 +158,7 @@ namespace SMP.BLL.Services.AnnouncementServices
             await notificationService.CreateNotitficationAsync(new NotificationDTO
             {
                 Content = newAnnouncement.Content,
-                NotificationPageLink = $"smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
+                NotificationPageLink = request.AssignedTo == NotificationRooms.Students ? $"smp-student-announcement/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}" : $"smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
                 NotificationSourceId = newAnnouncement.AnnouncementsId.ToString(),
                 Subject = newAnnouncement.Header,
                 Receivers = "all",

@@ -2,10 +2,10 @@
 {
     public class NotificationRooms
     {
-        public const string Teachers = "Teachers";
-        public const string Students = "Students";
-        public const string Parents = "Parents";
+        public const string Teachers = "teacher";
+        public const string Students = "student";
+        public const string Parents = "parent";
         public const string PushedNotification = "PushedNotification";
-        public const string Admin = "Admin";
+        public const string Admin = "admin";
     }
 }

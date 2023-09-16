@@ -3,6 +3,7 @@ using BLL.LoggerService;
 using BLL.StudentServices;
 using Contracts.Authentication;
 using Contracts.Common;
+using Contracts.Email;
 using DAL;
 using DAL.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.TeacherServices;
+using SMP.BLL.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,18 +26,21 @@ namespace BLL.AuthenticationServices
         private readonly DataContext context;
         private readonly string smsClientId;
         private readonly ILoggerService loggerService;
+        private readonly EmailConfiguration emailConfiguration;
+        private readonly IUtilitiesService utilitiesService;
 
         public RolesService(
-            RoleManager<UserRole> manager, 
-            UserManager<AppUser> userManager, 
-            DataContext context, IHttpContextAccessor accessor, 
-            ILoggerService loggerService)
+            RoleManager<UserRole> manager,
+            UserManager<AppUser> userManager,
+            DataContext context, IHttpContextAccessor accessor,
+            ILoggerService loggerService, IUtilitiesService utilitiesService)
         {
             this.manager = manager;
             this.userManager = userManager;
             this.context = context;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.loggerService = loggerService;
+            this.utilitiesService = utilitiesService;
         }
 
 
@@ -312,6 +317,13 @@ namespace BLL.AuthenticationServices
                 var role = manager.Roles.FirstOrDefault(d => d.Id == request.RoleId);
                 if (role != null)
                 {
+                    if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
+                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Admin);
+                    if (role.Name.StartsWith(DefaultRoles.TEACHER))
+                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
+                    if (role.Name.StartsWith(DefaultRoles.STUDENT))
+                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
+
                     var removeResult = await userManager.RemoveFromRoleAsync(user, role.Name);
                     if (removeResult.Succeeded)
                     {

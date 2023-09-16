@@ -145,6 +145,39 @@ namespace SMP.BLL.Utilities
                 return string.Join("|", (int)type);
         }
 
+        public string RemoveUserType(string userTypes, UserTypes type)
+        {
+            if (!string.IsNullOrEmpty(userTypes))
+            {
+                IEnumerable<int> splited = userTypes.Split('|').Select(int.Parse);
+                if (splited.Any(d => d == (int)type))
+                {
+                    var newArr = splited.Where(d => d != (int)type);
+                    return string.Join("|", newArr);
+                }
+                return userTypes;
+            }
+            else
+                return "";
+        }
+
+        public string AddUserType(string userTypes, UserTypes type)
+        {
+            if (!string.IsNullOrEmpty(userTypes))
+            {
+                IEnumerable<int> splited = userTypes.Split('|').Select(int.Parse);
+                if (!splited.Any(d => d == (int)type))
+                {
+                    var types = new List<int>();
+                    types.AddRange(splited);
+                    types.Add((int)type);
+                    return string.Join("|", types);
+                }
+                return userTypes;
+            }
+            else
+                return "";
+        }
 
         public bool IsThisUser(UserTypes type, string userTpyes)
         {
