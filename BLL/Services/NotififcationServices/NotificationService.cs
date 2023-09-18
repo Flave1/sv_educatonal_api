@@ -220,5 +220,153 @@ namespace SMP.BLL.Services.NotififcationServices
             await webRequestService.PostAsync<AnnouncementResponse, PushNotificationDto>($"{fwsOptions.FwsBaseUrl}{NotificationRoutes.createAnnouncement}", notificationRequest);
         }
 
+        public async Task<APIResponse<GetNotificationDTO>> GetMostRecentNotificationAsync()
+        {
+
+            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
+            var res = new APIResponse<GetNotificationDTO>();
+            try
+            {
+                var query = context.Notification.Where(x => x.ClientId == smsClientId).OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
+
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
+                {
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin || x.ToGroup == NotificationRooms.Teachers);
+                    }
+                    else
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Teachers);
+                }
+
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Students);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.ParentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
+                }
+
+                query = query.Where(x => x.Receivers == "all" || x.Receivers.Contains(userId));
+
+
+                var result = await query.Select(f => new GetNotificationDTO(f)).FirstOrDefaultAsync();
+                res.Result = result;
+
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
+            }
+        }
+
+        public async Task<APIResponse<PagedResponse<List<GetNotificationDTO>>>> GetUnreadNotificationAsync(PaginationFilter filter)
+        {
+
+            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
+            var res = new APIResponse<PagedResponse<List<GetNotificationDTO>>>();
+            try
+            {
+                var query = context.Notification.Where(x => x.ClientId == smsClientId).OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
+
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
+                {
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin || x.ToGroup == NotificationRooms.Teachers);
+                    }
+                    else
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Teachers);
+                }
+
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Students);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.ParentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
+                }
+
+                query = paginationService.GetPagedResult(query, filter);
+
+                query = query.Where(x => x.Receivers == "all" || x.Receivers.Contains(userId));
+
+                query = query.Where(x => string.IsNullOrEmpty(x.ReadBy) || !x.ReadBy.Contains(userId));
+
+                var totaltRecord = query.Count();
+                var result = await query.Select(f => new GetNotificationDTO(f)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
+            }
+        }
+
+        public async Task<APIResponse<int>> GetUnreadNotificationCountAsync()
+        {
+
+            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
+            var res = new APIResponse<int>();
+            try
+            {
+                var query = context.Notification.Where(x => x.ClientId == smsClientId).OrderByDescending(x => x.CreatedOn).Where(x => !x.Deleted);
+
+                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
+                {
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin || x.ToGroup == NotificationRooms.Teachers);
+                    }
+                    else
+                        query = query.Where(x => x.ToGroup == NotificationRooms.Admin);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Teachers);
+                }
+
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Students);
+                }
+                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.ParentRole(smsClientId)))
+                {
+                    query = query.Where(x => x.ToGroup == NotificationRooms.Parents);
+                }
+
+                query = query.Where(x => x.Receivers == "all" || x.Receivers.Contains(userId));
+
+                query = query.Where(x => string.IsNullOrEmpty(x.ReadBy) || !x.ReadBy.Contains(userId));
+
+                var count = query.Count();
+                res.Result = count;
+
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
+            }
+        }
     }
 }

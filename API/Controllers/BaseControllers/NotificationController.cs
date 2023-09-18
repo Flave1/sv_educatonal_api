@@ -36,13 +36,34 @@ namespace API.Controllers
         }
 
         [HttpPost("update/notifications")]
-        public async Task<IActionResult> UpdateProfileByStudentAsync([FromForm] UpdateNotification request)
+        public async Task<IActionResult> UpdateProfileByStudentAsync([FromBody] UpdateNotification request)
         {
             await service.UpdateNotification(request.NotificationId);
             var rs = new APIResponse<bool>();
             rs.Message.FriendlyMessage = "success";
             return Ok(rs);
         }
+
+        [HttpGet("get-notification")]
+        public async Task<IActionResult> Getnotitfication()
+        {
+            var response = await service.GetMostRecentNotificationAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("get-unread-notifications")]
+        public async Task<IActionResult> GetUnreadNotifications(PaginationFilter filter)
+        {
+            var response = await service.GetUnreadNotificationAsync(filter);
+            return Ok(response);
+        }
+        [HttpGet("get-unread-notification-count")]
+        public async Task<IActionResult> GetUnreadNotificationCount()
+        {
+            var response = await service.GetUnreadNotificationCountAsync();
+            return Ok(response);
+        }
+
     }
 
 }

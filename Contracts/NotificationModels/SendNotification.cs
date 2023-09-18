@@ -50,6 +50,7 @@ namespace SMP.Contracts.NotificationModels
         public string NotificationSourceId { get; set; } = string.Empty;
         public string DateCreated { get; set; }
         public Guid NotificationId { get; set; }
+        public string ReadBy { get; set; }
         public GetNotificationDTO(Notification x)
         {
             Type = x.Type;
@@ -61,6 +62,7 @@ namespace SMP.Contracts.NotificationModels
             DateCreated = x.CreatedOn.ToString("f");
             NotificationId = x.NotificationId;
             Content = x.Content;
+            ReadBy = x.ReadBy;
         }
     }
 
