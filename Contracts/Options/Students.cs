@@ -135,6 +135,7 @@ namespace Contracts.Options
         public string[] Hobbies { get; set; }
         public string[] BestSubjectNames { get; set; }
         public string[] BestSubjectIds { get; set; }
+        public string Status { get; set; }
         public GetStudentContacts(StudentContact db, string regNoFormat, List<Subject> subjects)
         {
             RegistrationNumber = regNoFormat.Replace("%VALUE%", db.RegistrationNumber);
@@ -162,6 +163,7 @@ namespace Contracts.Options
             UserName = db.User.UserName;
             Email = db.User.Email;
             Photo = db.Photo;
+            Status = db.Status == 1 ? "active" : "inactive";
             SessionClassID = db.SessionClassId.ToString();
             SessionClass = db?.SessionClass?.Class?.Name;
             Hobbies = db.Hobbies is not null ? db.Hobbies.Split(',') : Array.Empty<string>();
@@ -192,6 +194,7 @@ namespace Contracts.Options
             StateId = db.StateId;
             CountryId = db.CountryId;
             ZipCode = db.ZipCode;
+            Status = db.Status == 1 ? "active" : "inactive";
             UserAccountId = db.User.Id;
             StudentAccountId = db.StudentContactId.ToString();
             UserName = db.User.UserName;
@@ -285,6 +288,11 @@ namespace Contracts.Options
         }
 
 
+    }
+
+    public class SimplePostRequest
+    {
+        public Guid Id { get; set; }      
     }
 
 }

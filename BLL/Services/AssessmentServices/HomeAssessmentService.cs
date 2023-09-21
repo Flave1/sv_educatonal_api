@@ -410,9 +410,12 @@ namespace SMP.BLL.Services.AssessmentServices
 
             res.IsSuccessful = true;
             var ass = new GetClassAssessmentRecord();
-            ass.TotalAssessment = selectedClass.AssessmentScore;
+            ass.TotalAssessment = context.SessionClassSubject
+                .FirstOrDefault(d => d.SessionClassId == sessionClasId && d.ClientId == smsClientId && d.Deleted == false 
+                && d.SessionClassSubjectId == sessionClassSubjectId).AssessmentScore;
+
             ass.Used = total;
-            ass.Unused = Convert.ToDecimal((selectedClass.AssessmentScore - ass.Used).ToString().Trim('-'));
+            ass.Unused = Convert.ToDecimal((ass.TotalAssessment - ass.Used).ToString().Trim('-'));
             res.Result = ass;
             return await Task.Run(() => res);
         }

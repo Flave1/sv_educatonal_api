@@ -42,6 +42,7 @@ namespace Contracts.Authentication
         public string Address { get; set; }
         public string Gender { get; set; }
         public string MaritalStatus { get; set; }
+        public string Status { get; set; }
         public ApplicationUser() { }
         public ApplicationUser(Teacher db)
         {
@@ -62,6 +63,7 @@ namespace Contracts.Authentication
             Address = db.Address;
             Gender = db.Gender;
             MaritalStatus = db.MaritalStatus;
+            Status = db.Status == 1 ? "active" : "inactive";
         }
     }
 

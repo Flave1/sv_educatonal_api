@@ -4,12 +4,14 @@ using BLL.Constants;
 using BLL.EmailServices;
 using BLL.Filter;
 using BLL.LoggerService;
+using BLL.StudentServices;
 using BLL.Wrappers;
 using Contracts.Authentication;
 using Contracts.Common;
 using Contracts.Email;
 using DAL;
 using DAL.Authentication;
+using DAL.StudentInformation;
 using DAL.TeachersInfor;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -152,6 +154,30 @@ namespace SMP.BLL.Services.TeacherServices
             }
         }
 
+        async Task<APIResponse<string>> ITeacherService.DeactivateTeacherAsync(Guid teacherId)
+        {
+            var res = new APIResponse<string>();
+            try
+            {
+                var teacher = await context.Teacher.FirstOrDefaultAsync(x => x.TeacherId == teacherId);
+                if (teacher == null)
+                {
+                    res.Message.FriendlyMessage = "Unable to find teacher";
+                    return res;
+                }
+                teacher.Status = teacher.Status == (int)TeacherStatus.Inactive? (int)TeacherStatus.Active : (int)TeacherStatus.Inactive;
+                await context.SaveChangesAsync();
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successful";
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = ex?.Message ?? ex.InnerException.Message;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
         private async Task SendEmailToTeacherOnCreateAsync(AppUser obj)
         {
             var to = new List<EmailAddress>();

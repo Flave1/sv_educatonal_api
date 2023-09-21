@@ -29,5 +29,6 @@ namespace BLL.StudentServices
         IQueryable<StudentContact> GetStudent(Guid studentContactId);
         Task CreateStudentSessionClassHistoryAsync(StudentContact student);
         string GetRegistrationFormat();
+        Task<APIResponse<StudentContact>> DeactivateStudenAsync(Guid studentId);
     }
 }

@@ -87,8 +87,6 @@ namespace BLL.AuthenticationServices
                     return res;
                 }
 
-                
-
                 if (loginRequest.UserType == (int)UserTypes.Teacher)
                 {
                     var teacher = GetTeacherByUserId(userAccount.Id, clientId);
