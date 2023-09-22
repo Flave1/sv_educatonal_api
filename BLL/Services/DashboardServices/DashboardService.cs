@@ -170,7 +170,7 @@ namespace SMP.BLL.Services.DashboardServices
 
 
             var classNotes = context.TeacherClassNote.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.SessionTermId == termId).Include(x=>x.ClassNote)
-                .Where(x=> context.ClassNote.Where(x=>x.AprrovalStatus != (int)NoteApprovalStatus.Saved).Select(x=>x.ClassNoteId).Contains(x.ClassNoteId))
+                .Where(x=> context.ClassNote.Where(x=>x.AprrovalStatus == (int)NoteApprovalStatus.Approved).Select(x=>x.ClassNoteId).Contains(x.ClassNoteId))
                 .AsEnumerable()
                .Count(x => !string.IsNullOrEmpty(x.Classes) ? x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(student.SessionClass.ClassId.ToString()) : false);
 
