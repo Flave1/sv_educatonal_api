@@ -40,37 +40,49 @@ namespace SMP.BLL.Services.AssessmentServices
 
         async Task<APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>> IClassAssessmentService.GetAssessmentByTeacherAsync(string sessionClassId, string sessionClassSubjectId, PaginationFilter filter)
         {
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
             var res = new APIResponse<PagedResponse<List<GetClassAssessmentRequest>>>();
-            var activeTerm = termService.GetCurrentTerm();
-            var query =  context.ClassAssessment.Where(c => c.ClientId == smsClientId)
-                 .Include(s => s.SessionClassSubject)
-                 .Include(s => s.SessionClass).ThenInclude(c => c.Class)
-                 .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
-                 .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                 .Where(x => x.SessionTermId == activeTerm.SessionTermId);
-
-            if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
+            try
             {
-                query = query.Where(x => x.Scorer == Guid.Parse(teacherId));
+                var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+                var activeTerm = termService.GetCurrentTerm();
+                var query = context.ClassAssessment.Where(c => c.ClientId == smsClientId)
+                     .Include(s => s.SessionClassSubject)
+                     .Include(s => s.SessionClass).ThenInclude(c => c.Class)
+                     .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
+                     .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
+                     .Where(x => x.SessionTermId == activeTerm.SessionTermId);
+
+                if (!accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH) && !accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)))
+                {
+                    query = query.Where(x => x.Scorer == Guid.Parse(teacherId));
+                }
+
+
+                if (!string.IsNullOrEmpty(sessionClassId))
+                {
+                    query = query.Where(d => d.SessionClassId == Guid.Parse(sessionClassId));
+                }
+                if (!string.IsNullOrEmpty(sessionClassSubjectId))
+                {
+                    query = query.Where(d => d.SessionClassSubjectId == Guid.Parse(sessionClassSubjectId));
+                }
+
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                res.IsSuccessful = true;
+                return await Task.Run(() => res);
             }
-
-
-            if (!string.IsNullOrEmpty(sessionClassId))
+            catch(Exception ex)
             {
-                query = query.Where(d => d.SessionClassId == Guid.Parse(sessionClassId));
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
             }
-            if (!string.IsNullOrEmpty(sessionClassSubjectId))
-            {
-                query = query.Where(d => d.SessionClassSubjectId == Guid.Parse(sessionClassSubjectId));
-            }
-
-            var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).Select(s => new GetClassAssessmentRequest(s)).ToListAsync();
-            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
-
-            res.IsSuccessful = true;
-            return await Task.Run(() => res);
+            
         }
 
 
@@ -118,39 +130,50 @@ namespace SMP.BLL.Services.AssessmentServices
         async Task<APIResponse<List<ClassAssessmentStudents>>> IClassAssessmentService.GetClassStudentByAssessmentAsync(Guid classAssessmentId)
         {
             var res = new APIResponse<List<ClassAssessmentStudents>>();
-            res.Result = new List<ClassAssessmentStudents>();
-            var activeTerm = termService.GetCurrentTerm();
-            var ass = context.ClassAssessment.Where(c => c.ClientId == smsClientId)
-                .Include(s => s.SessionClassSubject).ThenInclude(d => d.SessionClassGroups)
-                .Include(x => x.SessionClass).ThenInclude(x => x.Session).ThenInclude(d => d.Terms)
-                .FirstOrDefault(x => x.ClassAssessmentId == classAssessmentId && x.SessionTermId == activeTerm.SessionTermId);
-
-            if (ass is null)
+            try
             {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                res.Result = new List<ClassAssessmentStudents>();
+                var activeTerm = termService.GetCurrentTerm();
+                var ass = context.ClassAssessment.Where(c => c.ClientId == smsClientId)
+                    .Include(s => s.SessionClassSubject).ThenInclude(d => d.SessionClassGroups)
+                    .Include(x => x.SessionClass).ThenInclude(x => x.Session).ThenInclude(d => d.Terms)
+                    .FirstOrDefault(x => x.ClassAssessmentId == classAssessmentId && x.SessionTermId == activeTerm.SessionTermId);
+
+                if (ass is null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                var students = context.StudentContact
+                    .Where(x => x.SessionClassId == ass.SessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
+                    .Include(d => d.User).ToList();
+                foreach (var st in students)
+                {
+                    var item = new ClassAssessmentStudents();
+                    item.StudentName = st.FirstName + " " + st.MiddleName + " " + st.LastName;
+                    item.Score = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType ==
+                    (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId && d.ClientId == smsClientId)?.Score ?? 0;
+                    item.GroupIds = ass.SessionClass.SessionClassSubjects.SelectMany(d => d.SessionClassGroups).Select(d => d.SessionClassGroupId).Distinct().ToArray();
+                    item.StudentContactId = st.StudentContactId.ToString();
+                    item.IsSaved = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType ==
+                    (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId && d.ClientId == smsClientId)?.IsOfferring ?? false;
+                    res.Result.Add(item);
+                }
+                res.IsSuccessful = true;
+                return await Task.Run(() => res);
+            }
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
 
-            var students = context.StudentContact
-                .Where(x => x.SessionClassId == ass.SessionClassId && x.EnrollmentStatus == (int)EnrollmentStatus.Enrolled)
-                .Include(d => d.User).ToList();
-            foreach(var st in students)
-            {
-                var item = new ClassAssessmentStudents();
-                item.StudentName =  st.FirstName + " " + st.MiddleName + " " + st.LastName;
-                item.Score = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType == 
-                (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId && d.ClientId == smsClientId)?.Score ?? 0;
-                item.GroupIds = ass.SessionClass.SessionClassSubjects.SelectMany(d => d.SessionClassGroups).Select(d => d.SessionClassGroupId).Distinct().ToArray();
-                item.StudentContactId = st.StudentContactId.ToString();
-                item.IsSaved = context.AssessmentScoreRecord.FirstOrDefault(d => d.AssessmentType ==
-                (int)AssessmentTypes.ClassAssessment && classAssessmentId == d.ClassAssessmentId && d.StudentContactId == st.StudentContactId && d.ClientId == smsClientId)?.IsOfferring?? false;
-                res.Result.Add(item);
-            }
-            res.IsSuccessful = true;
-            return await Task.Run(() => res);
         }
 
-    
         async Task<APIResponse<UpdateStudentAssessmentScore>> IClassAssessmentService.UpdateStudentAssessmentScoreAsync(UpdateStudentAssessmentScore request)
         {
             var res = new APIResponse<UpdateStudentAssessmentScore>();
@@ -233,16 +256,26 @@ namespace SMP.BLL.Services.AssessmentServices
         public async Task<APIResponse<GetClassAssessmentRequest>> GetSingleAssessmentAsync(Guid classAssessmentId)
         {
             var res = new APIResponse<GetClassAssessmentRequest>();
+            try
+            {
+                res.Result = await context.ClassAssessment.Where(c => c.ClientId == smsClientId && c.ClassAssessmentId == classAssessmentId)
+                     .Include(s => s.SessionClassSubject)
+                     .Include(s => s.SessionClass).ThenInclude(c => c.Class)
+                     .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
+                     .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
+                     .Select(s => new GetClassAssessmentRequest(s)).FirstOrDefaultAsync();
 
-            res.Result = await context.ClassAssessment.Where(c => c.ClientId == smsClientId && c.ClassAssessmentId == classAssessmentId)
-                 .Include(s => s.SessionClassSubject)
-                 .Include(s => s.SessionClass).ThenInclude(c => c.Class)
-                 .Include(x => x.SessionClassSubject).ThenInclude(d => d.Subject)
-                 .Include(x => x.SessionClass).ThenInclude(d => d.Students).ThenInclude(d => d.User)
-                 .Select(s => new GetClassAssessmentRequest(s)).FirstOrDefaultAsync();
-
-            res.IsSuccessful = true;
-            return await Task.Run(() => res);
+                res.IsSuccessful = true;
+                return await Task.Run(() => res);
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<SingleDelete>> IClassAssessmentService.DeleteClassAssessmentAsync(SingleDelete request)

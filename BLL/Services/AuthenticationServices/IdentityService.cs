@@ -169,6 +169,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = "Unexpected Error Occurred";
                 return res;
             }
@@ -279,6 +280,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = "Unexpected Error Occurred";
                 return res;
             }
@@ -376,6 +378,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException("Error Occurred !! Please contact system administration"); 
             }
         }
@@ -600,32 +603,39 @@ namespace BLL.AuthenticationServices
         {
 
             var res = new APIResponse<CBTLoginDetails>();
-            var apiCredentials = new SmsClientInformationRequest
+            try
             {
-                ApiKey = fwsOptions.Apikey,
-                ClientId = smsClientId
-            };
-            var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+                var apiCredentials = new SmsClientInformationRequest
+                {
+                    ApiKey = fwsOptions.Apikey,
+                    ClientId = smsClientId
+                };
+                var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
-            var clientDetails = new Dictionary<string, string>();
-            clientDetails.Add("userId", fwsClientInformation.Result.UserId);
-            clientDetails.Add("smsClientId", "");
-            clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
+                var clientDetails = new Dictionary<string, string>();
+                clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+                clientDetails.Add("smsClientId", "");
+                clientDetails.Add("productBaseurlSuffix", fwsClientInformation.Result.BaseUrlAppendix);
 
-            var req = new LoginCommandByHash
-            {
-                PasswordHash = fwsClientInformation.Result.PasswordHash
-            };
+                var req = new LoginCommandByHash
+                {
+                    PasswordHash = fwsClientInformation.Result.PasswordHash
+                };
 
-            res = await webRequestService.PostAsync<APIResponse<CBTLoginDetails>, LoginCommandByHash>($"{cbtRoutes.getToken}", req, clientDetails);
-            if (res.Result == null)
-            {
-                res.Message.FriendlyMessage = res.Message.FriendlyMessage;
+                res = await webRequestService.PostAsync<APIResponse<CBTLoginDetails>, LoginCommandByHash>($"{cbtRoutes.getToken}", req, clientDetails);
+                if (res.Result == null)
+                {
+                    res.Message.FriendlyMessage = res.Message.FriendlyMessage;
+                    return res;
+                }
+                res.IsSuccessful = true;
                 return res;
             }
-            res.IsSuccessful = true;
-            return res;
-
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                return res;
+            }
         }
 
         string ClientId(string url) => context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl == url).ClientId;
@@ -642,27 +652,35 @@ namespace BLL.AuthenticationServices
 
 
          async Task<APIResponse<List<AllSchools>>> IIdentityService.GetAllSchoolsAsync()
-        {
+         {
             var resp = new APIResponse<List<AllSchools>>();
-            var res =  await context.SchoolSettings.Where(d => d.Deleted == false).Select(d => new AllSchools
+            try
             {
-                Address = d.SCHOOLSETTINGS_SchoolAddress,
-                ClientId = d.ClientId,
-                RegNumberformat =  d.SCHOOLSETTINGS_StudentRegNoFormat,
-                SchoolHead = context.Session
-                .Where(r => r.IsActive == true && r.ClientId == d.ClientId)
-                .Include(d => d.HeadTeacher)
-                .Select(t => new { Name = t.HeadTeacher.FirstName + " "+ t.HeadTeacher.LastName })
-                .FirstOrDefault().Name,
-                SchoolLogo = d.SCHOOLSETTINGS_Photo,
-                SchoolName = d.SCHOOLSETTINGS_SchoolName,
-                SchoolUrl = d.APPLAYOUTSETTINGS_SchoolUrl
-            }).ToListAsync();
+                var res = await context.SchoolSettings.Where(d => d.Deleted == false).Select(d => new AllSchools
+                {
+                    Address = d.SCHOOLSETTINGS_SchoolAddress,
+                    ClientId = d.ClientId,
+                    RegNumberformat = d.SCHOOLSETTINGS_StudentRegNoFormat,
+                    SchoolHead = context.Session
+                    .Where(r => r.IsActive == true && r.ClientId == d.ClientId)
+                    .Include(d => d.HeadTeacher)
+                    .Select(t => new { Name = t.HeadTeacher.FirstName + " " + t.HeadTeacher.LastName })
+                    .FirstOrDefault().Name,
+                    SchoolLogo = d.SCHOOLSETTINGS_Photo,
+                    SchoolName = d.SCHOOLSETTINGS_SchoolName,
+                    SchoolUrl = d.APPLAYOUTSETTINGS_SchoolUrl
+                }).ToListAsync();
 
-            resp.IsSuccessful = true;
-            resp.Result = res;
-            return resp;
-        }
+                resp.IsSuccessful = true;
+                resp.Result = res;
+                return resp;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                return resp;
+            }
+         }
 
        
     }

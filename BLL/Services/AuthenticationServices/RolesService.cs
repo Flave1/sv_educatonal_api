@@ -105,34 +105,43 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<UserRole>> IRolesService.UpdateRoleAsync(UpdateRoleActivity request)
         {
             var res = new APIResponse<UserRole>();
-            var role = await manager.FindByIdAsync(request.RoleId);
-            if (role == null)
+            try
             {
-                res.Message.FriendlyMessage = "Role does not exist";
+                var role = await manager.FindByIdAsync(request.RoleId);
+                if (role == null)
+                {
+                    res.Message.FriendlyMessage = "Role does not exist";
+                    return res;
+                }
+
+                if (role.Name == DefaultRoles.FLAVETECH)
+                {
+                    res.Message.FriendlyMessage = "Role cannot be edited ";
+                    return res;
+                }
+                role.Name = request.Name + "" + smsClientId;
+                role.UpdateOn = DateTime.Now;
+                var result = await manager.UpdateAsync(role);
+                if (!result.Succeeded)
+                {
+                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                    return res;
+                }
+
+                await DeleteExistingActivitiesAsync(request.RoleId);
+                await CreateRoleActivitiesAsync(request.Activities, request.RoleId);
+
+                res.IsSuccessful = true;
+                res.Result = role;
+                res.Message.FriendlyMessage = "Successfully updated role";
                 return res;
             }
-
-            if (role.Name == DefaultRoles.FLAVETECH)
+            catch(Exception ex)
             {
-                res.Message.FriendlyMessage = "Role cannot be edited ";
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
                 return res;
             }
-            role.Name = request.Name + "" + smsClientId;
-            role.UpdateOn = DateTime.Now;
-            var result = await manager.UpdateAsync(role);
-            if (!result.Succeeded)
-            {
-                res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                return res;
-            }
-
-            await DeleteExistingActivitiesAsync(request.RoleId);
-            await CreateRoleActivitiesAsync(request.Activities, request.RoleId);
-
-            res.IsSuccessful = true;
-            res.Result = role;
-            res.Message.FriendlyMessage = "Successfully updated role";
-            return res;
         }
 
         async Task DeleteExistingActivitiesAsync(string roleId)
@@ -150,160 +159,220 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<List<ApplicationRoles>>> IRolesService.GetAllRolesAsync()
         {
             var res = new APIResponse<List<ApplicationRoles>>();
-            var result = await manager.Roles.Where(x => x.Deleted == false).OrderByDescending(d => d.CreatedOn)
+            try
+            {
+                var result = await manager.Roles.Where(x => x.Deleted == false).OrderByDescending(d => d.CreatedOn)
                 .Where(d => d.Name != DefaultRoles.FLAVETECH
                     && (d.Name == DefaultRoles.AdminRole(smsClientId) || d.Name == DefaultRoles.TeacherRole(smsClientId) || d.Name == DefaultRoles.ParentRole(smsClientId))
                     || d.ClientId == smsClientId)
                 .OrderByDescending(we => we.UpdatedBy)
                 .Select(a => new ApplicationRoles { RoleId = a.Id, Name = a.Name.Replace(smsClientId, "") }).ToListAsync();
 
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+                res.IsSuccessful = true;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
 
         async Task<APIResponse<List<GetActivities>>> IRolesService.GetAllActivitiesAsync()
         {
             var res = new APIResponse<List<GetActivities>>();
-            var result = await context.AppActivity.Where(d => d.Deleted != true).OrderByDescending(d => d.CreatedOn)
-                .OrderByDescending(we => we.UpdatedBy)
-                .Select(a => new GetActivities
-                {
-                    ActivityId = a.Id.ToString(),
-                    Name = a.DisplayName,
-                    ParentId = a.ActivityParentId.ToString(),
-                    ParentName = a.Parent.Name
-                }).ToListAsync();
+            try
+            {
+                var result = await context.AppActivity.Where(d => d.Deleted != true).OrderByDescending(d => d.CreatedOn)
+                    .OrderByDescending(we => we.UpdatedBy)
+                    .Select(a => new GetActivities
+                    {
+                        ActivityId = a.Id.ToString(),
+                        Name = a.DisplayName,
+                        ParentId = a.ActivityParentId.ToString(),
+                        ParentName = a.Parent.Name
+                    }).ToListAsync();
 
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+                res.IsSuccessful = true;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
         async Task<APIResponse<List<GetActivityParent>>> IRolesService.GetActivityParentsAsync()
         {
             var res = new APIResponse<List<GetActivityParent>>();
-            var result = await context.AppActivityParent.Where(d => d.Deleted != true)
-                .Select(a => new GetActivityParent
-                {
-                    ParentActivityId = a.Id.ToString(),
-                    Name = a.Name,
-                    DisplayName = a.DisplayName,
-                }).ToListAsync();
+            try
+            {
+                var result = await context.AppActivityParent.Where(d => d.Deleted != true)
+               .Select(a => new GetActivityParent
+               {
+                   ParentActivityId = a.Id.ToString(),
+                   Name = a.Name,
+                   DisplayName = a.DisplayName,
+               }).ToListAsync();
 
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+                res.IsSuccessful = true;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
 
 
         async Task<APIResponse<GetRoleActivities>> IRolesService.GetSingleRoleAsync(string roleId)
         {
             var res = new APIResponse<GetRoleActivities>();
-
-
-            var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new GetRoleActivities
+            try
             {
-                Name = w.Name.Replace(smsClientId, ""),
-                RoleId = roleId
-            }).FirstOrDefaultAsync();
-            if (role != null)
-            {
-                role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId && d.ClientId == smsClientId).Select(a => a.ActivityId).ToList();
+                var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new GetRoleActivities
+                {
+                    Name = w.Name.Replace(smsClientId, ""),
+                    RoleId = roleId
+                }).FirstOrDefaultAsync();
+                if (role != null)
+                {
+                    role.Activities = context.RoleActivity.Where(d => d.RoleId == roleId && d.ClientId == smsClientId).Select(a => a.ActivityId).ToList();
+                }
+                res.Result = role;
+                res.IsSuccessful = true;
+                res.Result = role;
+                return res;
             }
-            res.Result = role;
-            res.IsSuccessful = true;
-            res.Result = role;
-            return res;
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
         async Task<APIResponse<NotAddedUserRole>> IRolesService.GetUsersNotInRoleAsync(string roleId)
         {
             var res = new APIResponse<NotAddedUserRole>();
-
-            var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new NotAddedUserRole
+            try
             {
-                RoleName = w.Name.Replace(smsClientId, ""),
-                RoleId = roleId
-            }).FirstOrDefaultAsync();
-            if (role != null)
-            {
-                var userIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
-                role.Users = context.Teacher.Where(x => !userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(a => new UserNames(a, null)).ToList();
+                var role = await context.Roles.Where(d => d.Id == roleId).Select(w => new NotAddedUserRole
+                {
+                    RoleName = w.Name.Replace(smsClientId, ""),
+                    RoleId = roleId
+                }).FirstOrDefaultAsync();
+                if (role != null)
+                {
+                    var userIds = context.UserRoles.Where(d => d.RoleId == roleId).Select(d => d.UserId);
+                    role.Users = context.Teacher.Where(x => !userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(a => new UserNames(a, null)).ToList();
+                }
+                res.Result = role;
+                res.IsSuccessful = true;
+                res.Result = role;
+                return res;
             }
-            res.Result = role;
-            res.IsSuccessful = true;
-            res.Result = role;
-            return res;
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
 
         async Task<APIResponse<UserRole>> IRolesService.DeleteRoleAsync(MultipleDelete request)
         {
             var res = new APIResponse<UserRole>();
-            foreach (var roleId in request.Items)
+            try
             {
-                var role = await manager.FindByIdAsync(roleId);
-                if (role == null)
+                foreach (var roleId in request.Items)
                 {
-                    res.Message.FriendlyMessage = "Role does not exist";
-                    return res;
+                    var role = await manager.FindByIdAsync(roleId);
+                    if (role == null)
+                    {
+                        res.Message.FriendlyMessage = "Role does not exist";
+                        return res;
+                    }
+
+                    if (role.Name == DefaultRoles.TeacherRole(smsClientId))
+                    {
+                        res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
+                        return res;
+                    }
+
+                    if (role.Name == DefaultRoles.StudentRole(smsClientId))
+                    {
+                        res.Message.FriendlyMessage = "Student role cannot be deleted ";
+                        return res;
+                    }
+
+                    if (role.Name == DefaultRoles.AdminRole(smsClientId))
+                    {
+                        res.Message.FriendlyMessage = "Admin role cannot be deleted";
+                        return res;
+                    }
+                    if (role.Name == DefaultRoles.AdminRole(smsClientId))
+                    {
+                        res.Message.FriendlyMessage = "Role cannot be deleted";
+                        return res;
+                    }
+                    role.Deleted = true;
+                    role.Name = role.Name + "_DELETED" + DateTime.UtcNow.ToUniversalTime();
+                    var result = await manager.UpdateAsync(role);
+                    if (!result.Succeeded)
+                    {
+                        res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
+                        return res;
+                    }
+
+                    res.Result = role;
                 }
 
-                if (role.Name == DefaultRoles.TeacherRole(smsClientId))
-                {
-                    res.Message.FriendlyMessage = "Teacher role cannot be deleted ";
-                    return res;
-                }
-
-                if (role.Name == DefaultRoles.StudentRole(smsClientId))
-                {
-                    res.Message.FriendlyMessage = "Student role cannot be deleted ";
-                    return res;
-                }
-
-                if (role.Name == DefaultRoles.AdminRole(smsClientId))
-                {
-                    res.Message.FriendlyMessage = "Admin role cannot be deleted";
-                    return res;
-                }
-                if (role.Name == DefaultRoles.AdminRole(smsClientId))
-                {
-                    res.Message.FriendlyMessage = "Role cannot be deleted";
-                    return res;
-                }
-                role.Deleted = true;
-                role.Name = role.Name + "_DELETED" + DateTime.UtcNow.ToUniversalTime();
-                var result = await manager.UpdateAsync(role);
-                if (!result.Succeeded)
-                {
-                    res.Message.FriendlyMessage = result.Errors.FirstOrDefault().Description;
-                    return res;
-                }
-
-                res.Result = role;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successfully delted role";
+                return res;
             }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "Successfully delted role";
-            return res;
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
+                return res;
+            }
         }
 
         async Task<APIResponse<GetUsersInRole>> IRolesService.GetUsersInRoleAsync(GetUsersInRoleRequest request)
         {
             var res = new APIResponse<GetUsersInRole>();
-            var userIds = context.UserRoles.Where(d => d.RoleId == request.RoleId).Select(x => x.UserId);
-            var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d, smsClientId)).FirstOrDefault();
-            if (selectedRole != null)
+            try
             {
-                selectedRole.Users = await context.Teacher.Where(x => userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(x => new UserNames(x, null)).ToListAsync();
+                var userIds = context.UserRoles.Where(d => d.RoleId == request.RoleId).Select(x => x.UserId);
+                var selectedRole = context.Roles.Where(d => d.Id == request.RoleId).Select(d => new GetUsersInRole(d, smsClientId)).FirstOrDefault();
+                if (selectedRole != null)
+                {
+                    selectedRole.Users = await context.Teacher.Where(x => userIds.Contains(x.UserId) && x.ClientId == smsClientId).Select(x => new UserNames(x, null)).ToListAsync();
 
-                res.IsSuccessful = true;
-                res.Result = selectedRole;
-                res.Message.FriendlyMessage = Messages.GetSuccess;
-                return res;
+                    res.IsSuccessful = true;
+                    res.Result = selectedRole;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+                else
+                {
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
             }
-            else
+            catch(Exception ex)
             {
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
                 return res;
             }
         }
@@ -311,42 +380,51 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<bool>> IRolesService.RemoveUserFromRoleAsync(RemoveUserFromRoleRequest request)
         {
             var res = new APIResponse<bool>();
-            var user = await userManager.FindByIdAsync(request.UserId);
-            if (user != null)
+            try
             {
-                var role = manager.Roles.FirstOrDefault(d => d.Id == request.RoleId);
-                if (role != null)
+                var user = await userManager.FindByIdAsync(request.UserId);
+                if (user != null)
                 {
-                    if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
-                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Admin);
-                    if (role.Name.StartsWith(DefaultRoles.TEACHER))
-                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
-                    if (role.Name.StartsWith(DefaultRoles.STUDENT))
-                        user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
-
-                    var removeResult = await userManager.RemoveFromRoleAsync(user, role.Name);
-                    if (removeResult.Succeeded)
+                    var role = manager.Roles.FirstOrDefault(d => d.Id == request.RoleId);
+                    if (role != null)
                     {
-                        res.IsSuccessful = true;
-                        res.Result = true;
-                        res.Message.FriendlyMessage = "Successfully removed User from role";
-                        return res;
+                        if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
+                            user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Admin);
+                        if (role.Name.StartsWith(DefaultRoles.TEACHER))
+                            user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
+                        if (role.Name.StartsWith(DefaultRoles.STUDENT))
+                            user.UserTypes = utilitiesService.RemoveUserType(user.UserTypes, UserTypes.Teacher);
+
+                        var removeResult = await userManager.RemoveFromRoleAsync(user, role.Name);
+                        if (removeResult.Succeeded)
+                        {
+                            res.IsSuccessful = true;
+                            res.Result = true;
+                            res.Message.FriendlyMessage = "Successfully removed User from role";
+                            return res;
+                        }
+                        else
+                        {
+                            res.Message.FriendlyMessage = removeResult.Errors.FirstOrDefault().Description;
+                            return res;
+                        }
                     }
                     else
                     {
-                        res.Message.FriendlyMessage = removeResult.Errors.FirstOrDefault().Description;
+                        res.Message.FriendlyMessage = "Role not found";
                         return res;
                     }
                 }
                 else
                 {
-                    res.Message.FriendlyMessage = "Role not found";
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
                     return res;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Unable to create Role with activities!! please contact administrator";
                 return res;
             }
         }

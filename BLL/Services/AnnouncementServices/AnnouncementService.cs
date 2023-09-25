@@ -1,10 +1,12 @@
 ﻿using BLL;
 using BLL.Constants;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.Wrappers;
 using Contracts.Annoucements;
 using Contracts.Common;
 using DAL;
+using Microsoft.AspNet.SignalR.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -34,11 +36,12 @@ namespace SMP.BLL.Services.AnnouncementServices
         private readonly IPaginationService paginationService;
         private readonly INotificationService notificationService;
         private readonly IWebRequestService webRequestService;
+        private readonly ILoggerService logger;
         protected readonly IHubContext<NotificationHub> hub;
         private readonly string smsClientId;
 
         public AnnouncementService(DataContext context, IHttpContextAccessor accessor, IPaginationService paginationService, IHubContext<NotificationHub> hub, INotificationService notificationService,
-            IWebRequestService webRequestService)
+            IWebRequestService webRequestService, ILoggerService logger)
         {
             this.context = context;
             this.accessor = accessor;
@@ -46,176 +49,228 @@ namespace SMP.BLL.Services.AnnouncementServices
             this.hub = hub;
             this.notificationService = notificationService;
             this.webRequestService = webRequestService;
+            this.logger = logger;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<GetAnnouncements>> IAnnouncementsService.UpdateSeenAnnouncementAsync(UpdatSeenAnnouncement request)
         {
             var res = new APIResponse<GetAnnouncements>();
-            var userId = accessor.HttpContext.User.FindFirst(d => d.Type == "userId").Value;
+            try
+            {
+                var userId = accessor.HttpContext.User.FindFirst(d => d.Type == "userId").Value;
 
-            var announcement = await context.Announcement.Where(c => c.ClientId == smsClientId).Include(d => d.Sender).FirstOrDefaultAsync(x=>x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
-            if(announcement != null)
-            {
-                var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
-                if(!splitedIds.Any(d => d == userId))
+                var announcement = await context.Announcement.Where(c => c.ClientId == smsClientId).Include(d => d.Sender).FirstOrDefaultAsync(x => x.AnnouncementsId == Guid.Parse(request.AnnouncementsId));
+                if (announcement != null)
                 {
-                    splitedIds.Add(userId);
-                    announcement.SeenByIds = string.Join(',', splitedIds);
-                    await context.SaveChangesAsync();
-                    
+                    var splitedIds = !string.IsNullOrEmpty(announcement.SeenByIds) ? announcement.SeenByIds.Split(',').ToList() : new List<string>();
+                    if (!splitedIds.Any(d => d == userId))
+                    {
+                        splitedIds.Add(userId);
+                        announcement.SeenByIds = string.Join(',', splitedIds);
+                        await context.SaveChangesAsync();
+
+                    }
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    res.Result = new GetAnnouncements(announcement, userId);
+                    res.IsSuccessful = true;
+
+                    return res;
                 }
-                res.Message.FriendlyMessage = Messages.GetSuccess;
-                res.Result = new GetAnnouncements(announcement, userId);
-                res.IsSuccessful = true;
-                
-                return res;
+                else
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
         }
 
         async Task<APIResponse<PagedResponse<List<GetAnnouncements>>>> IAnnouncementsService.GetAnnouncementsAsync(PaginationFilter filter)
-        { 
+        {
             var res = new APIResponse<PagedResponse<List<GetAnnouncements>>>();
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            
-            if (!string.IsNullOrEmpty(userid))
+            try
             {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+
+                if (!string.IsNullOrEmpty(userid))
                 {
-                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.Deleted == false)
-                          .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn);
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                    {
+                        var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.Deleted == false)
+                              .Include(d => d.Sender)
+                            .OrderByDescending(d => d.CreatedOn);
 
-                    var totaltRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                        var totaltRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
-                    res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    return res;
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+                    }
+
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "teacher" && c.Deleted == false)
+                             .Include(d => d.Sender)
+                             .OrderByDescending(d => d.CreatedOn);
+
+                        var totaltRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+                    }
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
+                    {
+                        var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "student" && c.Deleted == false)
+                              .Include(d => d.Sender)
+                            .OrderByDescending(d => d.CreatedOn);
+
+                        var totaltRecord = query.Count();
+                        var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
+                        res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+
+
+                        res.IsSuccessful = true;
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        return res;
+
+                    }
+
                 }
 
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
-                {
-                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "teacher" && c.Deleted == false)
-                         .Include(d => d.Sender)
-                         .OrderByDescending(d => d.CreatedOn);
-
-                    var totaltRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
-
-                    res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    return res;
-                }
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.StudentRole(smsClientId)))
-                {
-                    var query = context.Announcement.Where(c => c.ClientId == smsClientId && c.AssignedTo == "student" && c.Deleted == false)
-                          .Include(d => d.Sender)
-                        .OrderByDescending(d => d.CreatedOn);
-
-                    var totaltRecord = query.Count();
-                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new GetAnnouncements(x, userid)).ToListAsync();
-                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
-
-
-                    res.IsSuccessful = true;
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    return res;
-
-                }
-             
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
             }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<CreateAnnouncement>> IAnnouncementsService.CreateAnnouncementsAsync(CreateAnnouncement request)
         {
             var res = new APIResponse<CreateAnnouncement>();
-            var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var newAnnouncement = new Announcements()
+            try
             {
-                Header = request.Header,
-                AnnouncementDate = Tools.GetCurrentLocalDateTime(),
-                AssignedTo = request.AssignedTo,
-                SentBy = userid,
-                Content = request.Content
-            };
-            
-            await context.Announcement.AddAsync(newAnnouncement);
-            await context.SaveChangesAsync();
+                var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                var newAnnouncement = new Announcements()
+                {
+                    Header = request.Header,
+                    AnnouncementDate = Tools.GetCurrentLocalDateTime(),
+                    AssignedTo = request.AssignedTo,
+                    SentBy = userid,
+                    Content = request.Content
+                };
 
-            await notificationService.CreateNotitficationAsync(new NotificationDTO
+                await context.Announcement.AddAsync(newAnnouncement);
+                await context.SaveChangesAsync();
+
+                await notificationService.CreateNotitficationAsync(new NotificationDTO
+                {
+                    Content = newAnnouncement.Content,
+                    NotificationPageLink = request.AssignedTo == NotificationRooms.Students ? $"smp-student-announcement/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}" : $"smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
+                    NotificationSourceId = newAnnouncement.AnnouncementsId.ToString(),
+                    Subject = newAnnouncement.Header,
+                    Receivers = "all",
+                    Type = "announcement",
+                    ToGroup = request.AssignedTo
+                });
+                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+
+                res.Message.FriendlyMessage = Messages.Created;
+                res.IsSuccessful = true;
+                res.Result = request;
+                return res;
+            }
+            catch (Exception ex)
             {
-                Content = newAnnouncement.Content,
-                NotificationPageLink = request.AssignedTo == NotificationRooms.Students ? $"smp-student-announcement/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}" : $"smp-notification/announcement-details?announcementsId={newAnnouncement.AnnouncementsId}",
-                NotificationSourceId = newAnnouncement.AnnouncementsId.ToString(),
-                Subject = newAnnouncement.Header,
-                Receivers = "all",
-                Type = "announcement",
-                ToGroup = request.AssignedTo
-            });
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
-
-            res.Message.FriendlyMessage = Messages.Created;
-            res.IsSuccessful = true;
-            res.Result = request;
-            return res;
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<UpdateAnnouncement>> IAnnouncementsService.UpdateAnnouncementsAsync(UpdateAnnouncement request)
         {
             var res = new APIResponse<UpdateAnnouncement>();
-
-            var ann = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == request.AnnouncementsId && d.ClientId == smsClientId);
-            if(ann == null)
+            try
             {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                var ann = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == request.AnnouncementsId && d.ClientId == smsClientId);
+                if (ann == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                ann.Header = request.Header;
+                ann.AssignedTo = request.AssignedTo;
+                ann.Content = request.Content;
+                ann.IsEdited = true;
+                await context.SaveChangesAsync();
+
+                res.Message.FriendlyMessage = Messages.Updated;
+                res.IsSuccessful = true;
+                res.Result = request;
                 return res;
             }
-
-            ann.Header = request.Header;
-            ann.AssignedTo = request.AssignedTo;
-            ann.Content = request.Content;
-            ann.IsEdited = true;
-            await context.SaveChangesAsync();
-
-            res.Message.FriendlyMessage = Messages.Updated;
-            res.IsSuccessful = true;
-            res.Result = request;
-            return res;
+            catch(Exception ex) 
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<bool>> IAnnouncementsService.DeleteAnnouncementsAsync(SingleDelete request)
         {
             var res = new APIResponse<bool>();
-
-            var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item) && d.ClientId == smsClientId);
-            if (result != null)
+            try
             {
-                result.Deleted = true;
-                await context.SaveChangesAsync();
-            }
-            else
-            { 
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                var result = await context.Announcement.FirstOrDefaultAsync(d => d.AnnouncementsId == Guid.Parse(request.Item) && d.ClientId == smsClientId);
+                if (result != null)
+                {
+                    result.Deleted = true;
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+                res.IsSuccessful = true;
+                res.Result = true;
+                res.Message.FriendlyMessage = Messages.DeletedSuccess;
                 return res;
             }
-            res.IsSuccessful = true;
-            res.Result = true;
-            res.Message.FriendlyMessage = Messages.DeletedSuccess;
-            return res;
-            
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
        
