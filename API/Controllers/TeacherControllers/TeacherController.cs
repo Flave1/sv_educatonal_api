@@ -2,6 +2,7 @@
 using BLL.MiddleWares;
 using Contracts.Authentication;
 using Contracts.Common;
+using Contracts.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SMP.BLL.Services.TeacherServices;
@@ -37,6 +38,15 @@ namespace API.Controllers
         public async Task<IActionResult> UpdateTeacherAsync([FromForm] UserCommand request)
         {
             var response = await service.UpdateTeacherAsync(request);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
+        [HttpPost("de-activate/teacher")]
+        public async Task<IActionResult> DeactivateTeacherAsync([FromBody] SimplePostRequest request)
+        {
+            var response = await service.DeactivateTeacherAsync(request.Id);
             if (response.IsSuccessful)
                 return Ok(response);
             return BadRequest(response);
