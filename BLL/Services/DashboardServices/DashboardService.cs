@@ -1,11 +1,13 @@
 ﻿using BLL;
 using BLL.Constants;
+using BLL.LoggerService;
 using DAL;
 using DAL.ClassEntities;
 using DAL.SessionEntities;
 using DAL.SubjectModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using NLog;
 using SMP.BLL.Constants;
 using SMP.BLL.Services.Constants;
 using SMP.BLL.Services.SessionServices;
@@ -26,48 +28,73 @@ namespace SMP.BLL.Services.DashboardServices
         private readonly IHttpContextAccessor accessor;
         private readonly string smsClientId;
         private readonly ITermService termService;
-        public DashboardService(DataContext context, IHttpContextAccessor accessor, ITermService termService)
+        private readonly ILoggerService logger;
+
+        public DashboardService(DataContext context, IHttpContextAccessor accessor, ITermService termService, ILoggerService logger)
         {
             this.context = context;
             this.accessor = accessor;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.termService = termService;
+            this.logger = logger;
         }
 
         APIResponse<GetDashboardCount> IDashboardService.GetDashboardCountAsync()
         {
-            var res = new APIResponse<GetDashboardCount>();
-            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
-            var rolesActivities = context.RoleActivity.Where(x=>x.ClientId == smsClientId)
-                .Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
 
-            if (!string.IsNullOrEmpty(userId))
-            { 
-                if(accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+            var res = new APIResponse<GetDashboardCount>();
+            try
+            {
+                var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+                var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
+                var rolesActivities = context.RoleActivity.Where(x => x.ClientId == smsClientId)
+                    .Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
+
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    res.Result = GetDashboardCounts();
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                    {
+                        res.Result = GetDashboardCounts();
+                    }
+                    else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
+                    }
                 }
-                else if(accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
-                {
-                    res.Result = GetTeacherDashboardCounts(Guid.Parse(teacherId), rolesActivities.Select(x => x.Activity.Permission).ToList());
-                } 
-            } 
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
+            
         }
 
         APIResponse<GetStudentshDasboardCount> IDashboardService.GetStudentDashboardCountAsync()
         {
-            var res = new APIResponse<GetStudentshDasboardCount>();
 
-            var studentId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
-            res.Result = GetStudentDashboardCounts(Guid.Parse(studentId));
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
+            var res = new APIResponse<GetStudentshDasboardCount>();
+            try
+            {
+                var studentId = accessor.HttpContext.User.FindFirst(e => e.Type == "studentContactId")?.Value;
+                res.Result = GetStudentDashboardCounts(Guid.Parse(studentId));
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
 
         private GetDashboardCount GetDashboardCounts()
@@ -186,111 +213,131 @@ namespace SMP.BLL.Services.DashboardServices
         APIResponse<List<Teacherclasses>> IDashboardService.GetTeacherMobileDashboardCountAsync()
         {
             var res = new APIResponse<List<Teacherclasses>>();
-            var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
-            var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
-            var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
-            var rolesActivities = context.RoleActivity.Where(x=>x.ClientId == smsClientId).Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
-            IQueryable<SessionClass> classesAsASujectTeacher = null;
-            IQueryable<SessionClass> classesAsAFormTeacher = null;
-            var currentTerm = termService.GetCurrentTerm();
-            if(currentTerm is null)
+            try
             {
-                res.Message.FriendlyMessage = "No active term found";
-                return res;
-            }
-            if (!string.IsNullOrEmpty(userId))
-            {
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                var userId = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
+                var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value;
+                var userRoles = context.UserRoles.Where(x => x.UserId == userId).AsEnumerable();
+                var rolesActivities = context.RoleActivity.Where(x => x.ClientId == smsClientId).Include(x => x.Activity).Where(x => userRoles.Select(r => r.RoleId).Contains(x.RoleId)).AsEnumerable();
+                IQueryable<SessionClass> classesAsASujectTeacher = null;
+                IQueryable<SessionClass> classesAsAFormTeacher = null;
+                var currentTerm = termService.GetCurrentTerm();
+                if (currentTerm is null)
                 {
-                    classesAsASujectTeacher = context.SessionClass
-                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name);
-
-                    classesAsAFormTeacher = context.SessionClass
-                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name);
-
+                    res.Message.FriendlyMessage = "No active term found";
+                    return res;
                 }
-                else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    classesAsASujectTeacher = context.SessionClass
-                                            .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
-                                            .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
-                                            .Include(s => s.Class)
-                                            .Include(s => s.Session)
-                                            .Include(s => s.SessionClassSubjects)
-                                            .OrderBy(s => s.Class.Name);
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                    {
+                        classesAsASujectTeacher = context.SessionClass
+                            .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
+                            .Include(s => s.Class)
+                            .Include(s => s.Session)
+                            .Include(s => s.SessionClassSubjects)
+                            .OrderBy(s => s.Class.Name);
 
-                    classesAsAFormTeacher = context.SessionClass
-                        .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId))
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name);
+                        classesAsAFormTeacher = context.SessionClass
+                            .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false)
+                            .Include(s => s.Class)
+                            .Include(s => s.Session)
+                            .Include(s => s.SessionClassSubjects)
+                            .OrderBy(s => s.Class.Name);
+
+                    }
+                    else if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        classesAsASujectTeacher = context.SessionClass
+                                                .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.SessionClassSubjects
+                                                .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)))
+                                                .Include(s => s.Class)
+                                                .Include(s => s.Session)
+                                                .Include(s => s.SessionClassSubjects)
+                                                .OrderBy(s => s.Class.Name);
+
+                        classesAsAFormTeacher = context.SessionClass
+                            .Where(e => e.ClientId == smsClientId && e.Session.IsActive == true && e.Deleted == false && e.FormTeacherId == Guid.Parse(teacherId))
+                            .Include(s => s.Class)
+                            .Include(s => s.Session)
+                            .Include(s => s.SessionClassSubjects)
+                            .OrderBy(s => s.Class.Name);
+                    }
                 }
-            }
-            var allClasses = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new { ClassName = s.Class.Name, SessionClassId = s.SessionClassId, Classid = s.ClassId }).ToList();
+                var allClasses = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new { ClassName = s.Class.Name, SessionClassId = s.SessionClassId, Classid = s.ClassId }).ToList();
 
-            var classRes = new List<Teacherclasses>();
-            for (int i = 0; i < allClasses.Count; i++)
-            {
-                var result = new Teacherclasses();
+                var classRes = new List<Teacherclasses>();
+                for (int i = 0; i < allClasses.Count; i++)
+                {
+                    var result = new Teacherclasses();
 
-                result.SessionClass = allClasses[i].ClassName;
-                result.SessionClassId = allClasses[i].SessionClassId;
-                result.ClassLookupId = allClasses[i].Classid;
+                    result.SessionClass = allClasses[i].ClassName;
+                    result.SessionClassId = allClasses[i].SessionClassId;
+                    result.ClassLookupId = allClasses[i].Classid;
 
-                var totalHomeAssessments = context.HomeAssessment
+                    var totalHomeAssessments = context.HomeAssessment
+                            .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
+                            .Include(x => x.SessionClass).ThenInclude(x => x.Session)
+                            .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
+                            .Count(x => x.Deleted == false && x.TeacherId == Guid.Parse(teacherId));
+
+                    var totalClassAssessments = context.ClassAssessment
                         .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
                         .Include(x => x.SessionClass).ThenInclude(x => x.Session)
                         .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
-                        .Count(x => x.Deleted == false && x.TeacherId == Guid.Parse(teacherId));
+                       .Count(x => x.Scorer == Guid.Parse(teacherId));
 
-                var totalClassAssessments = context.ClassAssessment
-                    .Where(x => x.ClientId == smsClientId && x.SessionClassId == allClasses[i].SessionClassId)
-                    .Include(x => x.SessionClass).ThenInclude(x => x.Session)
-                    .Where(x => x.SessionClass.Session.IsActive && currentTerm.SessionTermId == x.SessionTermId)
-                   .Count(x => x.Scorer == Guid.Parse(teacherId));
+                    result.AssessmentCount = (totalHomeAssessments + totalClassAssessments);
 
-                result.AssessmentCount = (totalHomeAssessments + totalClassAssessments);
+                    result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
 
-                result.StudentCounts = context.StudentContact.Where(s => s.SessionClassId == allClasses[i].SessionClassId && s.EnrollmentStatus == (int)EnrollmentStatus.Enrolled).Count();
-
-                result.StudentNoteCount = context.TeacherClassNote
-                    .Where(x => x.ClientId == smsClientId && x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
-                    .Where(x => x?.Classes != null ? (bool)x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString()) : false).Distinct().Count();
-                classRes.Add(result);
+                    result.StudentNoteCount = context.TeacherClassNote
+                        .Where(x => x.ClientId == smsClientId && x.SessionTermId == currentTerm.SessionTermId).AsEnumerable()
+                        .Where(x => x?.Classes != null ? (bool)x.Classes.Split(',', StringSplitOptions.None).ToList().Contains(allClasses[i].Classid.ToString()) : false).Distinct().Count();
+                    classRes.Add(result);
+                }
+                res.Result = classRes;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
             }
-            res.Result = classRes;
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
   
         APIResponse<List<ApplicationSetupStatus>> IDashboardService.GetApplicationStatus()
         {
             var res = new APIResponse<List<ApplicationSetupStatus>>();
-            res.Result = new List<ApplicationSetupStatus>();
-            var currentterm = termService.GetCurrentTerm();
-            var session = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive && d.Deleted == false) ?? null;
-            var classes = context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
-            var subs = context.Subject.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
-            var setting = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId && d.Deleted == false);
-            res.Result.Add(GetSessionStatus(session));
-            res.Result.Add(GetClassStatus(classes, session?.SessionId, currentterm));
-            res.Result.Add(GetSubjectsStatus(subs, session?.SessionId, currentterm));
-            res.Result.Add(GetSchoolSettingStatus(setting)); 
-            res.Result.Add(GetResultSettingStatus(setting));
-            res.Result.Add(GetRegNumberStatus(setting));
-            res.Result.Add(GetGradeStatus(currentterm));
-            res.Result.Add(GetTemplateStatus(setting));
-            return res;
+            try
+            {
+                res.Result = new List<ApplicationSetupStatus>();
+                var currentterm = termService.GetCurrentTerm();
+                var session = context.Session.FirstOrDefault(d => d.ClientId == smsClientId && d.IsActive && d.Deleted == false) ?? null;
+                var classes = context.ClassLookUp.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
+                var subs = context.Subject.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.IsActive).ToList();
+                var setting = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId && d.Deleted == false);
+                res.Result.Add(GetSessionStatus(session));
+                res.Result.Add(GetClassStatus(classes, session?.SessionId, currentterm));
+                res.Result.Add(GetSubjectsStatus(subs, session?.SessionId, currentterm));
+                res.Result.Add(GetSchoolSettingStatus(setting));
+                res.Result.Add(GetResultSettingStatus(setting));
+                res.Result.Add(GetRegNumberStatus(setting));
+                res.Result.Add(GetGradeStatus(currentterm));
+                res.Result.Add(GetTemplateStatus(setting));
+                return res;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = "Error Occurred trying to create student account!! Please contact system administrator";
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
 
 

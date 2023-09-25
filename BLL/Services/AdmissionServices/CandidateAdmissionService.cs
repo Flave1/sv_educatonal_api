@@ -99,9 +99,10 @@ namespace SMP.BLL.Services.AdmissionServices
             }
             catch (Exception ex)
             {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
-                res.Message.TechnicalMessage = ex.ToString();
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
                 return res;
             }
         }

@@ -24,9 +24,9 @@ namespace BLL.LoggerService
                 LogType = (int)LogType.Info,
                 Message = message
             };
+            logger.Info(message);
             context.Add(log);
             context.SaveChangesNoClientAsync().Wait();
-            logger.Info(message);
         }
 
         public void Warning(string message)
@@ -36,9 +36,9 @@ namespace BLL.LoggerService
                 LogType = (int)LogType.Warning,
                 Message = message
             };
+            logger.Warn(message);
             context.Add(log);
             context.SaveChangesNoClientAsync().Wait();
-            logger.Warn(message);
         }
 
         public void Debug(string message)
@@ -48,9 +48,9 @@ namespace BLL.LoggerService
                 LogType = (int)LogType.Debug,
                 Message = message
             };
+            logger.Debug(message);
             context.Add(log);
             context.SaveChangesNoClientAsync().Wait();
-            logger.Debug(message);
         }
 
         public void Error(string message, string stackTrace, string innerException, string innerExceptionMessage)
@@ -63,9 +63,9 @@ namespace BLL.LoggerService
                 InnerException = innerException,
                 InnerExceptionMessage = innerExceptionMessage
             };
+            logger.Error($"Message: {message} || StackTrace: {message} || InnerException: {innerException} || InnerExceptionMessage: {innerExceptionMessage}");
             context.Add(log);
             context.SaveChangesNoClientAsync().Wait();
-            logger.Error(message);
         }
     }
 }

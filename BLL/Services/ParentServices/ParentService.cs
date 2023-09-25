@@ -331,15 +331,20 @@ namespace SMP.BLL.Services.ParentServices
                 var studentsSessionClassId = await students.Select(x => x.SessionClassId).ToListAsync();
 
                 var sessionClassSubjectIds = context.SessionClassSubject.Where(x => x.ClientId == smsClientId && studentsSessionClassId.Contains(x.SessionClassId)).Select(x => x.SessionClassSubjectId).ToList();
-                var classAssessment = context.ClassAssessment.Where(x => x.ClientId == smsClientId && sessionClassSubjectIds.Contains(x.SessionClassSubjectId ?? Guid.Empty));
+                var classAssessment = context.ClassAssessment.Where(x => x.ClientId == smsClientId && x.Deleted != true && sessionClassSubjectIds.Contains(x.SessionClassSubjectId ?? Guid.Empty));
                 var totalClassAssessment = classAssessment.Count();
 
-                var homeAssessment = context.HomeAssessment.Where(x => x.ClientId == smsClientId  && sessionClassSubjectIds.Contains(x.SessionClassSubjectId ?? Guid.Empty));
+                var homeAssessment = context.HomeAssessment.Where(x => x.ClientId == smsClientId && x.Status != (int)HomeAssessmentStatus.Saved && x.Deleted != true && sessionClassSubjectIds.Contains(x.SessionClassSubjectId ?? Guid.Empty));
                 var totalHomeAssessment = homeAssessment.Count();
 
-                var studentsTeacherId = await students.Select(x => x.SessionClass.Teacher.TeacherId).ToListAsync();
-                var teacherClassNote = context.TeacherClassNote.Where(x => studentsTeacherId.Contains(x.TeacherId) && x.Deleted != true);
+                var sessionTermId = await students.Select(x => x.SessionClass.SessionTermId).ToListAsync();
+                var teacherClassNote = context.TeacherClassNote.Where(x => x.ClientId == smsClientId && x.Deleted != true).Include(x => x.ClassNote)
+                                       .Where(x => sessionTermId.Contains(x.SessionTermId) && x.ClassNote.AprrovalStatus == (int)NoteApprovalStatus.Approved);
                 var totalTeacherClassNote = teacherClassNote.Count();
+
+                //var studentsTeacherId = await students.Select(x => x.SessionClass.Teacher.TeacherId).ToListAsync();
+                //var teacherClassNote = context.TeacherClassNote.Where(x => studentsTeacherId.Contains(x.TeacherId) && x.Deleted != true);
+                //var totalTeacherClassNote = teacherClassNote.Count();
 
                 var studentsContactId = await students.Select(x => x.StudentContactId).ToListAsync();
                 var studentClassNote = context.StudentNote.Where(x => studentsContactId.Contains(x.StudentContactId.Value) && x.Deleted != true);

@@ -1,6 +1,7 @@
 ﻿using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NLog;
 using SMP.DAL.Models.Logger;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Contracts.Options
 {
     public class ValidationFilter : IAsyncActionFilter
     {
+        private static ILogger logger = LogManager.GetCurrentClassLogger();
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             if (!context.ModelState.IsValid)
@@ -52,6 +54,7 @@ namespace Contracts.Options
                 InnerException = message,
                 InnerExceptionMessage = message
             };
+            logger.Error(log);
             using(DataContext ctx = new DataContext())
             {
                 ctx.Add(log);
