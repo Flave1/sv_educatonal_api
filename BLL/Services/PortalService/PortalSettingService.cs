@@ -102,146 +102,215 @@ namespace SMP.BLL.Services.PortalService
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
-             
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
+
         } 
         async Task<APIResponse<UpdateResultSetting>> IPortalSettingService.UpdateResultSettingTemplateAsync(UpdateResultSetting request)
         {
             var res = new APIResponse<UpdateResultSetting>();
-            var result = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
-            if (result != null)
+            try
             {
-                result.RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate;
-                await context.SaveChangesAsync();
-                res.Message.FriendlyMessage = "Template selected Successfully";
-                res.IsSuccessful = true;
-                res.Result = request;
+                var result = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
+                if (result != null)
+                {
+                    result.RESULTSETTINGS_SelectedTemplate = request.SelectedTemplate;
+                    await context.SaveChangesAsync();
+                    res.Message.FriendlyMessage = "Template selected Successfully";
+                    res.IsSuccessful = true;
+                    res.Result = request;
 
-                return res;
+                    return res;
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = "School not found";
+                    return res;
+                }
             }
-            else
+            catch(Exception ex)
             {
-                res.Message.FriendlyMessage = "School not found";
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
         }
         async Task<APIResponse<PostNotificationSetting>> IPortalSettingService.CreateUpdateNotificationSettingsAsync(PostNotificationSetting request)
         {
             var res = new APIResponse<PostNotificationSetting>();
-            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x=>x.ClientId == smsClientId);
-
-            if (setting is not null)
+            try
             {
-                setting.NOTIFICATIONSETTINGS_Announcement = request.Announcement.media +"/"+ request.Announcement.send;
-                setting.NOTIFICATIONSETTINGS_Assessment = request.Assessment.media + "/" + request.Assessment.send;
-                setting.NOTIFICATIONSETTINGS_ClassManagement = request.ClassManagement.media + "/" + request.ClassManagement.send;
-                setting.NOTIFICATIONSETTINGS_Enrollment = request.Enrollment.media + "/" + request.Enrollment.send;
-                setting.NOTIFICATIONSETTINGS_Permission = request.Permission.media + "/" + request.Permission.send;
-                setting.NOTIFICATIONSETTINGS_PublishResult = request.PublishResult.media + "/" + request.PublishResult.send;
-                setting.NOTIFICATIONSETTINGS_RecoverPassword = request.RecoverPassword.media + "/" + request.RecoverPassword.send;
-                setting.NOTIFICATIONSETTINGS_Session = request.Session.media + "/" + request.Session.send;
-                setting.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = request.PublishResult.ShouldSendToParentsOnResultPublish;
-                setting.NOTIFICATIONSETTINGS_Staff = request.Staff.media + "/" + request.Staff.send;
-                await context.SaveChangesAsync();
-            }
+                var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == smsClientId);
 
-            res.Message.FriendlyMessage = Messages.Created;
-            res.Result = request;
-            res.IsSuccessful = true;
-            return res;
+                if (setting is not null)
+                {
+                    setting.NOTIFICATIONSETTINGS_Announcement = request.Announcement.media + "/" + request.Announcement.send;
+                    setting.NOTIFICATIONSETTINGS_Assessment = request.Assessment.media + "/" + request.Assessment.send;
+                    setting.NOTIFICATIONSETTINGS_ClassManagement = request.ClassManagement.media + "/" + request.ClassManagement.send;
+                    setting.NOTIFICATIONSETTINGS_Enrollment = request.Enrollment.media + "/" + request.Enrollment.send;
+                    setting.NOTIFICATIONSETTINGS_Permission = request.Permission.media + "/" + request.Permission.send;
+                    setting.NOTIFICATIONSETTINGS_PublishResult = request.PublishResult.media + "/" + request.PublishResult.send;
+                    setting.NOTIFICATIONSETTINGS_RecoverPassword = request.RecoverPassword.media + "/" + request.RecoverPassword.send;
+                    setting.NOTIFICATIONSETTINGS_Session = request.Session.media + "/" + request.Session.send;
+                    setting.NOTIFICATIONSETTINGS_ShouldSendToParentsOnResultPublish = request.PublishResult.ShouldSendToParentsOnResultPublish;
+                    setting.NOTIFICATIONSETTINGS_Staff = request.Staff.media + "/" + request.Staff.send;
+                    await context.SaveChangesAsync();
+                }
+
+                res.Message.FriendlyMessage = Messages.Created;
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
          
         async Task<APIResponse<SchoolSettingContract>> IPortalSettingService.GetSchollSettingsAsync()
         {
             var res = new APIResponse<SchoolSettingContract>();
-            res.Result = await context.SchoolSettings.Where(x=>x.ClientId == smsClientId).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
-            res.IsSuccessful = true;
-            return res;
+            try
+            {
+                res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new SchoolSettingContract(f)).FirstOrDefaultAsync() ?? new SchoolSettingContract();
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         async Task<APIResponse<ResultSettingContract>> IPortalSettingService.GetResultSettingsAsync()
         {
             var res = new APIResponse<ResultSettingContract>();
-            var result = await context.SchoolSettings.Where(x=>x.ClientId == smsClientId).Select(f=> new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
-            if (result != null)
+            try
             {
-                var session = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
-                if(session is not null)
+                var result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new ResultSettingContract(f)).FirstOrDefaultAsync() ?? new ResultSettingContract();
+                if (result != null)
                 {
-                    var teacher = context.Teacher.Where(x => x.ClientId == smsClientId && x.TeacherId == session.HeadTeacherId).FirstOrDefault();
-                    result.Headteacher = teacher?.FirstName + " " + teacher?.LastName;
+                    var session = context.Session.FirstOrDefault(x => x.IsActive && x.ClientId == smsClientId);
+                    if (session is not null)
+                    {
+                        var teacher = context.Teacher.Where(x => x.ClientId == smsClientId && x.TeacherId == session.HeadTeacherId).FirstOrDefault();
+                        result.Headteacher = teacher?.FirstName + " " + teacher?.LastName;
+                    }
+
                 }
-               
+                res.Result = result;
+                res.IsSuccessful = true;
+                return res;
             }
-            res.Result = result;
-            res.IsSuccessful = true;
-            return res;
+            catch (Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         } 
         async Task<APIResponse<PostNotificationSetting>>IPortalSettingService.GetNotificationSettingsAsync()
         {
             var res = new APIResponse<PostNotificationSetting>();
-            res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync() ?? new PostNotificationSetting();
-            res.IsSuccessful = true;
-            return res;
+            try
+            {
+                res.Result = await context.SchoolSettings.Where(x => x.ClientId == smsClientId).Select(f => new PostNotificationSetting(f)).FirstOrDefaultAsync() ?? new PostNotificationSetting();
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.GetAppLayoutSettingsAsync(string url)
         {
             //loggerService.Error("settings", url, "settings", "settings");
             var res = new APIResponse<AppLayoutSettings>();
-            res.Result = new AppLayoutSettings();
-            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == url.ToLower());
-
-            if (setting is not null)
+            try
             {
-                res.Result.scheme = setting.APPLAYOUTSETTINGS_Scheme;
-                res.Result.schemeDir = setting.APPLAYOUTSETTINGS_SchemeDir;
-                res.Result.colorprimary = setting.APPLAYOUTSETTINGS_Colorprimary;
-                res.Result.navbarstyle = setting.APPLAYOUTSETTINGS_Navbarstyle;
-                res.Result.sidebarcolor = setting.APPLAYOUTSETTINGS_Sidebarcolor;
-                res.Result.colorcustomizer = setting.APPLAYOUTSETTINGS_Colorcustomizer;
-                res.Result.colorinfo = setting.APPLAYOUTSETTINGS_Colorinfo;
-                res.Result.loginTemplate = setting.APPLAYOUTSETTINGS_loginTemplate;
-                res.Result.sidebarActiveStyle = setting.APPLAYOUTSETTINGS_SidebarActiveStyle;
-                res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
-                res.Result.schoolName = setting.SCHOOLSETTINGS_SchoolName;
-                res.Result.schoolLogo = setting.SCHOOLSETTINGS_Photo;
-                res.Result.abrv = setting.SCHOOLSETTINGS_SchoolAbbreviation;
-                if(setting.APPLAYOUTSETTINGS_SidebarType is not null)
-                    res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
-            }
+                res.Result = new AppLayoutSettings();
+                var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == url.ToLower());
 
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return res;
+                if (setting is not null)
+                {
+                    res.Result.scheme = setting.APPLAYOUTSETTINGS_Scheme;
+                    res.Result.schemeDir = setting.APPLAYOUTSETTINGS_SchemeDir;
+                    res.Result.colorprimary = setting.APPLAYOUTSETTINGS_Colorprimary;
+                    res.Result.navbarstyle = setting.APPLAYOUTSETTINGS_Navbarstyle;
+                    res.Result.sidebarcolor = setting.APPLAYOUTSETTINGS_Sidebarcolor;
+                    res.Result.colorcustomizer = setting.APPLAYOUTSETTINGS_Colorcustomizer;
+                    res.Result.colorinfo = setting.APPLAYOUTSETTINGS_Colorinfo;
+                    res.Result.loginTemplate = setting.APPLAYOUTSETTINGS_loginTemplate;
+                    res.Result.sidebarActiveStyle = setting.APPLAYOUTSETTINGS_SidebarActiveStyle;
+                    res.Result.schoolUrl = setting.APPLAYOUTSETTINGS_SchoolUrl;
+                    res.Result.schoolName = setting.SCHOOLSETTINGS_SchoolName;
+                    res.Result.schoolLogo = setting.SCHOOLSETTINGS_Photo;
+                    res.Result.abrv = setting.SCHOOLSETTINGS_SchoolAbbreviation;
+                    if (setting.APPLAYOUTSETTINGS_SidebarType is not null)
+                        res.Result.sidebarType = JsonConvert.DeserializeObject<SidebarType>(setting.APPLAYOUTSETTINGS_SidebarType);
+                }
+
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         async Task<APIResponse<AppLayoutSettings>> IPortalSettingService.UpdateAppLayoutSettingsAsync(AppLayoutSettings request)
         {
             var res = new APIResponse<AppLayoutSettings>();
-            var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => request.schoolUrl == x.APPLAYOUTSETTINGS_SchoolUrl);
-
-            if (setting is not null)
+            try
             {
-                setting.APPLAYOUTSETTINGS_Scheme = request.scheme;
-                setting.APPLAYOUTSETTINGS_SchemeDir = request.schemeDir;
-                setting.APPLAYOUTSETTINGS_Colorprimary = request.colorprimary;
-                setting.APPLAYOUTSETTINGS_Navbarstyle = request.navbarstyle;
-                setting.APPLAYOUTSETTINGS_Sidebarcolor = request.sidebarcolor;
-                setting.APPLAYOUTSETTINGS_Colorcustomizer = request.colorcustomizer;
-                setting.APPLAYOUTSETTINGS_Colorinfo = request.colorinfo;
-                setting.APPLAYOUTSETTINGS_SidebarType = JsonConvert.SerializeObject(request.sidebarType);
-                setting.APPLAYOUTSETTINGS_loginTemplate = request.loginTemplate;
-                setting.APPLAYOUTSETTINGS_SidebarActiveStyle = request.sidebarActiveStyle;
-                setting.APPLAYOUTSETTINGS_SchoolUrl = request.schoolUrl;
-                setting.ClientId = smsClientId;
-                await context.SaveChangesAsync();
-            }
-            
+                var setting = await context.SchoolSettings.FirstOrDefaultAsync(x => request.schoolUrl == x.APPLAYOUTSETTINGS_SchoolUrl);
 
-            res.Message.FriendlyMessage = "Updated Successfully";
-            res.Result = request;
-            res.IsSuccessful = true;
-            return res;
+                if (setting is not null)
+                {
+                    setting.APPLAYOUTSETTINGS_Scheme = request.scheme;
+                    setting.APPLAYOUTSETTINGS_SchemeDir = request.schemeDir;
+                    setting.APPLAYOUTSETTINGS_Colorprimary = request.colorprimary;
+                    setting.APPLAYOUTSETTINGS_Navbarstyle = request.navbarstyle;
+                    setting.APPLAYOUTSETTINGS_Sidebarcolor = request.sidebarcolor;
+                    setting.APPLAYOUTSETTINGS_Colorcustomizer = request.colorcustomizer;
+                    setting.APPLAYOUTSETTINGS_Colorinfo = request.colorinfo;
+                    setting.APPLAYOUTSETTINGS_SidebarType = JsonConvert.SerializeObject(request.sidebarType);
+                    setting.APPLAYOUTSETTINGS_loginTemplate = request.loginTemplate;
+                    setting.APPLAYOUTSETTINGS_SidebarActiveStyle = request.sidebarActiveStyle;
+                    setting.APPLAYOUTSETTINGS_SchoolUrl = request.schoolUrl;
+                    setting.ClientId = smsClientId;
+                    await context.SaveChangesAsync();
+                }
+
+
+                res.Message.FriendlyMessage = "Updated Successfully";
+                res.Result = request;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
         }
 
         void UpdateSchoolSettingsAsync(SchoolSetting setting, string schoolUrl)
@@ -281,8 +350,9 @@ namespace SMP.BLL.Services.PortalService
                 setting.RESULTSETTINGS_PrincipalStample = "";
                 setting.RESULTSETTINGS_SelectedTemplate = "default-template";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw;
             }
         }

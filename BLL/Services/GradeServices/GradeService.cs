@@ -156,43 +156,62 @@ namespace SMP.BLL.Services.GradeServices
         async Task<APIResponse<List<GetGradeGroupModel>>> IGradeService.GetGradeSettingAsync()
         {
             var res = new APIResponse<List<GetGradeGroupModel>>();
-
-            var result = await context.GradeGroup.Where(x=>x.ClientId == smsClientId && x.Deleted == false)
+            try
+            {
+                var result = await context.GradeGroup.Where(x => x.ClientId == smsClientId && x.Deleted == false)
                      .Include(d => d.Classes)
                      .Include(d => d.Grades)
                      .Select(d => new GetGradeGroupModel(d)).ToListAsync();
-
-            res.IsSuccessful = true;
-            res.Result = result;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
-        }
-
-        async Task<APIResponse<List<GetSessionClass>>> IGradeService.GetClassesAsync()
-        {
-            var res = new APIResponse<List<GetSessionClass>>();
-
-            var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true && d.ClientId == smsClientId);
-            if (currentSession != null)
-            {
-
-                var result = await context.SessionClass.Where(d=> d.SessionId == currentSession.SessionId && d.ClientId == smsClientId)
-                    .Include(rr => rr.Class)
-                    .OrderBy(s => s.Class.Name)
-                    .Select(d => new GetSessionClass(d)).ToListAsync();
-
-                              //select new GetSessionClass(a)).ToList();
 
                 res.IsSuccessful = true;
                 res.Result = result;
                 res.Message.FriendlyMessage = Messages.GetSuccess;
                 return res;
             }
-            else
+            catch(Exception ex)
             {
-                //return some messge
-                res.IsSuccessful = false;
-                res.Message.FriendlyMessage = "There is no session set up for school";
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+            
+        }
+
+        async Task<APIResponse<List<GetSessionClass>>> IGradeService.GetClassesAsync()
+        {
+            var res = new APIResponse<List<GetSessionClass>>();
+            try
+            {
+                var currentSession = context.Session.FirstOrDefault(d => d.IsActive == true && d.ClientId == smsClientId);
+                if (currentSession != null)
+                {
+
+                    var result = await context.SessionClass.Where(d => d.SessionId == currentSession.SessionId && d.ClientId == smsClientId)
+                        .Include(rr => rr.Class)
+                        .OrderBy(s => s.Class.Name)
+                        .Select(d => new GetSessionClass(d)).ToListAsync();
+
+                    //select new GetSessionClass(a)).ToList();
+
+                    res.IsSuccessful = true;
+                    res.Result = result;
+                    res.Message.FriendlyMessage = Messages.GetSuccess;
+                    return res;
+                }
+                else
+                {
+                    //return some messge
+                    res.IsSuccessful = false;
+                    res.Message.FriendlyMessage = "There is no session set up for school";
+                    return res;
+                }
+            }
+            catch(Exception ex )
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
                 return res;
             }
         }

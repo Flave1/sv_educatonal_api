@@ -48,38 +48,45 @@ namespace SMP.BLL.Services.CBTAssessmentServices
 
         async Task<APIResponse<PagedResponse<List<CBTExamination>>>> ICBTAssessmentService.GetCBTAssessmentsAsync(string sessionClassId,string subjectId, int pageNumber)
         {
-
-            var res = new APIResponse<PagedResponse<List<CBTExamination>>>();
-            var apiCredentials = new SmsClientInformationRequest
+            try
             {
-                ApiKey = fwsOptions.Apikey,
-                ClientId = smsClientId
-            };
-            var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
+                var res = new APIResponse<PagedResponse<List<CBTExamination>>>();
+                var apiCredentials = new SmsClientInformationRequest
+                {
+                    ApiKey = fwsOptions.Apikey,
+                    ClientId = smsClientId
+                };
+                var fwsClientInformation = await webRequestService.PostAsync<SmsClientInformation, SmsClientInformationRequest>($"{fwsRoutes.clientInformation}clientId={fwsOptions.ClientId}&apiKey={fwsOptions.Apikey}", apiCredentials);
 
-            var clientDetails = new Dictionary<string, string>();
-            clientDetails.Add("userId", fwsClientInformation.Result.UserId);
-            clientDetails.Add("smsClientId", smsClientId);
+                var clientDetails = new Dictionary<string, string>();
+                clientDetails.Add("userId", fwsClientInformation.Result.UserId);
+                clientDetails.Add("smsClientId", smsClientId);
 
-            res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}&subjectId={subjectId}", clientDetails);
+                res = await webRequestService.GetAsync<APIResponse<PagedResponse<List<CBTExamination>>>>($"{cbtRoutes.getClassCBTs}?PageNumber={pageNumber}&PageSize=20&sessionClassId={sessionClassId}&subjectId={subjectId}", clientDetails);
 
-            if (res.Result == null)
-            {
+                if (res.Result == null)
+                {
 
+                    res.IsSuccessful = true;
+                    res.Result = new PagedResponse<List<CBTExamination>>();
+                    res.Message.FriendlyMessage = res.Message.FriendlyMessage;
+                    return res;
+                }
+                res.Result.Data.ForEach(ele =>
+                {
+                    ele.IsIncluded = scoreEntryService.GetScoreEntryHistory(ele.CandidateCategoryId_ClassId,
+                            ele.ExamName_SubjectId, termService.GetCurrentTerm().SessionTermId.ToString(),
+                            HistorySource.CbtAssessment,
+                            ele.ExaminationId) is null ? false : true;
+                });
                 res.IsSuccessful = true;
-                res.Result = new PagedResponse<List<CBTExamination>>();
-                res.Message.FriendlyMessage = res.Message.FriendlyMessage;
                 return res;
             }
-            res.Result.Data.ForEach(ele =>
+            catch(Exception ex)
             {
-                ele.IsIncluded = scoreEntryService.GetScoreEntryHistory(ele.CandidateCategoryId_ClassId,
-                        ele.ExamName_SubjectId, termService.GetCurrentTerm().SessionTermId.ToString(),
-                        HistorySource.CbtAssessment,
-                        ele.ExaminationId) is null ? false : true;
-            });
-            res.IsSuccessful = true;
-            return res;
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
+            }
 
         }
 

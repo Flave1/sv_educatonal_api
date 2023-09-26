@@ -101,64 +101,100 @@ namespace BLL.ClassServices
         async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllClassLookupsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.ClassLookUp.Where(c => c.ClientId == smsClientId)
-                .OrderBy(s => s.Name)
-                .Include(d => d.GradeLevel)
-                .Where(d => d.Deleted != true).Select(a => new GetApplicationLookups { 
-                    LookupId = a.ClassLookupId.ToString().ToLower(), 
-                    Name = a.Name, 
-                    IsActive = a.IsActive, 
-                    GradeLevelId = a.GradeGroupId.ToString(),
-                    GradeLevelName = a.GradeLevel.GradeGroupName
-                }).ToListAsync();
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+            try
+            {
+                var result = await context.ClassLookUp.Where(c => c.ClientId == smsClientId)
+                    .OrderBy(s => s.Name)
+                    .Include(d => d.GradeLevel)
+                    .Where(d => d.Deleted != true).Select(a => new GetApplicationLookups
+                    {
+                        LookupId = a.ClassLookupId.ToString().ToLower(),
+                        Name = a.Name,
+                        IsActive = a.IsActive,
+                        GradeLevelId = a.GradeGroupId.ToString(),
+                        GradeLevelName = a.GradeLevel.GradeGroupName
+                    }).ToListAsync();
+                res.IsSuccessful = true;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+            
         }
 
         async Task<APIResponse<List<GetApplicationLookups>>> IClassLookupService.GetAllActiveClassLookupsAsync()
         {
             var res = new APIResponse<List<GetApplicationLookups>>();
-            var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true && d.ClientId == smsClientId)
+            try
+            {
+                var result = await context.ClassLookUp.Where(d => d.Deleted != true && d.IsActive == true && d.ClientId == smsClientId)
                 .OrderBy(d => d.Name)
-                .Select(a => new GetApplicationLookups { 
-                    LookupId = a.ClassLookupId.ToString().ToLower(), 
-                    Name = a.Name, 
+                .Select(a => new GetApplicationLookups
+                {
+                    LookupId = a.ClassLookupId.ToString().ToLower(),
+                    Name = a.Name,
                     IsActive = a.IsActive,
                     GradeLevelId = a.GradeGroupId.ToString(),
                 }).ToListAsync();
-            res.IsSuccessful = true;
-            res.Result = result;
-            return res;
+                res.IsSuccessful = true;
+                res.Result = result;
+                return res;
+            }
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<ClassLookup>> IClassLookupService.DeleteClassLookupAsync(MultipleDelete request)
         {
             var res = new APIResponse<ClassLookup>();
-            foreach(var lookupId in request.Items)
+            try
             {
-                var lookup = context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId) && d.ClientId == smsClientId);
-                if (lookup == null)
+                foreach (var lookupId in request.Items)
                 {
-                    res.Message.FriendlyMessage = "Class Lookup does not exist";
-                    return res;
+                    var lookup = context.ClassLookUp.FirstOrDefault(d => d.ClassLookupId == Guid.Parse(lookupId) && d.ClientId == smsClientId);
+                    if (lookup == null)
+                    {
+                        res.Message.FriendlyMessage = "Class Lookup does not exist";
+                        return res;
+                    }
+
+                    if (context.SessionClass.Any(x => x.ClassId == lookup.ClassLookupId && x.Deleted == false && x.ClientId == smsClientId))
+                    {
+                        res.Message.FriendlyMessage = "Class setup cannot be deleted";
+                        return res;
+                    }
+
+                    lookup.Deleted = true;
+                    await context.SaveChangesAsync();
+
+                    res.Result = lookup;
                 }
 
-                if(context.SessionClass.Any(x => x.ClassId == lookup.ClassLookupId && x.Deleted == false && x.ClientId == smsClientId))
-                {
-                    res.Message.FriendlyMessage = "Class setup cannot be deleted";
-                    return res;
-                }
-
-                lookup.Deleted = true;
-                await context.SaveChangesAsync();
-
-                res.Result = lookup;
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "You have succesfully deleted a class lookup";
+                return res;
             }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = "You have succesfully deleted a class lookup";
-            return res;
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
    
     }

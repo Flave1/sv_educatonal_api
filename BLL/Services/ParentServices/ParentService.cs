@@ -83,26 +83,36 @@ namespace SMP.BLL.Services.ParentServices
         async Task<APIResponse<PagedResponse<List<MyWards>>>> IParentService.GetMyWardsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<MyWards>>>();
-            var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
-
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
-            if (!string.IsNullOrEmpty(userName))
+            try
             {
-                var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
-                    .Include(x => x.Parent)
-                    .Where(x => x.Parent.Email == userName)
-                        .Include(x => x.SessionClass).ThenInclude(x => x.Class)
-                        .OrderByDescending(d => d.FirstName)
-                        .Where(d => d.Deleted == false);
+                var userName = accessor.HttpContext.User.FindFirst(e => e.Type == "userName")?.Value;
 
-                var totaltRecord = query.Count();
-                var result = await paginationService.GetPagedResult(query, filter).Select(x => new MyWards(x, regNoFormat)).ToListAsync();
-                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+                if (!string.IsNullOrEmpty(userName))
+                {
+                    var query = context.StudentContact.Where(x => x.ClientId == smsClientId)
+                        .Include(x => x.Parent)
+                        .Where(x => x.Parent.Email == userName)
+                            .Include(x => x.SessionClass).ThenInclude(x => x.Class)
+                            .OrderByDescending(d => d.FirstName)
+                            .Where(d => d.Deleted == false);
+
+                    var totaltRecord = query.Count();
+                    var result = await paginationService.GetPagedResult(query, filter).Select(x => new MyWards(x, regNoFormat)).ToListAsync();
+                    res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                }
+
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                return res;
             }
-
-            res.IsSuccessful = true;
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            return res;
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
 
         }
 
