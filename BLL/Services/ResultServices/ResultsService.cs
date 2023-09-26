@@ -61,50 +61,60 @@ namespace SMP.BLL.Services.ResultServices
             var userid = accessor.HttpContext.User.FindFirst(e => e.Type == "userId")?.Value;
             var teacherId = accessor.HttpContext.User.FindFirst(e => e.Type == "teacherId")?.Value; 
             var res = new APIResponse<List<GetClasses>>();
-
-            if (!string.IsNullOrEmpty(userid))
+            try
             {
-                //GET SUPER ADMIN CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                if (!string.IsNullOrEmpty(userid))
                 {
-                    res.Result = await context.SessionClass.Where(x=>x.ClientId == smsClientId && x.Deleted == false)
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true).Select(s => new GetClasses(s)).ToListAsync();
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    res.IsSuccessful = true;
-                    return res;
+                    //GET SUPER ADMIN CLASSES
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.AdminRole(smsClientId)) || accessor.HttpContext.User.IsInRole(DefaultRoles.FLAVETECH))
+                    {
+                        res.Result = await context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
+                            .Include(s => s.Class)
+                            .Include(s => s.Session)
+                            .OrderBy(s => s.Class.Name)
+                            .Where(e => e.Session.IsActive == true).Select(s => new GetClasses(s)).ToListAsync();
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        res.IsSuccessful = true;
+                        return res;
+                    }
+                    //GET TEACHER CLASSES
+                    if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
+                    {
+                        var classesAsASujectTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
+                             .Include(s => s.Class)
+                             .Include(s => s.Session)
+                             .Include(s => s.SessionClassSubjects)
+                             .OrderBy(s => s.Class.Name)
+                             .Where(e => e.Session.IsActive == true && e.SessionClassSubjects
+                             .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
+
+                        var classesAsAFormTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.FormTeacherId == Guid.Parse(teacherId))
+                            .Include(s => s.Class)
+                            .Include(s => s.Session)
+                            .Include(s => s.SessionClassSubjects)
+                            .OrderBy(s => s.Class.Name)
+                            .Where(e => e.Session.IsActive == true);
+
+
+                        res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetClasses(s)).ToList();
+                        res.Message.FriendlyMessage = Messages.GetSuccess;
+                        res.IsSuccessful = true;
+                        return res;
+                    }
+
                 }
-                //GET TEACHER CLASSES
-                if (accessor.HttpContext.User.IsInRole(DefaultRoles.TeacherRole(smsClientId)))
-                {
-                   var classesAsASujectTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false)
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true && e.SessionClassSubjects
-                        .Any(d => d.SubjectTeacherId == Guid.Parse(teacherId)));
-
-                    var classesAsAFormTeacher = context.SessionClass.Where(x => x.ClientId == smsClientId && x.Deleted == false && x.FormTeacherId == Guid.Parse(teacherId))
-                        .Include(s => s.Class)
-                        .Include(s => s.Session)
-                        .Include(s => s.SessionClassSubjects)
-                        .OrderBy(s => s.Class.Name)
-                        .Where(e => e.Session.IsActive == true);
-
-
-                    res.Result = classesAsASujectTeacher.ToList().Concat(classesAsAFormTeacher.ToList()).Distinct().Select(s => new GetClasses(s)).ToList();
-                    res.Message.FriendlyMessage = Messages.GetSuccess;
-                    res.IsSuccessful = true;
-                    return res;
-                }
-
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
             }
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return res;
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.IsSuccessful = false;
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<List<GetClasses>>> IResultsService.GetFormTeacherClassesAsync()

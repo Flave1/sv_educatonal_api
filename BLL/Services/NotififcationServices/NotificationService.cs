@@ -160,19 +160,27 @@ namespace SMP.BLL.Services.NotififcationServices
 
         public async Task UpdateNotification(Guid NotififcationId)
         {
-            var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
-            var nt = await context.Notification.FindAsync(NotififcationId);
-            if(nt != null)
+            try
             {
-                var splitedIds = !string.IsNullOrEmpty(nt.ReadBy) ? nt.ReadBy.Split(',').ToList() : new List<string>();
-                if (!splitedIds.Any(d => d == userId))
+                var userId = accessor.HttpContext.User.FindFirst(x => x.Type == "userId").Value;
+                var nt = await context.Notification.FindAsync(NotififcationId);
+                if (nt != null)
                 {
-                    splitedIds.Add(userId);
-                    nt.ReadBy = string.Join(',', splitedIds);
-                    await context.SaveChangesAsync();
+                    var splitedIds = !string.IsNullOrEmpty(nt.ReadBy) ? nt.ReadBy.Split(',').ToList() : new List<string>();
+                    if (!splitedIds.Any(d => d == userId))
+                    {
+                        splitedIds.Add(userId);
+                        nt.ReadBy = string.Join(',', splitedIds);
+                        await context.SaveChangesAsync();
+                    }
                 }
+                await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
             }
-            await hub.Clients.Group(NotificationRooms.PushedNotification).SendAsync(Methods.NotificationArea, new DateTime());
+            catch(Exception ex)
+            {
+                loggerService.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
+            }
         }
 
 

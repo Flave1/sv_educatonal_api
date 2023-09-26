@@ -1,5 +1,6 @@
 ﻿using BLL;
 using BLL.Filter;
+using BLL.LoggerService;
 using BLL.StudentServices;
 using BLL.Wrappers;
 using DAL;
@@ -21,65 +22,88 @@ namespace SMP.BLL.Services.EnrollmentServices
         private readonly DataContext context;
         private readonly IStudentService studentService;
         private readonly IPaginationService paginationService;
+        private readonly ILoggerService logger;
         private readonly string smsClientId;
-        public EnrollmentService(DataContext context, IStudentService studentService, IPaginationService paginationService, IHttpContextAccessor accessor)
+        public EnrollmentService(DataContext context, IStudentService studentService, IPaginationService paginationService, IHttpContextAccessor accessor, ILoggerService logger)
         {
             this.context = context;
             this.studentService = studentService;
             this.paginationService = paginationService;
+            this.logger = logger;
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
         }
 
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetEnrolledStudentsAsync(Guid sessionClassId, PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
-            var status = (int)EnrollmentStatus.Enrolled;
+            try
+            {
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+                var status = (int)EnrollmentStatus.Enrolled;
 
-            var cls = context.SessionClass.Where(x=>x.ClientId == smsClientId).Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
-            if (cls.Session.IsActive)
-                status = (int)EnrollmentStatus.Enrolled;
-            else
-                status = (int)EnrollmentStatus.UnEnrolled;
+                var cls = context.SessionClass.Where(x => x.ClientId == smsClientId).Include(x => x.Session).FirstOrDefault(s => s.SessionClassId == sessionClassId);
+                if (cls.Session.IsActive)
+                    status = (int)EnrollmentStatus.Enrolled;
+                else
+                    status = (int)EnrollmentStatus.UnEnrolled;
 
 
-            var query = (from a in context.StudentContact
-                                .Include(s => s.SessionClass)
-                                .Include(s => s.SessionClass).ThenInclude(s => s.Class)
-                          where a.ClientId == smsClientId && a.Status == status && a.Deleted == false &&  a.SessionClassId == sessionClassId select a);
+                var query = (from a in context.StudentContact
+                                    .Include(s => s.SessionClass)
+                                    .Include(s => s.SessionClass).ThenInclude(s => s.Class)
+                             where a.ClientId == smsClientId && a.Status == status && a.Deleted == false && a.SessionClassId == sessionClassId
+                             select a);
 
-            var totaltRecord = query.Count();
-            var result = paginationService.GetPagedResult(query, filter).Select(a =>  new EnrolledStudents(a, regNoFormat)).ToList();
-            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                var totaltRecord = query.Count();
+                var result = paginationService.GetPagedResult(query, filter).Select(a => new EnrolledStudents(a, regNoFormat)).ToList();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return await Task.Run(() =>  res);
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return await Task.Run(() => res);
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<PagedResponse<List<EnrolledStudents>>>> IEnrollmentService.GetUnenrrolledStudentsAsync(PaginationFilter filter)
         {
             var res = new APIResponse<PagedResponse<List<EnrolledStudents>>>();
-            var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
+            try
+            {
+                var regNoFormat = context.SchoolSettings.FirstOrDefault(x => x.ClientId == smsClientId).SCHOOLSETTINGS_StudentRegNoFormat;
 
-            var query =  (from a in context.StudentContact.Include(s => s.User)
-                                where a.ClientId == smsClientId && a.EnrollmentStatus == (int)EnrollmentStatus.UnEnrolled && a.Deleted == false
-                                select new EnrolledStudents
-                                {
-                                    Status = "unenrrolled",
-                                    StudentContactId = a.StudentContactId.ToString(),
-                                    StudentName = a.FirstName + " " + a.MiddleName + " " + a.LastName,
-                                    StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
-                                    Class = a.SessionClass.Class.Name
-                                });
+                var query = (from a in context.StudentContact.Include(s => s.User)
+                             where a.ClientId == smsClientId && a.EnrollmentStatus == (int)EnrollmentStatus.UnEnrolled && a.Deleted == false
+                             select new EnrolledStudents
+                             {
+                                 Status = "unenrrolled",
+                                 StudentContactId = a.StudentContactId.ToString(),
+                                 StudentName = a.FirstName + " " + a.MiddleName + " " + a.LastName,
+                                 StudentRegNumber = regNoFormat.Replace("%VALUE%", a.RegistrationNumber),
+                                 Class = a.SessionClass.Class.Name
+                             });
 
-            var totaltRecord = query.Count();
-            var result = await paginationService.GetPagedResult(query, filter).ToListAsync();
-            res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
+                var totaltRecord = query.Count();
+                var result = await paginationService.GetPagedResult(query, filter).ToListAsync();
+                res.Result = paginationService.CreatePagedReponse(result, filter, totaltRecord);
 
-            res.Message.FriendlyMessage = Messages.GetSuccess;
-            res.IsSuccessful = true;
-            return res;
+                res.Message.FriendlyMessage = Messages.GetSuccess;
+                res.IsSuccessful = true;
+                return res;
+            }
+            catch (Exception ex) 
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                res.Message.TechnicalMessage = ex?.Message ?? ex?.InnerException.ToString();
+                return res;
+            }
         }
 
         async Task<APIResponse<Enroll>> IEnrollmentService.EnrollStudentsAsyncAsync(Enroll req)
@@ -102,6 +126,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                 }
                 catch (Exception ex)
                 {
+                    logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
                     return res;
@@ -131,6 +156,7 @@ namespace SMP.BLL.Services.EnrollmentServices
                 }
                 catch (Exception ex)
                 {
+                    logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                     res.Message.FriendlyMessage = Messages.FriendlyException;
                     res.Message.TechnicalMessage = ex?.Message ?? ex.InnerException.ToString();
                     return res;
@@ -145,12 +171,19 @@ namespace SMP.BLL.Services.EnrollmentServices
 
         void IEnrollmentService.UnenrollStudent(Guid studentId)
         {
-            var enrollment = context.StudentContact.FirstOrDefault(e => e.StudentContactId == studentId);
-            if (enrollment != null)
+            try
             {
-                enrollment.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
-                enrollment.Status = (int)StudentStatus.Inactive;
-                context.SaveChanges();
+                var enrollment = context.StudentContact.FirstOrDefault(e => e.StudentContactId == studentId);
+                if (enrollment != null)
+                {
+                    enrollment.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
+                    enrollment.Status = (int)StudentStatus.Inactive;
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
             }
         }
     }

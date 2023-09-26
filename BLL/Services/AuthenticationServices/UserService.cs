@@ -23,6 +23,7 @@ using SMP.BLL.Services.AuthenticationServices;
 using SMP.Contracts.Routes;
 using SMP.BLL.Services.WebRequestServices;
 using Org.BouncyCastle.Asn1.Ocsp;
+using BLL.LoggerService;
 
 namespace BLL.AuthenticationServices
 {
@@ -39,9 +40,11 @@ namespace BLL.AuthenticationServices
         public readonly IHttpContextAccessor accessor;
         private readonly IOtpService otpService;
         private readonly IWebRequestService requestService;
+        private readonly ILoggerService logger;
+
         public UserService(UserManager<AppUser> manager, IEmailService emailService, RoleManager<UserRole> roleManager, DataContext context,
             IIdentityService identityService, IOptions<EmailConfiguration> emailOptions,
-            IUtilitiesService utilitiesService, IHttpContextAccessor accessor, IOtpService otpService, IWebRequestService requestService)
+            IUtilitiesService utilitiesService, IHttpContextAccessor accessor, IOtpService otpService, IWebRequestService requestService, ILoggerService logger)
         {
             this.manager = manager;
             this.emailService = emailService;
@@ -54,45 +57,53 @@ namespace BLL.AuthenticationServices
             smsClientId = accessor.HttpContext.User.FindFirst(x => x.Type == "smsClientId")?.Value;
             this.otpService = otpService;
             this.requestService = requestService;
+            this.logger = logger;
         }
 
         async Task<APIResponse<string[]>> IUserService.AddUserToRoleAsync(string roleId, AppUser user, string[] userIds)
         {
             var res = new APIResponse<string[]>();
-            if (user == null)
+            try
             {
-                var role = await roleManager.FindByIdAsync(roleId);
-                if (role == null)
-                    throw new ArgumentException("Role does not exist");
-
-                if (userIds.Any())
+                if (user == null)
                 {
-                    foreach (var userId in userIds)
+                    var role = await roleManager.FindByIdAsync(roleId);
+                    if (role == null)
+                        throw new ArgumentException("Role does not exist");
+
+                    if (userIds.Any())
                     {
-                        user = manager.Users.FirstOrDefault(f => f.Id == userId);
+                        foreach (var userId in userIds)
+                        {
+                            user = manager.Users.FirstOrDefault(f => f.Id == userId);
 
-                        if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
-                             user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Admin);
-                        if (role.Name.StartsWith(DefaultRoles.TEACHER))
-                            user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
-                        if (role.Name.StartsWith(DefaultRoles.STUDENT))
-                            user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
+                            if (role.Name.StartsWith(DefaultRoles.SCHOOLADMIN))
+                                user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Admin);
+                            if (role.Name.StartsWith(DefaultRoles.TEACHER))
+                                user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
+                            if (role.Name.StartsWith(DefaultRoles.STUDENT))
+                                user.UserTypes = utilitiesService.AddUserType(user.UserTypes, UserTypes.Teacher);
 
-                        if (user == null)
-                            throw new ArgumentException("User account not found");
+                            if (user == null)
+                                throw new ArgumentException("User account not found");
 
-                        var result = await manager.AddToRoleAsync(user, role.Name);
-                        if (!result.Succeeded)
-                            throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                            var result = await manager.AddToRoleAsync(user, role.Name);
+                            if (!result.Succeeded)
+                                throw new ArgumentException(result.Errors.FirstOrDefault().Description);
+                        }
+
                     }
-
                 }
+                res.IsSuccessful = true;
+                res.Result = userIds;
+                res.Message.FriendlyMessage = Messages.Saved;
+                return res;
             }
-            res.IsSuccessful = true;
-            res.Result = userIds;
-            res.Message.FriendlyMessage = Messages.Saved;
-            return res;
-
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                return res;
+            }
         }
 
 
@@ -158,35 +169,44 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
         }
 
         async Task<string> CreateRoleIfNotCreated(string roleName)
         {
-            if (!await roleManager.RoleExistsAsync(roleName))
+            try
             {
-                var role = new UserRole
+                if (!await roleManager.RoleExistsAsync(roleName))
                 {
-                    Name = roleName,
-                    Active = true,
-                    Deleted = false,
-                    CreatedOn = DateTime.UtcNow,
-                    CreatedBy = "",
-                    ClientId = smsClientId
-                };
+                    var role = new UserRole
+                    {
+                        Name = roleName,
+                        Active = true,
+                        Deleted = false,
+                        CreatedOn = DateTime.UtcNow,
+                        CreatedBy = "",
+                        ClientId = smsClientId
+                    };
 
-                var result = await roleManager.CreateAsync(role);
-                if (result.Succeeded)
+                    var result = await roleManager.CreateAsync(role);
+                    if (result.Succeeded)
+                    {
+                        return roleName;
+                    }
+                }
+                else
                 {
                     return roleName;
                 }
+                return "failed";
             }
-            else
+            catch(Exception ex)
             {
-                return roleName;
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                throw;
             }
-            return "failed";
 
         }
 
@@ -225,6 +245,7 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -255,6 +276,7 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
 
@@ -284,6 +306,7 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
 
@@ -328,10 +351,12 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
             catch (Exception ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -365,10 +390,12 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
             catch (Exception ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 throw new ArgumentException(ex.Message);
             }
         }
@@ -448,21 +475,28 @@ namespace BLL.AuthenticationServices
 
         async Task IUserService.GenerateResetLinkAndSendToUserEmail(ResetPassword request)
         {
-            var appsetting = context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == request.SchoolUrl.ToLower());
-            if(appsetting is null)
-                throw new ArgumentException("Invalid Request");
-            if (int.Parse(request.UserType) == (int)UserTypes.Student)
+            try
             {
-                var user = await manager.Users.FirstOrDefaultAsync(d =>  d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
-                if (user == null)
-                    throw new ArgumentException("Student account with this email address is not registered");
+                var appsetting = context.SchoolSettings.FirstOrDefault(x => x.APPLAYOUTSETTINGS_SchoolUrl.ToLower() == request.SchoolUrl.ToLower());
+                if (appsetting is null)
+                    throw new ArgumentException("Invalid Request");
+                if (int.Parse(request.UserType) == (int)UserTypes.Student)
+                {
+                    var user = await manager.Users.FirstOrDefaultAsync(d => d.Email.ToLower().Trim() == request.ResetOptionValue.ToLower().Trim());
+                    if (user == null)
+                        throw new ArgumentException("Student account with this email address is not registered");
 
 
-                var token = await manager.GeneratePasswordResetTokenAsync(user);
-                var link = appsetting.APPLAYOUTSETTINGS_SchoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
+                    var token = await manager.GeneratePasswordResetTokenAsync(user);
+                    var link = appsetting.APPLAYOUTSETTINGS_SchoolUrl + "/AccountReset?user=" + token.Replace("+", "tokenSpace") + "&id=" + user.Id;
 
-                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appsetting.ClientId);
-                await SendResetLinkToEmailToUserAsync(user, link, "Account Verification", schoolSettings);
+                    var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == appsetting.ClientId);
+                    await SendResetLinkToEmailToUserAsync(user, link, "Account Verification", schoolSettings);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
             }
 
         }
@@ -489,57 +523,86 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<AuthenticationResult>> IUserService.ResetAccountAsync(ResetAccount request)
         {
             var res = new APIResponse<AuthenticationResult>();
-            var user = await manager.FindByIdAsync(request.UserId);
-            request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
-            if (user == null)
-                throw new ArgumentException("Ooops!! Account not identified");
-
-            var changePassword = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
-            if (changePassword.Succeeded)
+            try
             {
-                //await SendResetSuccessEmailToUserAsync(user);
-                var loginResult = await identityService.WebLoginAsync(new LoginCommand { Password = request.Password, UserName = user.UserName });
-                if (!string.IsNullOrEmpty(loginResult.Result.AuthResult.Token))
-                    return res;
+                var user = await manager.FindByIdAsync(request.UserId);
+                request.ResetToken = request.ResetToken.Replace("tokenSpace", "+");
+                if (user == null)
+                    throw new ArgumentException("Ooops!! Account not identified");
+
+                var changePassword = await manager.ResetPasswordAsync(user, request.ResetToken, request.Password);
+                if (changePassword.Succeeded)
+                {
+                    //await SendResetSuccessEmailToUserAsync(user);
+                    var loginResult = await identityService.WebLoginAsync(new LoginCommand { Password = request.Password, UserName = user.UserName });
+                    if (!string.IsNullOrEmpty(loginResult.Result.AuthResult.Token))
+                        return res;
+                }
+                else
+                    throw new ArgumentException(changePassword.Errors.FirstOrDefault().Description);
+                throw new ArgumentException("Ooops!! Something is wrong some where");
             }
-            else
-                throw new ArgumentException(changePassword.Errors.FirstOrDefault().Description);
-            throw new ArgumentException("Ooops!! Something is wrong some where");
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                return res;
+            }
+           
         }
 
         async Task<APIResponse<AuthenticationResult>> IUserService.ValidateEmailAsync(ValidateEmail request)
         {
             var res = new APIResponse<AuthenticationResult>();
-            var user = await manager.FindByEmailAsync(request.Email);
-           
-            if (user == null)
+            try
             {
-                res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                var user = await manager.FindByEmailAsync(request.Email);
+
+                if (user == null)
+                {
+                    res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                    return res;
+                }
+                if (!IsUserAvailableInSchool(request.ClientId, user.Id))
+                {
+                    res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                    return res;
+                }
+
+                await SendReseOtpOnMobileAsync(request.ClientId, request.Email);
+
+                res.Message.FriendlyMessage = "An otp has been sent to your email";
+                res.IsSuccessful = true;
                 return res;
             }
-            if (!IsUserAvailableInSchool(request.ClientId, user.Id))
+            catch(Exception ex)
             {
-                res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;
             }
-
-            await SendReseOtpOnMobileAsync(request.ClientId, request.Email);
-
-            res.Message.FriendlyMessage = "An otp has been sent to your email";
-            res.IsSuccessful = true;
-            return res;
         }
         async Task<APIResponse<AuthenticationResult>> IUserService.ValidateOTPAsync(ValidateOtp request)
         {
             var res = new APIResponse<AuthenticationResult>();
-            if (otpService.IsOtpValid(request.Otp, request.ClientId))
+            try
             {
-                res.IsSuccessful = true;
-                res.Message.FriendlyMessage = "Otp is valid";
+                if (otpService.IsOtpValid(request.Otp, request.ClientId))
+                {
+                    res.IsSuccessful = true;
+                    res.Message.FriendlyMessage = "Otp is valid";
+                    return res;
+                }
+                res.Message.FriendlyMessage = "Otp is invalid";
                 return res;
             }
-            res.Message.FriendlyMessage = "Otp is invalid";
-            return res;
+            catch(Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
+                return res;
+            }
+            
         }
 
         private async Task SendReseOtpOnMobileAsync(string clientId, string email)
@@ -603,38 +666,46 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<LoginSuccessResponse>> IUserService.ChangePasswordAsync(ChangePassword request)
         {
             var res = new APIResponse<LoginSuccessResponse>();
-
-            var clientId = ClientId(request.SchoolUrl);
-            accessor.HttpContext.Items["smsClientId"] = clientId;
-
-            var user = await manager.FindByIdAsync(request.UserId);
-            if (user == null)
+            try
             {
-                res.Message.FriendlyMessage = "Ooops!! Account not identified";
-                return res;
+                var clientId = ClientId(request.SchoolUrl);
+                accessor.HttpContext.Items["smsClientId"] = clientId;
+
+                var user = await manager.FindByIdAsync(request.UserId);
+                if (user == null)
+                {
+                    res.Message.FriendlyMessage = "Ooops!! Account not identified";
+                    return res;
+                }
+                user.EmailConfirmed = true;
+
+                var isUserPAssword = await manager.CheckPasswordAsync(user, request.OldPassword);
+                if (!isUserPAssword)
+                {
+                    res.Message.FriendlyMessage = "Old Password incorrect";
+                    return res;
+                }
+                user.EmailConfirmed = true;
+
+
+                var token = await manager.GeneratePasswordResetTokenAsync(user);
+                var changePassword = await manager.ResetPasswordAsync(user, token, request.NewPassword);
+                if (changePassword.Succeeded)
+                {
+                    var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x => x.ClientId == clientId);
+                    await SendResetSuccessEmailToUserAsync(user, schoolSettings);
+                    return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl, (UserTypes)request.UserType);
+                }
+                else
+                {
+                    res.Message.FriendlyMessage = changePassword.Errors.FirstOrDefault().Description;
+                    return res;
+                }
             }
-            user.EmailConfirmed = true;
-
-            var isUserPAssword = await manager.CheckPasswordAsync(user, request.OldPassword);
-            if (!isUserPAssword)
+            catch (Exception ex)
             {
-                res.Message.FriendlyMessage = "Old Password incorrect";
-                return res;
-            }
-            user.EmailConfirmed = true;
-
-
-            var token = await manager.GeneratePasswordResetTokenAsync(user);
-            var changePassword = await manager.ResetPasswordAsync(user, token, request.NewPassword);
-            if (changePassword.Succeeded)
-            {
-                var schoolSettings = await context.SchoolSettings.FirstOrDefaultAsync(x=> x.ClientId == clientId);
-                await SendResetSuccessEmailToUserAsync(user, schoolSettings);
-                return await identityService.LoginAfterPasswordIsChangedAsync(user, request.SchoolUrl, (UserTypes)request.UserType);
-            }
-            else
-            {
-                res.Message.FriendlyMessage = changePassword.Errors.FirstOrDefault().Description;
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;
             }
         }
@@ -642,28 +713,37 @@ namespace BLL.AuthenticationServices
         async Task<APIResponse<SmpStudentValidationResponse>> IUserService.ValidateUserAsync(SetupMobileAccountRequest request)
         {
             var res = new APIResponse<SmpStudentValidationResponse>();
-
-            var school = await context.SchoolSettings.FirstOrDefaultAsync(s => s.ClientId == request.ClientId);
-
-            if (school == null)
+            try
             {
-                res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                var school = await context.SchoolSettings.FirstOrDefaultAsync(s => s.ClientId == request.ClientId);
+
+                if (school == null)
+                {
+                    res.Message.FriendlyMessage = Messages.FriendlyNOTFOUND;
+                    return res;
+                }
+
+                res = await ValidateUserInformationFromMobileAsync(request, school);
+
+                if (res.Result.Status != "success")
+                {
+                    res.IsSuccessful = false;
+                    return res;
+                }
+
+                res.Result.SchoolUrl = school.APPLAYOUTSETTINGS_SchoolUrl;
+                res.Result.UserType = request.UserType;
+                res.Result.ClientId = school.ClientId.ToString();
+                res.IsSuccessful = true;
                 return res;
             }
-
-            res = await ValidateUserInformationFromMobileAsync(request, school);
-
-            if (res.Result.Status != "success")
+            catch(Exception ex)
             {
-                res.IsSuccessful = false;
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = Messages.FriendlyException;
                 return res;
             }
-
-            res.Result.SchoolUrl = school.APPLAYOUTSETTINGS_SchoolUrl;
-            res.Result.UserType = request.UserType;
-            res.Result.ClientId = school.ClientId.ToString();
-            res.IsSuccessful = true;
-            return res;
+           
         }
 
         private async Task<APIResponse<SmpStudentValidationResponse>> ValidateUserInformationFromMobileAsync(SetupMobileAccountRequest request, SchoolSetting setting)
@@ -759,6 +839,13 @@ namespace BLL.AuthenticationServices
             }
             catch (ArgumentException ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
+                res.Message.FriendlyMessage = ex.Message;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.Message.FriendlyMessage = ex.Message;
                 return res;
             }
@@ -795,6 +882,7 @@ namespace BLL.AuthenticationServices
             }
             catch(Exception ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -835,6 +923,7 @@ namespace BLL.AuthenticationServices
             }
             catch(Exception ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
@@ -873,6 +962,7 @@ namespace BLL.AuthenticationServices
             }
             catch (Exception ex)
             {
+                logger.Error(ex?.Message, ex?.StackTrace, ex?.InnerException?.ToString(), ex?.InnerException?.Message);
                 res.IsSuccessful = false;
                 res.Message.FriendlyMessage = Messages.FriendlyException;
                 res.Message.TechnicalMessage = ex.ToString();
