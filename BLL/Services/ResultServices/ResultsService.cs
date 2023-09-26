@@ -864,7 +864,7 @@ namespace SMP.BLL.Services.ResultServices
                     res.Result = studentResult;
                 }
                 res.IsSuccessful = true;
-                return res;
+                return await Task.Run(() => res);
             }
             catch (Exception ex)
             {

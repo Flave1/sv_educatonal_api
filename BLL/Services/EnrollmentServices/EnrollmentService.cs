@@ -151,7 +151,6 @@ namespace SMP.BLL.Services.EnrollmentServices
                     if (student != null)
                     {
                         student.EnrollmentStatus = (int)EnrollmentStatus.UnEnrolled;
-                        student.Status = (int)EnrollmentStatus.UnEnrolled;
                         await context.SaveChangesAsync();
                     }
                 }

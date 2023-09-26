@@ -45,6 +45,15 @@ namespace API.Controllers
             return BadRequest(response);
         }
 
+        [HttpPost("de-activate/student")]
+        public async Task<IActionResult> DeactivateStudentAsync([FromBody] SimplePostRequest request)
+        {
+            var response = await service.DeactivateStudenAsync(request.Id);
+            if (response.IsSuccessful)
+                return Ok(response);
+            return BadRequest(response);
+        }
+
         [HttpPost("update/by-student")]
         public async Task<IActionResult> UpdateProfileByStudentAsync([FromForm] UpdateProfileByStudentRequest request)
         {

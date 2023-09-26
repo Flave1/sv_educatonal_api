@@ -361,11 +361,11 @@ namespace SMP.Contracts.ResultModels
             }
             cognitiveBehaviour = new List<CognitiveBehaviour>
             {
-                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
-                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
-                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
-                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"},
-                new CognitiveBehaviour{ behaviour = "Play", remark = "Play"}
+                new CognitiveBehaviour{ behaviour = "Curiosity", remark = "Currious"},
+                new CognitiveBehaviour{ behaviour = "Problem Solving", remark = "Solves problem"},
+                new CognitiveBehaviour{ behaviour = "Critical Thinking", remark = "Thinks fast"},
+                new CognitiveBehaviour{ behaviour = "Mathematical Reasoning", remark = "Reasons mathematicaly"},
+                new CognitiveBehaviour{ behaviour = "Social Cognition", remark = "Good social skills"}
             };
         }
 

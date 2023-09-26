@@ -132,6 +132,31 @@ namespace BLL.StudentServices
             }
         }
 
+        async Task<APIResponse<StudentContact>> IStudentService.DeactivateStudenAsync(Guid studentId)
+        {
+            var res = new APIResponse<StudentContact>();
+            try
+            {
+                var student = await context.StudentContact.FirstOrDefaultAsync(x => x.StudentContactId == studentId);
+                if(student == null)
+                {
+                    res.Message.FriendlyMessage = "Unable to find student";
+                    return res;
+                }
+                student.Status = student.Status == (int)StudentStatus.Inactive ? (int)StudentStatus.Active : (int)StudentStatus.Inactive;
+                await context.SaveChangesAsync();
+                res.IsSuccessful = true;
+                res.Message.FriendlyMessage = "Successful";
+                return res;
+            }
+            catch (Exception ex)
+            {
+                res.Message.FriendlyMessage = ex?.Message ?? ex.InnerException.Message;
+                res.Message.TechnicalMessage = ex.ToString();
+                return res;
+            }
+        }
+
         public string GetRegistrationFormat()
         {
             var regF = context.SchoolSettings.FirstOrDefault(d => d.ClientId == smsClientId);
