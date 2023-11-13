@@ -25,6 +25,7 @@ namespace Contracts.Options
     { 
         public string Email { get; set; }
         public string ClientId { get; set; }
+        public int UserType { get; set; }
     }
     public class ValidateOtp
     {
@@ -39,7 +40,7 @@ namespace Contracts.Options
     {
         public string ResetOption { get; set; }
         public string ResetOptionValue { get; set; }
-        public string UserType { get; set; }
+        public int UserType { get; set; }
         public string SchoolUrl { get; set; }
     }
     public class ChangePassword {

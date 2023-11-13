@@ -87,8 +87,8 @@ namespace SMP.Contracts.Notes
             NoteTitle = db.ClassNote.NoteTitle;
             DateCreated = db.CreatedOn.ToString("dd-MM-yyy hh:mm");
             NoteContent = isSingle ? db.ClassNote.NoteContent : "" ;
-            Author = db.ClassNote.Author.ToString();
-            AuthorName = db.Teacher.FirstName + " " + db.Teacher.LastName;
+            Author = db.ClassNote.AuthorDetail.Id.ToString();
+            AuthorName = db.ClassNote.AuthorDetail.Email;// db.Teacher.FirstName + " " + db.Teacher.LastName;
             ApprovalStatus = db.ClassNote.AprrovalStatus;
 
             if(ApprovalStatus == 1)
